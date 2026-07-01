@@ -1,0 +1,3282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#7a1f2b" />
+  <title>Control de Recaudaciones y Liquidaciones - Liquidación [v-banner-fix-6]</title>
+
+  <style>
+/* =========================================================
+   ESTILOS GLOBALES - Control TUSSAM
+   ========================================================= */
+
+:root {
+  --color-bg: #f2f0f0;
+  --color-surface: #ffffff;
+  --color-text: #2b2424;
+  --color-text-secondary: #6e6464;
+  --color-primary: #7a1f2b;
+  --color-primary-dark: #5a1620;
+  --color-border: #ddd6d6;
+  --color-success: #2e7d32;
+  --color-success-bg: #e8f5e9;
+  --color-danger: #c62828;
+  --color-danger-bg: #fdecea;
+  --shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  --radius: 12px;
+}
+
+body.dark {
+  --color-bg: #1a1616;
+  --color-surface: #262020;
+  --color-text: #f1efef;
+  --color-text-secondary: #bdb5b5;
+  --color-primary: #b1414f;
+  --color-primary-dark: #8c2e3a;
+  --color-border: #3a3232;
+  --color-success: #66bb6a;
+  --color-success-bg: #1b3320;
+  --color-danger: #ef5350;
+  --color-danger-bg: #3a1d1d;
+  --shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background-color: var(--color-primary); color: #ffffff;
+  padding: 14px 16px; position: sticky; top: 0; z-index: 100;
+  box-shadow: var(--shadow);
+}
+.app-header h1 { font-size: 1.15rem; margin: 0; font-weight: 600; }
+.header-left { display: flex; align-items: center; gap: 10px; }
+.material-icon { font-size: 1.4rem; }
+.icon-btn {
+  background: rgba(255,255,255,.15); border: none; color: #fff;
+  font-size: 1.2rem; padding: 8px 10px; border-radius: 50%;
+  cursor: pointer; transition: background 0.2s ease;
+}
+.icon-btn:hover { background: rgba(255,255,255,.3); }
+
+.tabs {
+  display: flex; overflow-x: auto;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky; top: 56px; z-index: 99;
+  -webkit-overflow-scrolling: touch;
+}
+.tab-btn {
+  flex: 0 0 auto; background: none; border: none;
+  padding: 12px 16px; font-size: 0.9rem;
+  color: var(--color-text-secondary); cursor: pointer;
+  border-bottom: 3px solid transparent; white-space: nowrap;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.tab-btn:hover { color: var(--color-primary); }
+.tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+
+.container { max-width: 1000px; margin: 0 auto; padding: 16px; }
+.tab-content { display: none; animation: fadeIn 0.25s ease; }
+.tab-content.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h2 { margin-top: 4px; font-size: 1.3rem; font-weight: 600; }
+h3 { margin-top: 0; font-size: 1.05rem; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.card { background-color: var(--color-surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--color-border); }
+.card-title { font-size: 0.9rem; color: var(--color-text-secondary); margin-bottom: 8px; }
+.card-value { font-size: 1.8rem; font-weight: 700; }
+#cardSaldo.positivo .card-value { color: var(--color-danger); }
+#cardSaldo.positivo { background-color: var(--color-danger-bg); }
+#cardSaldo.cero .card-value { color: var(--color-success); }
+#cardSaldo.cero { background-color: var(--color-success-bg); }
+
+.info-box { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 14px 18px; font-size: 0.9rem; color: var(--color-text-secondary); }
+.info-box p { margin: 6px 0; }
+
+.form-card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 18px; margin-bottom: 18px; box-shadow: var(--shadow); }
+.form-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; }
+.form-row label { flex: 1 1 180px; display: flex; flex-direction: column; font-size: 0.85rem; color: var(--color-text-secondary); gap: 4px; }
+
+input, select, textarea {
+  font-family: inherit; font-size: 0.95rem; padding: 9px 10px;
+  border: 1px solid var(--color-border); border-radius: 8px;
+  background-color: var(--color-bg); color: var(--color-text);
+  outline: none; transition: border-color 0.2s ease;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--color-primary); }
+textarea { width: 100%; resize: vertical; font-family: monospace; }
+
+.form-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.btn { border: none; border-radius: 8px; padding: 10px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: filter 0.2s ease, transform 0.05s ease; }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background-color: var(--color-primary); color: #fff; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-secondary { background-color: var(--color-border); color: var(--color-text); }
+.btn-secondary:hover { filter: brightness(0.95); }
+.btn-danger { background-color: var(--color-danger); color: #fff; }
+.btn-edit { background-color: var(--color-primary); color: #fff; }
+.btn-sm { padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; margin-right: 4px; border: none; cursor: pointer; }
+
+.btn-toggle-filtros { margin-bottom: 10px; }
+.btn-toggle-filtros.activo { background-color: var(--color-primary); color: #fff; }
+.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 14px; background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 12px; }
+.filters label { display: flex; flex-direction: column; font-size: 0.85rem; color: var(--color-text-secondary); gap: 4px; flex: 1 1 150px; }
+
+.table-wrapper { overflow-x: auto; background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 600px; }
+thead { background-color: var(--color-primary); color: #fff; }
+th, td { padding: 10px 12px; text-align: left; white-space: nowrap; }
+tbody tr { border-bottom: 1px solid var(--color-border); }
+tbody tr:hover { background-color: rgba(21, 101, 192, 0.06); }
+.empty-msg { text-align: center; color: var(--color-text-secondary); padding: 16px; font-style: italic; }
+
+.chart-container { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 16px; margin-top: 18px; box-shadow: var(--shadow); }
+
+.help-text { font-size: 0.88rem; color: var(--color-text-secondary); margin-bottom: 10px; }
+
+.toast {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background-color: var(--color-primary-dark); color: #fff;
+  padding: 12px 20px; border-radius: 8px; font-size: 0.9rem;
+  box-shadow: var(--shadow); opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 999; max-width: 90%; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background-color: var(--color-danger); }
+.toast.success { background-color: var(--color-success); }
+
+/* MENÚ PRINCIPAL */
+.menu-principal {
+  position: relative; min-height: calc(100vh - 56px); padding: 16px;
+  overflow: hidden; display: flex; flex-direction: column; gap: 16px;
+}
+.watermark {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: clamp(3rem, 18vw, 9rem); font-weight: 900;
+  color: var(--color-primary); opacity: 0.06;
+  pointer-events: none; white-space: nowrap; letter-spacing: 0.05em;
+  z-index: 0; user-select: none;
+}
+.menu-resumen { display: flex; gap: 10px; z-index: 1; }
+.resumen-item { flex: 1; background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 12px 8px; text-align: center; box-shadow: var(--shadow); }
+.resumen-label { display: block; font-size: 0.75rem; color: var(--color-text-secondary); margin-bottom: 4px; }
+.resumen-valor { display: block; font-size: 1.1rem; font-weight: 700; color: var(--color-text); }
+#cardSaldo.positivo { background-color: var(--color-danger-bg); border-color: var(--color-danger); }
+#cardSaldo.positivo .resumen-valor { color: var(--color-danger); }
+#cardSaldo.cero { background-color: var(--color-success-bg); border-color: var(--color-success); }
+#cardSaldo.cero .resumen-valor { color: var(--color-success); }
+
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; z-index: 1; }
+.menu-btn {
+  background-color: var(--color-surface); border: 2px solid var(--color-border);
+  border-radius: 16px; padding: 24px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  cursor: pointer; box-shadow: var(--shadow);
+  transition: transform 0.12s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-btn:active { transform: scale(0.96); }
+.menu-btn:hover { border-color: var(--color-primary); box-shadow: 0 4px 14px rgba(122,31,43,.15); }
+.menu-icon { font-size: 2.2rem; line-height: 1; }
+.menu-label { font-size: 0.9rem; font-weight: 600; color: var(--color-text); text-align: center; line-height: 1.2; }
+
+.volver-btn { font-size: 1.3rem; font-weight: 700; padding: 6px 12px; margin-right: 4px; }
+#contenidoSecciones .tab-content { padding-bottom: 24px; }
+#contenidoSecciones h2 { margin-top: 8px; margin-bottom: 14px; color: var(--color-primary); border-bottom: 2px solid var(--color-primary); padding-bottom: 8px; }
+
+.banner-aviso { display: flex; align-items: center; gap: 12px; border-radius: var(--radius); padding: 14px 16px; font-size: 0.9rem; line-height: 1.4; z-index: 1; animation: aparecer 0.3s ease; }
+@keyframes aparecer { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.banner-alerta { background-color: #fff3cd; border: 2px solid #e6a817; color: #7a5800; }
+body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; color: #ffd966; }
+.banner-urgente { background-color: var(--color-danger-bg); border: 2px solid var(--color-danger); color: var(--color-danger); }
+.banner-icono { font-size: 1.8rem; flex-shrink: 0; }
+
+/* CÁMARA */
+.camara-card { background-color: var(--color-surface); border: 2px solid var(--color-primary); border-radius: var(--radius); padding: 16px; margin-bottom: 18px; box-shadow: var(--shadow); }
+.camara-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-weight: 600; font-size: 1rem; color: var(--color-primary); }
+#estadoEscaneo { background-color: var(--color-bg); border-radius: 8px; padding: 8px 12px; font-size: 0.88rem; min-height: 28px; }
+#fotoPrevia { box-shadow: var(--shadow); border: 1px solid var(--color-border); }
+
+@media (max-width: 600px) {
+  .app-header h1 { font-size: 1rem; }
+  .card-value { font-size: 1.4rem; }
+  .form-row label { flex: 1 1 100%; }
+  .filters label { flex: 1 1 100%; }
+}
+@media (min-width: 600px) {
+  .menu-grid { grid-template-columns: 1fr 1fr 1fr; }
+  .menu-btn { padding: 28px 16px; }
+}
+
+/* =========================================================
+   ESTILOS DIARIO DEL CONDUCTOR — encapsulados en #tc
+   ========================================================= */
+#tab-calendario { padding: 0 !important; border: none !important; }
+#tab-calendario h2 { display: none; }
+
+#tc {
+  --bg:#F0F2F5;--surface:#fff;--surface2:#F7F8FA;
+  --brand:#1B4F8A;--brand-light:#EAF0FA;
+  --accent:#E8A020;--danger:#D93B3B;--success:#2E7D56;
+  --night:#2C1E6B;
+  --text:#111827;--text2:#6B7280;--text3:#9CA3AF;
+  --border:#E5E7EB;
+  --r-s:8px;--r-m:14px;--r-l:20px;
+  --sh-s:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);
+  --sh-m:0 6px 24px rgba(0,0,0,.13);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
+  background:var(--bg);color:var(--text);
+  -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5;
+}
+/* Reset de input/select solo dentro de #tc */
+#tc input,#tc select,#tc textarea{font-family:inherit;}
+#tc button{font-family:inherit;cursor:pointer;border:none;background:none;}
+
+/* HEADER TC */
+#tc .tc-hdr{background:var(--brand);color:#fff;padding:14px 14px 12px;}
+#tc .tc-hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+#tc .tc-hdr-left{display:flex;align-items:center;gap:10px;}
+#tc .tc-bus{width:34px;height:34px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+#tc .tc-hdr-title{font-size:16px;font-weight:700;}
+#tc .tc-hdr-sub{font-size:11px;opacity:.65;margin-top:1px;}
+#tc .tc-mnav{display:flex;align-items:center;justify-content:center;gap:8px;}
+#tc .tc-mnav button{color:rgba(255,255,255,.75);font-size:22px;line-height:1;padding:0 6px;-webkit-tap-highlight-color:transparent;}
+#tc .tc-mnav button:active{color:#fff;}
+#tc .tc-mlbl{font-size:15px;font-weight:700;min-width:150px;text-align:center;}
+
+/* MENÚ DESPLEGABLE TC */
+#tc .tc-menu-wrap{position:relative;display:flex;justify-content:flex-end;padding:0;}
+#tc .tc-menu-btn{background:rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:7px 14px;font-size:14px;font-weight:700;letter-spacing:.2px;border:1.5px solid rgba(255,255,255,.3);-webkit-tap-highlight-color:transparent;line-height:1.3;}
+#tc .tc-menu-btn:active{background:rgba(255,255,255,.28);}
+#tc .tc-dropdown{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border-radius:var(--r-m);box-shadow:0 8px 32px rgba(0,0,0,.18);min-width:210px;z-index:200;overflow:hidden;animation:tcFadeIn .18s ease;}
+#tc .tc-dropdown.open{display:block;}
+#tc .tc-dd-item{display:flex;align-items:center;gap:10px;padding:13px 16px;font-size:14px;font-weight:600;color:var(--text);width:100%;text-align:left;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent;}
+#tc .tc-dd-item:last-child{border-bottom:none;}
+#tc .tc-dd-item:active{background:var(--bg);}
+#tc .tc-dd-item.danger{color:var(--danger);}
+
+/* LEYENDA TC */
+#tc .tc-ley-panel{margin:0 4px 8px;background:var(--surface);border-radius:var(--r-m);box-shadow:var(--sh-m);padding:16px 18px;animation:tcFadeIn .2s ease;}
+@keyframes tcFadeIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+#tc .tc-ley-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+#tc .tc-ley-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+#tc .tc-ley-item{display:flex;align-items:center;gap:8px;font-size:13.5px;}
+#tc .tc-ley-dot{width:22px;height:22px;border-radius:5px;flex-shrink:0;}
+#tc .tc-ley-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
+#tc .tc-ley-btn{font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);color:var(--text2);background:var(--surface2);}
+#tc .tc-ley-btn:active{opacity:.7;}
+#tc .tc-ley-btn-add{color:var(--brand);border-color:var(--brand);background:var(--brand-light);}
+#tc .tc-ley-btn-edit{color:#7A3010;border-color:#C05621;background:#FFF3EB;}
+#tc .tc-ley-btn-reset{color:var(--danger);border-color:var(--danger);background:#FEE2E2;}
+
+/* CALENDARIO TC */
+#tc .tc-cal{margin:0 6px 10px;}
+#tc .tc-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}
+#tc .tc-dow span{text-align:center;font-size:11px;font-weight:700;color:var(--text3);padding:4px 0;text-transform:uppercase;letter-spacing:.3px;}
+#tc .tc-dow span:nth-child(6),#tc .tc-dow span:nth-child(7){color:var(--danger);}
+#tc .tc-cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+
+/* Celda día TC */
+/* Fallback Safari: aspect-ratio no soportado antes de iOS 15 */
+#tc .tc-d{background:var(--surface);border-radius:var(--r-s);box-shadow:var(--sh-s);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;min-height:52px;transition:transform .1s;-webkit-tap-highlight-color:transparent;}
+@supports (aspect-ratio:1){#tc .tc-d{aspect-ratio:1;min-height:unset;}}
+#tc .tc-d:active{transform:scale(.91);}
+#tc .tc-d.empty{background:transparent;box-shadow:none;cursor:default;pointer-events:none;}
+#tc .tc-d.today .tc-dnum{font-size:16px;font-weight:900;}
+#tc .tc-d.weekend .tc-dnum{color:var(--danger);}
+#tc .tc-dnum{font-size:16px;font-weight:700;line-height:1;position:relative;z-index:1;}
+#tc .tc-dtag{font-size:8px;font-weight:700;letter-spacing:.4px;margin-top:3px;padding:2px 5px;border-radius:4px;position:relative;z-index:1;}
+#tc .tc-ddot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:3px;right:4px;z-index:2;}
+#tc .tc-d.has-cambio{box-shadow:0 0 0 2.5px #E65100,var(--sh-s)!important;overflow:visible;}
+#tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:var(--r-s);pointer-events:none;z-index:0;}
+
+/* OVERLAY TC */
+#tc .tc-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:flex-end;justify-content:center;}
+#tc .tc-ov.open{display:flex;}
+#tc .tc-sh{background:var(--surface);border-radius:var(--r-l) var(--r-l) 0 0;width:100%;max-width:520px;max-height:96vh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;animation:tcSlideUp .25s cubic-bezier(.32,1,.6,1);}
+@keyframes tcSlideUp{from{transform:translateY(100%);opacity:0;}to{transform:none;opacity:1;}}
+#tc .tc-sh-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 0;}
+#tc .tc-sh-hd{display:flex;align-items:flex-start;justify-content:space-between;padding:13px 16px 11px;border-bottom:1px solid var(--border);}
+#tc .tc-sh-title{font-size:18px;font-weight:700;}
+#tc .tc-sh-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+#tc .tc-xbtn{width:30px;height:30px;background:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text2);flex-shrink:0;margin-top:1px;}
+
+/* VISTA DÍA TC */
+#tc .tc-view-body{padding:0 0 20px;}
+#tc .tc-turno-banner{display:flex;align-items:center;gap:10px;padding:12px 16px;margin:12px 16px 0;border-radius:var(--r-m);}
+#tc .tc-turno-icon{font-size:22px;}
+#tc .tc-turno-label{font-size:16px;font-weight:700;color:#fff;}
+#tc .tc-turno-auto{font-size:11px;color:rgba(255,255,255,.75);margin-top:1px;}
+#tc .tc-ruta-wrap{background:#e8e8e8;display:flex;align-items:flex-start;justify-content:center;padding:10px;margin-top:12px;min-height:180px;}
+#tc .tc-ruta-img{width:100%;max-width:480px;border-radius:var(--r-s);box-shadow:var(--sh-m);display:block;}
+#tc .tc-ruta-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:150px;color:var(--text3);gap:8px;}
+#tc .tc-ruta-empty span{font-size:32px;}
+#tc .tc-ruta-empty p{font-size:13px;}
+#tc .tc-view-extra{padding:0 16px;}
+#tc .tc-cambio-badge{background:#FFF3E0;border-left:3px solid #E65100;border-radius:var(--r-s);padding:9px 12px;font-size:13px;color:#E65100;margin-top:10px;}
+#tc .tc-cambio-badge-link{background:#FFF3E0;border:2px solid #E65100;border-radius:var(--r-s);padding:10px 13px;font-size:13px;color:#7A3000;margin-top:10px;line-height:1.6;}
+#tc .tc-cambio-badge-link strong{color:#E65100;}
+#tc .tc-serv-card{background:var(--surface2);border-radius:var(--r-m);padding:10px 14px;margin-top:10px;}
+#tc .tc-serv-lbl{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;}
+#tc .tc-serv-val{font-size:16px;font-weight:700;margin-top:2px;}
+#tc .tc-inc-box{background:#FEF2F2;border-left:3px solid var(--danger);border-radius:var(--r-s);padding:9px 12px;font-size:13px;color:var(--danger);margin-top:10px;}
+#tc .tc-nota-box{background:#FEF4E2;border-left:3px solid var(--accent);border-radius:var(--r-s);padding:9px 12px;font-size:13px;color:#92400E;margin-top:10px;}
+#tc .tc-day-actions{display:flex;gap:8px;padding:14px 16px 0;}
+#tc .tc-btn{flex:1;padding:12px;border-radius:var(--r-m);font-size:14px;font-weight:700;transition:opacity .15s;text-align:center;}
+#tc .tc-btn:active{opacity:.7;}
+#tc .tc-btn-primary{background:var(--brand);color:#fff;}
+#tc .tc-btn-ghost{background:var(--surface2);color:var(--text2);}
+#tc .tc-btn-orange{background:#FFF3E0;color:#E65100;}
+#tc .tc-btn-danger{background:#FEE2E2;color:var(--danger);}
+
+/* FORMULARIOS TC */
+#tc .tc-form{padding:16px;}
+#tc .tc-fg{margin-bottom:12px;}
+#tc .tc-lbl{display:block;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+#tc .tc-inp,#tc .tc-sel,#tc .tc-ta{width:100%;padding:11px 13px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-m);font-size:15px;color:var(--text);outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none;}
+#tc .tc-inp:focus,#tc .tc-sel:focus,#tc .tc-ta:focus{border-color:var(--brand);background:#fff;}
+#tc .tc-ta{resize:none;line-height:1.5;}
+#tc .tc-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;}
+#tc .tc-frow{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+#tc .tc-save-btn{width:100%;padding:14px;background:var(--brand);color:#fff;border-radius:var(--r-m);font-size:16px;font-weight:700;margin-top:6px;margin-bottom:10px;}
+#tc .tc-save-btn:active{opacity:.8;}
+#tc .tc-cambio-info{background:#FFF8E1;border-left:3px solid var(--accent);border-radius:var(--r-s);padding:9px 12px;font-size:12px;color:#7A5000;margin-bottom:14px;line-height:1.5;}
+#tc .tc-pdf-row{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-m);padding:10px 12px;}
+#tc .tc-pdf-name{flex:1;font-size:13px;color:var(--text3);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#tc .tc-pdf-name.ok{color:var(--brand);font-style:normal;font-weight:600;}
+#tc .tc-mini-btn{font-size:12px;font-weight:700;color:var(--brand);padding:4px 8px;background:var(--brand-light);border-radius:6px;flex-shrink:0;}
+
+/* IMPORT PDF TC */
+#tc .tc-imp-panel{padding:16px;}
+#tc .tc-zone{border:2px dashed var(--border);border-radius:var(--r-l);padding:32px 16px;text-align:center;background:var(--surface2);cursor:pointer;transition:border-color .2s,background .2s;}
+#tc .tc-zone:hover{border-color:var(--brand);background:var(--brand-light);}
+#tc .tc-zone-icon{font-size:40px;margin-bottom:10px;}
+#tc .tc-zone-title{font-size:16px;font-weight:700;margin-bottom:4px;}
+#tc .tc-zone-sub{font-size:13px;color:var(--text2);line-height:1.5;}
+#tc .tc-tip{background:#EAF0FA;border-radius:var(--r-s);padding:10px 13px;font-size:12px;color:#1B4F8A;margin-top:12px;line-height:1.6;}
+#tc .tc-prog-wrap{margin-top:16px;}
+#tc .tc-prog-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;}
+#tc .tc-prog-bg{background:var(--border);border-radius:20px;height:8px;overflow:hidden;}
+#tc .tc-prog-bar{background:var(--brand);height:8px;border-radius:20px;transition:width .3s;}
+#tc .tc-pages-list{margin-top:12px;display:flex;flex-direction:column;gap:6px;}
+#tc .tc-page-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface2);border-radius:var(--r-s);}
+#tc .tc-page-thumb{width:36px;height:50px;object-fit:cover;border-radius:4px;box-shadow:var(--sh-s);flex-shrink:0;}
+#tc .tc-page-info{flex:1;min-width:0;}
+#tc .tc-page-num{font-size:12px;font-weight:700;color:var(--text2);}
+#tc .tc-page-date{font-size:13px;font-weight:700;margin-top:1px;}
+#tc .tc-page-st{font-size:11px;margin-top:2px;}
+#tc .tc-page-st.ok{color:var(--success);}
+#tc .tc-page-st.warn{color:var(--danger);font-weight:600;}
+#tc .tc-imp-actions{display:flex;gap:8px;margin-top:14px;}
+
+/* RESUMEN ANUAL TC */
+#tc .tc-cal-resumen{background:var(--surface2);border-radius:var(--r-m);padding:12px 14px;margin-top:12px;}
+#tc .tc-cal-resumen-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;}
+#tc .tc-cal-resumen-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+#tc .tc-cal-res-item{text-align:center;background:var(--surface);border-radius:var(--r-s);padding:6px 4px;}
+#tc .tc-cal-res-cod{font-size:13px;font-weight:800;}
+#tc .tc-cal-res-n{font-size:11px;color:var(--text2);}
+
+/* BORRAR DATOS TC */
+#tc .tc-aviso{background:#FEF3C7;border-left:3px solid var(--accent);border-radius:var(--r-s);padding:12px 13px;font-size:13px;color:#78350F;line-height:1.6;margin-bottom:4px;}
+#tc .tc-aviso-red{background:#FEE2E2;border-left-color:var(--danger);color:#7F1D1D;}
+#tc .tc-borrar-resumen{background:var(--surface2);border-radius:var(--r-s);padding:10px 13px;font-size:13px;color:var(--text2);margin-top:10px;line-height:1.7;}
+
+/* TOGGLE TC */
+#tc .tc-tog-row{display:flex;align-items:center;gap:12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-m);padding:12px 13px;font-size:14px;font-weight:500;margin-top:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+#tc .tc-tog{width:50px;height:28px;background:#D1D5DB;border-radius:14px;position:relative;flex-shrink:0;transition:background .2s;}
+#tc .tc-tog::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .2s;}
+#tc .tc-tog.on{background:var(--success);}
+#tc .tc-tog.on::after{transform:translateX(22px);}
+
+/* AJUSTES LEYENDA TC */
+#tc .tc-ajustes-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+#tc .tc-ajuste-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--r-m);border:1.5px solid var(--border);}
+#tc .tc-ajuste-swatch{width:28px;height:28px;border-radius:6px;flex-shrink:0;cursor:pointer;border:2px solid rgba(0,0,0,.12);}
+#tc .tc-ajuste-info{flex:1;min-width:0;}
+#tc .tc-ajuste-code{font-size:13px;font-weight:800;}
+#tc .tc-ajuste-name{font-size:12px;color:var(--text2);}
+#tc .tc-ajuste-edit-btn{font-size:11px;font-weight:700;color:var(--brand);padding:4px 8px;background:var(--brand-light);border-radius:6px;}
+#tc .tc-ajuste-del-btn{font-size:11px;font-weight:700;color:var(--danger);padding:4px 8px;background:#FEE2E2;border-radius:6px;margin-left:4px;}
+#tc .tc-color-preview{width:100%;height:44px;border-radius:var(--r-s);margin-top:8px;border:1.5px solid var(--border);}
+#tc .tc-section-sep{border:none;border-top:1px solid var(--border);margin:16px 0;}
+
+/* TOAST TC */
+#tc-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:#111;color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;font-weight:600;z-index:600;opacity:0;transition:all .28s;pointer-events:none;white-space:nowrap;box-shadow:var(--sh-m);}
+#tc-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#tc .tc-sh::-webkit-scrollbar{width:3px;}
+#tc .tc-sh::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* VISTA ANUAL TC */
+#tc .tc-view-toggle{display:flex;gap:6px;margin:0 6px 8px;}
+#tc .tc-vt-btn{flex:1;padding:8px 0;font-size:13px;font-weight:700;border-radius:var(--r-s);border:1.5px solid var(--border);color:var(--text2);background:var(--surface);transition:all .15s;-webkit-tap-highlight-color:transparent;}
+#tc .tc-vt-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
+#tc .tc-anual{padding:0 6px 12px;}
+#tc .tc-anual-mes{margin-bottom:14px;}
+#tc .tc-anual-mes-title{font-size:12px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:0 2px;margin-bottom:5px;}
+#tc .tc-anual-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:3px;}
+#tc .tc-anual-dow span{text-align:center;font-size:9px;font-weight:700;color:var(--text3);padding:2px 0;text-transform:uppercase;}
+#tc .tc-anual-dow span:nth-child(6),#tc .tc-anual-dow span:nth-child(7){color:var(--danger);}
+#tc .tc-anual-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+#tc .tc-ad{background:var(--surface);border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;min-height:34px;-webkit-tap-highlight-color:transparent;transition:transform .1s;}
+@supports (aspect-ratio:1){#tc .tc-ad{aspect-ratio:1;min-height:unset;}}
+#tc .tc-ad:active{transform:scale(.88);}
+#tc .tc-ad.empty{background:transparent;cursor:default;pointer-events:none;}
+#tc .tc-ad.weekend .tc-adnum{color:var(--danger);}
+#tc .tc-ad.today{box-shadow:0 0 0 2px var(--brand);}
+#tc .tc-ad.has-cambio{box-shadow:0 0 0 2px #E65100;}
+#tc .tc-adnum{font-size:11px;font-weight:700;line-height:1;position:relative;z-index:1;}
+#tc .tc-adtag{font-size:7px;font-weight:800;letter-spacing:.2px;padding:1px 3px;border-radius:3px;margin-top:2px;position:relative;z-index:1;color:#fff;}
+#tc .tc-addot{width:4px;height:4px;border-radius:50%;position:absolute;bottom:2px;right:3px;z-index:2;}
+  </style>
+</head>
+<body>
+
+  <!-- ===================== CABECERA ===================== -->
+  <header class="app-header">
+    <div class="header-left">
+      <button id="btnVolver" class="icon-btn volver-btn" style="display:none;" aria-label="Volver al menú">←</button>
+      <span class="material-icon" id="headerIcon">🚌</span>
+      <h1 id="headerTitle">Control Liquidación</h1>
+    </div>
+    <div class="header-right">
+      <button id="btnSettings" class="icon-btn" title="Ajustes" aria-label="Ajustes">⚙️</button>
+      <button id="btnTheme" class="icon-btn" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
+    </div>
+  </header>
+
+  <!-- Modal de ajustes/versión -->
+  <div id="modalSettings" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
+      <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
+      <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
+        <div><strong>Aplicación:</strong> Control de Recaudaciones + Diario del Conductor</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">2.02</span></div>
+        <div style="margin-top:8px;"><strong>Desarrollado para:</strong> TUSSAM</div>
+      </div>
+      <button id="btnCerrarSettings" class="btn btn-secondary" style="width:100%; margin-top:20px;">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- ===================== PANTALLA: MENÚ PRINCIPAL ===================== -->
+  <div id="menuPrincipal" class="menu-principal">
+    <div class="watermark">LIQUIDACIÓN</div>
+    <div id="bannerAviso" class="banner-aviso" style="display:none;"></div>
+    <div class="menu-resumen">
+      <div class="resumen-item">
+        <span class="resumen-label">Recaudado</span>
+        <span class="resumen-valor" id="totalRecaudado">0,00 €</span>
+      </div>
+      <div class="resumen-item resumen-saldo" id="cardSaldo">
+        <span class="resumen-label">Saldo</span>
+        <span class="resumen-valor" id="saldoPendiente">0,00 €</span>
+      </div>
+      <div class="resumen-item">
+        <span class="resumen-label">Liquidado</span>
+        <span class="resumen-valor" id="totalLiquidado">0,00 €</span>
+      </div>
+    </div>
+    <div class="menu-grid">
+      <button class="menu-btn" data-tab="recaudaciones">
+        <span class="menu-icon">💰</span><span class="menu-label">Recaudaciones</span>
+      </button>
+      <button class="menu-btn" data-tab="liquidaciones">
+        <span class="menu-icon">🧾</span><span class="menu-label">Liquidaciones</span>
+      </button>
+      <button class="menu-btn" data-tab="importar">
+        <span class="menu-icon">📥</span><span class="menu-label">Importar Correo</span>
+      </button>
+      <button class="menu-btn" data-tab="estadillo">
+        <span class="menu-icon">🪙</span><span class="menu-label">Estadillo</span>
+      </button>
+      <button class="menu-btn" data-tab="historial">
+        <span class="menu-icon">📜</span><span class="menu-label">Historial</span>
+      </button>
+      <button class="menu-btn" data-tab="backup">
+        <span class="menu-icon">💾</span><span class="menu-label">Copias de Seguridad</span>
+      </button>
+      <button class="menu-btn" data-tab="calendario">
+        <span class="menu-icon">📅</span><span class="menu-label">Diario del Conductor</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== PANTALLAS DE SECCIÓN ===================== -->
+  <main class="container" id="contenidoSecciones" style="display:none;">
+
+    <!-- RECAUDACIONES -->
+    <section id="tab-recaudaciones" class="tab-content">
+      <h2>💰 Recaudaciones</h2>
+      <form id="formRecaudacion" class="form-card">
+        <input type="hidden" id="recaudacionId" />
+        <div class="form-row">
+          <label>Fecha <input type="date" id="recFecha" required /></label>
+          <label>Servicio <input type="text" id="recServicio" placeholder="Ej: Línea 5" required /></label>
+        </div>
+        <div class="form-row">
+          <label>Primera Parte (€) <input type="number" id="recParte1" step="0.01" value="0" required /></label>
+          <label>Segunda Parte (€) <input type="number" id="recParte2" step="0.01" value="0" required /></label>
+          <label>Total (€) <input type="number" id="recTotal" step="0.01" value="0" readonly /></label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">💾 Guardar</button>
+          <button type="button" id="btnCancelarRec" class="btn btn-secondary">✖ Cancelar</button>
+        </div>
+      </form>
+      <button type="button" class="btn btn-secondary btn-toggle-filtros" data-target="filtrosRec">🔍 Filtros y orden</button>
+      <div class="filters" id="filtrosRec" style="display:none;">
+        <label>Buscar por fecha <input type="date" id="filtroRecFecha" /></label>
+        <label>Buscar por servicio <input type="text" id="filtroRecServicio" placeholder="Servicio..." /></label>
+        <label>Ordenar por fecha
+          <select id="ordenRecFecha">
+            <option value="desc">Más reciente primero</option>
+            <option value="asc">Más antiguo primero</option>
+          </select>
+        </label>
+        <button id="btnLimpiarFiltrosRec" class="btn btn-secondary">Limpiar filtros</button>
+      </div>
+      <div class="table-wrapper">
+        <table id="tablaRecaudaciones">
+          <thead><tr><th>Fecha</th><th>Servicio</th><th>1ª Parte</th><th>2ª Parte</th><th>Total</th><th>Acciones</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="empty-msg" id="recVacio" style="display:none;">No hay recaudaciones registradas.</p>
+    </section>
+
+    <!-- LIQUIDACIONES -->
+    <section id="tab-liquidaciones" class="tab-content">
+      <h2>🧾 Liquidaciones</h2>
+      <div class="camara-card">
+        <div class="camara-header">
+          <span>📷 Escanear ticket con la cámara</span>
+          <button type="button" id="btnToggleCamara" class="btn btn-primary">Abrir cámara</button>
+        </div>
+        <div id="areaCamara" style="display:none;">
+          <div id="bloqueApiKey" style="display:none;">
+            <p class="help-text">Introduce tu clave gratuita de OCR.space. Consíguela en <strong>ocr.space/ocrapi</strong>.</p>
+            <div class="form-row">
+              <label>Clave API OCR.space <input type="password" id="inputApiKeyGoogle" placeholder="K8579..." autocomplete="off" /></label>
+            </div>
+            <div class="form-actions">
+              <button type="button" id="btnGuardarApiKey" class="btn btn-primary">💾 Guardar clave</button>
+            </div>
+          </div>
+          <div id="bloqueEscaneo" style="display:none;">
+            <input type="file" id="inputFotoTicket" accept="image/*" capture="environment" style="display:none;" />
+            <div id="previsualizacion" style="display:none; margin:10px 0;">
+              <img id="fotoPrevia" src="" alt="Foto del ticket" style="max-width:100%; border-radius:8px;" />
+            </div>
+            <div class="form-actions" style="margin-top:10px;">
+              <button type="button" id="btnHacerFoto" class="btn btn-primary">📷 Hacer foto al ticket</button>
+              <button type="button" id="btnAnalizarFoto" class="btn btn-primary" style="display:none;">🔍 Extraer datos</button>
+              <button type="button" id="btnDescartarFoto" class="btn btn-secondary" style="display:none;">✖ Descartar foto</button>
+            </div>
+            <div class="form-actions" style="margin-top:6px;">
+              <button type="button" id="btnCambiarApiKey" class="btn btn-secondary" style="font-size:0.78rem; padding:5px 10px;">⚙️ Cambiar clave API</button>
+            </div>
+          </div>
+          <div id="estadoEscaneo" class="help-text" style="margin-top:8px; min-height:24px;"></div>
+        </div>
+      </div>
+      <form id="formLiquidacion" class="form-card">
+        <input type="hidden" id="liquidacionId" />
+        <div class="form-row">
+          <label>Fecha <input type="date" id="liqFecha" required /></label>
+          <label>Número de Recibo <input type="text" id="liqRecibo" placeholder="Ej: 123456" required /></label>
+        </div>
+        <div class="form-row">
+          <label>Máquina <input type="text" id="liqMaquina" placeholder="Ej: M-07" required /></label>
+          <label>Importe (€) <input type="number" id="liqImporte" step="0.01" value="0" required /></label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">💾 Guardar</button>
+          <button type="button" id="btnCancelarLiq" class="btn btn-secondary">✖ Cancelar</button>
+        </div>
+      </form>
+      <button type="button" class="btn btn-secondary btn-toggle-filtros" data-target="filtrosLiq">🔍 Filtros y orden</button>
+      <div class="filters" id="filtrosLiq" style="display:none;">
+        <label>Buscar (recibo, máquina o fecha) <input type="text" id="filtroLiq" placeholder="Buscar..." /></label>
+        <label>Ordenar por
+          <select id="ordenLiq">
+            <option value="fecha-desc">Fecha (más reciente)</option>
+            <option value="fecha-asc">Fecha (más antiguo)</option>
+            <option value="importe-desc">Importe (mayor a menor)</option>
+            <option value="importe-asc">Importe (menor a mayor)</option>
+          </select>
+        </label>
+        <button id="btnLimpiarFiltrosLiq" class="btn btn-secondary">Limpiar filtros</button>
+      </div>
+      <div class="table-wrapper">
+        <table id="tablaLiquidaciones">
+          <thead><tr><th>Fecha</th><th>Nº Recibo</th><th>Máquina</th><th>Importe</th><th>Acciones</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="empty-msg" id="liqVacio" style="display:none;">No hay liquidaciones registradas.</p>
+    </section>
+
+    <!-- IMPORTAR CORREO -->
+    <section id="tab-importar" class="tab-content">
+      <h2>📥 Importar Correo</h2>
+      <p class="help-text">Pega el texto del correo de recaudación. La app detectará fecha, servicio e importe.</p>
+      <textarea id="textoCorreo" rows="8" placeholder="Pega aquí el texto del correo..."></textarea>
+      <div class="form-actions">
+        <button id="btnAnalizarCorreo" class="btn btn-primary">🔍 Analizar Correo</button>
+        <button id="btnLimpiarCorreo" class="btn btn-secondary">🗑 Limpiar</button>
+      </div>
+      <div id="resultadoAnalisis" class="form-card" style="display:none;">
+        <h3>Datos detectados</h3>
+        <p class="help-text">Revisa y completa los campos no detectados.</p>
+        <div id="impInfoExistente" class="info-box" style="display:none; margin-bottom:10px;"></div>
+        <div class="form-row">
+          <label>Fecha <input type="date" id="impFecha" /></label>
+          <label>Servicio <input type="text" id="impServicio" placeholder="Ej: 4304" /></label>
+        </div>
+        <div class="form-row">
+          <label>Importe detectado (€) <input type="number" id="impImporte" step="0.01" /></label>
+        </div>
+        <div class="form-row">
+          <label style="flex:1 1 100%;">¿En qué parte guardar este importe?
+            <select id="impParte">
+              <option value="1">1ª Parte</option>
+              <option value="2">2ª Parte</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button id="btnGuardarImportado" class="btn btn-primary">✅ Guardar Recaudación</button>
+          <button id="btnCancelarImportado" class="btn btn-secondary">✖ Cancelar</button>
+        </div>
+      </div>
+      <div id="impPreguntaMas" class="form-card" style="display:none; text-align:center;">
+        <p style="font-size:1rem; font-weight:600; margin-bottom:14px;">¿Tienes más recaudaciones para importar?</p>
+        <div class="form-actions" style="justify-content:center;">
+          <button id="btnImpMas" class="btn btn-primary">📥 Sí, importar otra</button>
+          <button id="btnImpFin" class="btn btn-secondary">🏠 No, volver al inicio</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ESTADILLO -->
+    <section id="tab-estadillo" class="tab-content">
+      <h2>🪙 Estadillo de Monedas y Billetes</h2>
+      <p class="help-text">Indica la cantidad de cada moneda o billete.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="card-title">Total Estadillo</div>
+          <div class="card-value" id="totalEstadillo">0,00 €</div>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table id="tablaEstadillo">
+          <thead><tr><th>Valor</th><th>Cantidad</th><th>Subtotal</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="form-actions">
+        <button id="btnLimpiarEstadillo" class="btn btn-secondary">🗑 Vaciar Estadillo</button>
+      </div>
+    </section>
+
+    <!-- HISTORIAL -->
+    <section id="tab-historial" class="tab-content">
+      <h2>📜 Historial de Movimientos</h2>
+      <p class="help-text">Todas las recaudaciones y liquidaciones en orden cronológico.</p>
+      <button type="button" class="btn btn-secondary btn-toggle-filtros" data-target="filtrosHistorial">🔍 Filtros y orden</button>
+      <div class="filters" id="filtrosHistorial" style="display:none;">
+        <label>Tipo
+          <select id="filtroHistorialTipo">
+            <option value="todos">Todos</option>
+            <option value="recaudacion">Solo Recaudaciones</option>
+            <option value="liquidacion">Solo Liquidaciones</option>
+          </select>
+        </label>
+        <label>Buscar <input type="text" id="filtroHistorialTexto" placeholder="Servicio, recibo, máquina..." /></label>
+        <label>Ordenar por fecha
+          <select id="ordenHistorial">
+            <option value="desc">Más reciente primero</option>
+            <option value="asc">Más antiguo primero</option>
+          </select>
+        </label>
+      </div>
+      <div class="table-wrapper">
+        <table id="tablaHistorial">
+          <thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Importe</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="empty-msg" id="historialVacio" style="display:none;">No hay movimientos registrados todavía.</p>
+    </section>
+
+    <!-- COPIAS DE SEGURIDAD -->
+    <section id="tab-backup" class="tab-content">
+      <h2>💾 Copias de Seguridad</h2>
+      <div class="info-box">
+        <p>📅 <strong>Copia automática diaria:</strong> se descarga al abrir la app.</p>
+        <p id="estadoBackupAuto" style="margin-top:6px;"></p>
+      </div>
+      <div class="form-card">
+        <h3>Exportar datos</h3>
+        <p class="help-text">Descarga un archivo JSON con todos los datos.</p>
+        <button id="btnExportar" class="btn btn-primary">⬇️ Exportar datos (JSON)</button>
+      </div>
+      <div class="form-card">
+        <h3>Importar datos</h3>
+        <p class="help-text"><strong>Atención:</strong> sustituirá los datos actuales.</p>
+        <input type="file" id="inputImportarJSON" accept="application/json" />
+        <button id="btnImportar" class="btn btn-primary">⬆️ Importar datos</button>
+      </div>
+    </section>
+
+    <!-- ===================== PESTAÑA CALENDARIO (Diario del Conductor) ===================== -->
+    <section id="tab-calendario" class="tab-content">
+      <h2>📅 Diario del Conductor</h2>
+
+      <div id="tc">
+        <!-- HEADER DIARIO -->
+        <div class="tc-hdr">
+          <div class="tc-hdr-row">
+            <div class="tc-hdr-left">
+              <div class="tc-bus">&#128652;</div>
+              <div>
+                <div class="tc-hdr-title">Diario del Conductor</div>
+                <div class="tc-hdr-sub">Registro de jornadas</div>
+              </div>
+            </div>
+            <div class="tc-menu-wrap">
+              <button class="tc-menu-btn" onclick="tcToggleMenu()">&#9776; Acciones</button>
+              <div class="tc-dropdown" id="tc-dropdown">
+                <button class="tc-dd-item" onclick="tcMenuAction(tcOpenCal)">&#128197; Subir calendario</button>
+                <button class="tc-dd-item" onclick="tcMenuAction(tcOpenImport)">&#128196; Subir hojas de ruta</button>
+                <button class="tc-dd-item" onclick="tcMenuAction(tcOpenAsignar)">&#128295; Asignar turnos</button>
+                <button class="tc-dd-item" onclick="tcMenuAction(tcLeyenda)">&#127912; Tipos de turnos</button>
+                <button class="tc-dd-item danger" onclick="tcMenuAction(tcOpenBorrar)">&#128465;&#65039; Borrar datos</button>
+              </div>
+            </div>
+          </div>
+          <div class="tc-mnav">
+            <button onclick="tcMonth(-1)">&#8249;</button>
+            <span class="tc-mlbl" id="tc-mlbl"></span>
+            <button onclick="tcMonth(1)">&#8250;</button>
+          </div>
+        </div>
+
+        <!-- TOGGLE VISTA -->
+        <div class="tc-view-toggle">
+          <button class="tc-vt-btn active" id="tc-btn-mes" onclick="tcSetVista('mes')">📅 Mensual</button>
+          <button class="tc-vt-btn" id="tc-btn-anual" onclick="tcSetVista('anual')">🗓️ Anual</button>
+        </div>
+
+        <!-- LEYENDA FLOTANTE -->
+        <div id="tc-ley" class="tc-ley-panel" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="tc-ley-title" style="margin-bottom:0;">Tipos de turno</div>
+            <button onclick="document.getElementById('tc-ley').style.display='none'" class="tc-xbtn">&#10005;</button>
+          </div>
+          <div class="tc-ley-grid" id="tc-ley-grid"></div>
+          <div class="tc-ley-actions">
+            <button class="tc-ley-btn tc-ley-btn-add" onclick="tcOpenAddTurno()">&#10133; A&#241;adir turno</button>
+            <button class="tc-ley-btn tc-ley-btn-edit" onclick="tcOpenAjustes()">&#9998;&#65039; Editar colores</button>
+            <button class="tc-ley-btn tc-ley-btn-reset" onclick="tcResetColores()">&#8635; Restaurar</button>
+          </div>
+        </div>
+
+        <!-- CALENDARIO -->
+        <div class="tc-cal">
+          <div class="tc-dow"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+          <div class="tc-cgrid" id="tc-cgrid"></div>
+        </div>
+
+        <!-- VISTA ANUAL -->
+        <div class="tc-anual" id="tc-anual" style="display:none"></div>
+
+        <!-- OVERLAY -->
+        <div class="tc-ov" id="tc-ov" onclick="tcCloseOnBg(event)">
+        <div class="tc-sh">
+        <div class="tc-sh-handle"></div>
+
+        <!-- PANEL VISTA DIA -->
+        <div id="pnl-view" style="display:none">
+          <div class="tc-sh-hd">
+            <div><div class="tc-sh-title" id="vw-title">&#8212;</div><div class="tc-sh-sub" id="vw-date">&#8212;</div></div>
+            <button class="tc-xbtn" onclick="tcClose()">&#10005;</button>
+          </div>
+          <div class="tc-view-body">
+            <div id="vw-turno"></div>
+            <div class="tc-ruta-wrap" id="vw-ruta"><div class="tc-ruta-empty"><span>&#128203;</span><p>Sin hoja de ruta</p></div></div>
+            <div class="tc-view-extra" id="vw-extra"></div>
+            <div class="tc-day-actions">
+              <button class="tc-btn tc-btn-ghost" onclick="tcToEdit()">&#9999;&#65039; Editar</button>
+              <button class="tc-btn tc-btn-orange" onclick="tcToCambio()">&#128260; Cambio</button>
+              <button class="tc-btn tc-btn-danger" onclick="tcDeleteDay()">&#128465;&#65039; Borrar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL EDITAR -->
+        <div id="pnl-edit" style="display:none">
+          <div class="tc-sh-hd">
+            <div><div class="tc-sh-title" id="ed-title">Editar</div><div class="tc-sh-sub" id="ed-date">&#8212;</div></div>
+            <button class="tc-xbtn" onclick="tcShowPanel('pnl-view')">&#10005;</button>
+          </div>
+          <div class="tc-form">
+            <div class="tc-fg"><label class="tc-lbl">Tipo de turno</label><select class="tc-sel" id="ed-turno"></select></div>
+            <div class="tc-fg"><label class="tc-lbl">Servicio</label><input class="tc-inp" id="ed-servicio" type="text" placeholder="Ej. 301-A"></div>
+            <div class="tc-fg"><label class="tc-lbl">&#9888;&#65039; Incidencias</label><textarea class="tc-ta" id="ed-incidencia" rows="2" placeholder="Describe cualquier incidencia&#8230;"></textarea></div>
+            <div class="tc-fg"><label class="tc-lbl">&#128203; Notas</label><textarea class="tc-ta" id="ed-notas" rows="2" placeholder="Observaciones personales&#8230;"></textarea></div>
+            <button class="tc-save-btn" onclick="tcSaveEdit()">Guardar cambios</button>
+          </div>
+        </div>
+
+        <!-- PANEL CAMBIO -->
+        <div id="pnl-cambio" style="display:none">
+          <div class="tc-sh-hd">
+            <div><div class="tc-sh-title">&#128260; Registrar cambio</div><div class="tc-sh-sub" id="cambio-date">&#8212;</div></div>
+            <button class="tc-xbtn" onclick="tcShowPanel('pnl-view')">&#10005;</button>
+          </div>
+          <div class="tc-form">
+            <div class="tc-cambio-info">&#8505;&#65039; Registra el intercambio de d&#237;as. Ambos d&#237;as quedar&#225;n vinculados.</div>
+            <div class="tc-fg"><label class="tc-lbl">Nombre del compa&#241;ero</label><input class="tc-inp" id="cambio-companero" type="text" placeholder="Nombre del compa&#241;ero"></div>
+            <div class="tc-fg"><label class="tc-lbl">&#128197; D&#237;a destino</label><input class="tc-inp" id="cambio-fecha-destino" type="date"></div>
+            <div class="tc-fg"><label class="tc-lbl">Nuevo tipo de turno</label><select class="tc-sel" id="cambio-turno"></select></div>
+            <div class="tc-fg"><label class="tc-lbl">Nuevo servicio</label><input class="tc-inp" id="cambio-servicio" type="text" placeholder="Servicio del compa&#241;ero"></div>
+            <div class="tc-fg">
+              <label class="tc-lbl">Nueva hoja de ruta (PDF) <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label>
+              <div class="tc-pdf-row">
+                <div class="tc-pdf-name" id="cambio-pdf-name">Sin hoja seleccionada</div>
+                <button class="tc-mini-btn" onclick="document.getElementById('cambio-pdf-file').click()">Elegir PDF</button>
+                <input type="file" id="cambio-pdf-file" accept="application/pdf" onchange="tcCambioPdf(this)" style="display:none">
+              </div>
+            </div>
+            <div class="tc-fg"><label class="tc-lbl">&#128203; Notas del cambio</label><textarea class="tc-ta" id="cambio-notas" rows="2" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
+            <button class="tc-save-btn" style="background:#E65100;" onclick="tcSaveCambio()">Guardar cambio</button>
+          </div>
+        </div>
+
+        <!-- PANEL SUBIR HOJAS DE RUTA -->
+        <div id="pnl-import" style="display:none">
+          <div class="tc-sh-hd">
+            <div><div class="tc-sh-title">&#128196; Subir hojas de ruta</div><div class="tc-sh-sub">PDF una p&#225;gina por d&#237;a</div></div>
+            <button class="tc-xbtn" onclick="tcClose()">&#10005;</button>
+          </div>
+          <div class="tc-imp-panel">
+            <div id="imp-zone-wrap">
+              <div class="tc-zone" onclick="document.getElementById('imp-file').click()">
+                <div class="tc-zone-icon">&#128196;</div>
+                <div class="tc-zone-title">Seleccionar PDF de la semana</div>
+                <div class="tc-zone-sub">Una p&#225;gina por d&#237;a</div>
+                <input type="file" id="imp-file" accept="application/pdf" onchange="tcImpLoad(this)" style="display:none">
+              </div>
+              <div class="tc-tip">&#128161; La app detectar&#225; autom&#225;ticamente la fecha de cada hoja. El turno no se modifica.</div>
+              <button class="tc-btn tc-btn-primary" style="margin-top:12px;padding:13px;width:100%;" id="imp-go-btn" onclick="tcImpProcess()" disabled>Extraer p&#225;ginas</button>
+            </div>
+            <div id="imp-prog" style="display:none">
+              <div class="tc-prog-wrap">
+                <div class="tc-prog-title" id="imp-prog-txt">Extrayendo&#8230;</div>
+                <div class="tc-prog-bg"><div class="tc-prog-bar" id="imp-bar" style="width:0%"></div></div>
+                <div class="tc-pages-list" id="imp-pages"></div>
+              </div>
+            </div>
+            <div id="imp-actions" style="display:none" class="tc-imp-actions">
+              <button class="tc-btn tc-btn-danger" style="flex:0 0 auto;padding:13px 16px;" onclick="tcImpReset()">&#10005; Descartar</button>
+              <button class="tc-btn tc-btn-primary" onclick="tcImpConfirm()">&#10004; Guardar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL CALENDARIO ANUAL -->
+        <div id="pnl-cal" style="display:none">
+          <div class="tc-sh-hd">
+            <div><div class="tc-sh-title">&#128197; Calendario anual</div><div class="tc-sh-sub">Extrae turnos de todo el a&#241;o</div></div>
+            <button class="tc-xbtn" onclick="tcClose()">&#10005;</button>
+          </div>
+          <div class="tc-imp-panel">
+            <div id="cal-zone-wrap">
+              <div class="tc-zone" onclick="document.getElementById('cal-file').click()">
+                <div class="tc-zone-icon">&#128197;</div>
+                <div class="tc-zone-title">Seleccionar calendario anual (PDF)</div>
+                <div class="tc-zone-sub">P&#225;gina &#250;nica &middot; CM CT CN PM PT PN D V</div>
+                <input type="file" id="cal-file" accept="application/pdf" onchange="tcCalLoad(this)" style="display:none">
+              </div>
+              <div class="tc-tip">&#128161; La app leer&#225; el texto y detectar&#225; el turno para cada d&#237;a del a&#241;o.</div>
+            </div>
+            <div id="cal-prog" style="display:none">
+              <div class="tc-prog-wrap">
+                <div class="tc-prog-title" id="cal-prog-txt">Leyendo calendario&#8230;</div>
+                <div class="tc-prog-bg"><div class="tc-prog-bar" id="cal-bar" style="width:0%"></div></div>
+                <div id="cal-resumen-wrap"></div>
+              </div>
+            </div>
+            <div id="cal-actions" style="display:none" class="tc-imp-actions">
+              <button class="tc-btn tc-btn-danger" style="flex:0 0 auto;padding:13px 16px;" onclick="tcCalReset()">&#10005; Descartar</button>
+              <button class="tc-btn tc-btn-primary" onclick="tcCalConfirm()">&#10004; Guardar en calendario</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL ASIGNAR TURNOS -->
+        <div id="pnl-asignar" style="display:none">
+          <div class="tc-sh-hd">
+            <div><div class="tc-sh-title">&#128295; Asignar turnos</div><div class="tc-sh-sub">Asignación masiva por rango</div></div>
+            <button class="tc-xbtn" onclick="tcClose()">&#10005;</button>
+          </div>
+          <div class="tc-form">
+            <div id="asgn-p1">
+              <div class="tc-aviso" style="background:#EAF0FA;border-left-color:var(--brand);color:#1B4F8A;">&#128295; Asigna un turno a todos los días del rango. <strong>No se borrarán</strong> hojas, incidencias ni notas.</div>
+              <div class="tc-frow" style="margin-top:14px">
+                <div class="tc-fg"><label class="tc-lbl">Fecha inicio</label><input class="tc-inp" id="asgn-desde" type="date"></div>
+                <div class="tc-fg"><label class="tc-lbl">Fecha fin</label><input class="tc-inp" id="asgn-hasta" type="date"></div>
+              </div>
+              <div class="tc-fg" style="margin-top:4px"><label class="tc-lbl">Tipo de turno</label><select class="tc-sel" id="asgn-turno"></select></div>
+              <button class="tc-btn tc-btn-primary tc-save-btn" onclick="tcAsignarP2()">Continuar &#8594;</button>
+            </div>
+            <div id="asgn-p2" style="display:none">
+              <div class="tc-aviso" style="background:#EAF0FA;border-left-color:var(--brand);color:#1B4F8A;">
+                &#9432;&#65039; <strong>Confirmación</strong><br>
+                Turno <strong id="asgn-conf-turno"></strong> en <strong id="asgn-conf-n"></strong> días.<br>
+                Rango: <span id="asgn-conf-rango"></span>
+              </div>
+              <div class="tc-borrar-resumen" id="asgn-resumen" style="margin-top:10px;"></div>
+              <div class="tc-tog-row" onclick="tcAsignarTog()">
+                <div class="tc-tog" id="asgn-tog"></div>
+                <span>Confirmo la asignación masiva</span>
+              </div>
+              <div class="tc-frow" style="margin-top:12px">
+                <button class="tc-btn tc-btn-ghost" onclick="tcAsignarVolver()">&#8592; Atrás</button>
+                <button class="tc-btn tc-btn-primary" id="asgn-btn-ok" onclick="tcAsignarEjecutar()" disabled style="opacity:.4">&#10004; Asignar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL BORRAR DATOS -->
+        <div id="pnl-borrar" style="display:none">
+          <div class="tc-sh-hd">
+            <div><div class="tc-sh-title">&#128465;&#65039; Borrar datos</div><div class="tc-sh-sub">Eliminación por rango</div></div>
+            <button class="tc-xbtn" onclick="tcClose()">&#10005;</button>
+          </div>
+          <div class="tc-form">
+            <div id="bp1">
+              <div class="tc-aviso">&#9888;&#65039; Esta acción elimina <strong>todos los datos</strong> del rango. <strong>No se puede deshacer.</strong></div>
+              <div class="tc-frow" style="margin-top:14px">
+                <div class="tc-fg"><label class="tc-lbl">Fecha inicio</label><input class="tc-inp" id="b-desde" type="date"></div>
+                <div class="tc-fg"><label class="tc-lbl">Fecha fin</label><input class="tc-inp" id="b-hasta" type="date"></div>
+              </div>
+              <button class="tc-btn tc-btn-danger tc-save-btn" onclick="tcBp2()">Continuar &#8594;</button>
+            </div>
+            <div id="bp2" style="display:none">
+              <div class="tc-aviso tc-aviso-red">&#128680; <strong>Primera confirmación</strong><br>Vas a eliminar <strong id="b-n1"></strong> días.<br>Rango: <span id="b-rango1"></span></div>
+              <div class="tc-borrar-resumen" id="b-resumen1"></div>
+              <div class="tc-tog-row" onclick="tcBtog1()"><div class="tc-tog" id="b-tog1"></div><span>Confirmo que quiero borrar</span></div>
+              <div class="tc-frow" style="margin-top:12px">
+                <button class="tc-btn tc-btn-ghost" onclick="tcBvolver1()">&#8592; Atrás</button>
+                <button class="tc-btn tc-btn-danger" id="b-btn2" onclick="tcBp3()" disabled style="opacity:.4">Siguiente &#8594;</button>
+              </div>
+            </div>
+            <div id="bp3" style="display:none">
+              <div class="tc-aviso tc-aviso-red">&#128308; <strong>Segunda confirmación — ÚLTIMA ADVERTENCIA</strong><br>Esta acción es <strong>irreversible</strong>.</div>
+              <div class="tc-tog-row" onclick="tcBtog2()"><div class="tc-tog" id="b-tog2"></div><span>Soy consciente de que no tiene vuelta atrás</span></div>
+              <div class="tc-frow" style="margin-top:12px">
+                <button class="tc-btn tc-btn-ghost" onclick="tcBvolver2()">&#8592; Atrás</button>
+                <button class="tc-btn tc-btn-danger" id="b-btn3" onclick="tcBejecutar()" disabled style="opacity:.4">&#128465;&#65039; Borrar definitivamente</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL AJUSTES LEYENDA -->
+        <div id="pnl-ajustes" style="display:none">
+          <div class="tc-sh-hd">
+            <div><div class="tc-sh-title">&#9881;&#65039; Ajustes de leyenda</div><div class="tc-sh-sub">Colores y tipos de turno</div></div>
+            <button class="tc-xbtn" onclick="tcCloseAjustes()">&#10005;</button>
+          </div>
+          <div class="tc-form" id="ajustes-body"></div>
+        </div>
+
+        <!-- PANEL NUEVO/EDITAR TURNO -->
+        <div id="pnl-edit-turno" style="display:none">
+          <div class="tc-sh-hd">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <button onclick="tcShowPanel('pnl-ajustes')" style="background:none;border:none;cursor:pointer;font-size:20px;padding:0;line-height:1;color:var(--text);">&#8592;</button>
+              <div><div class="tc-sh-title" id="edit-turno-title">Nuevo tipo de turno</div><div class="tc-sh-sub" id="edit-turno-sub"></div></div>
+            </div>
+            <button class="tc-xbtn" onclick="tcShowPanel('pnl-ajustes')">&#10005;</button>
+          </div>
+          <div class="tc-form">
+            <div class="tc-fg"><label class="tc-lbl">Código (ej. EX)</label><input class="tc-inp" id="et-code" type="text" placeholder="2-3 letras" maxlength="4" style="text-transform:uppercase"></div>
+            <div class="tc-fg"><label class="tc-lbl">Nombre descriptivo</label><input class="tc-inp" id="et-name" type="text" placeholder="Ej. Extraordinario"></div>
+            <div class="tc-fg"><label class="tc-lbl">&#127912; Color de fondo</label><input class="tc-inp" id="et-bg" type="color" value="#C8DCFA" style="height:48px;padding:6px;"></div>
+            <div class="tc-fg"><label class="tc-lbl">Color del texto</label><input class="tc-inp" id="et-text" type="color" value="#0D3772" style="height:48px;padding:6px;"></div>
+            <div class="tc-fg"><label class="tc-lbl">Color de la etiqueta</label><input class="tc-inp" id="et-tag" type="color" value="#1B4F8A" style="height:48px;padding:6px;"></div>
+            <div class="tc-fg">
+              <label class="tc-lbl">&#128065; Vista previa</label>
+              <div id="et-preview" style="height:64px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1.5px solid var(--border);">
+                <span id="et-prev-num" style="font-size:18px;font-weight:800;">15</span>
+                <span id="et-prev-tag" style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;">EX</span>
+              </div>
+            </div>
+            <input type="hidden" id="et-editing-code">
+            <button class="tc-save-btn" onclick="tcSaveTurnoEdit()">Guardar</button>
+          </div>
+        </div>
+
+        </div><!-- /tc-sh -->
+        </div><!-- /tc-ov -->
+
+        <div class="tc-toast" id="tc-toast"></div>
+      </div><!-- /tc -->
+
+      <!-- Banner de avisos de liquidación bajo el calendario -->
+      <div id="bannerAvisoCalendario" class="banner-aviso" style="display:none; margin:10px 6px 4px;"></div>
+
+    </section>
+
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- ===================== JS CONTROL LIQUIDACIÓN ===================== -->
+  <script>
+var DB_NAME = "tussam_db";
+var DB_VERSION = 1;
+var STORE_RECAUDACIONES = "recaudaciones";
+var STORE_LIQUIDACIONES = "liquidaciones";
+var db = null;
+
+function abrirBaseDatos() {
+  return new Promise(function (resolve, reject) {
+    if (!window.indexedDB) { resolve(null); return; }
+    var request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = function (event) {
+      var database = event.target.result;
+      if (!database.objectStoreNames.contains(STORE_RECAUDACIONES)) {
+        var storeRec = database.createObjectStore(STORE_RECAUDACIONES, { keyPath: "id" });
+        storeRec.createIndex("fecha", "fecha", { unique: false });
+        storeRec.createIndex("servicio", "servicio", { unique: false });
+      }
+      if (!database.objectStoreNames.contains(STORE_LIQUIDACIONES)) {
+        var storeLiq = database.createObjectStore(STORE_LIQUIDACIONES, { keyPath: "id" });
+        storeLiq.createIndex("fecha", "fecha", { unique: false });
+        storeLiq.createIndex("recibo", "recibo", { unique: false });
+      }
+    };
+    request.onsuccess = function (event) { db = event.target.result; resolve(db); };
+    request.onerror = function () { resolve(null); };
+  });
+}
+
+function obtenerTodos(storeName) {
+  return new Promise(function (resolve) {
+    if (db) {
+      try {
+        var tx = db.transaction(storeName, "readonly");
+        var store = tx.objectStore(storeName);
+        var items = [];
+        var cursorRequest = store.openCursor();
+        cursorRequest.onsuccess = function (event) {
+          var cursor = event.target.result;
+          if (cursor) { items.push(cursor.value); cursor.continue(); }
+          else { if (items.length === 0) resolve(leerLocalStorage(storeName)); else resolve(items); }
+        };
+        cursorRequest.onerror = function () { resolve(leerLocalStorage(storeName)); };
+      } catch (err) { resolve(leerLocalStorage(storeName)); }
+    } else { resolve(leerLocalStorage(storeName)); }
+  });
+}
+
+function guardarRegistro(storeName, registro) {
+  guardarEnLocalStorage(storeName, registro);
+  return new Promise(function (resolve) {
+    if (db) {
+      try {
+        var tx = db.transaction(storeName, "readwrite");
+        var store = tx.objectStore(storeName);
+        store.put(registro);
+        tx.oncomplete = function () { resolve(true); };
+        tx.onerror = function () { resolve(true); };
+      } catch (err) { resolve(true); }
+    } else { resolve(true); }
+  });
+}
+
+function eliminarRegistro(storeName, id) {
+  eliminarDeLocalStorage(storeName, id);
+  return new Promise(function (resolve) {
+    if (db) {
+      try {
+        var tx = db.transaction(storeName, "readwrite");
+        var store = tx.objectStore(storeName);
+        store.delete(id);
+        tx.oncomplete = function () { resolve(true); };
+        tx.onerror = function () { resolve(true); };
+      } catch (err) { resolve(true); }
+    } else { resolve(true); }
+  });
+}
+
+function reemplazarTodos(storeName, registros) {
+  return new Promise(function (resolve) {
+    if (db) {
+      var tx = db.transaction(storeName, "readwrite");
+      var store = tx.objectStore(storeName);
+      store.clear();
+      registros.forEach(function (item) { store.put(item); });
+      tx.oncomplete = function () { resolve(true); };
+      tx.onerror = function () { resolve(false); };
+    } else {
+      localStorage.setItem("tussam_" + storeName, JSON.stringify(registros));
+      resolve(true);
+    }
+  });
+}
+
+function leerLocalStorage(storeName) {
+  var raw = localStorage.getItem("tussam_" + storeName);
+  return raw ? JSON.parse(raw) : [];
+}
+function guardarEnLocalStorage(storeName, registro) {
+  var items = leerLocalStorage(storeName);
+  var index = items.findIndex(function (i) { return i.id === registro.id; });
+  if (index >= 0) items[index] = registro; else items.push(registro);
+  localStorage.setItem("tussam_" + storeName, JSON.stringify(items));
+}
+function eliminarDeLocalStorage(storeName, id) {
+  var items = leerLocalStorage(storeName).filter(function (i) { return i.id !== id; });
+  localStorage.setItem("tussam_" + storeName, JSON.stringify(items));
+}
+
+function generarId() { return Date.now().toString(36) + "_" + Math.random().toString(36).substr(2, 9); }
+function formatearMoneda(numero) {
+  var valor = parseFloat(numero);
+  if (isNaN(valor)) valor = 0;
+  return valor.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+}
+function formatearFecha(fechaISO) {
+  if (!fechaISO) return "";
+  var partes = fechaISO.split("-");
+  if (partes.length !== 3) return fechaISO;
+  return partes[2] + "/" + partes[1] + "/" + partes[0];
+}
+function fechaHoyISO() {
+  var hoy = new Date();
+  var mes = (hoy.getMonth() + 1).toString().padStart(2, "0");
+  var dia = hoy.getDate().toString().padStart(2, "0");
+  return hoy.getFullYear() + "-" + mes + "-" + dia;
+}
+function mostrarToast(mensaje, tipo) {
+  var toast = document.getElementById("toast");
+  toast.textContent = mensaje;
+  toast.className = "toast show" + (tipo ? " " + tipo : "");
+  setTimeout(function () { toast.className = "toast"; }, 2500);
+}
+function escaparHTML(texto) {
+  if (texto === null || texto === undefined) return "";
+  return String(texto).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function confirmarAccion(boton, textoOriginal, accion) {
+  if (boton.getAttribute("data-confirmando") === "true") {
+    boton.removeAttribute("data-confirmando"); boton.textContent = textoOriginal; accion();
+  } else {
+    boton.setAttribute("data-confirmando", "true"); boton.textContent = "✅ ¿Seguro?";
+    setTimeout(function () {
+      if (boton.getAttribute("data-confirmando") === "true") {
+        boton.removeAttribute("data-confirmando"); boton.textContent = textoOriginal;
+      }
+    }, 3000);
+  }
+}
+
+var listaRecaudaciones = [];
+var listaLiquidaciones = [];
+var editandoRecaudacionId = null;
+var editandoLiquidacionId = null;
+
+function inicializarTabs() {
+  document.querySelectorAll(".menu-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () { abrirSeccion(btn.getAttribute("data-tab")); });
+  });
+  document.getElementById("btnVolver").addEventListener("click", function () { volverAlMenu(); });
+}
+
+function abrirSeccion(tabId) {
+  document.getElementById("menuPrincipal").style.display = "none";
+  document.getElementById("contenidoSecciones").style.display = "block";
+  document.querySelectorAll(".tab-content").forEach(function (s) { s.style.display = "none"; });
+  document.getElementById("tab-" + tabId).style.display = "block";
+  var titulos = {
+    recaudaciones: "💰 Recaudaciones", liquidaciones: "🧾 Liquidaciones",
+    importar: "📥 Importar Correo", estadillo: "🪙 Estadillo",
+    historial: "📜 Historial", backup: "💾 Copias de Seguridad",
+    calendario: "📅 Diario del Conductor"
+  };
+  document.getElementById("headerTitle").textContent = titulos[tabId] || "Control Liquidación";
+  document.getElementById("headerIcon").style.display = "none";
+  document.getElementById("btnVolver").style.display = "inline-flex";
+  if (tabId === "estadillo") renderizarEstadillo();
+  if (tabId === "historial") renderizarHistorial();
+  if (tabId === "calendario") cargarPDFjsSiNecesario();
+}
+
+function cargarPDFjsSiNecesario() {
+  if (typeof pdfjsLib !== "undefined") return; // ya cargado
+  /* IMPORTANTE — Safari iOS:
+     workerSrc debe apuntar a la URL real del worker ANTES de que pdf.min.js
+     lo use. Si se deja vacío ("") PDF.js intenta crear un Worker inline con
+     un Blob vacío que queda en estado roto y contamina el MessageChannel del
+     hilo principal, provocando DataCloneError en cualquier operación posterior
+     que Safari intente serializar (incluido el onload de Image en OCR). */
+  var PDFJS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/";
+  var s1 = document.createElement("script");
+  s1.src = PDFJS_CDN + "pdf.min.js";
+  s1.onload = function () {
+    /* Apuntar al worker real — PDF.js lo cargará cuando haga falta,
+       creando un Worker limpio sin contaminar el hilo principal */
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_CDN + "pdf.worker.min.js";
+  };
+  document.head.appendChild(s1);
+}
+
+function volverAlMenu() {
+  document.getElementById("contenidoSecciones").style.display = "none";
+  document.getElementById("menuPrincipal").style.display = "flex";
+  document.getElementById("headerTitle").textContent = "Control Liquidación";
+  document.getElementById("headerIcon").style.display = "inline";
+  document.getElementById("btnVolver").style.display = "none";
+  actualizarResumen();
+}
+
+function inicializarTema() {
+  var temaGuardado = localStorage.getItem("tussam_tema");
+  if (temaGuardado === "dark") { document.body.classList.add("dark"); document.getElementById("btnTheme").textContent = "☀️"; }
+  document.getElementById("btnTheme").addEventListener("click", function () {
+    document.body.classList.toggle("dark");
+    var esOscuro = document.body.classList.contains("dark");
+    localStorage.setItem("tussam_tema", esOscuro ? "dark" : "light");
+    document.getElementById("btnTheme").textContent = esOscuro ? "☀️" : "🌙";
+  });
+
+  var modalSettings = document.getElementById("modalSettings");
+  document.getElementById("btnSettings").addEventListener("click", function () {
+    modalSettings.style.display = "flex";
+  });
+  document.getElementById("btnCerrarSettings").addEventListener("click", function () {
+    modalSettings.style.display = "none";
+  });
+  modalSettings.addEventListener("click", function (e) {
+    if (e.target === modalSettings) modalSettings.style.display = "none";
+  });
+}
+
+function cargarRecaudaciones() {
+  return obtenerTodos(STORE_RECAUDACIONES).then(function (items) {
+    listaRecaudaciones = items; actualizarResumen(); renderizarRecaudaciones();
+  });
+}
+function renderizarRecaudaciones() {
+  var tbody = document.querySelector("#tablaRecaudaciones tbody");
+  var vacioMsg = document.getElementById("recVacio");
+  var filtroFecha = document.getElementById("filtroRecFecha").value;
+  var filtroServicio = document.getElementById("filtroRecServicio").value.trim().toLowerCase();
+  var orden = document.getElementById("ordenRecFecha").value;
+  var datos = listaRecaudaciones.filter(function (item) {
+    return (!filtroFecha || item.fecha === filtroFecha) &&
+           (!filtroServicio || item.servicio.toLowerCase().indexOf(filtroServicio) !== -1);
+  });
+  datos.sort(function (a, b) {
+    if (a.fecha === b.fecha) return 0;
+    return orden === "asc" ? (a.fecha < b.fecha ? -1 : 1) : (a.fecha > b.fecha ? -1 : 1);
+  });
+  tbody.innerHTML = "";
+  vacioMsg.style.display = datos.length === 0 ? "block" : "none";
+  datos.forEach(function (item) {
+    var tr = document.createElement("tr");
+    tr.innerHTML = "<td>" + formatearFecha(item.fecha) + "</td><td>" + escaparHTML(item.servicio) + "</td>" +
+      "<td>" + formatearMoneda(item.parte1) + "</td><td>" + formatearMoneda(item.parte2) + "</td>" +
+      "<td><strong>" + formatearMoneda(item.total) + "</strong></td>" +
+      "<td><button class='btn-sm btn-edit' data-action='editar-rec' data-id='" + item.id + "'>✏️</button>" +
+      "<button class='btn-sm btn-danger' data-action='eliminar-rec' data-id='" + item.id + "'>🗑️</button></td>";
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('[data-action="editar-rec"]').forEach(function (btn) {
+    btn.addEventListener("click", function () { editarRecaudacion(btn.getAttribute("data-id")); });
+  });
+  tbody.querySelectorAll('[data-action="eliminar-rec"]').forEach(function (btn) {
+    btn.addEventListener("click", function () { confirmarAccion(btn, "🗑️", function () { eliminarRecaudacion(btn.getAttribute("data-id")); }); });
+  });
+}
+function actualizarTotalRecaudacion() {
+  var p1 = parseFloat(document.getElementById("recParte1").value) || 0;
+  var p2 = parseFloat(document.getElementById("recParte2").value) || 0;
+  document.getElementById("recTotal").value = (p1 + p2).toFixed(2);
+}
+function editarRecaudacion(id) {
+  var item = listaRecaudaciones.find(function (i) { return i.id === id; });
+  if (!item) return;
+  editandoRecaudacionId = id;
+  document.getElementById("recaudacionId").value = id;
+  document.getElementById("recFecha").value = item.fecha;
+  document.getElementById("recServicio").value = item.servicio;
+  document.getElementById("recParte1").value = item.parte1;
+  document.getElementById("recParte2").value = item.parte2;
+  document.getElementById("recTotal").value = item.total;
+  document.getElementById("formRecaudacion").scrollIntoView({ behavior: "smooth" });
+}
+function eliminarRecaudacion(id) {
+  eliminarRegistro(STORE_RECAUDACIONES, id).then(function () {
+    listaRecaudaciones = listaRecaudaciones.filter(function (i) { return i.id !== id; });
+    actualizarResumen(); renderizarRecaudaciones(); mostrarToast("Recaudación eliminada", "success");
+  });
+}
+function resetearFormRecaudacion() {
+  editandoRecaudacionId = null;
+  document.getElementById("formRecaudacion").reset();
+  document.getElementById("recaudacionId").value = "";
+  document.getElementById("recFecha").value = fechaHoyISO();
+  document.getElementById("recTotal").value = "0.00";
+}
+function inicializarRecaudaciones() {
+  document.getElementById("recFecha").value = fechaHoyISO();
+  ["recParte1", "recParte2", "recTotal"].forEach(function (id) {
+    document.getElementById(id).addEventListener("focus", function () { if (this.value === "0" || this.value === "0.00") this.value = ""; });
+    document.getElementById(id).addEventListener("blur", function () { if (this.value === "") this.value = "0"; });
+  });
+  document.getElementById("recParte1").addEventListener("input", actualizarTotalRecaudacion);
+  document.getElementById("recParte2").addEventListener("input", actualizarTotalRecaudacion);
+  document.getElementById("formRecaudacion").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var fecha = document.getElementById("recFecha").value;
+    var servicio = document.getElementById("recServicio").value.trim();
+    var parte1 = parseFloat(document.getElementById("recParte1").value) || 0;
+    var parte2 = parseFloat(document.getElementById("recParte2").value) || 0;
+    if (!fecha || !servicio) { mostrarToast("Completa todos los campos obligatorios.", "error"); return; }
+    var registro = { id: editandoRecaudacionId || generarId(), fecha: fecha, servicio: servicio, parte1: parte1, parte2: parte2, total: parte1 + parte2 };
+    guardarRegistro(STORE_RECAUDACIONES, registro).then(function () {
+      if (editandoRecaudacionId) { listaRecaudaciones[listaRecaudaciones.findIndex(function (i) { return i.id === registro.id; })] = registro; mostrarToast("Recaudación actualizada", "success"); }
+      else { listaRecaudaciones.push(registro); mostrarToast("Recaudación añadida", "success"); }
+      resetearFormRecaudacion(); actualizarResumen(); renderizarRecaudaciones();
+    });
+  });
+  document.getElementById("btnCancelarRec").addEventListener("click", resetearFormRecaudacion);
+  document.getElementById("filtroRecFecha").addEventListener("change", renderizarRecaudaciones);
+  document.getElementById("filtroRecServicio").addEventListener("input", renderizarRecaudaciones);
+  document.getElementById("ordenRecFecha").addEventListener("change", renderizarRecaudaciones);
+  document.getElementById("btnLimpiarFiltrosRec").addEventListener("click", function () {
+    document.getElementById("filtroRecFecha").value = "";
+    document.getElementById("filtroRecServicio").value = "";
+    document.getElementById("ordenRecFecha").value = "desc";
+    renderizarRecaudaciones();
+  });
+  resetearFormRecaudacion();
+}
+
+function cargarLiquidaciones() {
+  return obtenerTodos(STORE_LIQUIDACIONES).then(function (items) {
+    listaLiquidaciones = items; actualizarResumen(); renderizarLiquidaciones();
+  });
+}
+function renderizarLiquidaciones() {
+  var tbody = document.querySelector("#tablaLiquidaciones tbody");
+  var vacioMsg = document.getElementById("liqVacio");
+  var filtroTexto = document.getElementById("filtroLiq").value.trim().toLowerCase();
+  var orden = document.getElementById("ordenLiq").value;
+  var datos = listaLiquidaciones.filter(function (item) {
+    if (!filtroTexto) return true;
+    return item.recibo.toLowerCase().indexOf(filtroTexto) !== -1 ||
+           item.maquina.toLowerCase().indexOf(filtroTexto) !== -1 ||
+           formatearFecha(item.fecha).indexOf(filtroTexto) !== -1;
+  });
+  datos.sort(function (a, b) {
+    switch (orden) {
+      case "fecha-asc": return a.fecha < b.fecha ? -1 : (a.fecha > b.fecha ? 1 : 0);
+      case "fecha-desc": return a.fecha > b.fecha ? -1 : (a.fecha < b.fecha ? 1 : 0);
+      case "importe-asc": return a.importe - b.importe;
+      case "importe-desc": return b.importe - a.importe;
+      default: return 0;
+    }
+  });
+  tbody.innerHTML = "";
+  vacioMsg.style.display = datos.length === 0 ? "block" : "none";
+  datos.forEach(function (item) {
+    var tr = document.createElement("tr");
+    tr.innerHTML = "<td>" + formatearFecha(item.fecha) + "</td><td>" + escaparHTML(item.recibo) + "</td>" +
+      "<td>" + escaparHTML(item.maquina) + "</td><td><strong>" + formatearMoneda(item.importe) + "</strong></td>" +
+      "<td><button class='btn-sm btn-edit' data-action='editar-liq' data-id='" + item.id + "'>✏️</button>" +
+      "<button class='btn-sm btn-danger' data-action='eliminar-liq' data-id='" + item.id + "'>🗑️</button></td>";
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('[data-action="editar-liq"]').forEach(function (btn) {
+    btn.addEventListener("click", function () { editarLiquidacion(btn.getAttribute("data-id")); });
+  });
+  tbody.querySelectorAll('[data-action="eliminar-liq"]').forEach(function (btn) {
+    btn.addEventListener("click", function () { confirmarAccion(btn, "🗑️", function () { eliminarLiquidacion(btn.getAttribute("data-id")); }); });
+  });
+}
+function editarLiquidacion(id) {
+  var item = listaLiquidaciones.find(function (i) { return i.id === id; });
+  if (!item) return;
+  editandoLiquidacionId = id;
+  document.getElementById("liquidacionId").value = id;
+  document.getElementById("liqFecha").value = item.fecha;
+  document.getElementById("liqRecibo").value = item.recibo;
+  document.getElementById("liqMaquina").value = item.maquina;
+  document.getElementById("liqImporte").value = item.importe;
+  document.getElementById("formLiquidacion").scrollIntoView({ behavior: "smooth" });
+}
+function eliminarLiquidacion(id) {
+  eliminarRegistro(STORE_LIQUIDACIONES, id).then(function () {
+    listaLiquidaciones = listaLiquidaciones.filter(function (i) { return i.id !== id; });
+    actualizarResumen(); renderizarLiquidaciones(); mostrarToast("Liquidación eliminada", "success");
+  });
+}
+function resetearFormLiquidacion() {
+  editandoLiquidacionId = null;
+  document.getElementById("formLiquidacion").reset();
+  document.getElementById("liquidacionId").value = "";
+  document.getElementById("liqFecha").value = fechaHoyISO();
+  document.getElementById("liqImporte").value = "0.00";
+}
+function inicializarLiquidaciones() {
+  document.getElementById("liqFecha").value = fechaHoyISO();
+  var inputImporte = document.getElementById("liqImporte");
+  inputImporte.addEventListener("focus", function () { if (this.value === "0" || this.value === "0.00") this.value = ""; });
+  inputImporte.addEventListener("blur", function () { if (this.value === "") this.value = "0"; });
+  document.getElementById("formLiquidacion").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var fecha = document.getElementById("liqFecha").value;
+    var recibo = document.getElementById("liqRecibo").value.trim();
+    var maquina = document.getElementById("liqMaquina").value.trim();
+    var importe = parseFloat(document.getElementById("liqImporte").value) || 0;
+    if (!fecha || !recibo || !maquina) { mostrarToast("Completa todos los campos obligatorios.", "error"); return; }
+    var registro = { id: editandoLiquidacionId || generarId(), fecha: fecha, recibo: recibo, maquina: maquina, importe: importe };
+    guardarRegistro(STORE_LIQUIDACIONES, registro).then(function () {
+      if (editandoLiquidacionId) { listaLiquidaciones[listaLiquidaciones.findIndex(function (i) { return i.id === registro.id; })] = registro; mostrarToast("Liquidación actualizada", "success"); }
+      else { listaLiquidaciones.push(registro); mostrarToast("Liquidación añadida", "success"); }
+      resetearFormLiquidacion(); actualizarResumen(); renderizarLiquidaciones();
+    });
+  });
+  document.getElementById("btnCancelarLiq").addEventListener("click", resetearFormLiquidacion);
+  document.getElementById("filtroLiq").addEventListener("input", renderizarLiquidaciones);
+  document.getElementById("ordenLiq").addEventListener("change", renderizarLiquidaciones);
+  document.getElementById("btnLimpiarFiltrosLiq").addEventListener("click", function () {
+    document.getElementById("filtroLiq").value = "";
+    document.getElementById("ordenLiq").value = "fecha-desc";
+    renderizarLiquidaciones();
+  });
+  resetearFormLiquidacion();
+}
+
+function actualizarResumen() {
+  var totalRecaudado = listaRecaudaciones.reduce(function (acc, item) { return acc + (parseFloat(item.total) || 0); }, 0);
+  var totalLiquidado = listaLiquidaciones.reduce(function (acc, item) { return acc + (parseFloat(item.importe) || 0); }, 0);
+  var saldoPendiente = totalRecaudado - totalLiquidado;
+  document.getElementById("totalRecaudado").textContent = formatearMoneda(totalRecaudado);
+  document.getElementById("totalLiquidado").textContent = formatearMoneda(totalLiquidado);
+  document.getElementById("saldoPendiente").textContent = formatearMoneda(saldoPendiente);
+  var cardSaldo = document.getElementById("cardSaldo");
+  cardSaldo.classList.remove("positivo", "cero");
+  if (Math.round(saldoPendiente * 100) / 100 > 0) cardSaldo.classList.add("positivo");
+  else cardSaldo.classList.add("cero");
+  comprobarAvisoLiquidacion();
+}
+
+function calcularJornadasSinLiquidarDesdeHistorial(recs, liqs) {
+  // Recorre el historial ordenado por fecha (y por id como desempate dentro del
+  // mismo día) y cuenta cuántas recaudaciones se han guardado desde la última
+  // liquidación. Al guardar una liquidación, el contador vuelve a 0. En bucle.
+  var movimientos = [];
+  (recs || []).forEach(function (r) { movimientos.push({ tipo: "recaudacion", id: r.id || "", fecha: r.fecha || "" }); });
+  (liqs || []).forEach(function (l) { movimientos.push({ tipo: "liquidacion", id: l.id || "", fecha: l.fecha || "" }); });
+  // Orden: primero por fecha del registro; si coinciden en la misma fecha,
+  // la liquidación se considera anterior a la recaudación de ese mismo día
+  // (se liquida y luego, si hay recaudación ese día, se cuenta desde 0).
+  // Si hay empate total (mismo día y mismo tipo), se usa el id como desempate.
+  movimientos.sort(function (a, b) {
+    if (a.fecha !== b.fecha) return a.fecha < b.fecha ? -1 : 1;
+    if (a.tipo !== b.tipo) return a.tipo === "liquidacion" ? -1 : 1;
+    return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+  });
+  var contador = 0;
+  movimientos.forEach(function (m) {
+    if (m.tipo === "recaudacion") contador++;
+    else contador = 0;
+  });
+  return contador;
+}
+
+function mostrarBannerAviso(pendientes) {
+  var html = "";
+  var clase = "banner-aviso";
+  var visible = false;
+  if (pendientes >= 5) {
+    visible = true; clase = "banner-aviso banner-urgente";
+    html = "<span class='banner-icono'>🚨</span><div><strong>¡LÍMITE SUPERADO!</strong><br>Llevas <strong>" + pendientes + " jornadas</strong> sin liquidar. Tienes que liquidar HOY, sin más demora.</div>";
+  } else if (pendientes === 4) {
+    visible = true; clase = "banner-aviso banner-alerta";
+    html = "<span class='banner-icono'>⚠️</span><div><strong>Aviso: 4 jornadas sin liquidar</strong><br>Esta es tu última jornada antes del límite.</div>";
+  }
+  ["bannerAviso", "bannerAvisoCalendario"].forEach(function (id) {
+    var banner = document.getElementById(id);
+    if (!banner) return;
+    banner.className = clase;
+    if (visible) {
+      banner.innerHTML = html;
+      banner.style.display = "flex";
+    } else {
+      banner.style.display = "none";
+      banner.innerHTML = "";
+    }
+  });
+}
+
+function comprobarAvisoLiquidacion() {
+  mostrarBannerAviso(calcularJornadasSinLiquidarDesdeHistorial(listaRecaudaciones, listaLiquidaciones));
+}
+
+function analizarTextoCorreo(texto) { return extraerCamposTUSSAM(texto); }
+function extraerCamposTUSSAM(texto) {
+  /* Formato ticket físico TUSSAM:
+       Recibo:   149726
+       Máquina:  201907010008
+       Fecha:    25/06/26
+       Total:    EUR 57,40
+     Mantiene compatibilidad con formato correo (Inicio servicio, TOT. A INGRESAR). */
+  var resultado = { fecha: "", recibo: "", maquina: "", servicio: "", importe: "" };
+  var t = texto.replace(/\r/g, "\n").replace(/[ \t]+/g, " ");
+
+  console.log("[OCR] Texto OCR completo:\n" + t);
+
+  // RECIBO: "Recibo: 149726" / "Recibo : 149726"
+  var mRecibo = t.match(/[Rr]ecibo\s*[:\s]\s*(\d{4,10})/);
+  if (mRecibo) resultado.recibo = mRecibo[1].trim();
+
+  // MÁQUINA: "Máquina: 201907010008" / "Maquina: ..."
+  var mMaquina = t.match(/[Mm][aá]quina\s*[:\s]\s*([\w\-]{4,20})/);
+  if (mMaquina) resultado.maquina = mMaquina[1].trim();
+
+  // FECHA ticket: "Fecha: 25/06/26" (DD/MM/YY o DD/MM/YYYY)
+  var mFecha = t.match(/[Ff]echa\s*[:\s]\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
+  if (mFecha) {
+    var d1=mFecha[1].padStart(2,"0"), m1=mFecha[2].padStart(2,"0");
+    var a1=mFecha[3].length===2?"20"+mFecha[3]:mFecha[3];
+    resultado.fecha = a1+"-"+m1+"-"+d1;
+  } else {
+    // FECHA correo: "Inicio servicio: DD/MM/YYYY"
+    var mFI = t.match(/[Ii]nicio\s+servicio\s*:\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
+    if (mFI) {
+      resultado.fecha=(mFI[3].length===2?"20"+mFI[3]:mFI[3])+"-"+mFI[2].padStart(2,"0")+"-"+mFI[1].padStart(2,"0");
+    } else {
+      var mFE = t.match(/[Ii]nforme\s+emitido\s*:\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
+      if (mFE) {
+        resultado.fecha=(mFE[3].length===2?"20"+mFE[3]:mFE[3])+"-"+mFE[2].padStart(2,"0")+"-"+mFE[1].padStart(2,"0");
+      }
+    }
+  }
+
+  // SERVICIO (solo correos): "Servicio: XXXX"
+  var mServ = t.match(/[Ss]ervicio\s*:\s*(\d+)/);
+  if (mServ) resultado.servicio = mServ[1];
+
+  // IMPORTE: buscar "Total:" evitando "Total monedas/billetes"
+  var lineas = t.split("\n");
+  for (var i = 0; i < lineas.length; i++) {
+    var lin = lineas[i].trim();
+    if (/[Tt]otal\s+(monedas|billetes)/i.test(lin)) continue;
+    // "Total:   EUR 57,40"  o  "Total: 57,40"
+    var mT = lin.match(/[Tt]otal\s*:\s*(?:EUR\s*)?(\d+[,.]\d{1,2})/);
+    if (mT) { resultado.importe = normalizarImporte(mT[1]); break; }
+  }
+  // Fallback correo: "TOT. A INGRESAR: X,XX"
+  if (!resultado.importe) {
+    var mTot = t.match(/TOT[.\s]*A\s*INGRESAR\s*:\s*([\d]+[,.]\d{1,2})\s*€?/i);
+    if (mTot) resultado.importe = normalizarImporte(mTot[1]);
+  }
+  // Fallback: último valor EUR del ticket
+  if (!resultado.importe) {
+    var todos=[], reE=/EUR\s*(\d+[,.]\d{1,2})/g, mE;
+    while ((mE=reE.exec(t))!==null) todos.push(mE[1]);
+    if (todos.length>0) resultado.importe = normalizarImporte(todos[todos.length-1]);
+  }
+
+  console.log("[OCR] Fecha encontrada:",   resultado.fecha   || "NO");
+  console.log("[OCR] Recibo encontrado:",  resultado.recibo  || "NO");
+  console.log("[OCR] Máquina encontrada:", resultado.maquina || "NO");
+  console.log("[OCR] Importe encontrado:", resultado.importe || "NO");
+
+  return resultado;
+}
+function normalizarImporte(texto) {
+  var limpio = texto.trim();
+  if (limpio.indexOf(",") !== -1) limpio = limpio.replace(/\./g, "").replace(",", ".");
+  var num = parseFloat(limpio);
+  return isNaN(num) ? "" : num.toFixed(2);
+}
+
+function inicializarImportarCorreo() {
+  var impRecExistente = null;
+  document.getElementById("btnAnalizarCorreo").addEventListener("click", function () {
+    var texto = document.getElementById("textoCorreo").value.trim();
+    if (!texto) { mostrarToast("Pega primero el texto del correo.", "error"); return; }
+    var datos = analizarTextoCorreo(texto);
+    var fecha = datos.fecha || fechaHoyISO();
+    var servicio = datos.servicio || "";
+    document.getElementById("impFecha").value = fecha;
+    document.getElementById("impServicio").value = servicio;
+    document.getElementById("impImporte").value = datos.importe || "";
+    document.getElementById("impParte").value = "1";
+    impRecExistente = null;
+    if (fecha && servicio) {
+      impRecExistente = listaRecaudaciones.find(function (r) { return r.fecha === fecha && r.servicio === servicio; }) || null;
+    }
+    var infoExistente = document.getElementById("impInfoExistente");
+    if (impRecExistente) {
+      var tieneP1 = impRecExistente.parte1 > 0, tieneP2 = impRecExistente.parte2 > 0;
+      infoExistente.style.display = "block";
+      if (tieneP1 && tieneP2) {
+        infoExistente.style.borderColor = "var(--color-danger)"; infoExistente.style.color = "var(--color-danger)";
+        infoExistente.innerHTML = "&#9888; Esta recaudaci&#243;n ya tiene las <strong>dos partes</strong> rellenas. Si guardas sobreescribir&#225;s la parte que elijas.";
+      } else {
+        infoExistente.style.borderColor = "var(--color-success)"; infoExistente.style.color = "var(--color-success)";
+        infoExistente.innerHTML = "&#10004; Recaudaci&#243;n encontrada. Se <strong>actualizar&#225;</strong> con esta parte.";
+        document.getElementById("impParte").value = tieneP1 ? "2" : "1";
+      }
+    } else { infoExistente.style.display = "none"; }
+    document.getElementById("impPreguntaMas").style.display = "none";
+    document.getElementById("resultadoAnalisis").style.display = "block";
+    var faltantes = [];
+    if (!datos.fecha) faltantes.push("fecha"); if (!datos.servicio) faltantes.push("servicio"); if (!datos.importe) faltantes.push("importe");
+    if (faltantes.length > 0) mostrarToast("No se detect\u00f3: " + faltantes.join(", "), "error");
+    else mostrarToast("Datos detectados. Revisa antes de guardar.", "success");
+    document.getElementById("resultadoAnalisis").scrollIntoView({ behavior: "smooth" });
+  });
+  document.getElementById("btnLimpiarCorreo").addEventListener("click", function () {
+    document.getElementById("textoCorreo").value = "";
+    document.getElementById("resultadoAnalisis").style.display = "none";
+    document.getElementById("impInfoExistente").style.display = "none";
+    document.getElementById("impPreguntaMas").style.display = "none";
+    impRecExistente = null;
+  });
+  document.getElementById("btnCancelarImportado").addEventListener("click", function () {
+    document.getElementById("resultadoAnalisis").style.display = "none";
+    document.getElementById("textoCorreo").value = "";
+    document.getElementById("impInfoExistente").style.display = "none";
+    document.getElementById("impPreguntaMas").style.display = "none";
+    impRecExistente = null;
+  });
+  document.getElementById("btnGuardarImportado").addEventListener("click", function () {
+    var fecha = document.getElementById("impFecha").value;
+    var servicio = document.getElementById("impServicio").value.trim();
+    var importe = parseFloat(document.getElementById("impImporte").value);
+    var parte = document.getElementById("impParte").value;
+    if (!fecha || !servicio || isNaN(importe)) { mostrarToast("Completa todos los campos.", "error"); return; }
+    var registro;
+    if (impRecExistente) {
+      registro = { id: impRecExistente.id, fecha: fecha, servicio: servicio,
+        parte1: parte === "1" ? importe : impRecExistente.parte1,
+        parte2: parte === "2" ? importe : impRecExistente.parte2 };
+      registro.total = registro.parte1 + registro.parte2;
+    } else {
+      var p1 = parte === "1" ? importe : 0, p2 = parte === "2" ? importe : 0;
+      registro = { id: generarId(), fecha: fecha, servicio: servicio, parte1: p1, parte2: p2, total: p1 + p2 };
+    }
+    guardarRegistro(STORE_RECAUDACIONES, registro).then(function () {
+      if (impRecExistente) {
+        var idx = listaRecaudaciones.findIndex(function (r) { return r.id === registro.id; });
+        if (idx !== -1) listaRecaudaciones[idx] = registro;
+      } else { listaRecaudaciones.push(registro); }
+      actualizarResumen(); renderizarRecaudaciones();
+      mostrarToast("Recaudaci\u00f3n " + (impRecExistente ? "actualizada" : "importada") + " correctamente", "success");
+      impRecExistente = null;
+      document.getElementById("textoCorreo").value = "";
+      document.getElementById("resultadoAnalisis").style.display = "none";
+      document.getElementById("impInfoExistente").style.display = "none";
+      document.getElementById("impPreguntaMas").style.display = "block";
+      document.getElementById("impPreguntaMas").scrollIntoView({ behavior: "smooth" });
+    });
+  });
+  document.getElementById("btnImpMas").addEventListener("click", function () {
+    document.getElementById("impPreguntaMas").style.display = "none";
+  });
+  document.getElementById("btnImpFin").addEventListener("click", function () {
+    document.getElementById("impPreguntaMas").style.display = "none";
+    volverAlMenu();
+  });
+}
+
+var VALORES_ESTADILLO = [0.10, 0.20, 0.50, 1, 2, 5, 10, 20, 50];
+var ESTADILLO_KEY = "tussam_estadillo";
+function etiquetaValorEstadillo(valor) { return valor < 1 ? (valor * 100).toFixed(0) + " céntimos" : valor + " €"; }
+function cargarCantidadesEstadillo() { try { return JSON.parse(localStorage.getItem(ESTADILLO_KEY) || "{}"); } catch (e) { return {}; } }
+function guardarCantidadesEstadillo(c) { localStorage.setItem(ESTADILLO_KEY, JSON.stringify(c)); }
+function renderizarEstadillo() {
+  var tbody = document.querySelector("#tablaEstadillo tbody");
+  var cantidades = cargarCantidadesEstadillo();
+  tbody.innerHTML = "";
+  VALORES_ESTADILLO.forEach(function (valor) {
+    var cantidad = cantidades[valor] || 0;
+    var tr = document.createElement("tr");
+    tr.innerHTML = "<td><strong>" + etiquetaValorEstadillo(valor) + "</strong></td>" +
+      '<td><input type="number" min="0" step="1" class="estadillo-input" data-valor="' + valor + '" value="' + (cantidad === 0 ? "" : cantidad) + '" placeholder="0" /></td>' +
+      '<td class="estadillo-subtotal" data-valor="' + valor + '">' + formatearMoneda(valor * cantidad) + "</td>";
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll(".estadillo-input").forEach(function (input) { input.addEventListener("input", actualizarEstadillo); });
+  actualizarTotalEstadillo();
+}
+function actualizarEstadillo() {
+  var cantidades = {}, tbody = document.querySelector("#tablaEstadillo tbody");
+  tbody.querySelectorAll(".estadillo-input").forEach(function (input) {
+    var valor = parseFloat(input.getAttribute("data-valor"));
+    var cantidad = parseInt(input.value, 10) || 0;
+    cantidades[valor] = cantidad;
+    var celda = tbody.querySelector('.estadillo-subtotal[data-valor="' + valor + '"]');
+    if (celda) celda.textContent = formatearMoneda(valor * cantidad);
+  });
+  guardarCantidadesEstadillo(cantidades); actualizarTotalEstadillo();
+}
+function actualizarTotalEstadillo() {
+  var cantidades = cargarCantidadesEstadillo(), total = 0;
+  VALORES_ESTADILLO.forEach(function (valor) { total += valor * (cantidades[valor] || 0); });
+  document.getElementById("totalEstadillo").textContent = formatearMoneda(total);
+}
+function inicializarEstadillo() {
+  renderizarEstadillo();
+  document.getElementById("btnLimpiarEstadillo").addEventListener("click", function () {
+    localStorage.removeItem(ESTADILLO_KEY); renderizarEstadillo(); mostrarToast("Estadillo vaciado", "success");
+  });
+}
+
+function obtenerHistorialCombinado() {
+  var movimientos = [];
+  listaRecaudaciones.forEach(function (item) { movimientos.push({ tipo: "recaudacion", fecha: item.fecha, detalle: item.servicio, importe: item.total }); });
+  listaLiquidaciones.forEach(function (item) { movimientos.push({ tipo: "liquidacion", fecha: item.fecha, detalle: "Recibo " + item.recibo + " · Máquina " + item.maquina, importe: item.importe }); });
+  return movimientos;
+}
+function renderizarHistorial() {
+  var tbody = document.querySelector("#tablaHistorial tbody");
+  var vacioMsg = document.getElementById("historialVacio");
+  var filtroTipo = document.getElementById("filtroHistorialTipo").value;
+  var filtroTexto = document.getElementById("filtroHistorialTexto").value.trim().toLowerCase();
+  var orden = document.getElementById("ordenHistorial").value;
+  var movimientos = obtenerHistorialCombinado();
+  if (filtroTipo !== "todos") movimientos = movimientos.filter(function (m) { return m.tipo === filtroTipo; });
+  if (filtroTexto) movimientos = movimientos.filter(function (m) { return m.detalle.toLowerCase().indexOf(filtroTexto) !== -1; });
+  movimientos.sort(function (a, b) {
+    if (a.fecha === b.fecha) return 0;
+    return orden === "asc" ? (a.fecha < b.fecha ? -1 : 1) : (a.fecha > b.fecha ? -1 : 1);
+  });
+  tbody.innerHTML = "";
+  vacioMsg.style.display = movimientos.length === 0 ? "block" : "none";
+  movimientos.forEach(function (m) {
+    var tr = document.createElement("tr");
+    tr.innerHTML = "<td>" + formatearFecha(m.fecha) + "</td><td>" + (m.tipo === "recaudacion" ? "💰 Recaudación" : "🧾 Liquidación") + "</td>" +
+      "<td>" + escaparHTML(m.detalle) + "</td><td><strong>" + formatearMoneda(m.importe) + "</strong></td>";
+    tbody.appendChild(tr);
+  });
+}
+function inicializarHistorial() {
+  document.getElementById("filtroHistorialTipo").addEventListener("change", renderizarHistorial);
+  document.getElementById("filtroHistorialTexto").addEventListener("input", renderizarHistorial);
+  document.getElementById("ordenHistorial").addEventListener("change", renderizarHistorial);
+}
+
+function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
+  var datos = { version: 1, fechaExportacion: new Date().toISOString(), recaudaciones: listaRecaudaciones, liquidaciones: listaLiquidaciones };
+  var blob = new Blob([JSON.stringify(datos, null, 2)], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var enlace = document.createElement("a"); enlace.href = url; enlace.download = nombreArchivo;
+  document.body.appendChild(enlace); enlace.click(); document.body.removeChild(enlace); URL.revokeObjectURL(url);
+  if (mostrarAviso) mostrarToast("Copia exportada correctamente", "success");
+}
+function exportarDatos() { exportarDatosArchivo("BackupTUSSAM_" + fechaHoyISO() + ".json", true); }
+function importarDatos(archivo) {
+  if (!archivo) { mostrarToast("Selecciona primero un archivo JSON.", "error"); return; }
+  var lector = new FileReader();
+  lector.onload = function (event) {
+    try {
+      var datos = JSON.parse(event.target.result);
+      if (!datos.recaudaciones || !datos.liquidaciones) { mostrarToast("Formato incorrecto.", "error"); return; }
+      // Aseguramos que cada registro tenga un id válido antes de guardar en IndexedDB
+      // (un registro sin id provoca un fallo silencioso al escribir en la base de datos).
+      datos.recaudaciones.forEach(function (r) { if (!r.id) r.id = generarId(); });
+      datos.liquidaciones.forEach(function (l) { if (!l.id) l.id = generarId(); });
+      Promise.all([reemplazarTodos(STORE_RECAUDACIONES, datos.recaudaciones), reemplazarTodos(STORE_LIQUIDACIONES, datos.liquidaciones)]).then(function () {
+        listaRecaudaciones = datos.recaudaciones; listaLiquidaciones = datos.liquidaciones;
+        actualizarResumen();
+        renderizarRecaudaciones(); renderizarLiquidaciones();
+        mostrarToast("Datos importados correctamente", "success");
+      }).catch(function (err) {
+        mostrarToast("Error al importar los datos en la base de datos.", "error");
+      });
+    } catch (err) { mostrarToast("Error al leer el archivo JSON.", "error"); }
+  };
+  lector.readAsText(archivo);
+}
+function inicializarBackup() {
+  document.getElementById("btnExportar").addEventListener("click", exportarDatos);
+  document.getElementById("btnImportar").addEventListener("click", function (e) {
+    var boton = e.currentTarget, archivo = document.getElementById("inputImportarJSON").files[0];
+    if (!archivo) { mostrarToast("Selecciona primero un archivo JSON.", "error"); return; }
+    confirmarAccion(boton, "⬆️ Importar datos", function () { importarDatos(archivo); document.getElementById("inputImportarJSON").value = ""; });
+  });
+  mostrarEstadoBackupAuto();
+}
+
+var BACKUP_AUTO_KEY = "tussam_ultimo_backup_auto";
+var BACKUP_AUTO_NOMBRE = "BackupTUSSAM_automatico.json";
+function comprobarBackupAutomatico() {
+  var hoy = fechaHoyISO(), ultimoBackup = localStorage.getItem(BACKUP_AUTO_KEY);
+  if (ultimoBackup === hoy) return;
+  exportarDatosArchivo(BACKUP_AUTO_NOMBRE, false);
+  localStorage.setItem(BACKUP_AUTO_KEY, hoy);
+  mostrarToast("Copia de seguridad automática descargada", "success");
+  mostrarEstadoBackupAuto();
+}
+function mostrarEstadoBackupAuto() {
+  var elemento = document.getElementById("estadoBackupAuto");
+  if (!elemento) return;
+  var ultimoBackup = localStorage.getItem(BACKUP_AUTO_KEY);
+  elemento.textContent = ultimoBackup ? "Última copia automática: " + formatearFecha(ultimoBackup) : "Todavía no se ha generado ninguna copia automática.";
+}
+
+function rellenarFormularioConOCR(datos) {
+  if (datos.fecha)   document.getElementById("liqFecha").value   = datos.fecha;
+  if (datos.recibo)  document.getElementById("liqRecibo").value  = datos.recibo;
+  if (datos.maquina) document.getElementById("liqMaquina").value = datos.maquina;
+  if (datos.importe) document.getElementById("liqImporte").value = datos.importe;
+  var faltantes = [];
+  if (!datos.fecha) faltantes.push("fecha"); if (!datos.recibo) faltantes.push("recibo");
+  if (!datos.maquina) faltantes.push("máquina"); if (!datos.importe) faltantes.push("importe");
+  if (faltantes.length === 0) mostrarToast("✅ Datos extraídos. Revisa y guarda.", "success");
+  else mostrarToast("⚠️ No se detectó: " + faltantes.join(", "), "error");
+  document.getElementById("formLiquidacion").scrollIntoView({ behavior: "smooth" });
+}
+
+var OCR_SPACE_KEY_STORAGE = "tussam_ocrspace_key";
+
+function obtenerApiKeyOCR() {
+  return localStorage.getItem(OCR_SPACE_KEY_STORAGE) || null;
+}
+
+function guardarApiKeyOCR(clave) {
+  localStorage.setItem(OCR_SPACE_KEY_STORAGE, clave.trim());
+}
+
+/**
+ * Comprime una imagen (dataURL) antes de enviarla a OCR.space.
+ * Reduce el tamaño máximo a 1500px y la calidad al 70%.
+ *
+ * SAFARI iOS — DataCloneError:
+ * El error ocurría porque PDF.js dejaba un Worker roto en el hilo principal
+ * (workerSrc=""). Safari intentaba serializar el Event del onload de Image
+ * a través del MessageChannel de ese worker roto → DataCloneError.
+ * Solución: cargarPDFjsSiNecesario ya apunta workerSrc al worker real,
+ * eliminando el worker roto. Aquí además se extraen solo primitivas del
+ * evento onload (no se pasa el Event a ningún sitio) para blindar Safari.
+ */
+function comprimirImagen(dataURL) {
+  /* Reducir a 1000px y calidad 0.6 para que el base64 final quede
+     bien por debajo del límite de 1MB de OCR.space (~700KB objetivo) */
+  console.log("[OCR] Paso 3 — Comprimiendo imagen");
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    img.onerror = function () {
+      reject(new Error("No se pudo cargar la imagen para comprimir."));
+    };
+    img.onload = function () {
+      var srcW = img.width;
+      var srcH = img.height;
+      img = null;
+      var maxAncho = 1000;
+      var escala = Math.min(1, maxAncho / srcW);
+      var canvas = document.createElement("canvas");
+      canvas.width  = Math.round(srcW * escala);
+      canvas.height = Math.round(srcH * escala);
+      var ctx = canvas.getContext("2d");
+      var img2 = new Image();
+      img2.onload = function () {
+        ctx.drawImage(img2, 0, 0, canvas.width, canvas.height);
+        img2 = null;
+        /* Calidad 0.5: suficiente para OCR de texto impreso */
+        var resultado = canvas.toDataURL("image/jpeg", 0.5);
+        var kb = Math.round(resultado.length * 0.75 / 1024);
+        console.log("[OCR] Paso 3 — Imagen comprimida (" + canvas.width + "x" + canvas.height + ", ~" + kb + "KB)");
+        resolve(resultado);
+      };
+      img2.onerror = function () { reject(new Error("Error al redibujar imagen.")); };
+      img2.src = dataURL;
+    };
+    img.src = dataURL;
+  });
+}
+
+/**
+ * Envía la imagen a OCR.space mediante XMLHttpRequest.
+ * XHR no usa postMessage internamente en Safari iOS, evitando el DataCloneError
+ * que afecta a fetch() con payloads grandes. Se envuelve en Promise para
+ * mantener la cadena .then() existente sin cambiar el resto del código.
+ */
+function leerTicketConOCRSpace(imagenBase64, apiKey) {
+  var URL_OCR = "https://api.ocr.space/parse/image";
+
+  /* OCR.space requiere el dataURL completo incluyendo el prefijo MIME */
+  var base64final = imagenBase64.indexOf("data:") === 0
+    ? imagenBase64
+    : "data:image/jpeg;base64," + imagenBase64;
+
+  console.log("[OCR] Paso 4 — Preparando FormData");
+  console.log("[OCR] URL:", URL_OCR);
+  console.log("[OCR] Método: POST");
+  console.log("[OCR] API Key:", apiKey ? "presente (" + apiKey.length + " chars)" : "AUSENTE");
+  console.log("[OCR] Tamaño imagen (chars base64):", base64final.length);
+  console.log("[OCR] Tamaño imagen (~KB):", Math.round(base64final.length * 0.75 / 1024));
+
+  /* Sin Content-Type manual: el navegador genera multipart/form-data con boundary */
+  var fd = new FormData();
+  fd.append("apikey",            apiKey);
+  fd.append("language",          "spa");
+  fd.append("isOverlayRequired", "false");
+  fd.append("detectOrientation", "true");
+  fd.append("scale",             "true");
+  fd.append("OCREngine",         "2");
+  fd.append("base64Image",       base64final);
+  console.log("[OCR] FormData creada con 7 campos");
+  console.log("[OCR] Paso 5 — Iniciando fetch");
+
+  return fetch(URL_OCR, { method: "POST", body: fd })
+    .then(function (respuesta) {
+      console.log("[OCR] Paso 6 — Código HTTP:", respuesta.status);
+      console.log("[OCR] Status Text:", respuesta.statusText);
+      /* Leer siempre como texto primero para poder loguear la respuesta cruda */
+      return respuesta.text().then(function (raw) {
+        console.log("[OCR] Respuesta RAW completa:", raw);
+        /* Errores HTTP específicos */
+        if (respuesta.status === 401) throw new Error("API Key inválida o no autorizada (HTTP 401).");
+        if (respuesta.status === 403) throw new Error("Acceso denegado. Revisa la API Key (HTTP 403).");
+        if (respuesta.status === 404) throw new Error("Endpoint no encontrado. URL incorrecta (HTTP 404).");
+        if (respuesta.status === 429) throw new Error("Límite de peticiones alcanzado. Espera un momento (HTTP 429).");
+        if (respuesta.status >= 500)  throw new Error("Error interno del servidor OCR.space (HTTP " + respuesta.status + ").");
+        if (!respuesta.ok)            throw new Error("Error HTTP " + respuesta.status + ": " + raw.slice(0, 300));
+        /* Parsear JSON */
+        var datos;
+        try {
+          datos = JSON.parse(raw);
+        } catch (e) {
+          console.error("[OCR] Fallo al parsear JSON:", e.message);
+          throw new Error("La respuesta no es JSON válido: " + raw.slice(0, 200));
+        }
+        console.log("[OCR] Paso 7 — JSON parseado:", JSON.stringify(datos).slice(0, 300));
+        if (datos.IsErroredOnProcessing) {
+          console.error("[OCR] OCR.space reportó error:", datos.ErrorMessage);
+          throw new Error("OCR.space no pudo procesar la imagen: " + JSON.stringify(datos.ErrorMessage));
+        }
+        console.log("[OCR] ParsedResults:", JSON.stringify(datos.ParsedResults).slice(0, 200));
+        var texto = datos.ParsedResults &&
+                    datos.ParsedResults[0] &&
+                    datos.ParsedResults[0].ParsedText;
+        console.log("[OCR] Paso 8 — ParsedText:", texto ? texto.slice(0, 100) + "..." : "VACÍO");
+        if (!texto || texto.trim() === "") {
+          throw new Error("No se detectó texto. Intenta con mejor iluminación o más contraste.");
+        }
+        return texto;
+      });
+    })
+    .catch(function (err) {
+      /* Distinguir errores de red de errores de aplicación ya lanzados arriba */
+      if (err.message && (
+        err.message.indexOf("HTTP") !== -1 ||
+        err.message.indexOf("JSON") !== -1 ||
+        err.message.indexOf("OCR.space") !== -1 ||
+        err.message.indexOf("texto") !== -1
+      )) {
+        /* Error ya clasificado — relanzar tal cual */
+        throw err;
+      }
+      /* Errores de red sin respuesta del servidor */
+      console.error("[OCR] Error de red (sin respuesta):", err.name, err.message);
+      var msg = "Error de conexión con OCR.space.";
+      if (!navigator.onLine)                        msg = "Sin conexión a internet.";
+      else if (err.message.indexOf("DNS") !== -1)   msg = "Error DNS: no se resolvió api.ocr.space.";
+      else if (err.message.indexOf("CORS") !== -1)  msg = "Error CORS: petición bloqueada por el navegador.";
+      else if (err.message.indexOf("timeout") !== -1 || err.message.indexOf("Timeout") !== -1)
+                                                     msg = "Timeout: OCR.space tardó demasiado en responder.";
+      else if (err.message.indexOf("Load failed") !== -1 || err.message.indexOf("Failed to fetch") !== -1)
+                                                     msg = "Safari bloqueó la petición. Comprueba que la app tiene acceso a internet.";
+      throw new Error(msg);
+    });
+}
+
+/**
+ * Inicializa el módulo de cámara y OCR en la pestaña de liquidaciones.
+ */
+function inicializarCamaraOCR() {
+  var btnToggle      = document.getElementById("btnToggleCamara");
+  var areaCamara     = document.getElementById("areaCamara");
+  var bloqueApiKey   = document.getElementById("bloqueApiKey");
+  var bloqueEscaneo  = document.getElementById("bloqueEscaneo");
+  var inputApiKey    = document.getElementById("inputApiKeyGoogle");
+  var btnGuardarKey  = document.getElementById("btnGuardarApiKey");
+  var btnCambiarKey  = document.getElementById("btnCambiarApiKey");
+  var inputFoto      = document.getElementById("inputFotoTicket");
+  var btnHacerFoto   = document.getElementById("btnHacerFoto");
+  var btnAnalizar    = document.getElementById("btnAnalizarFoto");
+  var btnDescartar   = document.getElementById("btnDescartarFoto");
+  var previsualizacion = document.getElementById("previsualizacion");
+  var fotoPrevia     = document.getElementById("fotoPrevia");
+  var estado         = document.getElementById("estadoEscaneo");
+
+  var imagenBase64 = null;
+
+  function mostrarPanelSegunClave() {
+    var clave = obtenerApiKeyOCR();
+    if (clave) {
+      bloqueApiKey.style.display = "none";
+      bloqueEscaneo.style.display = "block";
+      estado.textContent = "✅ Clave lista. ¡Puedes escanear tickets!";
+    } else {
+      bloqueApiKey.style.display = "block";
+      bloqueEscaneo.style.display = "none";
+      estado.textContent = "";
+    }
+  }
+
+  btnToggle.addEventListener("click", function () {
+    var visible = areaCamara.style.display !== "none";
+    if (visible) {
+      areaCamara.style.display = "none";
+      btnToggle.textContent = "Abrir cámara";
+      resetearCamara();
+    } else {
+      areaCamara.style.display = "block";
+      btnToggle.textContent = "Cerrar cámara";
+      mostrarPanelSegunClave();
+    }
+  });
+
+  btnGuardarKey.addEventListener("click", function () {
+    var clave = inputApiKey.value.trim();
+    if (!clave) {
+      mostrarToast("Introduce la clave que recibiste por email.", "error");
+      return;
+    }
+    guardarApiKeyOCR(clave);
+    inputApiKey.value = "";
+    mostrarToast("Clave guardada correctamente", "success");
+    mostrarPanelSegunClave();
+  });
+
+  btnCambiarKey.addEventListener("click", function () {
+    localStorage.removeItem(OCR_SPACE_KEY_STORAGE);
+    resetearCamara();
+    mostrarPanelSegunClave();
+  });
+
+  btnHacerFoto.addEventListener("click", function () {
+    inputFoto.click();
+  });
+
+  inputFoto.addEventListener("change", function () {
+    var archivo = inputFoto.files[0];
+    if (!archivo) return;
+
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      imagenBase64 = e.target.result;
+      fotoPrevia.src = imagenBase64;
+      previsualizacion.style.display = "block";
+      btnAnalizar.style.display = "inline-block";
+      btnDescartar.style.display = "inline-block";
+      btnHacerFoto.style.display = "none";
+      estado.textContent = "📷 Foto lista. Pulsa 'Extraer datos'.";
+    };
+    reader.readAsDataURL(archivo);
+    inputFoto.value = "";
+  });
+
+  btnDescartar.addEventListener("click", resetearCamara);
+
+  btnAnalizar.addEventListener("click", function () {
+    console.log("[OCR] Paso 1 — Botón Extraer datos pulsado");
+    if (!imagenBase64) { console.warn("[OCR] Sin imagen base64"); return; }
+
+    var apiKey = obtenerApiKeyOCR();
+    if (!apiKey) {
+      mostrarToast("No hay clave API guardada.", "error");
+      mostrarPanelSegunClave();
+      return;
+    }
+
+    btnAnalizar.disabled = true;
+    btnDescartar.disabled = true;
+    estado.textContent = "⏳ Preparando imagen...";
+    console.log("[OCR] Paso 2 — Imagen seleccionada (base64 length: " + imagenBase64.length + ")");
+
+    comprimirImagen(imagenBase64)
+      .then(function (imagenComprimida) {
+        console.log("[OCR] Paso 3 — Imagen comprimida OK, enviando a OCR.space");
+        estado.textContent = "⏳ Leyendo el ticket...";
+        return leerTicketConOCRSpace(imagenComprimida, apiKey);
+      })
+      .then(function (textoOCR) {
+        console.log("[OCR] Paso 9 — Texto OCR recibido: " + textoOCR);
+        estado.textContent = "✅ Texto leído. Detectando campos...";
+        var datos = extraerCamposTUSSAM(textoOCR);
+        console.log("[OCR] Paso 10 — Datos detectados:", JSON.stringify(datos));
+        rellenarFormularioConOCR(datos);
+        console.log("[OCR] Paso 11 — Formulario rellenado");
+        areaCamara.style.display = "none";
+        btnToggle.textContent = "Abrir cámara";
+        resetearCamara();
+      })
+      .catch(function (err) {
+        console.error("[OCR] ERROR en línea del flujo OCR:", err);
+        console.error("[OCR] Nombre:", err.name, "| Mensaje:", err.message);
+        if (err.stack) console.error("[OCR] Stack:", err.stack);
+        estado.textContent = "❌ " + (err.message || "Error al leer el ticket.");
+        btnAnalizar.disabled = false;
+        btnDescartar.disabled = false;
+      });
+  });
+
+  function resetearCamara() {
+    imagenBase64 = null;
+    fotoPrevia.src = "";
+    previsualizacion.style.display = "none";
+    btnAnalizar.style.display = "none";
+    btnDescartar.style.display = "none";
+    btnHacerFoto.style.display = "inline-block";
+    btnAnalizar.disabled = false;
+    btnDescartar.disabled = false;
+    estado.textContent = "";
+    inputFoto.value = "";
+  }
+}
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  inicializarTema(); inicializarTabs();
+  document.querySelectorAll(".btn-toggle-filtros").forEach(function (boton) {
+    boton.addEventListener("click", function () {
+      var panel = document.getElementById(boton.getAttribute("data-target"));
+      if (!panel) return;
+      var visible = panel.style.display !== "none";
+      panel.style.display = visible ? "none" : "flex";
+      boton.classList.toggle("activo", !visible);
+    });
+  });
+  abrirBaseDatos().then(function () {
+    inicializarRecaudaciones(); inicializarLiquidaciones(); inicializarImportarCorreo();
+    inicializarBackup(); inicializarEstadillo(); inicializarHistorial(); inicializarCamaraOCR();
+    return Promise.all([cargarRecaudaciones(), cargarLiquidaciones()]);
+  }).then(function () {
+    actualizarResumen(); comprobarBackupAutomatico(); var params=new URLSearchParams(window.location.search); var correoParam=params.get("correo"); if(correoParam){var texto=decodeURIComponent(correoParam); abrirSeccion("importar"); document.getElementById("textoCorreo").value=texto; document.getElementById("btnAnalizarCorreo").click(); window.history.replaceState({},"",window.location.pathname);} });
+});
+  </script>
+
+  <!-- ===================== JS DIARIO DEL CONDUCTOR ===================== -->
+  <script>
+(function(){
+'use strict';
+
+(function(){
+  var _w=console.warn.bind(console);
+  console.warn=function(){
+    var m=arguments[0]||'';
+    if(typeof m==='string'&&(m.indexOf('fake worker')!==-1||m.indexOf('system font')!==-1))return;
+    _w.apply(console,arguments);
+  };
+})();
+// Worker deshabilitado: en Safari el worker de PDF.js interfiere con fetch+FormData
+// causando "The object can not be cloned". Correr en hilo principal evita el error.
+
+
+var STORE='tc_v4_dias';
+var STORE_TURNOS='tc_v5_turnos';
+var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var DSEM=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+
+var TURNOS_DEFAULT={
+  CM:{label:'Corrido Mañana',tag:'CM',icon:'🌅',bg:'#C8DCFA',textColor:'#0D3772',tagColor:'#1B4F8A'},
+  CT:{label:'Corrido Tarde', tag:'CT',icon:'🌇',bg:'#FDDCB5',textColor:'#7A3010',tagColor:'#C05621'},
+  CN:{label:'Corrido Noche', tag:'CN',icon:'🌙',bg:'#D5CCFF',textColor:'#1A0F5E',tagColor:'#2C1E6B'},
+  PM:{label:'Partido Mañana',tag:'PM',icon:'⚡',bg:'#C8DCFA',textColor:'#0D3772',tagColor:'#1B4F8A',partido:true},
+  PT:{label:'Partido Tarde', tag:'PT',icon:'⚡',bg:'#FDDCB5',textColor:'#7A3010',tagColor:'#C05621',partido:true},
+  PN:{label:'Partido Noche', tag:'PN',icon:'⚡',bg:'#D5CCFF',textColor:'#1A0F5E',tagColor:'#2C1E6B',partido:true},
+  D: {label:'Descanso',      tag:'D', icon:'😴',bg:'#E2E4E8',textColor:'#4B5563',tagColor:'#6B7280'},
+  V: {label:'Vacaciones',    tag:'V', icon:'🌴',bg:'#A7F3D0',textColor:'#064E3B',tagColor:'#065F46'}
+};
+
+var TURNO={};
+var dias={};
+var vY,vM;
+var activeDate=null;
+var pdfPages=[];
+var calDataStore=null;
+var cambioImg=null;
+var bDesde=null,bHasta=null,bChk1=false,bChk2=false;
+
+function loadTurnos(){
+  try{
+    var raw=localStorage.getItem(STORE_TURNOS);
+    if(raw) TURNO=JSON.parse(raw);
+    else TURNO=JSON.parse(JSON.stringify(TURNOS_DEFAULT));
+  }catch(e){TURNO=JSON.parse(JSON.stringify(TURNOS_DEFAULT));}
+  Object.keys(TURNO).forEach(function(k){
+    var t=TURNO[k];
+    if(!t.bg&&t.color) t.bg=t.color;
+    if(!t.bg) t.bg='#E2E4E8';
+    if(!t.textColor) t.textColor='#111827';
+    if(!t.tagColor) t.tagColor=t.bg;
+  });
+}
+function saveTurnos(){
+  try{localStorage.setItem(STORE_TURNOS,JSON.stringify(TURNO));}
+  catch(e){tcToast('⚠️ Error guardando configuración');}
+}
+function loadDias(){try{dias=JSON.parse(localStorage.getItem(STORE)||'{}');}catch(e){dias={};}}
+function saveDias(){
+  try{localStorage.setItem(STORE,JSON.stringify(dias));}
+  catch(e){tcToast('⚠️ Almacenamiento lleno. Borra días antiguos para liberar espacio.');}
+}
+
+function tcInit(){
+  loadTurnos(); loadDias();
+  var h=new Date(); vY=h.getFullYear(); vM=h.getMonth();
+  tcRenderHdr(); tcRenderLeyenda(); tcRenderCal();
+  tcBuildTurnoSelects();
+}
+
+function tcRenderHdr(){document.getElementById('tc-mlbl').textContent=MESES[vM]+' '+vY;}
+window.tcMonth=function(d){
+  vM+=d; if(vM<0){vM=11;vY--;} if(vM>11){vM=0;vY++;}
+  tcRenderHdr(); tcRenderCal();
+};
+
+function tcRenderLeyenda(){
+  var g=document.getElementById('tc-ley-grid');
+  g.innerHTML='';
+  Object.keys(TURNO).forEach(function(k){
+    var t=TURNO[k];
+    var item=document.createElement('div'); item.className='tc-ley-item';
+    var dot=document.createElement('div'); dot.className='tc-ley-dot';
+    if(t.partido){
+      var c1=t.bg, c2=tcAdjustHex(t.bg,-20);
+      dot.style.background='repeating-linear-gradient(135deg,'+c1+' 0,'+c1+' 5px,'+c2+' 5px,'+c2+' 7px)';
+    } else {
+      dot.style.background=t.bg;
+      dot.style.border='2px solid '+t.tagColor;
+    }
+    var txt=document.createElement('div');
+    txt.innerHTML='<strong>'+tcEsc(k)+'</strong> '+tcEsc(t.label);
+    item.appendChild(dot); item.appendChild(txt);
+    g.appendChild(item);
+  });
+}
+
+window.tcLeyenda=function(){
+  var p=document.getElementById('tc-ley');
+  p.style.display=p.style.display==='none'?'':'none';
+};
+
+function tcBuildTurnoSelects(){
+  var edSel=document.getElementById('ed-turno');
+  var camSel=document.getElementById('cambio-turno');
+  edSel.innerHTML='<option value="">— sin definir —</option>';
+  camSel.innerHTML='<option value="">— sin cambio —</option>';
+  Object.keys(TURNO).forEach(function(k){
+    var t=TURNO[k];
+    var opt1=document.createElement('option'); opt1.value=k; opt1.textContent=(t.icon||'')+'  '+k+' · '+t.label;
+    var opt2=opt1.cloneNode(true);
+    edSel.appendChild(opt1); camSel.appendChild(opt2);
+  });
+}
+
+window.tcOpenAjustes=function(){
+  tcRenderAjustesBody();
+  tcShowPanel('pnl-ajustes'); tcOpenOv();
+};
+window.tcCloseAjustes=function(){
+  tcRenderLeyenda(); tcBuildTurnoSelects(); tcRenderCal();
+  tcClose();
+};
+
+function tcRenderAjustesBody(){
+  var body=document.getElementById('ajustes-body');
+  var html='<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Turnos activos</div>';
+  html+='<div class="tc-ajustes-list" id="ajustes-list"></div>';
+  body.innerHTML=html;
+  var list=document.getElementById('ajustes-list');
+  Object.keys(TURNO).forEach(function(k){
+    var t=TURNO[k];
+    var row=document.createElement('div'); row.className='tc-ajuste-row';
+    var swatch=document.createElement('div'); swatch.className='tc-ajuste-swatch';
+    swatch.style.background=t.bg; swatch.style.borderColor=t.tagColor;
+    var info=document.createElement('div'); info.className='tc-ajuste-info';
+    info.innerHTML='<div class="tc-ajuste-code">'+tcEsc(k)+'</div><div class="tc-ajuste-name">'+tcEsc(t.label)+'</div>';
+    var editBtn=document.createElement('button'); editBtn.className='tc-ajuste-edit-btn';
+    editBtn.textContent='Editar';
+    var esBase=!!TURNOS_DEFAULT[k];
+    (function(code){editBtn.addEventListener('click',function(){tcOpenEditTurno(code);});})(k);
+    row.appendChild(swatch); row.appendChild(info); row.appendChild(editBtn);
+    if(!esBase){
+      var delBtn=document.createElement('button'); delBtn.className='tc-ajuste-del-btn';
+      delBtn.textContent='✕';
+      (function(code){delBtn.addEventListener('click',function(){tcDeleteTurno(code);});})(k);
+      row.appendChild(delBtn);
+    }
+    list.appendChild(row);
+  });
+}
+
+window.tcDeleteTurno=function(code){
+  var enUso=Object.keys(dias).some(function(k){return dias[k]&&dias[k].turno===code;});
+  if(enUso){tcToast('No se puede eliminar: el turno está siendo utilizado');return;}
+  delete TURNO[code];
+  saveTurnos(); tcRenderAjustesBody(); tcRenderLeyenda(); tcBuildTurnoSelects(); tcRenderCal();
+  tcToast('Turno '+code+' eliminado');
+};
+
+window.tcOpenAddTurno=function(){
+  document.getElementById('edit-turno-title').textContent='Nuevo tipo de turno';
+  document.getElementById('edit-turno-sub').textContent='';
+  document.getElementById('et-code').value='';
+  document.getElementById('et-code').disabled=false;
+  document.getElementById('et-name').value='';
+  document.getElementById('et-bg').value='#C8DCFA';
+  document.getElementById('et-text').value='#0D3772';
+  document.getElementById('et-tag').value='#1B4F8A';
+  document.getElementById('et-editing-code').value='';
+  tcUpdateEtPreview();
+  tcShowPanel('pnl-edit-turno'); tcOpenOv();
+};
+
+window.tcOpenEditTurno=function(code){
+  var t=TURNO[code]; if(!t)return;
+  document.getElementById('edit-turno-title').textContent='Editar · '+code;
+  document.getElementById('edit-turno-sub').textContent=t.label;
+  document.getElementById('et-code').value=code;
+  document.getElementById('et-code').disabled=true;
+  document.getElementById('et-name').value=t.label;
+  document.getElementById('et-bg').value=t.bg||'#E2E4E8';
+  document.getElementById('et-text').value=t.textColor||'#111827';
+  document.getElementById('et-tag').value=t.tagColor||t.bg||'#6B7280';
+  document.getElementById('et-editing-code').value=code;
+  tcUpdateEtPreview();
+  tcShowPanel('pnl-edit-turno'); tcOpenOv();
+};
+
+function tcUpdateEtPreview(){
+  var bg=document.getElementById('et-bg').value;
+  var tc2=document.getElementById('et-text').value;
+  var tg=document.getElementById('et-tag').value;
+  var code=document.getElementById('et-code').value.toUpperCase()||'EX';
+  var prev=document.getElementById('et-preview');
+  prev.style.background=bg;
+  document.getElementById('et-prev-num').style.color=tc2;
+  var tagEl=document.getElementById('et-prev-tag');
+  tagEl.textContent=code; tagEl.style.background=tg; tagEl.style.color='#fff';
+}
+['et-bg','et-text','et-tag','et-code'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el) el.addEventListener('input',tcUpdateEtPreview);
+});
+
+window.tcSaveTurnoEdit=function(){
+  var code=document.getElementById('et-code').value.toUpperCase().trim();
+  var editingCode=document.getElementById('et-editing-code').value;
+  var name=document.getElementById('et-name').value.trim();
+  var bg=document.getElementById('et-bg').value;
+  var tc2=document.getElementById('et-text').value;
+  var tg=document.getElementById('et-tag').value;
+  if(!code||code.length<1){tcToast('El código no puede estar vacío');return;}
+  if(!name){tcToast('Indica un nombre');return;}
+  if(!editingCode&&TURNO[code]){tcToast('Ya existe un turno con código '+code);return;}
+  var finalCode=editingCode||code;
+  var existing=TURNO[finalCode]||{};
+  TURNO[finalCode]={label:name,tag:finalCode,icon:existing.icon||'🔷',bg:bg,textColor:tc2,tagColor:tg,partido:existing.partido||false};
+  saveTurnos(); tcRenderAjustesBody(); tcRenderLeyenda(); tcBuildTurnoSelects(); tcRenderCal();
+  tcShowPanel('pnl-ajustes');
+  tcToast('✔ Turno '+finalCode+' guardado');
+};
+
+window.tcResetColores=function(){
+  TURNO=JSON.parse(JSON.stringify(TURNOS_DEFAULT));
+  saveTurnos(); tcRenderLeyenda(); tcBuildTurnoSelects(); tcRenderCal();
+  tcToast('✔ Colores restaurados');
+};
+
+function tcRenderCal(){
+  if(tcVista==='anual'){tcRenderAnual();return;}
+  var g=document.getElementById('tc-cgrid');
+  g.innerHTML='';
+  var hoy=new Date();
+  var nd=new Date(vY,vM+1,0).getDate();
+  var off=(new Date(vY,vM,1).getDay()+6)%7;
+  for(var i=0;i<off;i++){var e=document.createElement('div');e.className='tc-d empty';g.appendChild(e);}
+  for(var d=1;d<=nd;d++){
+    var key=tcFk(vY,vM,d);
+    var reg=dias[key];
+    var dow=(new Date(vY,vM,d).getDay()+6)%7;
+    var esHoy=vY===hoy.getFullYear()&&vM===hoy.getMonth()&&d===hoy.getDate();
+    var cell=document.createElement('div');
+    var cls='tc-d'+(dow>=5?' weekend':'')+(esHoy?' today':'');
+    if(reg&&reg.cambio) cls+=' has-cambio';
+    cell.className=cls;
+    if(reg&&reg.turno&&TURNO[reg.turno]){
+      var t=TURNO[reg.turno];
+      if(t.partido){
+        var c2=tcAdjustHex(t.bg,-20);
+        cell.style.background='repeating-linear-gradient(135deg,'+t.bg+' 0,'+t.bg+' 6px,'+c2+' 6px,'+c2+' 8px)';
+      } else {
+        cell.style.background=t.bg;
+      }
+    }
+    if(reg&&(reg.thumbData||reg.imgData)){
+      var th=document.createElement('div'); th.className='tc-d-thumb';
+      th.style.backgroundImage='url('+(reg.thumbData||reg.imgData)+')'; cell.appendChild(th);
+    }
+    var numEl=document.createElement('div'); numEl.className='tc-dnum'; numEl.textContent=d;
+    if(reg&&reg.turno&&TURNO[reg.turno]) numEl.style.color=TURNO[reg.turno].textColor;
+    cell.appendChild(numEl);
+    if(reg&&reg.turno&&TURNO[reg.turno]){
+      var tagEl=document.createElement('div'); tagEl.className='tc-dtag';
+      tagEl.textContent=TURNO[reg.turno].tag;
+      tagEl.style.background=TURNO[reg.turno].tagColor; tagEl.style.color='#fff';
+      cell.appendChild(tagEl);
+    }
+    if(reg&&reg.incidencia){
+      var dot=document.createElement('div'); dot.className='tc-ddot'; dot.style.background='var(--danger)';
+      cell.appendChild(dot);
+    }
+    (function(k,r){cell.addEventListener('click',function(){tcOpenDay(k,r);});})(key,reg);
+    g.appendChild(cell);
+  }
+}
+
+var tcVista='mes'; /* 'mes' | 'anual' */
+
+window.tcSetVista=function(v){
+  tcVista=v;
+  var btnMes=document.getElementById('tc-btn-mes');
+  var btnAnual=document.getElementById('tc-btn-anual');
+  var cal=document.querySelector('#tc .tc-cal');
+  var anual=document.getElementById('tc-anual');
+  var mnav=document.querySelector('#tc .tc-mnav');
+  if(v==='mes'){
+    btnMes.classList.add('active'); btnAnual.classList.remove('active');
+    cal.style.display=''; anual.style.display='none'; mnav.style.display='';
+    tcRenderCal();
+  } else {
+    btnAnual.classList.add('active'); btnMes.classList.remove('active');
+    cal.style.display='none'; anual.style.display=''; mnav.style.display='none';
+    tcRenderAnual();
+  }
+};
+
+function tcRenderAnual(){
+  var contenedor=document.getElementById('tc-anual');
+  contenedor.innerHTML='';
+  var hoy=new Date();
+  var anio=vY;
+  var dowLabels=['L','M','X','J','V','S','D'];
+  for(var m=0;m<12;m++){
+    var mesDiv=document.createElement('div'); mesDiv.className='tc-anual-mes';
+    /* Título del mes */
+    var titulo=document.createElement('div'); titulo.className='tc-anual-mes-title';
+    titulo.textContent=MESES[m]+' '+anio; mesDiv.appendChild(titulo);
+    /* Cabecera días de semana */
+    var dowDiv=document.createElement('div'); dowDiv.className='tc-anual-dow';
+    dowLabels.forEach(function(l){var s=document.createElement('span');s.textContent=l;dowDiv.appendChild(s);});
+    mesDiv.appendChild(dowDiv);
+    /* Grid días */
+    var grid=document.createElement('div'); grid.className='tc-anual-grid';
+    var nd=new Date(anio,m+1,0).getDate();
+    var off=(new Date(anio,m,1).getDay()+6)%7;
+    for(var i=0;i<off;i++){var e=document.createElement('div');e.className='tc-ad empty';grid.appendChild(e);}
+    for(var d=1;d<=nd;d++){
+      var key=anio+'-'+tcPad(m+1)+'-'+tcPad(d);
+      var reg=dias[key];
+      var dow=(new Date(anio,m,d).getDay()+6)%7;
+      var esHoy=anio===hoy.getFullYear()&&m===hoy.getMonth()&&d===hoy.getDate();
+      var cell=document.createElement('div');
+      var cls='tc-ad'+(dow>=5?' weekend':'')+(esHoy?' today':'');
+      if(reg&&reg.cambio) cls+=' has-cambio';
+      cell.className=cls;
+      if(reg&&reg.turno&&TURNO[reg.turno]){
+        var t=TURNO[reg.turno];
+        if(t.partido){
+          var c2=tcAdjustHex(t.bg,-20);
+          cell.style.background='repeating-linear-gradient(135deg,'+t.bg+' 0,'+t.bg+' 5px,'+c2+' 5px,'+c2+' 7px)';
+        } else {
+          cell.style.background=t.bg;
+        }
+      }
+      var numEl=document.createElement('div'); numEl.className='tc-adnum'; numEl.textContent=d;
+      if(reg&&reg.turno&&TURNO[reg.turno]) numEl.style.color=TURNO[reg.turno].textColor;
+      cell.appendChild(numEl);
+      if(reg&&reg.turno&&TURNO[reg.turno]){
+        var tagEl=document.createElement('div'); tagEl.className='tc-adtag';
+        tagEl.textContent=TURNO[reg.turno].tag;
+        tagEl.style.background=TURNO[reg.turno].tagColor;
+        cell.appendChild(tagEl);
+      }
+      if(reg&&reg.incidencia){
+        var dot=document.createElement('div'); dot.className='tc-addot'; dot.style.background='var(--danger)';
+        cell.appendChild(dot);
+      }
+      (function(k,r){cell.addEventListener('click',function(){tcOpenDay(k,r);});})(key,reg);
+      grid.appendChild(cell);
+    }
+    mesDiv.appendChild(grid);
+    contenedor.appendChild(mesDiv);
+  }
+}
+
+function tcAdjustHex(hex,amount){
+  var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  r=Math.max(0,Math.min(255,r+amount)); g=Math.max(0,Math.min(255,g+amount)); b=Math.max(0,Math.min(255,b+amount));
+  return '#'+tcPad2(r.toString(16))+tcPad2(g.toString(16))+tcPad2(b.toString(16));
+}
+function tcPad2(s){return s.length<2?'0'+s:s;}
+
+function tcOpenOv(){document.getElementById('tc-ov').classList.add('open');}
+window.tcClose=function(){document.getElementById('tc-ov').classList.remove('open');activeDate=null;};
+window.tcCloseOnBg=function(e){if(e.target===document.getElementById('tc-ov'))tcClose();};
+window.showPanel=function(id){
+  var panels=['pnl-view','pnl-edit','pnl-cambio','pnl-import','pnl-cal','pnl-borrar','pnl-ajustes','pnl-edit-turno','pnl-asignar'];
+  panels.forEach(function(x){document.getElementById(x).style.display=(x===id)?'':'none';});
+};
+function tcShowPanel(id){window.showPanel(id);}
+
+function tcOpenDay(key,reg){
+  activeDate=key; tcRenderView(key,reg||{}); tcShowPanel('pnl-view'); tcOpenOv();
+}
+
+function tcRenderView(key,reg){
+  var kp=key.split('-');
+  var ky=parseInt(kp[0],10),km=parseInt(kp[1],10)-1,kd=parseInt(kp[2],10);
+  var diaSem=DSEM[(new Date(ky,km,kd).getDay()+6)%7];
+  document.getElementById('vw-title').textContent=diaSem+' '+kd;
+  document.getElementById('vw-date').textContent=kd+' de '+MESES[km]+' de '+ky;
+  var tc2=reg.turno&&TURNO[reg.turno]?TURNO[reg.turno]:null;
+  var tw=document.getElementById('vw-turno');
+  if(tc2){
+    tw.innerHTML='<div class="tc-turno-banner" style="background:'+tc2.tagColor+'">'
+      +'<span class="tc-turno-icon">'+(tc2.icon||'')+'</span>'
+      +'<div><div class="tc-turno-label">'+tcEsc(tc2.label)+'</div>'
+      +(reg.autoTurno?'<div class="tc-turno-auto">★ Detectado automáticamente</div>':'')
+      +'</div></div>';
+  } else { tw.innerHTML=''; }
+  var rw=document.getElementById('vw-ruta');
+  if(reg.imgData){
+    rw.innerHTML='<img class="tc-ruta-img" src="'+reg.imgData+'" alt="Hoja de ruta">';
+  } else {
+    rw.innerHTML='<div class="tc-ruta-empty"><span>📋</span><p>Sin hoja de ruta</p></div>';
+  }
+  var html='';
+  if(reg.cambio){
+    var destFmt=reg.cambioFechaDestino?tcFmtF(reg.cambioFechaDestino):'—';
+    html+='<div class="tc-cambio-badge-link"><strong>🔄 Cambio registrado</strong><br>Día intercambiado: <strong>'+destFmt+'</strong><br>'+(reg.cambioCompanero?'Compañero: <strong>'+tcEsc(reg.cambioCompanero)+'</strong><br>':'')+(reg.cambioNotas?'<span style="font-size:12px;color:var(--text2)">'+tcEsc(reg.cambioNotas)+'</span>':'')+'</div>';
+  }
+  if(reg.servicio) html+='<div class="tc-serv-card"><div class="tc-serv-lbl">Servicio</div><div class="tc-serv-val">'+tcEsc(reg.servicio)+'</div></div>';
+  if(reg.incidencia) html+='<div class="tc-inc-box">⚠️ '+tcEsc(reg.incidencia)+'</div>';
+  if(reg.notas) html+='<div class="tc-nota-box">📋 '+tcEsc(reg.notas)+'</div>';
+  document.getElementById('vw-extra').innerHTML=html;
+}
+
+window.tcToEdit=function(){
+  var reg=dias[activeDate]||{};
+  var kp=activeDate.split('-');
+  document.getElementById('ed-title').textContent='Editar · '+parseInt(kp[2],10)+' '+MESES[parseInt(kp[1],10)-1];
+  document.getElementById('ed-date').textContent=activeDate;
+  document.getElementById('ed-turno').value=reg.turno||'';
+  document.getElementById('ed-servicio').value=reg.servicio||'';
+  document.getElementById('ed-incidencia').value=reg.incidencia||'';
+  document.getElementById('ed-notas').value=reg.notas||'';
+  tcShowPanel('pnl-edit');
+};
+window.tcSaveEdit=function(){
+  var reg=dias[activeDate]||{};
+  reg.turno=document.getElementById('ed-turno').value;
+  reg.servicio=document.getElementById('ed-servicio').value.trim();
+  reg.incidencia=document.getElementById('ed-incidencia').value.trim();
+  reg.notas=document.getElementById('ed-notas').value.trim();
+  reg.autoTurno=false;
+  dias[activeDate]=reg; saveDias(); tcRenderCal(); tcRenderView(activeDate,reg); tcShowPanel('pnl-view');
+  tcToast('✔ Cambios guardados');
+};
+window.tcDeleteDay=function(){
+  var btn=document.querySelector('#pnl-view .tc-btn-danger');
+  if(!btn)return;
+  if(btn.getAttribute('data-confirmando')==='true'){
+    btn.removeAttribute('data-confirmando'); btn.textContent='🗑️ Borrar';
+  } else {
+    btn.setAttribute('data-confirmando','true'); btn.textContent='✅ ¿Seguro?';
+    setTimeout(function(){
+      if(btn.getAttribute('data-confirmando')==='true'){
+        btn.removeAttribute('data-confirmando'); btn.textContent='🗑️ Borrar';
+      }
+    },3000);
+    return;
+  }
+  var reg=dias[activeDate]||{};
+  if(reg.cambioFechaDestino&&dias[reg.cambioFechaDestino]){
+    var dest=dias[reg.cambioFechaDestino];
+    dest.cambio=false; dest.cambioFechaDestino=null; dest.cambioCompanero=''; dest.cambioNotas='';
+    dias[reg.cambioFechaDestino]=dest;
+  }
+  delete dias[activeDate]; saveDias(); tcClose(); tcRenderCal();
+  tcToast('🗑️ Día eliminado');
+};
+
+window.tcToCambio=function(){
+  var reg=dias[activeDate]||{};
+  var kp=activeDate.split('-');
+  document.getElementById('cambio-date').textContent=parseInt(kp[2],10)+' de '+MESES[parseInt(kp[1],10)-1]+' de '+kp[0];
+  document.getElementById('cambio-companero').value=reg.cambioCompanero||'';
+  document.getElementById('cambio-fecha-destino').value=reg.cambioFechaDestino||'';
+  document.getElementById('cambio-turno').value='';
+  document.getElementById('cambio-servicio').value='';
+  document.getElementById('cambio-notas').value=reg.cambioNotas||'';
+  cambioImg=null;
+  var nm=document.getElementById('cambio-pdf-name');
+  nm.textContent='Sin hoja seleccionada'; nm.classList.remove('ok');
+  tcShowPanel('pnl-cambio');
+};
+window.tcCambioPdf=function(input){
+  if(typeof pdfjsLib==='undefined'){tcToast('Error cargando PDF.js');return;}
+  var file=input.files[0]; if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    pdfjsLib.getDocument({data:new Uint8Array(ev.target.result)}).promise.then(function(pdf){
+      pdf.getPage(1).then(function(page){
+        var vp=page.getViewport({scale:1.0});
+        var cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
+        page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise.then(function(){
+          cambioImg=cv.toDataURL('image/jpeg',0.60);
+          var nm=document.getElementById('cambio-pdf-name');
+          nm.textContent=file.name; nm.classList.add('ok');
+        });
+      });
+    });
+  };
+  reader.readAsArrayBuffer(file);
+};
+window.tcSaveCambio=function(){
+  var reg=dias[activeDate]||{};
+  var comp=document.getElementById('cambio-companero').value.trim();
+  var fechaDest=document.getElementById('cambio-fecha-destino').value;
+  var turno=document.getElementById('cambio-turno').value;
+  var serv=document.getElementById('cambio-servicio').value.trim();
+  var notas=document.getElementById('cambio-notas').value.trim();
+  if(cambioImg) reg.imgData=cambioImg;
+  if(turno) reg.turno=turno;
+  if(serv) reg.servicio=serv;
+  reg.cambio=true; reg.cambioCompanero=comp; reg.cambioFechaDestino=fechaDest||null; reg.cambioNotas=notas;
+  dias[activeDate]=reg;
+  if(fechaDest){
+    var dest=dias[fechaDest]||{};
+    dest.cambio=true; dest.cambioCompanero=comp; dest.cambioFechaDestino=activeDate; dest.cambioNotas=notas;
+    dias[fechaDest]=dest;
+  }
+  saveDias(); tcRenderCal(); tcRenderView(activeDate,reg); tcShowPanel('pnl-view');
+  tcToast('🔄 Cambio guardado'+(fechaDest?' · vinculado con '+tcFmtF(fechaDest):''));
+};
+
+window.tcOpenImport=function(){tcShowPanel('pnl-import');tcOpenOv();};
+window.tcImpReset=function(){
+  pdfPages=[];
+  document.getElementById('imp-file').value='';
+  document.getElementById('imp-prog').style.display='none';
+  document.getElementById('imp-actions').style.display='none';
+  document.getElementById('imp-zone-wrap').style.display='';
+  document.getElementById('imp-go-btn').disabled=true;
+  document.getElementById('imp-pages').innerHTML='';
+};
+window.tcImpLoad=function(input){if(input.files[0]){document.getElementById('imp-go-btn').disabled=false;tcToast('📄 '+input.files[0].name);}};
+window.tcImpProcess=function(){
+  if(typeof pdfjsLib==='undefined'){tcToast('Error cargando PDF.js');return;}
+  var file=document.getElementById('imp-file').files[0];
+  if(!file){tcToast('Elige un PDF primero');return;}
+  document.getElementById('imp-zone-wrap').style.display='none';
+  document.getElementById('imp-prog').style.display='';
+  pdfPages=[]; document.getElementById('imp-pages').innerHTML='';
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    pdfjsLib.getDocument({data:new Uint8Array(ev.target.result)}).promise.then(function(pdf){
+      var total=pdf.numPages;
+      function procPag(n){
+        if(n>total){
+          document.getElementById('imp-prog-txt').textContent='✔ '+total+' páginas extraídas.';
+          document.getElementById('imp-bar').style.width='100%';
+          document.getElementById('imp-actions').style.display='flex'; return;
+        }
+        document.getElementById('imp-prog-txt').textContent='Extrayendo página '+n+' de '+total+'…';
+        document.getElementById('imp-bar').style.width=Math.round((n-1)/total*100)+'%';
+        pdf.getPage(n).then(function(page){
+          var vp=page.getViewport({scale:1.2});
+          var cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
+          Promise.all([page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise,page.getTextContent()]).then(function(res){
+            var img=cv.toDataURL('image/jpeg',0.60);
+            var texto=res[1].items.map(function(i){return i.str;}).join(' ');
+            var key=tcDetectFecha(texto);
+            var serv=tcDetectServicio(texto);
+            pdfPages.push({key:key,imgData:img,servicio:serv,fechaOk:!!key});
+            var row=document.createElement('div'); row.className='tc-page-row';
+            var thmb=document.createElement('img'); thmb.className='tc-page-thumb'; thmb.src=img;
+            var inf=document.createElement('div'); inf.className='tc-page-info';
+            var fLabel,stCls;
+            if(key){
+              var kp2=key.split('-');
+              fLabel=parseInt(kp2[2],10)+' '+MESES[parseInt(kp2[1],10)-1]+' '+kp2[0]; stCls='ok';
+            } else { fLabel='⚠️ Fecha no detectada'; stCls='warn'; }
+            inf.innerHTML='<div class="tc-page-num">Pág. '+n+'</div><div class="tc-page-date">'+fLabel+'</div><div class="tc-page-st '+stCls+'">'+(serv?'Servicio: '+tcEsc(serv):'Sin servicio detectado')+'</div>';
+            row.appendChild(thmb); row.appendChild(inf);
+            document.getElementById('imp-pages').appendChild(row);
+            procPag(n+1);
+          });
+        });
+      }
+      procPag(1);
+    }).catch(function(){tcToast('Error leyendo PDF');tcImpReset();});
+  };
+  reader.readAsArrayBuffer(file);
+};
+/* Devuelve el número de semana ISO (lunes=inicio) de una clave 'YYYY-MM-DD' */
+function tcSemanaISO(key){
+  var p=key.split('-');
+  var d=new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10));
+  var tmp=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  tmp.setUTCDate(tmp.getUTCDate()+4-(tmp.getUTCDay()||7));
+  var yearStart=new Date(Date.UTC(tmp.getUTCFullYear(),0,1));
+  var wk=Math.ceil((((tmp-yearStart)/86400000)+1)/7);
+  return tmp.getUTCFullYear()+'W'+wk;
+}
+
+/* Elimina imgData y thumbData de todos los días de la semana más antigua con hojas */
+function tcBorrarSemanaAntigua(){
+  /* Obtener semanas que tienen al menos un día con hoja de ruta */
+  var semanasConHoja={};
+  Object.keys(dias).forEach(function(k){
+    if(dias[k]&&dias[k].imgData){
+      var sem=tcSemanaISO(k);
+      if(!semanasConHoja[sem]) semanasConHoja[sem]=[];
+      semanasConHoja[sem].push(k);
+    }
+  });
+  var semanas=Object.keys(semanasConHoja).sort(); /* orden cronológico */
+  if(semanas.length<3) return; /* menos de 3 semanas: no borrar */
+  /* Borrar la semana más antigua */
+  var masAntigua=semanas[0];
+  semanasConHoja[masAntigua].forEach(function(k){
+    delete dias[k].imgData;
+    delete dias[k].thumbData;
+  });
+  tcToast('🗑️ Semana antigua eliminada para liberar espacio ('+semanasConHoja[masAntigua].length+' hojas borradas)');
+}
+
+window.tcImpConfirm=function(){
+  var validas=pdfPages.filter(function(p){return p.fechaOk&&p.key;});
+  var skip=pdfPages.length-validas.length;
+  if(!validas.length){tcToast('No hay páginas válidas para guardar');return;}
+  var pendientes=validas.length,ok=0;
+  function generarThumb(p,callback){
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var thumbW=Math.min(img.width,300);
+        var thumbH=Math.round(img.height*(thumbW/img.width));
+        var cv=document.createElement('canvas');cv.width=thumbW;cv.height=thumbH;
+        cv.getContext('2d').drawImage(img,0,0,thumbW,thumbH);
+        callback(cv.toDataURL('image/jpeg',0.45));
+      }catch(e){callback(p.imgData);}
+    };
+    img.onerror=function(){callback(p.imgData);};
+    img.src=p.imgData;
+  }
+  validas.forEach(function(p){
+    generarThumb(p,function(thumb){
+      var ex=dias[p.key]||{};
+      dias[p.key]={turno:ex.turno||'',servicio:p.servicio||ex.servicio||'',imgData:p.imgData,thumbData:thumb,incidencia:ex.incidencia||'',notas:ex.notas||'',autoTurno:ex.autoTurno||false,cambio:ex.cambio||false,cambioCompanero:ex.cambioCompanero||'',cambioFechaDestino:ex.cambioFechaDestino||null,cambioNotas:ex.cambioNotas||''};
+      ok++;
+      pendientes--;
+      if(pendientes===0){
+        /* Si ya hay 3 semanas con hojas cargadas, borrar la más antigua antes de guardar */
+        tcBorrarSemanaAntigua();
+        saveDias(); tcRenderCal(); tcImpReset();
+        tcToast('✔ '+ok+' días guardados'+(skip?' · '+skip+' omitidos':''));
+      }
+    });
+  });
+};
+
+function tcDetectFecha(texto){
+  var mNom={'enero':1,'febrero':2,'marzo':3,'abril':4,'mayo':5,'junio':6,'julio':7,'agosto':8,'septiembre':9,'octubre':10,'noviembre':11,'diciembre':12,'jan':1,'feb':2,'mar':3,'apr':4,'jun':6,'jul':7,'aug':8,'sep':9,'oct':10,'nov':11,'dec':12,'ene':1,'ago':8};
+  var anio=new Date().getFullYear();
+  var m,re;
+  re=/\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})\b/g;
+  while((m=re.exec(texto))!==null){var d=parseInt(m[1],10),mo=parseInt(m[2],10),y=parseInt(m[3],10);if(y<100)y+=2000;if(d>=1&&d<=31&&mo>=1&&mo<=12&&y>=2020&&y<=2035)return y+'-'+tcPad(mo)+'-'+tcPad(d);}
+  re=/\b(20\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2})\b/g;
+  while((m=re.exec(texto))!==null){var y2=parseInt(m[1],10),mo2=parseInt(m[2],10),d2=parseInt(m[3],10);if(d2>=1&&d2<=31&&mo2>=1&&mo2<=12)return y2+'-'+tcPad(mo2)+'-'+tcPad(d2);}
+  re=/\b(\d{1,2})\s+(?:de\s+)?([a-záéíóúü]+)\s+(?:de\s+)?(\d{4})\b/gi;
+  while((m=re.exec(texto))!==null){var d3=parseInt(m[1],10),mes=m[2].toLowerCase(),y3=parseInt(m[3],10);var mo3=mNom[mes]||mNom[mes.substring(0,3)];if(mo3&&d3>=1&&d3<=31&&y3>=2020&&y3<=2035)return y3+'-'+tcPad(mo3)+'-'+tcPad(d3);}
+  re=/(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/gi;
+  while((m=re.exec(texto))!==null){var d4=parseInt(m[1],10),mo4=parseInt(m[2],10),y4=m[3]?parseInt(m[3],10):anio;if(y4<100)y4+=2000;if(d4>=1&&d4<=31&&mo4>=1&&mo4<=12)return y4+'-'+tcPad(mo4)+'-'+tcPad(d4);}
+  re=/\b(\d{1,2})\s+(?:de\s+)?([a-záéíóúü]{3,})\b/gi;
+  while((m=re.exec(texto))!==null){var d5=parseInt(m[1],10),mes5=m[2].toLowerCase();var mo5=mNom[mes5]||mNom[mes5.substring(0,3)];if(mo5&&d5>=1&&d5<=31)return anio+'-'+tcPad(mo5)+'-'+tcPad(d5);}
+  return null;
+}
+function tcDetectServicio(texto){
+  var m=texto.match(/(?:servicio|srv|serv)[.:\s-]*([A-Z0-9-]+)/i)||texto.match(/\bS[- ]?(\d{3,}[A-Z]?)\b/);
+  return m?m[1]:null;
+}
+
+window.tcOpenCal=function(){tcShowPanel('pnl-cal');tcOpenOv();};
+window.tcCalReset=function(){
+  calDataStore=null;
+  document.getElementById('cal-file').value='';
+  document.getElementById('cal-prog').style.display='none';
+  document.getElementById('cal-actions').style.display='none';
+  document.getElementById('cal-zone-wrap').style.display='';
+  document.getElementById('cal-resumen-wrap').innerHTML='';
+};
+window.tcCalLoad=function(input){
+  if(typeof pdfjsLib==='undefined'){tcToast('Error cargando PDF.js');return;}
+  var file=input.files[0]; if(!file)return;
+  document.getElementById('cal-zone-wrap').style.display='none';
+  document.getElementById('cal-prog').style.display='';
+  document.getElementById('cal-prog-txt').textContent='Leyendo PDF…';
+  document.getElementById('cal-bar').style.width='10%';
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    pdfjsLib.getDocument({data:new Uint8Array(ev.target.result)}).promise.then(function(pdf){
+      var total=pdf.numPages,texto='',done=0;
+      function leerPag(n){
+        if(n>total){
+          document.getElementById('cal-bar').style.width='80%';
+          document.getElementById('cal-prog-txt').textContent='Procesando turnos…';
+          calDataStore=tcParsearCalAnual(texto);
+          var nd=Object.keys(calDataStore).length;
+          document.getElementById('cal-bar').style.width='100%';
+          document.getElementById('cal-prog-txt').textContent='✔ '+nd+' días detectados';
+          tcRenderCalResumen(calDataStore);
+          document.getElementById('cal-actions').style.display='flex'; return;
+        }
+        pdf.getPage(n).then(function(page){
+          page.getTextContent().then(function(tc2){
+            /* Reconstruir líneas usando coordenada Y de cada item.
+               Items con Y similar (±4px) → misma línea. Ordenados por X. */
+            var items=tc2.items.filter(function(it){return it.str&&it.str.trim();});
+            if(!items.length){done++;leerPag(n+1);return;}
+            var grupos={};
+            items.forEach(function(it){
+              var y=Math.round(it.transform[5]/4)*4;
+              if(!grupos[y])grupos[y]=[];
+              grupos[y].push(it);
+            });
+            var ys=Object.keys(grupos).map(Number).sort(function(a,b){return b-a;});
+            var lineasPag=ys.map(function(y){
+              var row=grupos[y].slice().sort(function(a,b){return a.transform[4]-b.transform[4];});
+              return row.map(function(it){return it.str.trim();}).filter(Boolean).join(' ');
+            });
+            texto+=lineasPag.join('\n')+'\n';
+            done++;document.getElementById('cal-bar').style.width=Math.round(done/total*70)+'%';
+            leerPag(n+1);
+          });
+        });
+      }
+      leerPag(1);
+    }).catch(function(){tcToast('Error leyendo PDF');tcCalReset();});
+  };
+  reader.readAsArrayBuffer(file);
+};
+function tcRenderCalResumen(data){
+  /* Contar por código, incluyendo los que no están aún en TURNO */
+  var counts={};
+  Object.keys(data).forEach(function(k){
+    var v=data[k];
+    counts[v]=(counts[v]||0)+1;
+  });
+  /* Detectar cuáles son nuevos (no existen en TURNO) */
+  var nuevos=Object.keys(counts).filter(function(c){return !TURNO[c];});
+  var html='<div class="tc-cal-resumen">';
+  html+='<div class="tc-cal-resumen-title">'+Object.keys(data).length+' días detectados</div>';
+  html+='<div class="tc-cal-resumen-grid">';
+  Object.keys(counts).forEach(function(k){
+    var col=TURNO[k]?TURNO[k].tagColor:'#6B7280';
+    html+='<div class="tc-cal-res-item"><div class="tc-cal-res-cod" style="color:'+col+'">'+tcEsc(k)+'</div><div class="tc-cal-res-n">'+counts[k]+' días</div></div>';
+  });
+  html+='</div>';
+  if(nuevos.length>0){
+    html+='<div style="margin-top:10px;padding:8px 10px;background:#FEF3C7;border-left:3px solid #E6A817;border-radius:6px;font-size:12px;color:#78350F;">'+
+      '⚠️ Turnos nuevos que se crearán automáticamente: <strong>'+nuevos.join(', ')+'</strong></div>';
+  }
+  html+='</div>';
+  document.getElementById('cal-resumen-wrap').innerHTML=html;
+}
+
+/* Paleta de colores por defecto para turnos nuevos desconocidos */
+var TC_COLORES_NUEVOS=[
+  {bg:'#FDE8D8',textColor:'#7A2E0E',tagColor:'#C2410C'},
+  {bg:'#D1FAE5',textColor:'#064E3B',tagColor:'#059669'},
+  {bg:'#FCE7F3',textColor:'#831843',tagColor:'#DB2777'},
+  {bg:'#EDE9FE',textColor:'#4C1D95',tagColor:'#7C3AED'},
+  {bg:'#FEF9C3',textColor:'#713F12',tagColor:'#CA8A04'},
+  {bg:'#CFFAFE',textColor:'#164E63',tagColor:'#0891B2'},
+  {bg:'#F1F5F9',textColor:'#1E293B',tagColor:'#475569'}
+];
+var tcColorNuevoIdx=0;
+
+function tcCrearTurnoNuevo(codigo){
+  /* Normalizar alias conocidos del PDF de TUSSAM */
+  var ALIAS={'DESC':'D','VACA':'V','DESC.':'D','VACA.':'V','DI':'D','TP':'PT'};
+  if(ALIAS[codigo]) return ALIAS[codigo];
+  if(TURNO[codigo]) return codigo;
+  var c=TC_COLORES_NUEVOS[tcColorNuevoIdx%TC_COLORES_NUEVOS.length];
+  tcColorNuevoIdx++;
+  TURNO[codigo]={label:codigo,tag:codigo,icon:'📋',bg:c.bg,textColor:c.textColor,tagColor:c.tagColor};
+  saveTurnos();
+  return codigo;
+}
+
+function tcParsearCalAnual(texto){
+  /*
+   * Formato real del PDF de TUSSAM (una línea por semana):
+   *
+   *   [PREFIX] DD.MM A DD.MM [OBSERV] COD COD COD COD COD COD COD
+   *
+   *   PREFIX : opcional — "S.S.13", "14", "FER.16", etc.  → ignorar
+   *   OBSERV : opcional — campo de observaciones (una sola palabra antes de los 7 días)
+   *            Puede ser vacío, o un código como "TP", "FER.", "S.S.", etc.
+   *            CLAVE: si tras el rango hay MÁS de 7 tokens, el primero es OBSERV y
+   *            hay que descartarlo. Si hay exactamente 7, son directamente los días.
+   *
+   *   Los 7 COD siguen el orden: LUN MAR MIE JUE VIE SAB DOM
+   *
+   * Alias del PDF → código interno:
+   *   DESC.  → D    VACA.  → V    TP → PT    DI → D
+   */
+  var result={};
+  var anioActual=new Date().getFullYear();
+
+  /* Regex rango: "DD.MM A DD.MM"  (separador . / -) */
+  var reRango=/(\d{1,2})[.\/-](\d{1,2})\s+A\s+(\d{1,2})[.\/-](\d{1,2})/i;
+
+  /* Alias de normalización */
+  var ALIAS={'DESC':'D','VACA':'V','DI':'D'};
+
+  function normCod(s){
+    s=s.toUpperCase().replace(/\.+$/,'').trim();
+    return ALIAS[s]||s;
+  }
+
+  /* ¿Es un token que parece código de turno?
+     Empieza por letra, solo letras/dígitos/puntos, max 6 chars */
+  function esCodTurno(s){
+    return /^[A-ZÁÉÍÓÚÜ][A-Z0-9.]{0,5}$/i.test(s.replace(/\.$/,''));
+  }
+
+  /* Genera las fechas ISO de los días de la semana (máx 7) */
+  function semanaFechas(diaI,mesI,diaF,mesF){
+    var anioI=anioActual;
+    var anioF=(mesF<mesI)?anioActual+1:anioActual;
+    var cur=new Date(anioI,mesI-1,diaI);
+    var fin=new Date(anioF,mesF-1,diaF);
+    var fechas=[];
+    while(cur<=fin&&fechas.length<7){
+      fechas.push(cur.getFullYear()+'-'+tcPad(cur.getMonth()+1)+'-'+tcPad(cur.getDate()));
+      cur.setDate(cur.getDate()+1);
+    }
+    return fechas;
+  }
+
+  var lineas=texto.split(/\r?\n/);
+  var semanasDetectadas=0;
+
+  for(var i=0;i<lineas.length;i++){
+    var linea=lineas[i];
+    var mr=reRango.exec(linea);
+    if(!mr) continue;
+
+    var diaI=parseInt(mr[1],10), mesI=parseInt(mr[2],10);
+    var diaF=parseInt(mr[3],10), mesF=parseInt(mr[4],10);
+    if(mesI<1||mesI>12||mesF<1||mesF>12) continue;
+
+    /* Todo lo que viene DESPUÉS del rango en la misma línea */
+    var resto=linea.substring(mr.index+mr[0].length).trim();
+    var toks=resto?resto.split(/\s+/).filter(function(x){return x.trim()!='';}):[]; 
+
+    /* Recolectar hasta 8 tokens que parezcan códigos de turno */
+    var candidatos=[];
+    for(var t=0;t<toks.length&&candidatos.length<8;t++){
+      if(esCodTurno(toks[t])) candidatos.push(normCod(toks[t]));
+    }
+
+    /* Si hay 8 candidatos → el primero es el campo OBSERV.
+       OBSERV "TP" indica jornada partida: combinar con turno de cada día:
+         T + partido → PT  (Partido Tarde)
+         M + partido → PM  (Partido Mañana)
+         N + partido → PN  (Partido Noche)
+       Si OBSERV no indica partido (S.S., FER., ...) → ignorar.
+       Si hay 7 → son directamente los 7 días (jornada corrida). */
+    var observPartido=false;
+    if(candidatos.length>=8){
+      var observ=candidatos[0];
+      observPartido=(observ==='TP'||observ==='PM'||observ==='PN'||observ==='PT');
+      candidatos=candidatos.slice(1,8);
+    } else if(candidatos.length>0&&candidatos.length<7){
+      /* Intentar completar desde la línea siguiente */
+      var li=i+1;
+      while(candidatos.length<7&&li<lineas.length&&li<=i+3){
+        /* Parar si la siguiente línea contiene otro rango */
+        if(reRango.test(lineas[li])) break;
+        var extra=lineas[li].trim().split(/\s+/).filter(function(x){return x.trim()!='';});
+        for(var e=0;e<extra.length&&candidatos.length<7;e++){
+          if(esCodTurno(extra[e])) candidatos.push(normCod(extra[e]));
+        }
+        li++;
+      }
+    } else if(candidatos.length===0){
+      /* Sin nada en esta línea — buscar en la siguiente */
+      var li2=i+1;
+      if(li2<lineas.length&&!reRango.test(lineas[li2])){
+        var extra2=lineas[li2].trim().split(/\s+/).filter(function(x){return x.trim()!='';});
+        for(var e2=0;e2<extra2.length&&candidatos.length<8;e2++){
+          if(esCodTurno(extra2[e2])) candidatos.push(normCod(extra2[e2]));
+        }
+        if(candidatos.length>=8) candidatos=candidatos.slice(1,8);
+      }
+    }
+
+    if(candidatos.length<1) continue;
+
+    /* Si OBSERV indicaba partido, convertir turnos base a su versión partida:
+       T→PT  M→PM  N→PN  (solo para días que tengan turno, no descansos/vacas) */
+    if(observPartido){
+      var PARTIDO_MAP={'T':'PT','M':'PM','N':'PN'};
+      candidatos=candidatos.map(function(cod){return PARTIDO_MAP[cod]||cod;});
+    } else {
+      /* Sin contexto de partido: "T" pertenece a turno corrido → CT */
+      candidatos=candidatos.map(function(cod){return cod==='T'?'CT':cod;});
+    }
+
+    var fechas=semanaFechas(diaI,mesI,diaF,mesF);
+    for(var f=0;f<fechas.length&&f<candidatos.length;f++){
+      result[fechas[f]]=candidatos[f];
+    }
+    semanasDetectadas++;
+  }
+
+  /* ── Fallback token-a-token si no se detectó ninguna semana ── */
+  if(semanasDetectadas===0){
+    var MNOM=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    var tokens=texto.split(/\s+/);
+    var mesAct=-1;
+    var codKeys=Object.keys(TURNOS_DEFAULT).concat(['DI','DESC','VACA','TP']);
+    var VALID_COD=new RegExp('^('+codKeys.join('|')+')$','i');
+    for(var ii=0;ii<tokens.length;ii++){
+      var tk=tokens[ii];
+      var tl=tk.toLowerCase().replace(/[^a-záéíóúü]/g,'');
+      var im=MNOM.indexOf(tl);
+      if(im!==-1){mesAct=im+1;continue;}
+      if(mesAct===-1) continue;
+      var mfb=tk.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+      if(mfb){
+        var db=parseInt(mfb[1],10),mob=parseInt(mfb[2],10);
+        if(db>=1&&db<=31&&mob>=1&&mob<=12){
+          for(var jb=1;jb<=2;jb++){var nxb=(tokens[ii+jb]||'').toUpperCase().trim();if(VALID_COD.test(nxb)){var ncb=normCod(nxb);result[anioActual+'-'+tcPad(mob)+'-'+tcPad(db)]=(ncb==='T'?'CT':ncb);break;}}
+        }
+        continue;
+      }
+      var mdb=tk.match(/^(\d{1,2})\.?$/);
+      if(mdb){
+        var db2=parseInt(mdb[1],10);
+        if(db2>=1&&db2<=31){
+          for(var jb2=1;jb2<=2;jb2++){var nxb2=(tokens[ii+jb2]||'').toUpperCase().trim();if(VALID_COD.test(nxb2)){var ncb2=normCod(nxb2);result[anioActual+'-'+tcPad(mesAct)+'-'+tcPad(db2)]=(ncb2==='T'?'CT':ncb2);break;}}
+        }
+      }
+    }
+  }
+
+  return result;
+}
+window.tcCalConfirm=function(){
+  if(!calDataStore)return;
+  var n=0,nuevosCreados=[],errores=0;
+  /* Primero crear los turnos nuevos que hagan falta */
+  Object.keys(calDataStore).forEach(function(key){
+    var cod=calDataStore[key];
+    if(!TURNO[cod]){
+      var codFinal=tcCrearTurnoNuevo(cod);
+      /* Si tcCrearTurnoNuevo devolvió un alias distinto, actualizar el store */
+      if(codFinal!==cod){calDataStore[key]=codFinal;}
+      if(!TURNO[codFinal]){errores++;return;}
+      if(nuevosCreados.indexOf(codFinal)===-1) nuevosCreados.push(codFinal);
+    }
+  });
+  /* Luego guardar los días */
+  Object.keys(calDataStore).forEach(function(key){
+    var turno=calDataStore[key];
+    if(!TURNO[turno]){errores++;return;}
+    var ex=dias[key]||{};
+    ex.turno=turno; ex.autoTurno=true; dias[key]=ex; n++;
+  });
+  saveDias();
+  if(nuevosCreados.length>0){saveTurnos();tcRenderLeyenda();tcBuildTurnoSelects();}
+  calDataStore=null; tcCalReset(); tcClose(); tcRenderCal();
+  var msg='✔ '+n+' días guardados';
+  if(nuevosCreados.length>0) msg+=' · '+nuevosCreados.length+' turno'+(nuevosCreados.length>1?'s':'')+' nuevo'+(nuevosCreados.length>1?'s':'')+': '+nuevosCreados.join(', ');
+  if(errores>0) msg+=' · ⚠️ '+errores+' sin guardar';
+  tcToast(msg);
+};
+
+window.tcOpenBorrar=function(){
+  bDesde=null;bHasta=null;bChk1=false;bChk2=false;
+  document.getElementById('b-desde').value=''; document.getElementById('b-hasta').value='';
+  document.getElementById('bp1').style.display=''; document.getElementById('bp2').style.display='none'; document.getElementById('bp3').style.display='none';
+  tcShowPanel('pnl-borrar'); tcOpenOv();
+};
+window.tcBp2=function(){
+  bDesde=document.getElementById('b-desde').value; bHasta=document.getElementById('b-hasta').value;
+  if(!bDesde||!bHasta){tcToast('Indica las dos fechas');return;}
+  if(bDesde>bHasta){tcToast('La fecha inicio debe ser anterior al fin');return;}
+  var afect=Object.keys(dias).filter(function(k){return k>=bDesde&&k<=bHasta;});
+  if(!afect.length){tcToast('No hay datos en ese rango');return;}
+  bChk1=false;
+  document.getElementById('b-n1').textContent=afect.length;
+  document.getElementById('b-rango1').textContent=tcFmtF(bDesde)+' → '+tcFmtF(bHasta);
+  var cont={};
+  afect.forEach(function(k){var tur=(dias[k]||{}).turno||'?';cont[tur]=(cont[tur]||0)+1;});
+  document.getElementById('b-resumen1').textContent=Object.keys(cont).map(function(k){return (TURNO[k]?TURNO[k].tag:k)+': '+cont[k];}).join(' · ');
+  document.getElementById('b-tog1').classList.remove('on');
+  var btn=document.getElementById('b-btn2');btn.disabled=true;btn.style.opacity='.4';
+  document.getElementById('bp1').style.display='none'; document.getElementById('bp2').style.display='';
+};
+window.tcBtog1=function(){
+  bChk1=!bChk1; document.getElementById('b-tog1').classList.toggle('on',bChk1);
+  var btn=document.getElementById('b-btn2');btn.disabled=!bChk1;btn.style.opacity=bChk1?'1':'.4';
+};
+window.tcBp3=function(){
+  if(!bChk1)return; bChk2=false;
+  document.getElementById('b-tog2').classList.remove('on');
+  var btn=document.getElementById('b-btn3');btn.disabled=true;btn.style.opacity='.4';
+  document.getElementById('bp2').style.display='none'; document.getElementById('bp3').style.display='';
+};
+window.tcBtog2=function(){
+  bChk2=!bChk2; document.getElementById('b-tog2').classList.toggle('on',bChk2);
+  var btn=document.getElementById('b-btn3');btn.disabled=!bChk2;btn.style.opacity=bChk2?'1':'.4';
+};
+window.tcBvolver1=function(){document.getElementById('bp2').style.display='none';document.getElementById('bp1').style.display='';};
+window.tcBvolver2=function(){document.getElementById('bp3').style.display='none';document.getElementById('bp2').style.display='';};
+window.tcBejecutar=function(){
+  if(!bChk1||!bChk2||!bDesde||!bHasta)return;
+  var n=0;
+  Object.keys(dias).forEach(function(k){if(k>=bDesde&&k<=bHasta){delete dias[k];n++;}});
+  saveDias(); tcClose(); tcRenderCal();
+  tcToast('🗑️ '+n+' días eliminados');
+};
+
+var asgnDesde=null,asgnHasta=null,asgnTurno=null,asgnChk=false;
+function tcBuildAsignarSelect(){
+  var sel=document.getElementById('asgn-turno'); if(!sel)return;
+  sel.innerHTML='<option value="">— elegir turno —</option>';
+  Object.keys(TURNO).forEach(function(k){
+    var t=TURNO[k]; var opt=document.createElement('option'); opt.value=k;
+    opt.textContent=(t.icon||'')+' '+k+' · '+t.label; sel.appendChild(opt);
+  });
+}
+window.tcOpenAsignar=function(){
+  tcBuildAsignarSelect();
+  document.getElementById('asgn-desde').value=''; document.getElementById('asgn-hasta').value=''; document.getElementById('asgn-turno').value='';
+  document.getElementById('asgn-p1').style.display=''; document.getElementById('asgn-p2').style.display='none';
+  asgnChk=false;
+  tcShowPanel('pnl-asignar'); tcOpenOv();
+};
+window.tcAsignarP2=function(){
+  asgnDesde=document.getElementById('asgn-desde').value; asgnHasta=document.getElementById('asgn-hasta').value; asgnTurno=document.getElementById('asgn-turno').value;
+  if(!asgnDesde||!asgnHasta){tcToast('Indica las dos fechas');return;}
+  if(asgnDesde>asgnHasta){tcToast('La fecha inicio debe ser anterior al fin');return;}
+  if(!asgnTurno){tcToast('Elige un tipo de turno');return;}
+  var d=new Date(asgnDesde),fin=new Date(asgnHasta),count=0;
+  while(d<=fin){count++;d.setDate(d.getDate()+1);}
+  var t=TURNO[asgnTurno];
+  document.getElementById('asgn-conf-turno').textContent=(t?t.tag+' ('+t.label+')':asgnTurno);
+  document.getElementById('asgn-conf-n').textContent=count;
+  document.getElementById('asgn-conf-rango').textContent=tcFmtF(asgnDesde)+' → '+tcFmtF(asgnHasta);
+  var conDatos=0, d2=new Date(asgnDesde),fin2=new Date(asgnHasta);
+  while(d2<=fin2){
+    var k2=d2.getFullYear()+'-'+tcPad(d2.getMonth()+1)+'-'+tcPad(d2.getDate());
+    if(dias[k2]&&(dias[k2].turno||dias[k2].imgData||dias[k2].notas||dias[k2].incidencia))conDatos++;
+    d2.setDate(d2.getDate()+1);
+  }
+  document.getElementById('asgn-resumen').textContent=conDatos>0?'⚠️ '+conDatos+' días ya tienen datos (se conservarán).':'Ningún día tiene datos previos.';
+  asgnChk=false;
+  document.getElementById('asgn-tog').classList.remove('on');
+  var btn=document.getElementById('asgn-btn-ok');btn.disabled=true;btn.style.opacity='.4';
+  document.getElementById('asgn-p1').style.display='none'; document.getElementById('asgn-p2').style.display='';
+};
+window.tcAsignarTog=function(){
+  asgnChk=!asgnChk; document.getElementById('asgn-tog').classList.toggle('on',asgnChk);
+  var btn=document.getElementById('asgn-btn-ok');btn.disabled=!asgnChk;btn.style.opacity=asgnChk?'1':'.4';
+};
+window.tcAsignarVolver=function(){document.getElementById('asgn-p2').style.display='none';document.getElementById('asgn-p1').style.display='';};
+window.tcAsignarEjecutar=function(){
+  if(!asgnChk||!asgnDesde||!asgnHasta||!asgnTurno)return;
+  var n=0, d=new Date(asgnDesde),fin=new Date(asgnHasta);
+  while(d<=fin){
+    var key=d.getFullYear()+'-'+tcPad(d.getMonth()+1)+'-'+tcPad(d.getDate());
+    var ex=dias[key]||{}; ex.turno=asgnTurno; ex.autoTurno=false; dias[key]=ex; n++;
+    d.setDate(d.getDate()+1);
+  }
+  saveDias(); tcClose(); tcRenderCal();
+  tcToast('✔ Turno '+asgnTurno+' asignado a '+n+' días');
+};
+
+function tcFk(y,m,d){return y+'-'+tcPad(m+1)+'-'+tcPad(d);}
+function tcPad(n){return n<10?'0'+n:''+n;}
+function tcEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function tcFmtF(iso){var p=iso.split('-');return parseInt(p[2],10)+'/'+parseInt(p[1],10)+'/'+p[0];}
+function tcToast(msg){
+  var t=document.getElementById('tc-toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._to);
+  t._to=setTimeout(function(){t.classList.remove('show');},2600);
+}
+
+window.tcToggleMenu=function(){
+  var dd=document.getElementById('tc-dropdown'); dd.classList.toggle('open');
+};
+window.tcMenuAction=function(fn){
+  document.getElementById('tc-dropdown').classList.remove('open'); fn();
+};
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.tc-menu-wrap')){
+    var dd=document.getElementById('tc-dropdown');
+    if(dd) dd.classList.remove('open');
+  }
+});
+
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',tcInit); else tcInit();
+
+})();
+  </script>
+</body>
+</html>
