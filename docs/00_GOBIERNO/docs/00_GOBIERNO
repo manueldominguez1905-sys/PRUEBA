@@ -1,0 +1,65 @@
+# Reglas de Oro del Proyecto
+
+**Estado:** Aprobado  
+**Versión:** 1.0  
+**Última actualización:** Julio 2026
+
+---
+
+# Regla 1
+
+Nunca romper una funcionalidad existente para añadir una nueva.
+
+---
+
+# Regla 2
+
+Toda modificación deberá ser compatible con la arquitectura del proyecto.
+
+---
+
+# Regla 3
+
+Siempre reutilizar código antes de crear uno nuevo.
+
+---
+
+# Regla 4
+
+La interfaz visual deberá mantener siempre el mismo estilo.
+
+---
+
+# Regla 5
+
+Todo cambio importante deberá documentarse.
+
+---
+
+# Regla 6
+
+Antes de modificar código deberá analizarse el impacto sobre el resto de módulos.
+
+---
+
+# Regla 7
+
+La estabilidad tendrá prioridad sobre las nuevas funcionalidades.
+
+---
+
+# Regla 8
+
+Los datos oficiales y los datos del usuario permanecerán siempre separados.
+
+---
+
+# Regla 9
+
+Todo desarrollo deberá ser modular y escalable.
+
+---
+
+# Regla 10
+
+Antes de dar por finalizado un desarrollo se realizará una auditoría funcional y una auditoría arquitectónica.
