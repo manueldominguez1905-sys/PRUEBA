@@ -289,10 +289,15 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 
 /* CALENDARIO TC */
 #tc .tc-cal{margin:0 6px 10px;}
-#tc .tc-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}
+#tc .tc-dow{display:grid;grid-template-columns:44px repeat(7,1fr);margin-bottom:4px;}
+#tc .tc-dow .tc-dow-spacer{}
 #tc .tc-dow span{text-align:center;font-size:11px;font-weight:700;color:var(--text3);padding:4px 0;text-transform:uppercase;letter-spacing:.3px;}
-#tc .tc-dow span:nth-child(6),#tc .tc-dow span:nth-child(7){color:var(--danger);}
-#tc .tc-cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+#tc .tc-dow span:nth-child(7),#tc .tc-dow span:nth-child(8){color:var(--danger);}
+#tc .tc-cgrid{display:flex;flex-direction:column;gap:5px;}
+#tc .tc-week-row{display:grid;grid-template-columns:44px repeat(7,1fr);gap:5px;align-items:stretch;}
+#tc .tc-week-label{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 2px;}
+#tc .tc-week-num{font-size:11px;font-weight:800;color:var(--brand);line-height:1.25;white-space:nowrap;}
+#tc .tc-week-ev{font-size:10px;font-weight:800;color:var(--accent);line-height:1.25;text-transform:uppercase;letter-spacing:.2px;}
 
 /* Celda día TC */
 /* Fallback Safari: aspect-ratio no soportado antes de iOS 15 */
@@ -300,13 +305,19 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 @supports (aspect-ratio:1){#tc .tc-d{aspect-ratio:1;min-height:unset;}}
 #tc .tc-d:active{transform:scale(.91);}
 #tc .tc-d.empty{background:transparent;box-shadow:none;cursor:default;pointer-events:none;}
+#tc .tc-d.empty-mes{cursor:default;}
+#tc .tc-d.empty-mes .tc-dnum{color:var(--text3);opacity:.55;}
 #tc .tc-d.today .tc-dnum{font-size:16px;font-weight:900;}
 #tc .tc-d.weekend .tc-dnum{color:var(--danger);}
 #tc .tc-dnum{font-size:16px;font-weight:700;line-height:1;position:relative;z-index:1;}
+#tc .tc-dsub{font-size:8px;font-weight:800;letter-spacing:.4px;line-height:1.3;position:relative;z-index:1;}
+#tc .tc-dsub-nac{color:var(--danger);}
+#tc .tc-dsub-loc{color:var(--success);}
 #tc .tc-dtag{font-size:8px;font-weight:700;letter-spacing:.4px;margin-top:3px;padding:2px 5px;border-radius:4px;position:relative;z-index:1;}
 #tc .tc-ddot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:3px;right:4px;z-index:2;}
 #tc .tc-d.has-cambio{box-shadow:0 0 0 2.5px #E65100,var(--sh-s)!important;overflow:visible;}
 #tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:var(--r-s);pointer-events:none;z-index:0;}
+
 
 /* OVERLAY TC */
 #tc .tc-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:flex-end;justify-content:center;}
@@ -446,6 +457,10 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-adnum{font-size:11px;font-weight:700;line-height:1;position:relative;z-index:1;}
 #tc .tc-adtag{font-size:7px;font-weight:800;letter-spacing:.2px;padding:1px 3px;border-radius:3px;margin-top:2px;position:relative;z-index:1;color:#fff;}
 #tc .tc-addot{width:4px;height:4px;border-radius:50%;position:absolute;bottom:2px;right:3px;z-index:2;}
+
+/* --- Eventos Laborales (aditivo, no altera estilos de turnos) --- */
+#tc .tc-ev-day{outline:2px dotted #C05621;outline-offset:-2px;}
+#tc .tc-ev-mark{position:absolute;top:2px;left:2px;font-size:9px;line-height:1;z-index:2;}
   </style>
 </head>
 <body>
@@ -468,11 +483,12 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
     <div style="background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
-        <div><strong>Aplicación:</strong> CORREGIDO LOGICA CALENDARIOS</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">2.09</span></div>
+        <div><strong>Aplicación:</strong> CORREGIDO RECAUDACION 0 + BANNERS</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">2.08</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
-      <button id="btnCerrarSettings" class="btn btn-secondary" style="width:100%; margin-top:20px;">Cerrar</button>
+      <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
+      <button id="btnCerrarSettings" class="btn btn-secondary" style="width:100%; margin-top:10px;">Cerrar</button>
     </div>
   </div>
 
@@ -772,6 +788,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
                 <button class="tc-dd-item" onclick="tcMenuAction(tcOpenImport)">&#128196; Subir hojas de ruta</button>
                 <button class="tc-dd-item" onclick="tcMenuAction(tcOpenAsignar)">&#128295; Asignar turnos</button>
                 <button class="tc-dd-item" onclick="tcMenuAction(tcLeyenda)">&#127912; Tipos de turnos</button>
+                <button class="tc-dd-item" onclick="tcMenuAction(tcOpenCal)">&#128197; Importar Calendario de Turnos</button>
+                <button class="tc-dd-item" onclick="tcMenuAction(tcOpenEventos)">&#127881; Importar Calendario de Eventos Laborales</button>
                 <button class="tc-dd-item danger" onclick="tcMenuAction(tcOpenBorrar)">&#128465;&#65039; Borrar datos</button>
               </div>
             </div>
@@ -805,7 +823,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 
         <!-- CALENDARIO -->
         <div class="tc-cal">
-          <div class="tc-dow"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+          <div class="tc-dow"><span class="tc-dow-spacer"></span><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
           <div class="tc-cgrid" id="tc-cgrid"></div>
         </div>
 
@@ -932,6 +950,37 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
             <div id="cal-actions" style="display:none" class="tc-imp-actions">
               <button class="tc-btn tc-btn-danger" style="flex:0 0 auto;padding:13px 16px;" onclick="tcCalReset()">&#10005; Descartar</button>
               <button class="tc-btn tc-btn-primary" onclick="tcCalConfirm()">&#10004; Guardar en calendario</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL EVENTOS LABORALES (aditivo — Calendario de Eventos Laborales) -->
+        <div id="pnl-eventos" style="display:none">
+          <div class="tc-sh-hd">
+            <div><div class="tc-sh-title">&#127881; Eventos laborales</div><div class="tc-sh-sub">Festivos, Feria, Semana Santa, Roc&#237;o&#8230;</div></div>
+            <button class="tc-xbtn" onclick="tcClose()">&#10005;</button>
+          </div>
+          <div class="tc-imp-panel">
+            <div id="ev-zone-wrap">
+              <div class="tc-zone" onclick="document.getElementById('ev-file').click()">
+                <div class="tc-zone-icon">&#127881;</div>
+                <div class="tc-zone-title">Seleccionar calendario de eventos (PDF o imagen)</div>
+                <div class="tc-zone-sub">Festivos &middot; Semana Santa &middot; Feria &middot; Roc&#237;o &middot; Marat&#243;n &middot; Aperturas</div>
+                <input type="file" id="ev-file" accept="application/pdf,image/jpeg,image/jpg,image/png,image/webp" onchange="tcEventosLoad(this)" style="display:none">
+              </div>
+              <div class="tc-tip">&#128161; Se detecta autom&#225;ticamente si es PDF o imagen, y el a&#241;o de cada evento.</div>
+            </div>
+            <div id="ev-prog" style="display:none">
+              <div class="tc-prog-wrap">
+                <div class="tc-prog-title" id="ev-prog-txt">Leyendo archivo&#8230;</div>
+                <div class="tc-prog-bg"><div class="tc-prog-bar" id="ev-bar" style="width:0%"></div></div>
+                <div id="ev-resumen-wrap"></div>
+                <div id="ev-conflicto-wrap"></div>
+              </div>
+            </div>
+            <div id="ev-actions" style="display:none" class="tc-imp-actions">
+              <button class="tc-btn tc-btn-danger" style="flex:0 0 auto;padding:13px 16px;" onclick="tcEventosReset()">&#10005; Descartar</button>
+              <button class="tc-btn tc-btn-primary" id="ev-btn-guardar" onclick="tcEventosConfirm()">&#10004; Guardar eventos</button>
             </div>
           </div>
         </div>
@@ -1889,6 +1938,10 @@ function comprobarBackupAutomatico() {
   if (ultimoBackup === hoy) return;
   exportarDatosArchivo(BACKUP_AUTO_NOMBRE, false);
   localStorage.setItem(BACKUP_AUTO_KEY, hoy);
+  try{
+    var horaActual=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem('tussam_ultimo_backup_auto_hora', horaActual);
+  }catch(e){}
   mostrarToast("Copia de seguridad automática descargada", "success");
   mostrarEstadoBackupAuto();
 }
@@ -2267,80 +2320,6 @@ var TURNOS_DEFAULT={
   V: {label:'Vacaciones',    tag:'V', icon:'🌴',bg:'#A7F3D0',textColor:'#064E3B',tagColor:'#065F46'}
 };
 
-/* ==========================================================================
-   NORMALIZADOR CENTRAL DE TURNOS — único punto de verdad del proyecto.
-   Ninguna otra parte del código debe interpretar/convertir turnos por su
-   cuenta: todo (PDF, fallback de parseo, alta de turnos nuevos, migración de
-   datos antiguos, etc.) debe pasar por normalizarTurno().
-   ========================================================================== */
-
-/* Tabla central de equivalencias. M y T NUNCA son códigos finales: siempre
-   se traducen según la columna OBSERV (o a su turno corrido por defecto). */
-var TURNO_EQUIVALENCIAS={
-  'DESC.':'D','DESC':'D','VACA.':'V','VACA':'V','DI':'D',
-  'TP':'PT','PM':'PM','PN':'PN','PT':'PT','CN':'CN','CM':'CM','CT':'CT',
-  'AP':'AP','DCOMP':'DCOMP','D.G.A.':'D.G.A.','D.G.A':'D.G.A.',
-  'D':'D','V':'V'
-};
-
-/* Registro de códigos oficiales desconocidos detectados durante la
-   importación (pendientes de clasificar). No se usa para bloquear ni
-   convertir nada: es solo informativo/auditable. */
-var TURNO_NUEVOS_DETECTADOS={};
-
-/**
- * normalizarTurno(valorCelda, observacion)
- * Interpreta el código de turno de UN día siguiendo el orden oficial:
- *   PRIORIDAD 1: si la celda trae un código distinto de M/T, ese código
- *                manda siempre (tras pasar por la tabla de equivalencias).
- *   PRIORIDAD 2: si la celda es M o T, se consulta OBSERV:
- *                - OBSERV vacío o no reconocido → M→CM, T→CT
- *                - OBSERV indica partido (TP/PM/PN/PT) → combina con la
- *                  celda (T→PT, M→PM)
- *                - OBSERV indica otro turno (D, V, DCOMP, D.G.A., AP...) →
- *                  ese turno prevalece sobre M/T
- * Códigos desconocidos: nunca se bloquean, descartan ni convierten
- * automáticamente — se conservan literalmente y se registran para poder
- * añadirlos más adelante a TURNO_EQUIVALENCIAS.
- */
-function normalizarTurno(valorCelda,observacion){
-  var celda=(valorCelda||'').toString().toUpperCase().trim();
-  var celdaSinPunto=celda.replace(/\.+$/,'');
-  var obs=(observacion||'').toString().toUpperCase().trim();
-  var obsSinPunto=obs.replace(/\.+$/,'');
-
-  if(celda===''){return celda;}
-
-  /* PRIORIDAD 1: código oficial distinto de M/T en la propia celda */
-  if(celda!=='M'&&celda!=='T'){
-    if(TURNO_EQUIVALENCIAS.hasOwnProperty(celda)) return TURNO_EQUIVALENCIAS[celda];
-    if(TURNO_EQUIVALENCIAS.hasOwnProperty(celdaSinPunto)) return TURNO_EQUIVALENCIAS[celdaSinPunto];
-    /* Código desconocido: NO bloquear, NO descartar, NO convertir. */
-    TURNO_NUEVOS_DETECTADOS[celda]=(TURNO_NUEVOS_DETECTADOS[celda]||0)+1;
-    return celda;
-  }
-
-  /* PRIORIDAD 2: celda = M o T → decide OBSERV */
-  var obsEq=null;
-  if(obs&&TURNO_EQUIVALENCIAS.hasOwnProperty(obs)) obsEq=TURNO_EQUIVALENCIAS[obs];
-  else if(obsSinPunto&&TURNO_EQUIVALENCIAS.hasOwnProperty(obsSinPunto)) obsEq=TURNO_EQUIVALENCIAS[obsSinPunto];
-
-  if(obsEq){
-    if(obsEq==='PT'||obsEq==='PM'||obsEq==='PN'){
-      /* OBSERV indica jornada partida: combinar con la celda */
-      if(celda==='T') return 'PT';
-      if(celda==='M') return 'PM';
-      return obsEq;
-    }
-    /* OBSERV determina otro turno (D, V, DCOMP, D.G.A., AP...): prevalece sobre M/T */
-    return obsEq;
-  }
-
-  /* Sin OBSERV relevante (vacío, o algo ajeno como "S.S."/"FER."): equivalencia estándar */
-  if(celda==='M') return 'CM';
-  return 'CT'; /* celda==='T' */
-}
-
 var TURNO={};
 var dias={};
 var vY,vM;
@@ -2363,32 +2342,12 @@ function loadTurnos(){
     if(!t.textColor) t.textColor='#111827';
     if(!t.tagColor) t.tagColor=t.bg;
   });
-  /* Compatibilidad con datos antiguos: eliminar definitivamente M/T del
-     cuadro de Tipos de Turno, fusionándolos con CM/CT. */
-  var turnoMigrado=false;
-  if(TURNO.M){ if(!TURNO.CM) TURNO.CM=TURNO.M; delete TURNO.M; turnoMigrado=true; }
-  if(TURNO.T){ if(!TURNO.CT) TURNO.CT=TURNO.T; delete TURNO.T; turnoMigrado=true; }
-  if(turnoMigrado) saveTurnos();
 }
 function saveTurnos(){
   try{localStorage.setItem(STORE_TURNOS,JSON.stringify(TURNO));}
   catch(e){tcToast('⚠️ Error guardando configuración');}
 }
-function loadDias(){
-  try{dias=JSON.parse(localStorage.getItem(STORE)||'{}');}catch(e){dias={};}
-  /* Compatibilidad con datos antiguos: cualquier día que aún tenga guardado
-     el turno como 'M' o 'T' se normaliza a CM/CT sin perder el resto de la
-     información del registro. */
-  var diasMigrados=false;
-  Object.keys(dias).forEach(function(k){
-    var reg=dias[k];
-    if(reg&&(reg.turno==='M'||reg.turno==='T')){
-      reg.turno=normalizarTurno(reg.turno,'');
-      diasMigrados=true;
-    }
-  });
-  if(diasMigrados) saveDias();
-}
+function loadDias(){try{dias=JSON.parse(localStorage.getItem(STORE)||'{}');}catch(e){dias={};}}
 function saveDias(){
   try{localStorage.setItem(STORE,JSON.stringify(dias));}
   catch(e){tcToast('⚠️ Almacenamiento lleno. Borra días antiguos para liberar espacio.');}
@@ -2567,44 +2526,109 @@ function tcRenderCal(){
   var hoy=new Date();
   var nd=new Date(vY,vM+1,0).getDate();
   var off=(new Date(vY,vM,1).getDay()+6)%7;
-  for(var i=0;i<off;i++){var e=document.createElement('div');e.className='tc-d empty';g.appendChild(e);}
-  for(var d=1;d<=nd;d++){
-    var key=tcFk(vY,vM,d);
-    var reg=dias[key];
-    var dow=(new Date(vY,vM,d).getDay()+6)%7;
-    var esHoy=vY===hoy.getFullYear()&&vM===hoy.getMonth()&&d===hoy.getDate();
-    var cell=document.createElement('div');
-    var cls='tc-d'+(dow>=5?' weekend':'')+(esHoy?' today':'');
-    if(reg&&reg.cambio) cls+=' has-cambio';
-    cell.className=cls;
-    if(reg&&reg.turno&&TURNO[reg.turno]){
-      var t=TURNO[reg.turno];
-      if(t.partido){
-        var c2=tcAdjustHex(t.bg,-20);
-        cell.style.background='repeating-linear-gradient(135deg,'+t.bg+' 0,'+t.bg+' 6px,'+c2+' 6px,'+c2+' 8px)';
-      } else {
-        cell.style.background=t.bg;
+
+  /* Construir lista plana de celdas: relleno del mes anterior + mes actual + relleno del mes siguiente,
+     de forma que el total sea múltiplo de 7 (semanas completas), igual que antes visualmente
+     salvo que ahora los días de relleno muestran su número (atenuado) en vez de ir vacíos. */
+  var celdas=[];
+  var prevUltimoDia=new Date(vY,vM,0);
+  var prevNd=prevUltimoDia.getDate();
+  for(var i=off-1;i>=0;i--){
+    celdas.push({y:prevUltimoDia.getFullYear(),m:prevUltimoDia.getMonth(),d:prevNd-i,inMonth:false});
+  }
+  for(var d=1;d<=nd;d++){ celdas.push({y:vY,m:vM,d:d,inMonth:true}); }
+  var resto=celdas.length%7;
+  if(resto!==0){
+    var need=7-resto;
+    for(var j=1;j<=need;j++){
+      var nextDate=new Date(vY,vM+1,j);
+      celdas.push({y:nextDate.getFullYear(),m:nextDate.getMonth(),d:nextDate.getDate(),inMonth:false});
+    }
+  }
+
+  for(var w=0;w<celdas.length;w+=7){
+    var semanaCeldas=celdas.slice(w,w+7);
+    var primerCelda=semanaCeldas[0];
+    var keyLunes=tcFk(primerCelda.y,primerCelda.m,primerCelda.d);
+    var semISO=tcSemanaISO(keyLunes);
+    var numSemana=semISO.split('W')[1];
+
+    /* Etiqueta de evento anual (Feria, Semana Santa, Rocío, Maratón...) para la fila de semana.
+       Nunca se muestra dentro de las celdas, solo aquí, debajo del número de semana. */
+    var etiquetaAnual=null;
+    semanaCeldas.forEach(function(c){
+      if(etiquetaAnual) return;
+      var k=tcFk(c.y,c.m,c.d);
+      var ev=tcEventoDia(k);
+      if(ev && !tcEventoCategoriaFestivo(ev.tipo)) etiquetaAnual=tcEventoAbrevAnual(ev.tipo);
+    });
+
+    var row=document.createElement('div');
+    row.className='tc-week-row';
+
+    var wkCell=document.createElement('div');
+    wkCell.className='tc-week-label';
+    wkCell.innerHTML='<div class="tc-week-num">Sem. '+numSemana+'</div>'+
+      (etiquetaAnual?('<div class="tc-week-ev">'+etiquetaAnual+'</div>'):'');
+    row.appendChild(wkCell);
+
+    semanaCeldas.forEach(function(c){
+      var key=tcFk(c.y,c.m,c.d);
+      var reg=c.inMonth?dias[key]:null;
+      var dow=(new Date(c.y,c.m,c.d).getDay()+6)%7;
+      var esHoy=c.y===hoy.getFullYear()&&c.m===hoy.getMonth()&&c.d===hoy.getDate();
+      var cell=document.createElement('div');
+      var cls='tc-d'+(dow>=5?' weekend':'')+(esHoy?' today':'')+(c.inMonth?'':' empty-mes');
+      if(reg&&reg.cambio) cls+=' has-cambio';
+      cell.className=cls;
+      if(reg&&reg.turno&&TURNO[reg.turno]){
+        var t=TURNO[reg.turno];
+        if(t.partido){
+          var c2=tcAdjustHex(t.bg,-20);
+          cell.style.background='repeating-linear-gradient(135deg,'+t.bg+' 0,'+t.bg+' 6px,'+c2+' 6px,'+c2+' 8px)';
+        } else {
+          cell.style.background=t.bg;
+        }
       }
-    }
-    if(reg&&(reg.thumbData||reg.imgData)){
-      var th=document.createElement('div'); th.className='tc-d-thumb';
-      th.style.backgroundImage='url('+(reg.thumbData||reg.imgData)+')'; cell.appendChild(th);
-    }
-    var numEl=document.createElement('div'); numEl.className='tc-dnum'; numEl.textContent=d;
-    if(reg&&reg.turno&&TURNO[reg.turno]) numEl.style.color=TURNO[reg.turno].textColor;
-    cell.appendChild(numEl);
-    if(reg&&reg.turno&&TURNO[reg.turno]){
-      var tagEl=document.createElement('div'); tagEl.className='tc-dtag';
-      tagEl.textContent=TURNO[reg.turno].tag;
-      tagEl.style.background=TURNO[reg.turno].tagColor; tagEl.style.color='#fff';
-      cell.appendChild(tagEl);
-    }
-    if(reg&&reg.incidencia){
-      var dot=document.createElement('div'); dot.className='tc-ddot'; dot.style.background='var(--danger)';
-      cell.appendChild(dot);
-    }
-    (function(k,r){cell.addEventListener('click',function(){tcOpenDay(k,r);});})(key,reg);
-    g.appendChild(cell);
+      if(reg&&(reg.thumbData||reg.imgData)){
+        var th=document.createElement('div'); th.className='tc-d-thumb';
+        th.style.backgroundImage='url('+(reg.thumbData||reg.imgData)+')'; cell.appendChild(th);
+      }
+      var numEl=document.createElement('div'); numEl.className='tc-dnum'; numEl.textContent=c.d;
+      if(reg&&reg.turno&&TURNO[reg.turno]) numEl.style.color=TURNO[reg.turno].textColor;
+      cell.appendChild(numEl);
+
+      if(c.inMonth){
+        var ev=tcEventoDia(key);
+        var cat=ev?tcEventoCategoriaFestivo(ev.tipo):null;
+        if(cat==='nacional'){
+          numEl.style.color='var(--danger)';
+          var subN=document.createElement('div'); subN.className='tc-dsub tc-dsub-nac'; subN.textContent='NAC';
+          cell.appendChild(subN);
+        } else if(cat==='local'){
+          numEl.style.color='var(--success)';
+          var subL=document.createElement('div'); subL.className='tc-dsub tc-dsub-loc'; subL.textContent='LOC';
+          cell.appendChild(subL);
+        }
+      }
+
+      if(reg&&reg.turno&&TURNO[reg.turno]){
+        var tagEl=document.createElement('div'); tagEl.className='tc-dtag';
+        tagEl.textContent=TURNO[reg.turno].tag;
+        tagEl.style.background=TURNO[reg.turno].tagColor; tagEl.style.color='#fff';
+        cell.appendChild(tagEl);
+      }
+      if(reg&&reg.incidencia){
+        var dot=document.createElement('div'); dot.className='tc-ddot'; dot.style.background='var(--danger)';
+        cell.appendChild(dot);
+      }
+      if(c.inMonth){
+        (function(k,r){cell.addEventListener('click',function(){tcOpenDay(k,r);});})(key,reg);
+      }
+      row.appendChild(cell);
+    });
+
+    g.appendChild(row);
   }
 }
 
@@ -2680,6 +2704,7 @@ function tcRenderAnual(){
         cell.appendChild(dot);
       }
       (function(k,r){cell.addEventListener('click',function(){tcOpenDay(k,r);});})(key,reg);
+      tcAplicarEventoEnCelda(cell,key);
       grid.appendChild(cell);
     }
     mesDiv.appendChild(grid);
@@ -2698,7 +2723,7 @@ function tcOpenOv(){document.getElementById('tc-ov').classList.add('open');}
 window.tcClose=function(){document.getElementById('tc-ov').classList.remove('open');activeDate=null;};
 window.tcCloseOnBg=function(e){if(e.target===document.getElementById('tc-ov'))tcClose();};
 window.showPanel=function(id){
-  var panels=['pnl-view','pnl-edit','pnl-cambio','pnl-import','pnl-cal','pnl-borrar','pnl-ajustes','pnl-edit-turno','pnl-asignar'];
+  var panels=['pnl-view','pnl-edit','pnl-cambio','pnl-import','pnl-cal','pnl-borrar','pnl-ajustes','pnl-edit-turno','pnl-asignar','pnl-eventos'];
   panels.forEach(function(x){document.getElementById(x).style.display=(x===id)?'':'none';});
 };
 function tcShowPanel(id){window.showPanel(id);}
@@ -3083,10 +3108,9 @@ var TC_COLORES_NUEVOS=[
 var tcColorNuevoIdx=0;
 
 function tcCrearTurnoNuevo(codigo){
-  /* codigo ya llega normalizado (pasó por normalizarTurno en tcParsearCalAnual).
-     Si ya existe como turno conocido, no hay nada que crear. Si es un código
-     oficial nuevo/desconocido, se da de alta como turno pendiente de clasificar
-     (nunca se descarta ni se convierte en otra cosa). */
+  /* Normalizar alias conocidos del PDF de TUSSAM */
+  var ALIAS={'DESC':'D','VACA':'V','DESC.':'D','VACA.':'V','DI':'D','TP':'PT'};
+  if(ALIAS[codigo]) return ALIAS[codigo];
   if(TURNO[codigo]) return codigo;
   var c=TC_COLORES_NUEVOS[tcColorNuevoIdx%TC_COLORES_NUEVOS.length];
   tcColorNuevoIdx++;
@@ -3109,9 +3133,8 @@ function tcParsearCalAnual(texto){
    *
    *   Los 7 COD siguen el orden: LUN MAR MIE JUE VIE SAB DOM
    *
-   * La equivalencia de cada código (DESC.→D, VACA.→V, TP→PT, M→CM, T→CT,
-   * etc.) NO se resuelve aquí: se delega siempre en normalizarTurno(),
-   * el único punto de verdad del proyecto (ver TURNO_EQUIVALENCIAS).
+   * Alias del PDF → código interno:
+   *   DESC.  → D    VACA.  → V    TP → PT    DI → D
    */
   var result={};
   var anioActual=new Date().getFullYear();
@@ -3119,11 +3142,12 @@ function tcParsearCalAnual(texto){
   /* Regex rango: "DD.MM A DD.MM"  (separador . / -) */
   var reRango=/(\d{1,2})[.\/-](\d{1,2})\s+A\s+(\d{1,2})[.\/-](\d{1,2})/i;
 
-  /* Limpieza básica del token (mayúsculas, sin punto final). La equivalencia
-     real (DESC.→D, VACA.→V, TP→PT, M→CM, T→CT, etc.) la resuelve siempre
-     normalizarTurno(), el único punto de verdad — ver más abajo. */
+  /* Alias de normalización */
+  var ALIAS={'DESC':'D','VACA':'V','DI':'D'};
+
   function normCod(s){
-    return s.toUpperCase().replace(/\.+$/,'').trim();
+    s=s.toUpperCase().replace(/\.+$/,'').trim();
+    return ALIAS[s]||s;
   }
 
   /* ¿Es un token que parece código de turno?
@@ -3168,14 +3192,17 @@ function tcParsearCalAnual(texto){
       if(esCodTurno(toks[t])) candidatos.push(normCod(toks[t]));
     }
 
-    /* Si hay 8 candidatos → el primero es el campo OBSERV, que se traslada
-       a normalizarTurno() junto con cada celda de la semana (es ahí, en el
-       único punto de verdad, donde se decide si OBSERV indica partido,
-       otro turno especial, o si se ignora). Si hay 7 → son directamente
-       los 7 días (jornada corrida, sin OBSERV). */
-    var observ='';
+    /* Si hay 8 candidatos → el primero es el campo OBSERV.
+       OBSERV "TP" indica jornada partida: combinar con turno de cada día:
+         T + partido → PT  (Partido Tarde)
+         M + partido → PM  (Partido Mañana)
+         N + partido → PN  (Partido Noche)
+       Si OBSERV no indica partido (S.S., FER., ...) → ignorar.
+       Si hay 7 → son directamente los 7 días (jornada corrida). */
+    var observPartido=false;
     if(candidatos.length>=8){
-      observ=candidatos[0];
+      var observ=candidatos[0];
+      observPartido=(observ==='TP'||observ==='PM'||observ==='PN'||observ==='PT');
       candidatos=candidatos.slice(1,8);
     } else if(candidatos.length>0&&candidatos.length<7){
       /* Intentar completar desde la línea siguiente */
@@ -3203,9 +3230,15 @@ function tcParsearCalAnual(texto){
 
     if(candidatos.length<1) continue;
 
-    /* Único punto de normalización: cada celda de la semana pasa por
-       normalizarTurno() junto con el OBSERV detectado para esa semana. */
-    candidatos=candidatos.map(function(cod){return normalizarTurno(cod,observ);});
+    /* Si OBSERV indicaba partido, convertir turnos base a su versión partida:
+       T→PT  M→PM  N→PN  (solo para días que tengan turno, no descansos/vacas) */
+    if(observPartido){
+      var PARTIDO_MAP={'T':'PT','M':'PM','N':'PN'};
+      candidatos=candidatos.map(function(cod){return PARTIDO_MAP[cod]||cod;});
+    } else {
+      /* Sin contexto de partido: "T" pertenece a turno corrido → CT */
+      candidatos=candidatos.map(function(cod){return cod==='T'?'CT':cod;});
+    }
 
     var fechas=semanaFechas(diaI,mesI,diaF,mesF);
     for(var f=0;f<fechas.length&&f<candidatos.length;f++){
@@ -3219,9 +3252,8 @@ function tcParsearCalAnual(texto){
     var MNOM=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
     var tokens=texto.split(/\s+/);
     var mesAct=-1;
-    var codKeys=Object.keys(TURNOS_DEFAULT).concat(Object.keys(TURNO_EQUIVALENCIAS),['M','T']);
-    var codKeysEsc=codKeys.map(function(c){return c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');});
-    var VALID_COD=new RegExp('^('+codKeysEsc.join('|')+')$','i');
+    var codKeys=Object.keys(TURNOS_DEFAULT).concat(['DI','DESC','VACA','TP']);
+    var VALID_COD=new RegExp('^('+codKeys.join('|')+')$','i');
     for(var ii=0;ii<tokens.length;ii++){
       var tk=tokens[ii];
       var tl=tk.toLowerCase().replace(/[^a-záéíóúü]/g,'');
@@ -3232,7 +3264,7 @@ function tcParsearCalAnual(texto){
       if(mfb){
         var db=parseInt(mfb[1],10),mob=parseInt(mfb[2],10);
         if(db>=1&&db<=31&&mob>=1&&mob<=12){
-          for(var jb=1;jb<=2;jb++){var nxb=(tokens[ii+jb]||'').toUpperCase().trim();if(VALID_COD.test(nxb)){result[anioActual+'-'+tcPad(mob)+'-'+tcPad(db)]=normalizarTurno(nxb,'');break;}}
+          for(var jb=1;jb<=2;jb++){var nxb=(tokens[ii+jb]||'').toUpperCase().trim();if(VALID_COD.test(nxb)){var ncb=normCod(nxb);result[anioActual+'-'+tcPad(mob)+'-'+tcPad(db)]=(ncb==='T'?'CT':ncb);break;}}
         }
         continue;
       }
@@ -3240,7 +3272,7 @@ function tcParsearCalAnual(texto){
       if(mdb){
         var db2=parseInt(mdb[1],10);
         if(db2>=1&&db2<=31){
-          for(var jb2=1;jb2<=2;jb2++){var nxb2=(tokens[ii+jb2]||'').toUpperCase().trim();if(VALID_COD.test(nxb2)){result[anioActual+'-'+tcPad(mesAct)+'-'+tcPad(db2)]=normalizarTurno(nxb2,'');break;}}
+          for(var jb2=1;jb2<=2;jb2++){var nxb2=(tokens[ii+jb2]||'').toUpperCase().trim();if(VALID_COD.test(nxb2)){var ncb2=normCod(nxb2);result[anioActual+'-'+tcPad(mesAct)+'-'+tcPad(db2)]=(ncb2==='T'?'CT':ncb2);break;}}
         }
       }
     }
@@ -3406,6 +3438,339 @@ document.addEventListener('click',function(e){
 
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',tcInit); else tcInit();
 
+/* ===================================================================
+   CALENDARIO DE EVENTOS LABORALES (módulo 100% aditivo)
+   ---------------------------------------------------------------
+   Segundo origen de datos, independiente del Calendario de Turnos.
+   No reutiliza STORE ni STORE_TURNOS. No modifica dias{} ni TURNO{}.
+   Estructura en localStorage (clave propia):
+     STORE_EVENTOS = {
+       "2026": { "2026-01-01": {tipo:"Festivo nacional", nombre:"Año Nuevo"}, ... },
+       "2027": { ... }
+     }
+   =================================================================== */
+
+var STORE_EVENTOS='tc_v1_eventos';
+var EVENTOS=null;              /* null = aún no cargado (carga perezosa) */
+var evParsedPorAnio=null;      /* resultado pendiente de confirmar */
+var evColaConflictos=[];       /* años pendientes de resolver (reemplazar/cancelar) */
+var evAniosOmitir={};          /* años que el usuario decidió NO importar en esta tanda */
+
+/* Carga perezosa: solo se lee localStorage la primera vez que hace falta
+   (al abrir el panel de importación o al pintar el calendario), nunca
+   durante la apertura inicial del Diario del Conductor. */
+function tcEnsureEventosLoaded(){
+  if(EVENTOS!==null) return;
+  try{ EVENTOS=JSON.parse(localStorage.getItem(STORE_EVENTOS)||'{}'); }
+  catch(e){ EVENTOS={}; }
+}
+function saveEventos(){
+  try{ localStorage.setItem(STORE_EVENTOS,JSON.stringify(EVENTOS||{})); }
+  catch(e){ tcToast('⚠️ Error guardando eventos laborales'); }
+}
+
+/* Diccionario de clasificación por palabra clave (sin acentos, minúsculas) */
+var EV_TIPOS=[
+  {re:/semana\s*santa/, tipo:'Semana Santa'},
+  {re:/feria/, tipo:'Feria'},
+  {re:/rocio/, tipo:'Rocío'},
+  {re:/marat[oó]n/, tipo:'Maratón'},
+  {re:/apertura/, tipo:'Apertura comercial'},
+  {re:/vispera/, tipo:'Víspera de festivo'},
+  {re:/festivo\s*local|local/, tipo:'Festivo local'},
+  {re:/festivo\s*nacional|nacional/, tipo:'Festivo nacional'},
+  {re:/festivo/, tipo:'Festivo'}
+];
+function evNormaliza(s){
+  return String(s||'').toLowerCase()
+    .replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i')
+    .replace(/[óòö]/g,'o').replace(/[úùü]/g,'u');
+}
+function evClasificarTipo(texto){
+  var n=evNormaliza(texto);
+  for(var i=0;i<EV_TIPOS.length;i++){ if(EV_TIPOS[i].re.test(n)) return EV_TIPOS[i].tipo; }
+  return 'Evento especial';
+}
+
+var EV_MESES={enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,
+  septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12};
+
+/* Parser genérico de texto (extraído de PDF u OCR de imagen) a eventos.
+   Reconoce: DD/MM/AAAA, DD-MM-AAAA, DD.MM.AAAA, DD/MM, "DD de MES [de AAAA]".
+   Devuelve { "<año>": { "YYYY-MM-DD": {tipo, nombre} } } */
+function tcParsearEventos(texto){
+  var porAnio={};
+  var anioGlobal=null;
+  var mAnio=texto.match(/\b(20\d{2})\b/);
+  if(mAnio) anioGlobal=parseInt(mAnio[1],10);
+  if(!anioGlobal) anioGlobal=vY||new Date().getFullYear();
+
+  var reNum=/(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?/;
+  var reTexto=/(\d{1,2})\s+de\s+([a-záéíóúñ]+)(?:\s+de\s+(\d{4}))?/i;
+
+  var lineas=texto.split(/\r?\n/);
+  for(var i=0;i<lineas.length;i++){
+    var linea=lineas[i].trim();
+    if(!linea) continue;
+    var d=null,m=null,a=null,resto=null,match=null;
+    match=reNum.exec(linea);
+    if(match){
+      d=parseInt(match[1],10); m=parseInt(match[2],10);
+      a=match[3]?parseInt(match[3].length===2?('20'+match[3]):match[3],10):null;
+      resto=(linea.slice(0,match.index)+' '+linea.slice(match.index+match[0].length)).trim();
+    } else {
+      match=reTexto.exec(linea);
+      if(match){
+        d=parseInt(match[1],10); m=EV_MESES[evNormaliza(match[2])]||null;
+        a=match[3]?parseInt(match[3],10):null;
+        resto=(linea.slice(0,match.index)+' '+linea.slice(match.index+match[0].length)).trim();
+      }
+    }
+    if(!d||!m||m<1||m>12||d<1||d>31) continue;
+    var anio=a||anioGlobal;
+    var nombre=resto.replace(/^[\s:.\-–,]+|[\s:.\-–,]+$/g,'');
+    if(!nombre) nombre='Evento';
+    var tipo=evClasificarTipo(nombre);
+    var key=anio+'-'+tcPad(m)+'-'+tcPad(d);
+    if(!porAnio[anio]) porAnio[anio]={};
+    porAnio[anio][key]={tipo:tipo,nombre:nombre};
+  }
+  return porAnio;
+}
+
+window.tcOpenEventos=function(){
+  tcEnsureEventosLoaded();
+  tcEventosReset();
+  tcShowPanel('pnl-eventos'); tcOpenOv();
+};
+
+window.tcEventosReset=function(){
+  evParsedPorAnio=null; evColaConflictos=[]; evAniosOmitir={};
+  var fileEl=document.getElementById('ev-file'); if(fileEl) fileEl.value='';
+  document.getElementById('ev-prog').style.display='none';
+  document.getElementById('ev-actions').style.display='none';
+  document.getElementById('ev-zone-wrap').style.display='';
+  document.getElementById('ev-resumen-wrap').innerHTML='';
+  document.getElementById('ev-conflicto-wrap').innerHTML='';
+};
+
+window.tcEventosLoad=function(input){
+  var file=input.files&&input.files[0]; if(!file) return;
+  document.getElementById('ev-zone-wrap').style.display='none';
+  document.getElementById('ev-prog').style.display='';
+  document.getElementById('ev-prog-txt').textContent='Detectando formato…';
+  document.getElementById('ev-bar').style.width='10%';
+
+  var esPDF=(file.type==='application/pdf')||/\.pdf$/i.test(file.name);
+  var esImagen=/^image\//.test(file.type)||/\.(jpe?g|png|webp)$/i.test(file.name);
+
+  if(esPDF){
+    tcEventosLeerPDF(file);
+  } else if(esImagen){
+    tcEventosLeerImagen(file);
+  } else {
+    tcToast('Formato no soportado. Usa PDF o imagen (JPG, PNG, WEBP).');
+    tcEventosReset();
+  }
+};
+
+function tcEventosLeerPDF(file){
+  if(typeof pdfjsLib==='undefined'){
+    if(typeof cargarPDFjsSiNecesario==='function'){
+      cargarPDFjsSiNecesario();
+      setTimeout(function(){ tcEventosLeerPDF(file); },400);
+      return;
+    }
+    tcToast('Error cargando PDF.js'); tcEventosReset(); return;
+  }
+  document.getElementById('ev-prog-txt').textContent='Leyendo PDF…';
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    pdfjsLib.getDocument({data:new Uint8Array(ev.target.result)}).promise.then(function(pdf){
+      var total=pdf.numPages,texto='',done=0;
+      function leerPag(n){
+        if(n>total){
+          document.getElementById('ev-bar').style.width='80%';
+          tcEventosProcesarTexto(texto);
+          return;
+        }
+        pdf.getPage(n).then(function(page){
+          page.getTextContent().then(function(tc2){
+            var items=tc2.items.filter(function(it){return it.str&&it.str.trim();});
+            texto+=items.map(function(it){return it.str;}).join(' ')+'\n';
+            done++; document.getElementById('ev-bar').style.width=Math.round(done/total*70)+'%';
+            leerPag(n+1);
+          });
+        });
+      }
+      leerPag(1);
+    }).catch(function(){ tcToast('Error leyendo PDF'); tcEventosReset(); });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function tcEventosLeerImagen(file){
+  var apiKey=(typeof obtenerApiKeyOCR==='function')?obtenerApiKeyOCR():null;
+  if(!apiKey){
+    tcToast('⚠️ Configura primero tu clave OCR.space en Liquidaciones.');
+    tcEventosReset(); return;
+  }
+  document.getElementById('ev-prog-txt').textContent='Leyendo imagen…';
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var dataURL=ev.target.result;
+    document.getElementById('ev-bar').style.width='30%';
+    comprimirImagen(dataURL).then(function(comprimida){
+      document.getElementById('ev-bar').style.width='55%';
+      document.getElementById('ev-prog-txt').textContent='Extrayendo texto (OCR)…';
+      return leerTicketConOCRSpace(comprimida,apiKey);
+    }).then(function(textoOCR){
+      document.getElementById('ev-bar').style.width='80%';
+      tcEventosProcesarTexto(textoOCR||'');
+    }).catch(function(){
+      tcToast('Error leyendo la imagen con OCR'); tcEventosReset();
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function tcEventosProcesarTexto(texto){
+  var porAnio=tcParsearEventos(texto);
+  var anios=Object.keys(porAnio);
+  var totalEventos=0; anios.forEach(function(a){ totalEventos+=Object.keys(porAnio[a]).length; });
+  if(totalEventos===0){
+    document.getElementById('ev-bar').style.width='100%';
+    document.getElementById('ev-prog-txt').textContent='No se detectaron eventos';
+    document.getElementById('ev-resumen-wrap').innerHTML='<div class="tc-tip">No se ha podido detectar ninguna fecha. Prueba con otro archivo más legible.</div>';
+    document.getElementById('ev-actions').style.display='flex';
+    document.getElementById('ev-btn-guardar').style.display='none';
+    evParsedPorAnio=null;
+    return;
+  }
+  evParsedPorAnio=porAnio;
+  document.getElementById('ev-bar').style.width='100%';
+  document.getElementById('ev-prog-txt').textContent='✔ '+totalEventos+' eventos detectados';
+  document.getElementById('ev-btn-guardar').style.display='';
+  tcRenderEventosResumen(porAnio);
+  document.getElementById('ev-actions').style.display='flex';
+}
+
+function tcRenderEventosResumen(porAnio){
+  var html='';
+  Object.keys(porAnio).sort().forEach(function(anio){
+    var claves=Object.keys(porAnio[anio]).sort();
+    html+='<div class="tc-cal-resumen"><div class="tc-cal-resumen-title">Año '+tcEsc(anio)+' · '+claves.length+' eventos</div>';
+    html+='<div class="tc-cal-resumen-grid">';
+    claves.forEach(function(k){
+      html+='<div class="tc-cal-res-item"><div class="tc-cal-res-cod" style="font-size:11px;">'+tcFmtF(k)+'</div>'+
+        '<div class="tc-cal-res-n">'+tcEsc(porAnio[anio][k].tipo)+'<br><span style="opacity:.7">'+tcEsc(porAnio[anio][k].nombre)+'</span></div></div>';
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('ev-resumen-wrap').innerHTML=html;
+}
+
+/* Confirmación: comprueba año a año si ya existe calendario de eventos.
+   Si existe, pregunta Reemplazar/Cancelar (por año) antes de guardar. */
+window.tcEventosConfirm=function(){
+  if(!evParsedPorAnio) return;
+  tcEnsureEventosLoaded();
+  evColaConflictos=Object.keys(evParsedPorAnio).filter(function(a){
+    return EVENTOS[a]&&Object.keys(EVENTOS[a]).length>0;
+  });
+  evAniosOmitir={};
+  tcEventosResolverSiguienteConflicto();
+};
+
+function tcEventosResolverSiguienteConflicto(){
+  if(evColaConflictos.length===0){ tcEventosGuardarFinal(); return; }
+  var anio=evColaConflictos.shift();
+  var wrap=document.getElementById('ev-conflicto-wrap');
+  wrap.innerHTML='<div class="tc-aviso" style="background:#FEF3C7;border-left-color:#E6A817;color:#78350F;">'+
+    '⚠️ Ya existe un calendario para el año <strong>'+tcEsc(anio)+'</strong>.</div>'+
+    '<div class="tc-imp-actions" style="margin-top:8px;">'+
+    '<button class="tc-btn tc-btn-danger" id="ev-conf-cancelar">Cancelar</button>'+
+    '<button class="tc-btn tc-btn-primary" id="ev-conf-reemplazar">Reemplazar</button>'+
+    '</div>';
+  document.getElementById('ev-conf-cancelar').onclick=function(){
+    evAniosOmitir[anio]=true;
+    wrap.innerHTML='';
+    tcEventosResolverSiguienteConflicto();
+  };
+  document.getElementById('ev-conf-reemplazar').onclick=function(){
+    wrap.innerHTML='';
+    tcEventosResolverSiguienteConflicto();
+  };
+}
+
+function tcEventosGuardarFinal(){
+  if(!evParsedPorAnio) return;
+  tcEnsureEventosLoaded();
+  var aniosGuardados=[];
+  Object.keys(evParsedPorAnio).forEach(function(anio){
+    if(evAniosOmitir[anio]) return; /* usuario canceló este año */
+    EVENTOS[anio]=evParsedPorAnio[anio]; /* reemplaza solo ese año, o crea si es nuevo */
+    aniosGuardados.push(anio);
+    if(typeof window.tcAdminRegistrarMetaEventos==='function'){ window.tcAdminRegistrarMetaEventos(anio); }
+  });
+  saveEventos();
+  evParsedPorAnio=null; evColaConflictos=[]; evAniosOmitir={};
+  tcClose();
+  tcEventosReset();
+  tcRenderCal();
+  if(aniosGuardados.length>0) tcToast('✔ Eventos guardados para '+aniosGuardados.join(', '));
+  else tcToast('No se ha guardado ningún año (cancelado)');
+}
+
+/* --- Combinación visual con el Calendario de Turnos (solo lectura, aditivo) ---
+   No modifica dias{} ni la lógica de turnos: únicamente añade un indicador
+   visual sobre la celda ya construida por tcRenderCal/tcRenderAnual. */
+function tcAplicarEventoEnCelda(cell,key){
+  tcEnsureEventosLoaded();
+  var anio=key.slice(0,4);
+  var ev=EVENTOS&&EVENTOS[anio]&&EVENTOS[anio][key];
+  if(!ev) return;
+  cell.classList.add('tc-ev-day');
+  cell.title=(cell.title?cell.title+' · ':'')+ev.tipo+': '+ev.nombre;
+  var mk=document.createElement('div');
+  mk.className='tc-ev-mark';
+  mk.textContent='🎌';
+  cell.appendChild(mk);
+}
+
+/* Devuelve el evento {tipo,nombre} guardado para una fecha 'YYYY-MM-DD', o null. */
+function tcEventoDia(key){
+  tcEnsureEventosLoaded();
+  var anio=key.slice(0,4);
+  return (EVENTOS&&EVENTOS[anio]&&EVENTOS[anio][key])||null;
+}
+/* Clasifica un tipo de evento como festivo 'nacional' | 'local' | null (evento anual, no festivo puntual). */
+function tcEventoCategoriaFestivo(tipo){
+  if(tipo==='Festivo local') return 'local';
+  if(tipo==='Festivo nacional'||tipo==='Festivo') return 'nacional';
+  return null;
+}
+/* Abreviatura para mostrar en la columna de semana (nunca dentro de la celda). */
+function tcEventoAbrevAnual(tipo){
+  var MAP={
+    'Semana Santa':'SS',
+    'Feria':'FERIA',
+    'Rocío':'ROC',
+    'Maratón':'MAR',
+    'Apertura comercial':'APERT',
+    'Víspera de festivo':'VÍSP'
+  };
+  return MAP[tipo]||String(tipo||'').toUpperCase().slice(0,5);
+}
+
+/* Nueva función aditiva: permite a módulos externos (p.ej. Centro de
+   Administración) invalidar la caché en memoria tras borrar un año,
+   sin acceder directamente a variables internas de esta IIFE. */
+window.tcEventosInvalidarCache=function(){
+  EVENTOS=null;
+  if(typeof tcRenderCal==='function') tcRenderCal();
+};
+
 })();
   </script>
 
@@ -3530,6 +3895,400 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
 
     window.addEventListener('load', function () {
       setTimeout(vcComprobarVersion, 800);
+    });
+  })();
+  </script>
+
+  <!-- ===================== CENTRO DE ADMINISTRACIÓN (módulo aditivo) ===================== -->
+  <!-- No modifica autenticación existente (no había ninguna), no toca la base de datos,
+       no reutiliza ni altera lógica de negocio. Reutiliza únicamente clases visuales
+       ya existentes (.card, .btn, .btn-primary, .btn-secondary, .menu-grid, .menu-btn,
+       .menu-icon, .menu-label) — no se crean estilos nuevos. -->
+
+  <!-- Modal de contraseña -->
+  <div id="adminPassModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center; padding:16px;">
+    <div class="card" style="max-width:320px; width:100%;">
+      <h2 id="adminPassTitulo" style="margin:0 0 16px; font-size:1.1rem;">🔒 Acceso administrador</h2>
+      <input type="password" id="adminPassInput" placeholder="Contraseña" autocomplete="off"
+        style="width:100%; box-sizing:border-box; padding:10px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text); margin-bottom:16px; font-size:0.95rem;">
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-secondary" id="adminPassCancelar" style="flex:1;">Cancelar</button>
+        <button class="btn btn-primary" id="adminPassEntrar" style="flex:1;">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Centro de Administración -->
+  <div id="adminOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; align-items:center; justify-content:center; padding:16px;">
+    <div class="card" style="max-width:420px; width:100%; max-height:85vh; overflow-y:auto;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+        <h2 id="adminScreenTitle" style="margin:0; font-size:1.1rem;">🛠️ Centro de Administración</h2>
+        <button class="btn btn-secondary" id="adminBtnCerrar" style="padding:6px 12px;">✕</button>
+      </div>
+      <div id="adminScreenBody"></div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    'use strict';
+
+    /* Contraseña de acceso: ya no hay contraseña fija en el código.
+       Se gestiona localmente: si no existe, se solicita crearla; si existe, se solicita para acceder.
+       Se guarda solo un hash (SHA-256 si el navegador lo soporta) en localStorage, nunca en claro. */
+    var ADMIN_PASS_STORAGE='tussam_admin_pass_hash';
+    var adminPassModo='verificar'; /* 'crear' | 'verificar', según haya o no contraseña guardada */
+    var adminStack=[];
+
+    function adminHashFallback(str){
+      /* Fallback simple para entornos sin crypto.subtle (p.ej. file:// sin contexto seguro).
+         No es criptográficamente robusto, pero evita guardar la contraseña en claro. */
+      var hash=5381;
+      for(var i=0;i<str.length;i++){ hash=((hash<<5)+hash)+str.charCodeAt(i); hash|=0; }
+      return 'fb_'+(hash>>>0).toString(16);
+    }
+    function adminHashPassword(str){
+      try{
+        if(window.crypto && window.crypto.subtle && window.isSecureContext){
+          var datos=new TextEncoder().encode(str);
+          return window.crypto.subtle.digest('SHA-256', datos).then(function(buf){
+            var bytes=Array.from(new Uint8Array(buf));
+            return bytes.map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+          });
+        }
+      }catch(e){ /* se usa el fallback */ }
+      return Promise.resolve(adminHashFallback(str));
+    }
+    function adminHayPasswordGuardada(){
+      return !!localStorage.getItem(ADMIN_PASS_STORAGE);
+    }
+
+    var ADMIN_TITULOS={
+      main:'🛠️ Centro de Administración',
+      datosOficiales:'📂 Datos Oficiales',
+      calendarioLaboral:'📅 Calendario Laboral',
+      calendariosInstalados:'📋 Calendarios instalados',
+      eliminarCalendario:'🗑️ Eliminar calendario',
+      estadoSistema:'🗄 Estado del Sistema'
+    };
+
+    /* ---------- Acceso: botón "Administrador" en el modal de ajustes ---------- */
+    function adminAttachAccesoBoton(){
+      var btn=document.getElementById('btnAdminAcceso');
+      if(!btn) return;
+      btn.addEventListener('click',function(){
+        var modalSettings=document.getElementById('modalSettings');
+        if(modalSettings) modalSettings.style.display='none';
+        adminSolicitarPassword();
+      });
+    }
+
+    function adminSolicitarPassword(){
+      var modal=document.getElementById('adminPassModal');
+      var input=document.getElementById('adminPassInput');
+      var titulo=document.getElementById('adminPassTitulo');
+      var boton=document.getElementById('adminPassEntrar');
+      input.value='';
+      if(adminHayPasswordGuardada()){
+        adminPassModo='verificar';
+        if(titulo) titulo.textContent='🔒 Acceso administrador';
+        input.placeholder='Contraseña';
+        if(boton) boton.textContent='Entrar';
+      } else {
+        adminPassModo='crear';
+        if(titulo) titulo.textContent='🔒 Crear contraseña de administrador';
+        input.placeholder='Nueva contraseña (mín. 4 caracteres)';
+        if(boton) boton.textContent='Crear';
+      }
+      modal.style.display='flex';
+      setTimeout(function(){ input.focus(); },50);
+    }
+    function adminCerrarPassword(){ document.getElementById('adminPassModal').style.display='none'; }
+    function adminValidarPassword(){
+      var input=document.getElementById('adminPassInput');
+      var valor=input.value;
+
+      if(adminPassModo==='crear'){
+        if(!valor || valor.length<4){
+          if(typeof mostrarToast==='function') mostrarToast('La contraseña debe tener al menos 4 caracteres','error');
+          input.value='';
+          input.focus();
+          return;
+        }
+        adminHashPassword(valor).then(function(hash){
+          localStorage.setItem(ADMIN_PASS_STORAGE, hash);
+          adminCerrarPassword();
+          adminAbrir();
+        });
+        return;
+      }
+
+      adminHashPassword(valor).then(function(hash){
+        if(hash===localStorage.getItem(ADMIN_PASS_STORAGE)){
+          adminCerrarPassword();
+          adminAbrir();
+        } else {
+          /* Contraseña incorrecta: no se produce ninguna acción adicional */
+          input.value='';
+          input.focus();
+        }
+      });
+    }
+
+    /* ---------- Apertura / navegación del Centro ---------- */
+    function adminAbrir(){
+      adminStack=['main'];
+      document.getElementById('adminOverlay').style.display='flex';
+      adminRenderPantalla('main');
+    }
+    window.adminCerrarTodo=function(){
+      document.getElementById('adminOverlay').style.display='none';
+      adminStack=[];
+    };
+    window.adminIrAPublic=function(pantalla){
+      adminStack.push(pantalla);
+      adminRenderPantalla(pantalla);
+    };
+    window.adminVolverPublic=function(){
+      adminStack.pop();
+      adminRenderPantalla(adminStack[adminStack.length-1]||'main');
+    };
+    window.adminBtnCerrarClick=function(){
+      if(adminStack.length>1){
+        window.adminVolverPublic();
+      } else {
+        window.adminCerrarTodo();
+      }
+    };
+    window.adminProximamente=function(){ mostrarToast('Próximamente','success'); };
+
+    /* ---------- Acciones que reutilizan funcionalidad ya existente ---------- */
+    window.adminAccionActualizarCalendario=function(){
+      window.adminCerrarTodo();
+      if(typeof abrirSeccion==='function') abrirSeccion('calendario');
+      setTimeout(function(){ if(typeof window.tcOpenEventos==='function') window.tcOpenEventos(); },150);
+    };
+    window.adminAccionCopias=function(){
+      window.adminCerrarTodo();
+      if(typeof abrirSeccion==='function') abrirSeccion('backup');
+    };
+    window.adminAccionConfiguracion=function(){
+      window.adminCerrarTodo();
+      var modal=document.getElementById('modalSettings');
+      if(modal) modal.style.display='flex';
+    };
+
+    /* ---------- Metadatos de recursos oficiales (nuevo, independiente) ----------
+       No se muestran al usuario normal. Estructura mínima solicitada:
+       Nombre, Año, Fecha de actualización, Versión, Observaciones. */
+    var STORE_EVENTOS_META='tc_v1_eventos_meta';
+    function adminLeerMeta(){
+      try{ return JSON.parse(localStorage.getItem(STORE_EVENTOS_META)||'{}'); }catch(e){ return {}; }
+    }
+    function adminGuardarMeta(meta){
+      try{ localStorage.setItem(STORE_EVENTOS_META,JSON.stringify(meta)); }catch(e){}
+    }
+    /* Enganchada (opcional) desde tcEventosGuardarFinal al confirmar una importación */
+    window.tcAdminRegistrarMetaEventos=function(anio){
+      var meta=adminLeerMeta();
+      var anterior=meta[anio];
+      meta[anio]={
+        nombre:'Calendario de Eventos Laborales '+anio,
+        anio:anio,
+        fechaActualizacion:(typeof fechaHoyISO==='function'?fechaHoyISO():''),
+        version:anterior&&anterior.version?anterior.version+1:1,
+        observaciones:anterior&&anterior.observaciones?anterior.observaciones:''
+      };
+      adminGuardarMeta(meta);
+    };
+
+    /* ---------- Pantallas ---------- */
+    function adminListaCalendariosHTML(conBorrar){
+      var eventos={}; try{ eventos=JSON.parse(localStorage.getItem('tc_v1_eventos')||'{}'); }catch(e){}
+      var meta=adminLeerMeta();
+      var anios=Object.keys(eventos).filter(function(a){return Object.keys(eventos[a]||{}).length>0;}).sort();
+      if(anios.length===0){
+        return '<div class="card" style="text-align:center;color:var(--color-text-secondary);">No hay calendarios de eventos laborales instalados.</div>';
+      }
+      var html='';
+      anios.forEach(function(anio){
+        var m=meta[anio]||{};
+        var n=Object.keys(eventos[anio]).length;
+        html+='<div class="card" style="margin-bottom:10px;">'+
+          '<div style="font-weight:700;margin-bottom:6px;">📅 Año '+escaparHTML(anio)+'</div>'+
+          '<div style="font-size:0.85rem;color:var(--color-text-secondary);line-height:1.6;">'+
+          (m.nombre?('Nombre: '+escaparHTML(m.nombre)+'<br>'):'')+
+          'Eventos guardados: '+n+'<br>'+
+          (m.fechaActualizacion?('Actualizado: '+formatearFecha(m.fechaActualizacion)+'<br>'):'')+
+          (m.version?('Versión: '+escaparHTML(String(m.version))+'<br>'):'')+
+          (m.observaciones?('Obs.: '+escaparHTML(m.observaciones)):'')+
+          '</div>'+
+          (conBorrar?('<button class="btn btn-secondary" data-anio-borrar="'+anio+'" style="margin-top:10px;width:100%;">🗑️ Eliminar año '+anio+'</button>'):'')+
+          '</div>';
+      });
+      return html;
+    }
+
+    function adminWireBotonesEliminar(){
+      document.querySelectorAll('[data-anio-borrar]').forEach(function(btn){
+        var textoOriginal=btn.textContent;
+        btn.addEventListener('click',function(){
+          confirmarAccion(btn,textoOriginal,function(){
+            var anio=btn.getAttribute('data-anio-borrar');
+            adminEliminarCalendarioAnio(anio);
+          });
+        });
+      });
+    }
+
+    function adminEliminarCalendarioAnio(anio){
+      try{
+        var eventos=JSON.parse(localStorage.getItem('tc_v1_eventos')||'{}');
+        delete eventos[anio];
+        localStorage.setItem('tc_v1_eventos',JSON.stringify(eventos));
+        var meta=adminLeerMeta();
+        delete meta[anio];
+        adminGuardarMeta(meta);
+      }catch(e){}
+      if(typeof window.tcEventosInvalidarCache==='function') window.tcEventosInvalidarCache();
+      mostrarToast('Calendario '+anio+' eliminado','success');
+      adminRenderPantalla('eliminarCalendario');
+    }
+
+    /* Devuelve la lista de años (ordenada) con datos reales en un objeto {anio:{...}} */
+    function adminAniosConDatos(obj){
+      return Object.keys(obj||{}).filter(function(a){
+        var v=obj[a];
+        return v && (typeof v!=='object' || Object.keys(v).length>0);
+      }).sort();
+    }
+
+    function adminEstadoSistemaHTML(){
+      var bloques=[];
+
+      /* Calendario Laboral: años instalados a partir de tc_v1_eventos */
+      var eventos={}; try{ eventos=JSON.parse(localStorage.getItem('tc_v1_eventos')||'{}'); }catch(e){}
+      var aniosLaboral=adminAniosConDatos(eventos);
+      bloques.push({
+        titulo:'Calendario Laboral',
+        estado:aniosLaboral.length>0?'ok':'pendiente',
+        campos:[{label:'Año instalado', valor:aniosLaboral.length>0?aniosLaboral.join(', '):'—'}]
+      });
+
+      /* Calendario de Turnos: años instalados a partir de las claves YYYY-MM-DD de tc_v4_dias */
+      var diasEs={}; try{ diasEs=JSON.parse(localStorage.getItem('tc_v4_dias')||'{}'); }catch(e){}
+      var aniosSet={};
+      Object.keys(diasEs).forEach(function(k){
+        var reg=diasEs[k];
+        if(reg && Object.keys(reg).length>0 && /^\d{4}-\d{2}-\d{2}$/.test(k)) aniosSet[k.substring(0,4)]=true;
+      });
+      var aniosTurnos=Object.keys(aniosSet).sort();
+      bloques.push({
+        titulo:'Calendario de Turnos',
+        estado:aniosTurnos.length>0?'ok':'pendiente',
+        campos:[{label:'Año instalado', valor:aniosTurnos.length>0?aniosTurnos.join(', '):'—'}]
+      });
+
+      /* Convenio (aún no implementado) */
+      bloques.push({
+        titulo:'Convenio',
+        estado:'pendiente',
+        campos:[{label:'Año', valor:'—'}]
+      });
+
+      /* Tablas Salariales (aún no implementado) */
+      bloques.push({
+        titulo:'Tablas Salariales',
+        estado:'pendiente',
+        campos:[{label:'Año', valor:'—'}]
+      });
+
+      /* Base de Datos */
+      var estadoDB=(typeof db!=='undefined'&&db)?'ok':(!window.indexedDB?'error':'pendiente');
+      var versionDB=(typeof DB_VERSION!=='undefined')?DB_VERSION:'—';
+      bloques.push({
+        titulo:'Base de Datos',
+        estado:estadoDB,
+        campos:[{label:'Versión', valor:String(versionDB)}]
+      });
+
+      /* Última Copia de Seguridad */
+      var claveBackup=(typeof BACKUP_AUTO_KEY!=='undefined')?BACKUP_AUTO_KEY:'tussam_ultimo_backup_auto';
+      var claveBackupHora='tussam_ultimo_backup_auto_hora';
+      var ultimoFecha=localStorage.getItem(claveBackup);
+      var ultimoHora=localStorage.getItem(claveBackupHora);
+      var estadoBackup=!ultimoFecha?'error':(ultimoFecha===(typeof fechaHoyISO==='function'?fechaHoyISO():'')?'ok':'pendiente');
+      bloques.push({
+        titulo:'Última Copia Seguridad',
+        estado:estadoBackup,
+        campos:[
+          {label:'Fecha', valor:ultimoFecha?formatearFecha(ultimoFecha):'Nunca se ha generado'},
+          {label:'Hora', valor:ultimoHora||'—'}
+        ]
+      });
+
+      var ICONOS={ok:'🟢 Correcto',pendiente:'🟡 Pendiente',error:'🔴 Error'};
+      var html='';
+      bloques.forEach(function(b){
+        html+='<div class="card" style="margin-bottom:10px;padding:14px 16px;">'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">'+
+          '<div style="font-weight:700;">'+escaparHTML(b.titulo)+'</div>'+
+          '<div style="font-size:0.85rem;white-space:nowrap;">'+ICONOS[b.estado]+'</div>'+
+          '</div>'+
+          '<div style="font-size:0.85rem;color:var(--color-text-secondary);line-height:1.6;">'+
+          b.campos.map(function(c){ return escaparHTML(c.label)+': '+escaparHTML(c.valor); }).join('<br>')+
+          '</div></div>';
+      });
+      return html;
+    }
+
+    function adminRenderPantalla(pantalla){
+      document.getElementById('adminScreenTitle').textContent=ADMIN_TITULOS[pantalla]||ADMIN_TITULOS.main;
+      var body=document.getElementById('adminScreenBody');
+      var volverBtn=pantalla!=='main' ? '<button class="btn btn-secondary" onclick="window.adminVolverPublic()" style="margin-bottom:14px;width:100%;">← Volver</button>' : '';
+
+      if(pantalla==='main'){
+        body.innerHTML=
+          '<div class="menu-grid">'+
+          '<button class="menu-btn" onclick="window.adminIrAPublic(\'datosOficiales\')"><span class="menu-icon">📂</span><span class="menu-label">Datos Oficiales</span></button>'+
+          '<button class="menu-btn" onclick="window.adminIrAPublic(\'estadoSistema\')"><span class="menu-icon">🗄</span><span class="menu-label">Estado del Sistema</span></button>'+
+          '<button class="menu-btn" onclick="window.adminAccionCopias()"><span class="menu-icon">💾</span><span class="menu-label">Copias de Seguridad</span></button>'+
+          '<button class="menu-btn" onclick="window.adminAccionConfiguracion()"><span class="menu-icon">⚙</span><span class="menu-label">Configuración</span></button>'+
+          '<button class="menu-btn" onclick="window.adminCerrarTodo()"><span class="menu-icon">🚪</span><span class="menu-label">Salir</span></button>'+
+          '</div>';
+      } else if(pantalla==='datosOficiales'){
+        body.innerHTML=volverBtn+
+          '<div class="menu-grid">'+
+          '<button class="menu-btn" onclick="window.adminIrAPublic(\'calendarioLaboral\')"><span class="menu-icon">📅</span><span class="menu-label">Calendario Laboral</span></button>'+
+          '<button class="menu-btn" onclick="window.adminProximamente()"><span class="menu-icon">📄</span><span class="menu-label">Convenios</span></button>'+
+          '<button class="menu-btn" onclick="window.adminProximamente()"><span class="menu-icon">💶</span><span class="menu-label">Tablas Salariales</span></button>'+
+          '</div>';
+      } else if(pantalla==='calendarioLaboral'){
+        body.innerHTML=volverBtn+
+          '<div class="menu-grid">'+
+          '<button class="menu-btn" onclick="window.adminAccionActualizarCalendario()"><span class="menu-icon">⬆️</span><span class="menu-label">Actualizar Calendario</span></button>'+
+          '<button class="menu-btn" onclick="window.adminIrAPublic(\'calendariosInstalados\')"><span class="menu-icon">📋</span><span class="menu-label">Calendarios Instalados</span></button>'+
+          '<button class="menu-btn" onclick="window.adminIrAPublic(\'eliminarCalendario\')"><span class="menu-icon">🗑️</span><span class="menu-label">Eliminar Calendario</span></button>'+
+          '</div>';
+      } else if(pantalla==='calendariosInstalados'){
+        body.innerHTML=volverBtn+adminListaCalendariosHTML(false);
+      } else if(pantalla==='eliminarCalendario'){
+        body.innerHTML=volverBtn+adminListaCalendariosHTML(true);
+        adminWireBotonesEliminar();
+      } else if(pantalla==='estadoSistema'){
+        body.innerHTML=volverBtn+adminEstadoSistemaHTML();
+      }
+    }
+
+    /* ---------- Inicialización (no interfiere con el resto de la app) ---------- */
+    document.addEventListener('DOMContentLoaded',function(){
+      adminAttachAccesoBoton();
+      document.getElementById('adminPassCancelar').addEventListener('click',adminCerrarPassword);
+      document.getElementById('adminPassEntrar').addEventListener('click',adminValidarPassword);
+      document.getElementById('adminPassInput').addEventListener('keydown',function(e){ if(e.key==='Enter') adminValidarPassword(); });
+      document.getElementById('adminPassModal').addEventListener('click',function(e){ if(e.target.id==='adminPassModal') adminCerrarPassword(); });
+      document.getElementById('adminBtnCerrar').addEventListener('click',window.adminBtnCerrarClick);
+      document.getElementById('adminOverlay').addEventListener('click',function(e){ if(e.target.id==='adminOverlay') window.adminCerrarTodo(); });
     });
   })();
   </script>
