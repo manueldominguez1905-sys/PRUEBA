@@ -299,24 +299,26 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-week-num{font-size:11px;font-weight:800;color:var(--brand);line-height:1.25;white-space:nowrap;}
 #tc .tc-week-ev{font-size:10px;font-weight:800;color:var(--accent);line-height:1.25;text-transform:uppercase;letter-spacing:.2px;}
 
-/* Celda día TC */
+/* Celda día TC — mismo estilo de celda que el calendario anual (.tc-ad), adaptado al tamaño
+   disponible en la vista mensual (única diferencia permitida: el tamaño de la celda). */
 /* Fallback Safari: aspect-ratio no soportado antes de iOS 15 */
-#tc .tc-d{background:var(--surface);border-radius:var(--r-s);box-shadow:var(--sh-s);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;min-height:52px;transition:transform .1s;-webkit-tap-highlight-color:transparent;}
+#tc .tc-d{background:var(--surface);border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;min-height:52px;transition:transform .1s;-webkit-tap-highlight-color:transparent;}
 @supports (aspect-ratio:1){#tc .tc-d{aspect-ratio:1;min-height:unset;}}
 #tc .tc-d:active{transform:scale(.91);}
 #tc .tc-d.empty{background:transparent;box-shadow:none;cursor:default;pointer-events:none;}
 #tc .tc-d.empty-mes{cursor:default;}
 #tc .tc-d.empty-mes .tc-dnum{color:var(--text3);opacity:.55;}
+#tc .tc-d.today{box-shadow:0 0 0 2px var(--brand);overflow:visible;}
 #tc .tc-d.today .tc-dnum{font-size:16px;font-weight:900;}
 #tc .tc-d.weekend .tc-dnum{color:var(--danger);}
 #tc .tc-dnum{font-size:16px;font-weight:700;line-height:1;position:relative;z-index:1;}
 #tc .tc-dsub{font-size:8px;font-weight:800;letter-spacing:.4px;line-height:1.3;position:relative;z-index:1;}
 #tc .tc-dsub-nac{color:var(--danger);}
 #tc .tc-dsub-loc{color:var(--success);}
-#tc .tc-dtag{font-size:8px;font-weight:700;letter-spacing:.4px;margin-top:3px;padding:2px 5px;border-radius:4px;position:relative;z-index:1;}
+#tc .tc-dtag{font-size:8px;font-weight:700;letter-spacing:.4px;margin-top:3px;padding:2px 5px;border-radius:3px;position:relative;z-index:1;}
 #tc .tc-ddot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:3px;right:4px;z-index:2;}
-#tc .tc-d.has-cambio{box-shadow:0 0 0 2.5px #E65100,var(--sh-s)!important;overflow:visible;}
-#tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:var(--r-s);pointer-events:none;z-index:0;}
+#tc .tc-d.has-cambio{box-shadow:0 0 0 2px #E65100;overflow:visible;}
+#tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:5px;pointer-events:none;z-index:0;}
 
 
 /* OVERLAY TC */
