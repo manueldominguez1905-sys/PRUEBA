@@ -293,12 +293,18 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-dow .tc-dow-spacer{}
 #tc .tc-dow span{text-align:center;font-size:11px;font-weight:700;color:var(--text3);padding:4px 0;text-transform:uppercase;letter-spacing:.3px;}
 #tc .tc-dow span:nth-child(7),#tc .tc-dow span:nth-child(8){color:var(--danger);}
+<<<<<<< HEAD
 #tc .tc-cgrid{display:flex;flex-direction:column;gap:7px;}
 #tc .tc-week-row{display:grid;grid-template-columns:44px repeat(7,1fr);gap:7px;align-items:stretch;}
+=======
+#tc .tc-cgrid{display:flex;flex-direction:column;gap:5px;}
+#tc .tc-week-row{display:grid;grid-template-columns:44px repeat(7,1fr);gap:5px;align-items:stretch;}
+>>>>>>> 794a742aaf5c03d991bbf639e86f9bbfbda55693
 #tc .tc-week-label{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 2px;}
 #tc .tc-week-num{font-size:11px;font-weight:800;color:var(--brand);line-height:1.25;white-space:nowrap;}
 #tc .tc-week-ev{font-size:10px;font-weight:800;color:var(--accent);line-height:1.25;text-transform:uppercase;letter-spacing:.2px;}
 
+<<<<<<< HEAD
 /* Celda día TC — mismo lenguaje visual que el calendario anual (.tc-ad): fondo blanco plano
    (var(--surface)), mismo radio de esquinas reutilizado del sistema de diseño (var(--r-s)) y
    los mismos colores de estado ya usados en la vista anual: var(--brand) para "hoy" y #E65100
@@ -315,6 +321,18 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-d.empty-mes{cursor:default;border-color:var(--bg);}
 #tc .tc-d.empty-mes .tc-dnum{color:var(--text3);opacity:.55;}
 #tc .tc-d.today{border:2px solid var(--brand);overflow:visible;}
+=======
+/* Celda día TC — mismo estilo de celda que el calendario anual (.tc-ad), adaptado al tamaño
+   disponible en la vista mensual (única diferencia permitida: el tamaño de la celda). */
+/* Fallback Safari: aspect-ratio no soportado antes de iOS 15 */
+#tc .tc-d{background:var(--surface);border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;min-height:52px;transition:transform .1s;-webkit-tap-highlight-color:transparent;}
+@supports (aspect-ratio:1){#tc .tc-d{aspect-ratio:1;min-height:unset;}}
+#tc .tc-d:active{transform:scale(.91);}
+#tc .tc-d.empty{background:transparent;box-shadow:none;cursor:default;pointer-events:none;}
+#tc .tc-d.empty-mes{cursor:default;}
+#tc .tc-d.empty-mes .tc-dnum{color:var(--text3);opacity:.55;}
+#tc .tc-d.today{box-shadow:0 0 0 2px var(--brand);overflow:visible;}
+>>>>>>> 794a742aaf5c03d991bbf639e86f9bbfbda55693
 #tc .tc-d.today .tc-dnum{font-size:16px;font-weight:900;}
 #tc .tc-d.weekend .tc-dnum{color:var(--danger);}
 #tc .tc-dnum{font-size:16px;font-weight:700;line-height:1;position:relative;z-index:1;}
@@ -324,7 +342,12 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-dtag{font-size:8px;font-weight:700;letter-spacing:.4px;margin-top:3px;padding:2px 5px;border-radius:3px;position:relative;z-index:1;}
 #tc .tc-ddot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:3px;right:4px;z-index:2;}
 #tc .tc-d.has-cambio{box-shadow:0 0 0 2px #E65100;overflow:visible;}
+<<<<<<< HEAD
 #tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:var(--r-s);pointer-events:none;z-index:0;}
+=======
+#tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:5px;pointer-events:none;z-index:0;}
+
+>>>>>>> 794a742aaf5c03d991bbf639e86f9bbfbda55693
 
 
 /* OVERLAY TC */
