@@ -289,65 +289,63 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 
 /* CALENDARIO TC */
 #tc .tc-cal{margin:0 6px 10px;}
-#tc .tc-dow{display:grid;grid-template-columns:44px repeat(7,1fr);margin-bottom:4px;}
+#tc .tc-dow{display:grid;grid-template-columns:minmax(30px,58px) repeat(7,1fr);margin-bottom:4px;}
 #tc .tc-dow .tc-dow-spacer{}
 #tc .tc-dow span{text-align:center;font-size:11px;font-weight:700;color:var(--text3);padding:4px 0;text-transform:uppercase;letter-spacing:.3px;}
 #tc .tc-dow span:nth-child(7),#tc .tc-dow span:nth-child(8){color:var(--danger);}
-<<<<<<< HEAD
-#tc .tc-cgrid{display:flex;flex-direction:column;gap:7px;}
-#tc .tc-week-row{display:grid;grid-template-columns:44px repeat(7,1fr);gap:7px;align-items:stretch;}
-=======
-#tc .tc-cgrid{display:flex;flex-direction:column;gap:5px;}
-#tc .tc-week-row{display:grid;grid-template-columns:44px repeat(7,1fr);gap:5px;align-items:stretch;}
->>>>>>> 794a742aaf5c03d991bbf639e86f9bbfbda55693
-#tc .tc-week-label{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 2px;}
-#tc .tc-week-num{font-size:11px;font-weight:800;color:var(--brand);line-height:1.25;white-space:nowrap;}
+#tc .tc-cgrid{display:flex;flex-direction:column;gap:9px;}
+#tc .tc-cgrid-mini{gap:4px;}
+#tc .tc-week-row{display:grid;grid-template-columns:minmax(30px,58px) repeat(7,1fr);gap:9px;align-items:stretch;}
+#tc .tc-week-row--mini{grid-template-columns:minmax(18px,26px) repeat(7,1fr);gap:4px;}
+#tc .tc-week-label{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 2px;overflow:hidden;}
+#tc .tc-week-num{container-type:inline-size;container-name:tcwk;font-size:11px;font-weight:800;color:var(--brand);line-height:1.25;white-space:nowrap;display:block;width:100%;}
+#tc .tc-week-full{display:none;}
+#tc .tc-week-short{display:inline;}
+@container tcwk (min-width:50px){
+  #tc .tc-week-full{display:inline;}
+  #tc .tc-week-short{display:none;}
+}
+#tc .tc-week-row--mini .tc-week-num{font-size:8px;}
 #tc .tc-week-ev{font-size:10px;font-weight:800;color:var(--accent);line-height:1.25;text-transform:uppercase;letter-spacing:.2px;}
 
-<<<<<<< HEAD
-/* Celda día TC — mismo lenguaje visual que el calendario anual (.tc-ad): fondo blanco plano
-   (var(--surface)), mismo radio de esquinas reutilizado del sistema de diseño (var(--r-s)) y
-   los mismos colores de estado ya usados en la vista anual: var(--brand) para "hoy" y #E65100
-   para "cambio de turno". Único añadido propio de esta celda (más grande que la anual): un
-   borde fino (var(--border)) para el aspecto "tarjeta con rejilla" solicitado. El turno se
-   sigue mostrando exactamente igual que antes a través de su etiqueta (.tc-dtag, sin cambios);
-   lo único que se evita es que el color de fondo del turno (aplicado por JS a toda la celda)
-   tape el número, forzando que el fondo de la celda permanezca blanco. */
-/* Fallback Safari: aspect-ratio no soportado antes de iOS 15 */
-#tc .tc-d{background:var(--surface)!important;border:1.5px solid var(--border);border-radius:var(--r-s);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;min-height:52px;transition:transform .1s,border-color .1s;-webkit-tap-highlight-color:transparent;}
+/* ============================================================
+   COMPONENTE ÚNICO DE CELDA DE DÍA (DEV-002)
+   .tc-d es el único sistema visual de celda, compartido al 100% entre
+   el calendario Mensual y el Anual. El Anual únicamente añade el
+   modificador .tc-d-mini, que solo ajusta tamaños (nunca colores,
+   bordes de estado ni estructura), para caber en la rejilla de 12 meses.
+   El color de fondo de la celda es el color pastel del turno (misma
+   lógica de colores ya existente, TURNO[x].bg); el turno además se
+   señala con una pequeña pastilla (.tc-dtag) para que nunca domine la
+   celda, dejando el número del día como elemento protagonista. */
+#tc .tc-d{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;min-height:52px;transition:transform .1s,border-color .1s;-webkit-tap-highlight-color:transparent;}
 @supports (aspect-ratio:1){#tc .tc-d{aspect-ratio:1;min-height:unset;}}
 #tc .tc-d:active{transform:scale(.96);}
 #tc .tc-d.empty{background:transparent!important;border-color:transparent;cursor:default;pointer-events:none;}
 #tc .tc-d.empty-mes{cursor:default;border-color:var(--bg);}
 #tc .tc-d.empty-mes .tc-dnum{color:var(--text3);opacity:.55;}
 #tc .tc-d.today{border:2px solid var(--brand);overflow:visible;}
-=======
-/* Celda día TC — mismo estilo de celda que el calendario anual (.tc-ad), adaptado al tamaño
-   disponible en la vista mensual (única diferencia permitida: el tamaño de la celda). */
-/* Fallback Safari: aspect-ratio no soportado antes de iOS 15 */
-#tc .tc-d{background:var(--surface);border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;min-height:52px;transition:transform .1s;-webkit-tap-highlight-color:transparent;}
-@supports (aspect-ratio:1){#tc .tc-d{aspect-ratio:1;min-height:unset;}}
-#tc .tc-d:active{transform:scale(.91);}
-#tc .tc-d.empty{background:transparent;box-shadow:none;cursor:default;pointer-events:none;}
-#tc .tc-d.empty-mes{cursor:default;}
-#tc .tc-d.empty-mes .tc-dnum{color:var(--text3);opacity:.55;}
-#tc .tc-d.today{box-shadow:0 0 0 2px var(--brand);overflow:visible;}
->>>>>>> 794a742aaf5c03d991bbf639e86f9bbfbda55693
 #tc .tc-d.today .tc-dnum{font-size:16px;font-weight:900;}
 #tc .tc-d.weekend .tc-dnum{color:var(--danger);}
 #tc .tc-dnum{font-size:16px;font-weight:700;line-height:1;position:relative;z-index:1;}
 #tc .tc-dsub{font-size:8px;font-weight:800;letter-spacing:.4px;line-height:1.3;position:relative;z-index:1;}
 #tc .tc-dsub-nac{color:var(--danger);}
 #tc .tc-dsub-loc{color:var(--success);}
-#tc .tc-dtag{font-size:8px;font-weight:700;letter-spacing:.4px;margin-top:3px;padding:2px 5px;border-radius:3px;position:relative;z-index:1;}
+#tc .tc-dtag{font-size:9px;font-weight:700;letter-spacing:.3px;margin-top:3px;padding:2px 6px;border-radius:5px;position:relative;z-index:1;}
 #tc .tc-ddot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:3px;right:4px;z-index:2;}
 #tc .tc-d.has-cambio{box-shadow:0 0 0 2px #E65100;overflow:visible;}
-<<<<<<< HEAD
-#tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:var(--r-s);pointer-events:none;z-index:0;}
-=======
-#tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:5px;pointer-events:none;z-index:0;}
+#tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:12px;pointer-events:none;z-index:0;}
 
->>>>>>> 794a742aaf5c03d991bbf639e86f9bbfbda55693
+/* Modificador --mini: mismo componente .tc-d, reducido para la vista Anual (12 meses).
+   Solo cambia tamaño/tipografía; toda la lógica de color, estado y estructura es la de .tc-d. */
+#tc .tc-d-mini{border-width:1px;border-radius:6px;min-height:30px;}
+@supports (aspect-ratio:1){#tc .tc-d-mini{aspect-ratio:1;min-height:unset;}}
+#tc .tc-d-mini.today{border-width:1.5px;}
+#tc .tc-d-mini .tc-dnum{font-size:10.5px;}
+#tc .tc-d-mini.today .tc-dnum{font-size:11.5px;}
+#tc .tc-d-mini .tc-dtag{font-size:6.5px;padding:1px 3px;margin-top:1px;border-radius:2.5px;}
+#tc .tc-d-mini .tc-ddot{width:4px;height:4px;bottom:2px;right:2px;}
+#tc .tc-d-mini .tc-d-thumb{border-radius:6px;}
 
 
 /* OVERLAY TC */
@@ -477,17 +475,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-anual-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:3px;}
 #tc .tc-anual-dow span{text-align:center;font-size:9px;font-weight:700;color:var(--text3);padding:2px 0;text-transform:uppercase;}
 #tc .tc-anual-dow span:nth-child(6),#tc .tc-anual-dow span:nth-child(7){color:var(--danger);}
-#tc .tc-anual-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-#tc .tc-ad{background:var(--surface);border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;min-height:34px;-webkit-tap-highlight-color:transparent;transition:transform .1s;}
-@supports (aspect-ratio:1){#tc .tc-ad{aspect-ratio:1;min-height:unset;}}
-#tc .tc-ad:active{transform:scale(.88);}
-#tc .tc-ad.empty{background:transparent;cursor:default;pointer-events:none;}
-#tc .tc-ad.weekend .tc-adnum{color:var(--danger);}
-#tc .tc-ad.today{box-shadow:0 0 0 2px var(--brand);}
-#tc .tc-ad.has-cambio{box-shadow:0 0 0 2px #E65100;}
-#tc .tc-adnum{font-size:11px;font-weight:700;line-height:1;position:relative;z-index:1;}
-#tc .tc-adtag{font-size:7px;font-weight:800;letter-spacing:.2px;padding:1px 3px;border-radius:3px;margin-top:2px;position:relative;z-index:1;color:#fff;}
-#tc .tc-addot{width:4px;height:4px;border-radius:50%;position:absolute;bottom:2px;right:3px;z-index:2;}
+/* La rejilla de días de cada mes en el Anual reutiliza .tc-cgrid/.tc-week-row (con el
+   modificador --mini) y el componente de celda .tc-d/.tc-d-mini — ver tcRenderAnual(). */
 
 /* --- Eventos Laborales (aditivo, no altera estilos de turnos) --- */
 #tc .tc-ev-day{outline:2px dotted #C05621;outline-offset:-2px;}
@@ -514,8 +503,9 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
     <div style="background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
-        <div><strong>Aplicación:</strong> CORREGIDO RECAUDACION 0 + BANNERS</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">2.08</span></div>
+        <div><strong>Aplicación:</strong> DEV-002</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-002</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Unificación visual del calendario Mensual y Anual del Diario del Conductor.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -2599,7 +2589,7 @@ function tcRenderCal(){
 
     var wkCell=document.createElement('div');
     wkCell.className='tc-week-label';
-    wkCell.innerHTML='<div class="tc-week-num">Sem. '+numSemana+'</div>'+
+    wkCell.innerHTML='<span class="tc-week-num"><span class="tc-week-full">Sem. '+numSemana+'</span><span class="tc-week-short">S.'+numSemana+'</span></span>'+
       (etiquetaAnual?('<div class="tc-week-ev">'+etiquetaAnual+'</div>'):'');
     row.appendChild(wkCell);
 
@@ -2698,45 +2688,72 @@ function tcRenderAnual(){
     var dowDiv=document.createElement('div'); dowDiv.className='tc-anual-dow';
     dowLabels.forEach(function(l){var s=document.createElement('span');s.textContent=l;dowDiv.appendChild(s);});
     mesDiv.appendChild(dowDiv);
-    /* Grid días */
-    var grid=document.createElement('div'); grid.className='tc-anual-grid';
+
+    /* Grid del mes: mismo componente que el Mensual (.tc-cgrid + .tc-week-row), en su
+       variante --mini, para que cada mes sea una versión reducida del calendario mensual,
+       incluyendo el número de semana a la izquierda de cada fila. */
+    var grid=document.createElement('div'); grid.className='tc-cgrid tc-cgrid-mini';
     var nd=new Date(anio,m+1,0).getDate();
     var off=(new Date(anio,m,1).getDay()+6)%7;
-    for(var i=0;i<off;i++){var e=document.createElement('div');e.className='tc-ad empty';grid.appendChild(e);}
-    for(var d=1;d<=nd;d++){
-      var key=anio+'-'+tcPad(m+1)+'-'+tcPad(d);
-      var reg=dias[key];
-      var dow=(new Date(anio,m,d).getDay()+6)%7;
-      var esHoy=anio===hoy.getFullYear()&&m===hoy.getMonth()&&d===hoy.getDate();
-      var cell=document.createElement('div');
-      var cls='tc-ad'+(dow>=5?' weekend':'')+(esHoy?' today':'');
-      if(reg&&reg.cambio) cls+=' has-cambio';
-      cell.className=cls;
-      if(reg&&reg.turno&&TURNO[reg.turno]){
-        var t=TURNO[reg.turno];
-        if(t.partido){
-          var c2=tcAdjustHex(t.bg,-20);
-          cell.style.background='repeating-linear-gradient(135deg,'+t.bg+' 0,'+t.bg+' 5px,'+c2+' 5px,'+c2+' 7px)';
-        } else {
-          cell.style.background=t.bg;
+
+    var celdas=[];
+    for(var i=0;i<off;i++){ celdas.push(null); }
+    for(var d=1;d<=nd;d++){ celdas.push(d); }
+    while(celdas.length%7!==0){ celdas.push(null); }
+
+    for(var w=0;w<celdas.length;w+=7){
+      var semanaCeldas=celdas.slice(w,w+7);
+      var row=document.createElement('div'); row.className='tc-week-row tc-week-row--mini';
+
+      var wkCell=document.createElement('div'); wkCell.className='tc-week-label';
+      var primerDia=null;
+      for(var x=0;x<semanaCeldas.length;x++){ if(semanaCeldas[x]!=null){ primerDia=semanaCeldas[x]; break; } }
+      if(primerDia!=null){
+        var keyRef=tcFk(anio,m,primerDia);
+        var semISO=tcSemanaISO(keyRef);
+        var numSemana=semISO.split('W')[1];
+        wkCell.innerHTML='<span class="tc-week-num"><span class="tc-week-full">Sem. '+numSemana+'</span><span class="tc-week-short">S.'+numSemana+'</span></span>';
+      }
+      row.appendChild(wkCell);
+
+      semanaCeldas.forEach(function(d){
+        var cell=document.createElement('div');
+        if(d==null){ cell.className='tc-d tc-d-mini empty'; row.appendChild(cell); return; }
+        var key=tcFk(anio,m,d);
+        var reg=dias[key];
+        var dow=(new Date(anio,m,d).getDay()+6)%7;
+        var esHoy=anio===hoy.getFullYear()&&m===hoy.getMonth()&&d===hoy.getDate();
+        var cls='tc-d tc-d-mini'+(dow>=5?' weekend':'')+(esHoy?' today':'');
+        if(reg&&reg.cambio) cls+=' has-cambio';
+        cell.className=cls;
+        if(reg&&reg.turno&&TURNO[reg.turno]){
+          var t=TURNO[reg.turno];
+          if(t.partido){
+            var c2=tcAdjustHex(t.bg,-20);
+            cell.style.background='repeating-linear-gradient(135deg,'+t.bg+' 0,'+t.bg+' 5px,'+c2+' 5px,'+c2+' 7px)';
+          } else {
+            cell.style.background=t.bg;
+          }
         }
-      }
-      var numEl=document.createElement('div'); numEl.className='tc-adnum'; numEl.textContent=d;
-      if(reg&&reg.turno&&TURNO[reg.turno]) numEl.style.color=TURNO[reg.turno].textColor;
-      cell.appendChild(numEl);
-      if(reg&&reg.turno&&TURNO[reg.turno]){
-        var tagEl=document.createElement('div'); tagEl.className='tc-adtag';
-        tagEl.textContent=TURNO[reg.turno].tag;
-        tagEl.style.background=TURNO[reg.turno].tagColor;
-        cell.appendChild(tagEl);
-      }
-      if(reg&&reg.incidencia){
-        var dot=document.createElement('div'); dot.className='tc-addot'; dot.style.background='var(--danger)';
-        cell.appendChild(dot);
-      }
-      (function(k,r){cell.addEventListener('click',function(){tcOpenDay(k,r);});})(key,reg);
-      tcAplicarEventoEnCelda(cell,key);
-      grid.appendChild(cell);
+        var numEl=document.createElement('div'); numEl.className='tc-dnum'; numEl.textContent=d;
+        if(reg&&reg.turno&&TURNO[reg.turno]) numEl.style.color=TURNO[reg.turno].textColor;
+        cell.appendChild(numEl);
+        if(reg&&reg.turno&&TURNO[reg.turno]){
+          var tagEl=document.createElement('div'); tagEl.className='tc-dtag';
+          tagEl.textContent=TURNO[reg.turno].tag;
+          tagEl.style.background=TURNO[reg.turno].tagColor; tagEl.style.color='#fff';
+          cell.appendChild(tagEl);
+        }
+        if(reg&&reg.incidencia){
+          var dot=document.createElement('div'); dot.className='tc-ddot'; dot.style.background='var(--danger)';
+          cell.appendChild(dot);
+        }
+        (function(k,r){cell.addEventListener('click',function(){tcOpenDay(k,r);});})(key,reg);
+        tcAplicarEventoEnCelda(cell,key);
+        row.appendChild(cell);
+      });
+
+      grid.appendChild(row);
     }
     mesDiv.appendChild(grid);
     contenedor.appendChild(mesDiv);
