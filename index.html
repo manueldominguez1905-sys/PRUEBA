@@ -289,14 +289,14 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 
 /* CALENDARIO TC */
 #tc .tc-cal{margin:0 6px 10px;}
-#tc .tc-dow{display:grid;grid-template-columns:minmax(30px,58px) repeat(7,1fr);margin-bottom:4px;}
+#tc .tc-dow{display:grid;grid-template-columns:minmax(30px,58px) repeat(7,minmax(0,1fr));margin-bottom:4px;}
 #tc .tc-dow .tc-dow-spacer{}
 #tc .tc-dow span{text-align:center;font-size:11px;font-weight:700;color:var(--text3);padding:4px 0;text-transform:uppercase;letter-spacing:.3px;}
 #tc .tc-dow span:nth-child(7),#tc .tc-dow span:nth-child(8){color:var(--danger);}
 #tc .tc-cgrid{display:flex;flex-direction:column;gap:9px;}
 #tc .tc-cgrid-mini{gap:4px;}
-#tc .tc-week-row{display:grid;grid-template-columns:minmax(30px,58px) repeat(7,1fr);gap:9px;align-items:stretch;}
-#tc .tc-week-row--mini{grid-template-columns:minmax(18px,26px) repeat(7,1fr);gap:4px;}
+#tc .tc-week-row{display:grid;grid-template-columns:minmax(30px,58px) repeat(7,minmax(0,1fr));gap:9px;align-items:stretch;}
+#tc .tc-week-row--mini{grid-template-columns:minmax(18px,26px) repeat(7,minmax(0,1fr));gap:4px;}
 #tc .tc-week-label{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 2px;overflow:hidden;}
 #tc .tc-week-num{container-type:inline-size;container-name:tcwk;font-size:11px;font-weight:800;color:var(--brand);line-height:1.25;white-space:nowrap;display:block;width:100%;}
 #tc .tc-week-full{display:none;}
@@ -318,9 +318,9 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
    lógica de colores ya existente, TURNO[x].bg); el turno además se
    señala con una pequeña pastilla (.tc-dtag) para que nunca domine la
    celda, dejando el número del día como elemento protagonista. */
-#tc .tc-d{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;min-height:52px;transition:transform .1s,border-color .1s;-webkit-tap-highlight-color:transparent;}
+#tc .tc-d{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;min-height:52px;transition:border-color .1s;-webkit-tap-highlight-color:transparent;isolation:isolate;-webkit-transform:translateZ(0);}
 @supports (aspect-ratio:1){#tc .tc-d{aspect-ratio:1;min-height:unset;}}
-#tc .tc-d:active{transform:scale(.96);}
+#tc .tc-d:active{opacity:.75;}
 #tc .tc-d.empty{background:transparent!important;border-color:transparent;cursor:default;pointer-events:none;}
 #tc .tc-d.empty-mes{cursor:default;border-color:var(--bg);}
 #tc .tc-d.empty-mes .tc-dnum{color:var(--text3);opacity:.55;}
@@ -472,7 +472,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-anual{padding:0 6px 12px;}
 #tc .tc-anual-mes{margin-bottom:14px;}
 #tc .tc-anual-mes-title{font-size:12px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:0 2px;margin-bottom:5px;}
-#tc .tc-anual-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:3px;}
+#tc .tc-anual-dow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin-bottom:3px;}
 #tc .tc-anual-dow span{text-align:center;font-size:9px;font-weight:700;color:var(--text3);padding:2px 0;text-transform:uppercase;}
 #tc .tc-anual-dow span:nth-child(6),#tc .tc-anual-dow span:nth-child(7){color:var(--danger);}
 /* La rejilla de días de cada mes en el Anual reutiliza .tc-cgrid/.tc-week-row (con el
