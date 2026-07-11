@@ -3155,13 +3155,18 @@ var TC_COLORES_NUEVOS=[
 ];
 var tcColorNuevoIdx=0;
 
+function tcHashCodigo(s){
+  var h=0;
+  for(var i=0;i<s.length;i++){ h=((h<<5)-h+s.charCodeAt(i))|0; }
+  return Math.abs(h);
+}
+
 function tcCrearTurnoNuevo(codigo){
   /* Normalizar alias conocidos del PDF de TUSSAM */
   var ALIAS={'DESC':'D','VACA':'V','DESC.':'D','VACA.':'V','DI':'D','TP':'PT'};
   if(ALIAS[codigo]) return ALIAS[codigo];
   if(TURNO[codigo]) return codigo;
-  var c=TC_COLORES_NUEVOS[tcColorNuevoIdx%TC_COLORES_NUEVOS.length];
-  tcColorNuevoIdx++;
+  var c=TC_COLORES_NUEVOS[tcHashCodigo(codigo)%TC_COLORES_NUEVOS.length];
   TURNO[codigo]={label:codigo,tag:codigo,icon:'📋',bg:c.bg,textColor:c.textColor,tagColor:c.tagColor};
   saveTurnos();
   return codigo;
@@ -3198,6 +3203,12 @@ function tcParsearCalAnual(texto){
     return ALIAS[s]||s;
   }
 
+  /* Turno corrido por defecto (sin indicación de partido): M/T/N → CM/CT/CN */
+  function tcAlCorrido(cod){
+    var M={'T':'CT','M':'CM','N':'CN'};
+    return M[cod]||cod;
+  }
+
   /* ¿Es un token que parece código de turno?
      Empieza por letra, solo letras/dígitos/puntos, max 6 chars */
   function esCodTurno(s){
@@ -3219,6 +3230,18 @@ function tcParsearCalAnual(texto){
   }
 
   var lineas=texto.split(/\r?\n/);
+
+  /* Detección de régimen declarado en la cabecera del PDF (texto que aparece
+     antes/encima de las filas semanales, ej. "TURNO PARTIDO", "JORNADA CORRIDA").
+     Sirve como valor por defecto cuando una semana concreta no trae su propio
+     campo OBSERV con TP/PM/PN/PT. La indicación por semana (OBSERV) siempre
+     tiene prioridad sobre este valor global. */
+  var reHeaderPartido=/JORNADA\s+PARTID|TURNO\s+PARTID|R[EÉ]GIMEN\s+PARTID/i;
+  var reHeaderCorrido=/JORNADA\s+CORRID|TURNO\s+CORRID|R[EÉ]GIMEN\s+CORRID/i;
+  var partidoGlobal=false;
+  if(reHeaderPartido.test(texto)) partidoGlobal=true;
+  else if(reHeaderCorrido.test(texto)) partidoGlobal=false;
+
   var semanasDetectadas=0;
 
   for(var i=0;i<lineas.length;i++){
@@ -3246,11 +3269,14 @@ function tcParsearCalAnual(texto){
          M + partido → PM  (Partido Mañana)
          N + partido → PN  (Partido Noche)
        Si OBSERV no indica partido (S.S., FER., ...) → ignorar.
-       Si hay 7 → son directamente los 7 días (jornada corrida). */
-    var observPartido=false;
+       Si hay 7 → son directamente los 7 días (jornada corrida).
+       Si la semana no trae OBSERV explícito, se usa el régimen detectado en
+       la cabecera del PDF (partidoGlobal) como valor por defecto. */
+    var observPartido=partidoGlobal;
     if(candidatos.length>=8){
       var observ=candidatos[0];
-      observPartido=(observ==='TP'||observ==='PM'||observ==='PN'||observ==='PT');
+      if(observ==='TP'||observ==='PM'||observ==='PN'||observ==='PT') observPartido=true;
+      else if(observ==='CT'||observ==='CM'||observ==='CN'||observ==='CORRIDO'||observ==='C') observPartido=false;
       candidatos=candidatos.slice(1,8);
     } else if(candidatos.length>0&&candidatos.length<7){
       /* Intentar completar desde la línea siguiente */
@@ -3284,8 +3310,8 @@ function tcParsearCalAnual(texto){
       var PARTIDO_MAP={'T':'PT','M':'PM','N':'PN'};
       candidatos=candidatos.map(function(cod){return PARTIDO_MAP[cod]||cod;});
     } else {
-      /* Sin contexto de partido: "T" pertenece a turno corrido → CT */
-      candidatos=candidatos.map(function(cod){return cod==='T'?'CT':cod;});
+      /* Sin contexto de partido (OBSERV vacío o no indica partido): turno corrido por defecto */
+      candidatos=candidatos.map(tcAlCorrido);
     }
 
     var fechas=semanaFechas(diaI,mesI,diaF,mesF);
@@ -3312,7 +3338,7 @@ function tcParsearCalAnual(texto){
       if(mfb){
         var db=parseInt(mfb[1],10),mob=parseInt(mfb[2],10);
         if(db>=1&&db<=31&&mob>=1&&mob<=12){
-          for(var jb=1;jb<=2;jb++){var nxb=(tokens[ii+jb]||'').toUpperCase().trim();if(VALID_COD.test(nxb)){var ncb=normCod(nxb);result[anioActual+'-'+tcPad(mob)+'-'+tcPad(db)]=(ncb==='T'?'CT':ncb);break;}}
+          for(var jb=1;jb<=2;jb++){var nxb=(tokens[ii+jb]||'').toUpperCase().trim();if(VALID_COD.test(nxb)){var ncb=normCod(nxb);result[anioActual+'-'+tcPad(mob)+'-'+tcPad(db)]=tcAlCorrido(ncb);break;}}
         }
         continue;
       }
@@ -3320,7 +3346,7 @@ function tcParsearCalAnual(texto){
       if(mdb){
         var db2=parseInt(mdb[1],10);
         if(db2>=1&&db2<=31){
-          for(var jb2=1;jb2<=2;jb2++){var nxb2=(tokens[ii+jb2]||'').toUpperCase().trim();if(VALID_COD.test(nxb2)){var ncb2=normCod(nxb2);result[anioActual+'-'+tcPad(mesAct)+'-'+tcPad(db2)]=(ncb2==='T'?'CT':ncb2);break;}}
+          for(var jb2=1;jb2<=2;jb2++){var nxb2=(tokens[ii+jb2]||'').toUpperCase().trim();if(VALID_COD.test(nxb2)){var ncb2=normCod(nxb2);result[anioActual+'-'+tcPad(mesAct)+'-'+tcPad(db2)]=tcAlCorrido(ncb2);break;}}
         }
       }
     }
