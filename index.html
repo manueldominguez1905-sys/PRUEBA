@@ -504,8 +504,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-002</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-002</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Unificación visual del calendario Mensual y Anual del Diario del Conductor.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-002R2</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección de la numeración ISO de semanas y eliminación del turno ficticio "M".</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -2374,8 +2374,26 @@ function saveDias(){
   catch(e){tcToast('⚠️ Almacenamiento lleno. Borra días antiguos para liberar espacio.');}
 }
 
+/* Limpieza dirigida del turno ficticio "M" creado como efecto colateral del bug
+   de parseo ya corregido (un código suelto "M" del PDF, sin contexto de partido,
+   no se mapeaba a "CM" y se creaba como turno nuevo con color inventado).
+   "M" no forma parte de TURNOS_DEFAULT, por lo que nunca puede ser un turno oficial.
+   Los días que ya tuvieran asignado ese turno ficticio se remapean a su equivalente
+   oficial correcto (CM = Corrido Mañana), sin perder el día ni su información. */
+function tcLimpiarTurnoFicticioM(){
+  if(TURNO['M'] && !TURNOS_DEFAULT['M']){
+    Object.keys(dias).forEach(function(k){
+      if(dias[k] && dias[k].turno==='M'){ dias[k].turno='CM'; }
+    });
+    delete TURNO['M'];
+    saveTurnos();
+    saveDias();
+  }
+}
+
 function tcInit(){
   loadTurnos(); loadDias();
+  tcLimpiarTurnoFicticioM();
   var h=new Date(); vY=h.getFullYear(); vM=h.getMonth();
   tcRenderHdr(); tcRenderLeyenda(); tcRenderCal();
   tcBuildTurnoSelects();
@@ -2972,13 +2990,23 @@ window.tcImpProcess=function(){
 };
 /* Devuelve el número de semana ISO (lunes=inicio) de una clave 'YYYY-MM-DD' */
 function tcSemanaISO(key){
+  /* Convención TUSSAM: la semana se etiqueta según el año al que pertenece
+     su LUNES (no el jueves, que es lo que usa el ISO-8601 estricto).
+     Efecto: la semana que arranca en diciembre y cruza a enero se queda
+     con el año que termina (ej. "Semana 52"), y la Semana 1 del año nuevo
+     empieza en el primer lunes ya dentro de ese año. */
   var p=key.split('-');
-  var d=new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10));
-  var tmp=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
-  tmp.setUTCDate(tmp.getUTCDate()+4-(tmp.getUTCDay()||7));
-  var yearStart=new Date(Date.UTC(tmp.getUTCFullYear(),0,1));
-  var wk=Math.ceil((((tmp-yearStart)/86400000)+1)/7);
-  return tmp.getUTCFullYear()+'W'+wk;
+  var d=new Date(Date.UTC(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10)));
+  var dow=d.getUTCDay()||7; /* Lunes=1 .. Domingo=7 */
+  var monday=new Date(d);
+  monday.setUTCDate(monday.getUTCDate()-(dow-1));
+  var weekYear=monday.getUTCFullYear();
+  var jan1=new Date(Date.UTC(weekYear,0,1));
+  var jan1Dow=jan1.getUTCDay()||7;
+  var firstMonday=new Date(jan1);
+  firstMonday.setUTCDate(jan1.getUTCDate()+(jan1Dow===1?0:(8-jan1Dow)));
+  var wk=Math.round((monday-firstMonday)/(7*86400000))+1;
+  return weekYear+'W'+wk;
 }
 
 /* Elimina imgData y thumbData de todos los días de la semana más antigua con hojas */
