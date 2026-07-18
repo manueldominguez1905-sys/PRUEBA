@@ -503,9 +503,9 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
     <div style="background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
-        <div><strong>Aplicación:</strong> DEV-002</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-002R2</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección de la numeración ISO de semanas y eliminación del turno ficticio "M".</div>
+        <div><strong>Aplicación:</strong> DEV-003</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-003</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Eliminación de la acción duplicada "Subir calendario". Se mantiene una única opción: "Importar calendario de turnos".</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -805,7 +805,6 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
             <div class="tc-menu-wrap">
               <button class="tc-menu-btn" onclick="tcToggleMenu()">&#9776; Acciones</button>
               <div class="tc-dropdown" id="tc-dropdown">
-                <button class="tc-dd-item" onclick="tcMenuAction(tcOpenCal)">&#128197; Subir calendario</button>
                 <button class="tc-dd-item" onclick="tcMenuAction(tcOpenImport)">&#128196; Subir hojas de ruta</button>
                 <button class="tc-dd-item" onclick="tcMenuAction(tcOpenAsignar)">&#128295; Asignar turnos</button>
                 <button class="tc-dd-item" onclick="tcMenuAction(tcLeyenda)">&#127912; Tipos de turnos</button>
