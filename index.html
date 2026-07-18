@@ -505,7 +505,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-003</div>
         <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-003</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Eliminación de la acción duplicada "Subir calendario". Se mantiene una única opción: "Importar calendario de turnos".</div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Gestión individual de hojas de ruta y recuerdo de la última ubicación utilizada para seleccionar archivos PDF.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -864,11 +864,13 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
           <div class="tc-view-body">
             <div id="vw-turno"></div>
             <div class="tc-ruta-wrap" id="vw-ruta"><div class="tc-ruta-empty"><span>&#128203;</span><p>Sin hoja de ruta</p></div></div>
+            <div class="tc-day-actions" id="vw-ruta-actions"></div>
+            <input type="file" id="dia-hoja-file" accept="application/pdf" onchange="tcDiaHojaPdf(this)" style="display:none">
             <div class="tc-view-extra" id="vw-extra"></div>
             <div class="tc-day-actions">
               <button class="tc-btn tc-btn-ghost" onclick="tcToEdit()">&#9999;&#65039; Editar</button>
               <button class="tc-btn tc-btn-orange" onclick="tcToCambio()">&#128260; Cambio</button>
-              <button class="tc-btn tc-btn-danger" onclick="tcDeleteDay()">&#128465;&#65039; Borrar</button>
+              <button class="tc-btn tc-btn-danger" id="tc-btn-borrar-dia" onclick="tcDeleteDay()">&#128465;&#65039; Borrar</button>
             </div>
           </div>
         </div>
@@ -904,7 +906,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
               <label class="tc-lbl">Nueva hoja de ruta (PDF) <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label>
               <div class="tc-pdf-row">
                 <div class="tc-pdf-name" id="cambio-pdf-name">Sin hoja seleccionada</div>
-                <button class="tc-mini-btn" onclick="document.getElementById('cambio-pdf-file').click()">Elegir PDF</button>
+                <button class="tc-mini-btn" onclick="tcPdfPick('cambio-pdf-file',tcCambioPdf)">Elegir PDF</button>
                 <input type="file" id="cambio-pdf-file" accept="application/pdf" onchange="tcCambioPdf(this)" style="display:none">
               </div>
             </div>
@@ -921,7 +923,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
           </div>
           <div class="tc-imp-panel">
             <div id="imp-zone-wrap">
-              <div class="tc-zone" onclick="document.getElementById('imp-file').click()">
+              <div class="tc-zone" onclick="tcPdfPick('imp-file',tcImpLoad)">
                 <div class="tc-zone-icon">&#128196;</div>
                 <div class="tc-zone-title">Seleccionar PDF de la semana</div>
                 <div class="tc-zone-sub">Una p&#225;gina por d&#237;a</div>
@@ -952,7 +954,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
           </div>
           <div class="tc-imp-panel">
             <div id="cal-zone-wrap">
-              <div class="tc-zone" onclick="document.getElementById('cal-file').click()">
+              <div class="tc-zone" onclick="tcPdfPick('cal-file',tcCalLoad)">
                 <div class="tc-zone-icon">&#128197;</div>
                 <div class="tc-zone-title">Seleccionar calendario anual (PDF)</div>
                 <div class="tc-zone-sub">P&#225;gina &#250;nica &middot; CM CT CN PM PT PN D V</div>
@@ -2818,6 +2820,13 @@ function tcRenderView(key,reg){
   } else {
     rw.innerHTML='<div class="tc-ruta-empty"><span>📋</span><p>Sin hoja de ruta</p></div>';
   }
+  var raw=document.getElementById('vw-ruta-actions');
+  if(reg.imgData){
+    raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)">🔁 Reemplazar hoja</button>'
+      +'<button class="tc-btn tc-btn-danger" onclick="tcDiaHojaDelete()">🗑️ Eliminar hoja</button>';
+  } else {
+    raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)">➕ Añadir hoja de ruta</button>';
+  }
   var html='';
   if(reg.cambio){
     var destFmt=reg.cambioFechaDestino?tcFmtF(reg.cambioFechaDestino):'—';
@@ -2851,7 +2860,7 @@ window.tcSaveEdit=function(){
   tcToast('✔ Cambios guardados');
 };
 window.tcDeleteDay=function(){
-  var btn=document.querySelector('#pnl-view .tc-btn-danger');
+  var btn=document.getElementById('tc-btn-borrar-dia');
   if(!btn)return;
   if(btn.getAttribute('data-confirmando')==='true'){
     btn.removeAttribute('data-confirmando'); btn.textContent='🗑️ Borrar';
@@ -2907,6 +2916,100 @@ window.tcCambioPdf=function(input){
   };
   reader.readAsArrayBuffer(file);
 };
+/* Procesa la primera página de un PDF y devuelve (vía callback) imgData + thumbData,
+   reutilizando el mismo procedimiento/calidad que ya usa la app (escala 1.0, jpeg 0.60;
+   miniatura máx. 300px de ancho, jpeg 0.45). */
+function tcProcesarPrimeraPaginaPdf(file,callback){
+  if(typeof pdfjsLib==='undefined'){tcToast('Error cargando PDF.js');return;}
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    pdfjsLib.getDocument({data:new Uint8Array(ev.target.result)}).promise.then(function(pdf){
+      pdf.getPage(1).then(function(page){
+        var vp=page.getViewport({scale:1.0});
+        var cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
+        page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise.then(function(){
+          var imgData=cv.toDataURL('image/jpeg',0.60);
+          var img=new Image();
+          img.onload=function(){
+            try{
+              var thumbW=Math.min(img.width,300);
+              var thumbH=Math.round(img.height*(thumbW/img.width));
+              var tcv=document.createElement('canvas'); tcv.width=thumbW; tcv.height=thumbH;
+              tcv.getContext('2d').drawImage(img,0,0,thumbW,thumbH);
+              callback(imgData,tcv.toDataURL('image/jpeg',0.45));
+            }catch(e){callback(imgData,imgData);}
+          };
+          img.onerror=function(){callback(imgData,imgData);};
+          img.src=imgData;
+        });
+      });
+    }).catch(function(){tcToast('Error leyendo PDF');});
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* Selector de PDF con recuerdo de la última carpeta usada (File System Access API),
+   con fallback automático al <input type="file"> existente cuando el navegador no
+   admite showOpenFilePicker (p.ej. Safari/iPhone) o si el usuario cancela por error. */
+window.tcPdfPick=function(inputId,handler){
+  if(window.showOpenFilePicker){
+    window.showOpenFilePicker({
+      id:'tussam-pdf-ultima-ruta',
+      multiple:false,
+      excludeAcceptAllOption:true,
+      types:[{description:'PDF',accept:{'application/pdf':['.pdf']}}]
+    }).then(function(handles){
+      return handles[0].getFile();
+    }).then(function(file){
+      handler({files:[file]});
+    }).catch(function(err){
+      if(err&&err.name==='AbortError')return; /* cancelado por el usuario: no hacer nada */
+      var input=document.getElementById(inputId);
+      if(input)input.click();
+    });
+  } else {
+    var input=document.getElementById(inputId);
+    if(input)input.click();
+  }
+};
+
+/* Añade o reemplaza la hoja de ruta del día abierto, conservando el resto de datos */
+window.tcDiaHojaPdf=function(input){
+  var file=input.files&&input.files[0]; if(!file||!activeDate)return;
+  var habiaHoja=!!(dias[activeDate]&&dias[activeDate].imgData);
+  tcProcesarPrimeraPaginaPdf(file,function(imgData,thumbData){
+    var reg=dias[activeDate]||{};
+    reg.imgData=imgData; reg.thumbData=thumbData;
+    dias[activeDate]=reg;
+    saveDias(); tcRenderCal(); tcRenderView(activeDate,reg);
+    document.getElementById('dia-hoja-file').value='';
+    tcToast(habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida');
+  });
+};
+
+/* Elimina únicamente imgData/thumbData del día abierto, sin tocar el resto de campos */
+window.tcDiaHojaDelete=function(){
+  var btn=document.querySelector('#vw-ruta-actions .tc-btn-danger');
+  if(!btn)return;
+  if(btn.getAttribute('data-confirmando')==='true'){
+    btn.removeAttribute('data-confirmando'); btn.textContent='🗑️ Eliminar hoja';
+  } else {
+    btn.setAttribute('data-confirmando','true'); btn.textContent='✅ ¿Seguro?';
+    setTimeout(function(){
+      if(btn.getAttribute('data-confirmando')==='true'){
+        btn.removeAttribute('data-confirmando'); btn.textContent='🗑️ Eliminar hoja';
+      }
+    },3000);
+    return;
+  }
+  if(!activeDate||!dias[activeDate])return;
+  var reg=dias[activeDate];
+  delete reg.imgData; delete reg.thumbData;
+  dias[activeDate]=reg;
+  saveDias(); tcRenderCal(); tcRenderView(activeDate,reg);
+  tcToast('🗑️ Hoja de ruta eliminada');
+};
+
 window.tcSaveCambio=function(){
   var reg=dias[activeDate]||{};
   var comp=document.getElementById('cambio-companero').value.trim();
