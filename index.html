@@ -504,8 +504,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-004</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004R1</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Reparación de la extracción de jornada desde hojas de ruta, conexión con recaudaciones, visualización de datos y conservación de ampliaciones.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004R4</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección final de restauración de backups y avisos de sincronización.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -1356,6 +1356,12 @@ var listaRecaudaciones = [];
 var listaLiquidaciones = [];
 var editandoRecaudacionId = null;
 var editandoLiquidacionId = null;
+/* Estado temporal de edición de las dos horas de una recaudación (DEV-004R2):
+   conserva ambas horas en memoria mientras el usuario cambia de selector,
+   para no mezclar ni perder la hora de la parte que no está viendo. */
+var recEditHoraParte1 = null;
+var recEditHoraParte2 = null;
+var recHoraParteActual = "1";
 
 function inicializarTabs() {
   document.querySelectorAll(".menu-btn").forEach(function (btn) {
@@ -1481,18 +1487,38 @@ function editarRecaudacion(id) {
   editandoRecaudacionId = id;
   document.getElementById("recaudacionId").value = id;
   document.getElementById("recFecha").value = item.fecha;
-  document.getElementById("recHora").value = item.hora || "";
-  document.getElementById("recHoraParte").value = (item.horaParte2 && !item.horaParte1) ? "2" : "1";
   document.getElementById("recServicio").value = item.servicio;
   document.getElementById("recParte1").value = item.parte1;
   document.getElementById("recParte2").value = item.parte2;
   document.getElementById("recTotal").value = item.total;
+  // Estado temporal: conservamos ambas horas tal cual están guardadas, sin mezclarlas.
+  recEditHoraParte1 = item.horaParte1 || (!item.horaParte2 ? (item.hora || null) : null);
+  recEditHoraParte2 = item.horaParte2 || null;
+  var parteSel;
+  if (item.parteJornada === "parte1" || item.parteJornada === "parte2") {
+    parteSel = item.parteJornada === "parte2" ? "2" : "1";
+  } else if (item.horaParte1 && !item.horaParte2) {
+    parteSel = "1";
+  } else if (item.horaParte2 && !item.horaParte1) {
+    parteSel = "2";
+  } else {
+    parteSel = "1"; // ambas horas presentes (o ninguna): primera parte por defecto, sin mezclar
+  }
+  recHoraParteActual = parteSel;
+  document.getElementById("recHoraParte").value = parteSel;
+  document.getElementById("recHora").value = (parteSel === "2" ? recEditHoraParte2 : recEditHoraParte1) || "";
   document.getElementById("formRecaudacion").scrollIntoView({ behavior: "smooth" });
 }
 function eliminarRecaudacion(id) {
+  var item = listaRecaudaciones.find(function (i) { return i.id === id; });
+  var fechaAnterior = item ? item.fecha : null;
+  var servicioAnterior = item ? item.servicio : null;
   eliminarRegistro(STORE_RECAUDACIONES, id).then(function () {
     listaRecaudaciones = listaRecaudaciones.filter(function (i) { return i.id !== id; });
     actualizarResumen(); renderizarRecaudaciones(); mostrarToast("Recaudación eliminada", "success");
+    if (typeof tcJornadaSincronizarDesdeRecaudaciones === "function" && fechaAnterior) {
+      tcJornadaSincronizarDesdeRecaudaciones(fechaAnterior, servicioAnterior);
+    }
   });
 }
 function resetearFormRecaudacion() {
@@ -1503,36 +1529,60 @@ function resetearFormRecaudacion() {
   document.getElementById("recHora").value = horaAhoraHM();
   document.getElementById("recHoraParte").value = "1";
   document.getElementById("recTotal").value = "0.00";
+  recEditHoraParte1 = horaAhoraHM();
+  recEditHoraParte2 = null;
+  recHoraParteActual = "1";
 }
 function inicializarRecaudaciones() {
   document.getElementById("recFecha").value = fechaHoyISO();
   document.getElementById("recHora").value = horaAhoraHM();
+  recEditHoraParte1 = horaAhoraHM();
+  recEditHoraParte2 = null;
+  recHoraParteActual = "1";
   ["recParte1", "recParte2", "recTotal"].forEach(function (id) {
     document.getElementById(id).addEventListener("focus", function () { if (this.value === "0" || this.value === "0.00") this.value = ""; });
     document.getElementById(id).addEventListener("blur", function () { if (this.value === "") this.value = "0"; });
   });
   document.getElementById("recParte1").addEventListener("input", actualizarTotalRecaudacion);
   document.getElementById("recParte2").addEventListener("input", actualizarTotalRecaudacion);
+  // Al cambiar de "la hora corresponde a", guarda la hora de la parte que se abandona
+  // y muestra la hora ya guardada de la parte a la que se cambia, sin mezclarlas.
+  document.getElementById("recHoraParte").addEventListener("change", function () {
+    var horaCampo = document.getElementById("recHora");
+    if (recHoraParteActual === "2") recEditHoraParte2 = horaCampo.value || null; else recEditHoraParte1 = horaCampo.value || null;
+    recHoraParteActual = this.value;
+    horaCampo.value = (recHoraParteActual === "2" ? recEditHoraParte2 : recEditHoraParte1) || "";
+  });
   document.getElementById("formRecaudacion").addEventListener("submit", function (e) {
     e.preventDefault();
     var fecha = document.getElementById("recFecha").value;
-    var hora = document.getElementById("recHora").value || "";
     var horaParteSel = document.getElementById("recHoraParte").value;
     var servicio = document.getElementById("recServicio").value.trim();
     var parte1 = parseFloat(document.getElementById("recParte1").value) || 0;
     var parte2 = parseFloat(document.getElementById("recParte2").value) || 0;
     if (!fecha || !servicio) { mostrarToast("Completa todos los campos obligatorios.", "error"); return; }
+    // Volcamos el valor visible del campo hora al estado temporal de la parte activa
+    // antes de leerlo, para no perder el último cambio del usuario.
+    var horaCampo = document.getElementById("recHora").value || "";
+    // Guarda la hora visible en la parte activa; una hora vaciada se guarda como null (no se recupera la antigua).
+    if (horaParteSel === "2") recEditHoraParte2 = horaCampo || null; else recEditHoraParte1 = horaCampo || null;
     var existente = editandoRecaudacionId ? listaRecaudaciones.find(function (i) { return i.id === editandoRecaudacionId; }) : null;
-    var horaParte1 = existente ? (existente.horaParte1 || null) : null;
-    var horaParte2 = existente ? (existente.horaParte2 || null) : null;
-    if (horaParteSel === "2") horaParte2 = hora || horaParte2; else horaParte1 = hora || horaParte1;
-    var registro = { id: editandoRecaudacionId || generarId(), fecha: fecha, hora: hora, servicio: servicio, parte1: parte1, parte2: parte2, total: parte1 + parte2, horaParte1: horaParte1, horaParte2: horaParte2 };
+    var fechaAnterior = existente ? existente.fecha : null;
+    var servicioAnterior = existente ? existente.servicio : null;
+    // El registro se construye SIEMPRE con los dos valores temporales, nunca desde el registro antiguo.
+    var horaParte1 = recEditHoraParte1 || null;
+    var horaParte2 = recEditHoraParte2 || null;
+    var horaCompat = horaParteSel === "2" ? (horaParte2 || "") : (horaParte1 || "");
+    var registro = { id: editandoRecaudacionId || generarId(), fecha: fecha, hora: horaCompat, servicio: servicio, parte1: parte1, parte2: parte2, total: parte1 + parte2, horaParte1: horaParte1, horaParte2: horaParte2, parteJornada: horaParteSel === "2" ? "parte2" : "parte1", actualizadoEn: new Date().toISOString() };
     guardarRegistro(STORE_RECAUDACIONES, registro).then(function () {
       if (editandoRecaudacionId) { listaRecaudaciones[listaRecaudaciones.findIndex(function (i) { return i.id === registro.id; })] = registro; mostrarToast("Recaudación actualizada", "success"); }
       else { listaRecaudaciones.push(registro); mostrarToast("Recaudación añadida", "success"); }
       resetearFormRecaudacion(); actualizarResumen(); renderizarRecaudaciones();
-      if (typeof tcJornadaAsociarRecaudacion === "function" && hora) {
-        tcJornadaAsociarRecaudacion({ fecha: fecha, hora: hora, parteJornada: horaParteSel === "2" ? "parte2" : "parte1" });
+      if (typeof tcJornadaSincronizarDesdeRecaudaciones === "function") {
+        if (fechaAnterior && (fechaAnterior !== fecha || servicioAnterior !== servicio)) {
+          tcJornadaSincronizarDesdeRecaudaciones(fechaAnterior, servicioAnterior);
+        }
+        tcJornadaSincronizarDesdeRecaudaciones(fecha, servicio);
       }
     });
   });
@@ -1882,13 +1932,15 @@ function inicializarImportarCorreo() {
         parte1Rellena: parte === "1" ? true : (typeof impRecExistente.parte1Rellena === "boolean" ? impRecExistente.parte1Rellena : impRecExistente.parte1 > 0),
         parte2Rellena: parte === "2" ? true : (typeof impRecExistente.parte2Rellena === "boolean" ? impRecExistente.parte2Rellena : impRecExistente.parte2 > 0),
         horaParte1: parte === "1" ? hora : (impRecExistente.horaParte1 || null),
-        horaParte2: parte === "2" ? hora : (impRecExistente.horaParte2 || null) };
+        horaParte2: parte === "2" ? hora : (impRecExistente.horaParte2 || null),
+        parteJornada: parte === "2" ? "parte2" : "parte1", actualizadoEn: new Date().toISOString() };
       registro.total = registro.parte1 + registro.parte2;
     } else {
       var p1 = parte === "1" ? importe : 0, p2 = parte === "2" ? importe : 0;
       registro = { id: generarId(), fecha: fecha, hora: hora, servicio: servicio, parte1: p1, parte2: p2, total: p1 + p2,
         parte1Rellena: parte === "1", parte2Rellena: parte === "2",
-        horaParte1: parte === "1" ? hora : null, horaParte2: parte === "2" ? hora : null };
+        horaParte1: parte === "1" ? hora : null, horaParte2: parte === "2" ? hora : null,
+        parteJornada: parte === "2" ? "parte2" : "parte1", actualizadoEn: new Date().toISOString() };
     }
     guardarRegistro(STORE_RECAUDACIONES, registro).then(function () {
       if (impRecExistente) {
@@ -1897,8 +1949,8 @@ function inicializarImportarCorreo() {
       } else { listaRecaudaciones.push(registro); }
       actualizarResumen(); renderizarRecaudaciones();
       mostrarToast("Recaudaci\u00f3n " + (impRecExistente ? "actualizada" : "importada") + " correctamente", "success");
-      if (typeof tcJornadaAsociarRecaudacion === "function" && hora) {
-        tcJornadaAsociarRecaudacion({ fecha: fecha, hora: hora, parteJornada: parte === "2" ? "parte2" : "parte1" });
+      if (typeof tcJornadaSincronizarDesdeRecaudaciones === "function") {
+        tcJornadaSincronizarDesdeRecaudaciones(fecha, servicio);
       }
       impRecExistente = null;
       document.getElementById("textoCorreo").value = "";
@@ -1995,7 +2047,13 @@ function inicializarHistorial() {
 }
 
 function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
-  var datos = { version: 2, fechaExportacion: new Date().toISOString(), recaudaciones: listaRecaudaciones, liquidaciones: listaLiquidaciones, calendarioConductor: (typeof dias !== "undefined" ? dias : {}) };
+  var calendarioConductor = {};
+  try {
+    if (typeof window.tcExportarDatosCalendarioConductor === "function") {
+      calendarioConductor = window.tcExportarDatosCalendarioConductor() || {};
+    }
+  } catch (e) { calendarioConductor = {}; }
+  var datos = { version: 2, fechaExportacion: new Date().toISOString(), recaudaciones: listaRecaudaciones, liquidaciones: listaLiquidaciones, calendarioConductor: calendarioConductor, calendarioConductorIncluido: true };
   var blob = new Blob([JSON.stringify(datos, null, 2)], { type: "application/json" });
   var url = URL.createObjectURL(blob);
   var enlace = document.createElement("a"); enlace.href = url; enlace.download = nombreArchivo;
@@ -2009,28 +2067,81 @@ function importarDatos(archivo) {
   lector.onload = function (event) {
     try {
       var datos = JSON.parse(event.target.result);
-      if (!datos.recaudaciones || !datos.liquidaciones) { mostrarToast("Formato incorrecto.", "error"); return; }
+      // Validar todo el backup ANTES de borrar ningún dato existente.
+      if (!datos || typeof datos !== "object" || !Array.isArray(datos.recaudaciones) || !Array.isArray(datos.liquidaciones)) {
+        mostrarToast("Formato incorrecto.", "error"); return;
+      }
+      // Compatible con backups anteriores a DEV-004R1 que no incluyen este bloque.
+      var bloqueDias = datos.calendarioConductor || datos.diasCalendario;
+      var esObjetoDias = bloqueDias && typeof bloqueDias === "object" && !Array.isArray(bloqueDias);
+      var marcaCalendarioIncluido = datos.calendarioConductorIncluido === true;
+      var esVacio = esObjetoDias && Object.keys(bloqueDias).length === 0;
+      var avisoBackupAntiguoVacio = false;
+      var calendarioSolicitado;
+      if (!esObjetoDias) {
+        calendarioSolicitado = false; // backup muy antiguo, sin bloque de calendario: comportamiento previo
+      } else if (marcaCalendarioIncluido) {
+        calendarioSolicitado = true; // backup nuevo: se restaura aunque esté vacío
+      } else if (esVacio) {
+        // Backup antiguo sin marca y con calendario vacío: no es fiable, no se borra el actual.
+        calendarioSolicitado = false;
+        avisoBackupAntiguoVacio = true;
+      } else {
+        calendarioSolicitado = true; // backup antiguo con datos reales de calendario
+      }
       // Aseguramos que cada registro tenga un id válido antes de guardar en IndexedDB
       // (un registro sin id provoca un fallo silencioso al escribir en la base de datos).
       datos.recaudaciones.forEach(function (r) { if (!r.id) r.id = generarId(); });
       datos.liquidaciones.forEach(function (l) { if (!l.id) l.id = generarId(); });
-      Promise.all([reemplazarTodos(STORE_RECAUDACIONES, datos.recaudaciones), reemplazarTodos(STORE_LIQUIDACIONES, datos.liquidaciones)]).then(function () {
-        listaRecaudaciones = datos.recaudaciones; listaLiquidaciones = datos.liquidaciones;
-        actualizarResumen();
-        renderizarRecaudaciones(); renderizarLiquidaciones();
-        // Compatible con backups anteriores a DEV-004R1 que no incluyen este bloque.
-        var bloqueDias = datos.calendarioConductor || datos.diasCalendario;
-        if (bloqueDias && typeof bloqueDias === "object") {
-          try {
-            dias = bloqueDias;
-            localStorage.setItem(STORE, JSON.stringify(dias));
-            if (typeof tcRenderCal === "function") tcRenderCal();
-            if (typeof activeDate !== "undefined" && activeDate && dias[activeDate] && typeof tcRenderView === "function") tcRenderView(activeDate, dias[activeDate]);
-          } catch (e) {}
+
+      // Copias profundas previas para poder restaurar si algo falla después.
+      var recaudacionesPrevias = JSON.parse(JSON.stringify(listaRecaudaciones || []));
+      var liquidacionesPrevias = JSON.parse(JSON.stringify(listaLiquidaciones || []));
+      var calendarioPrevio = (typeof window.tcExportarDatosCalendarioConductor === "function")
+        ? window.tcExportarDatosCalendarioConductor() : null;
+
+      function restaurarCalendarioPrevio() {
+        if (calendarioPrevio && typeof window.tcImportarDatosCalendarioConductor === "function") {
+          window.tcImportarDatosCalendarioConductor(calendarioPrevio);
         }
-        mostrarToast("Datos importados correctamente", "success");
+      }
+
+      // 1) El calendario se restaura primero. Si falla, no se toca recaudaciones/liquidaciones.
+      if (calendarioSolicitado) {
+        var calendarioRestaurado = false;
+        try {
+          if (typeof window.tcImportarDatosCalendarioConductor === "function") {
+            calendarioRestaurado = window.tcImportarDatosCalendarioConductor(bloqueDias) === true;
+          }
+        } catch (e) { calendarioRestaurado = false; }
+        if (!calendarioRestaurado) {
+          mostrarToast("No se pudo restaurar el Calendario Conductor. No se ha importado nada.", "error");
+          return;
+        }
+      }
+
+      // 2) Recaudaciones y liquidaciones. Se comprueba expresamente el resultado real de
+      //    cada restauración: Promise.all no falla aunque reemplazarTodos resuelva false.
+      Promise.all([reemplazarTodos(STORE_RECAUDACIONES, datos.recaudaciones), reemplazarTodos(STORE_LIQUIDACIONES, datos.liquidaciones)]).then(function (resultados) {
+        if (resultados[0] === true && resultados[1] === true) {
+          listaRecaudaciones = datos.recaudaciones; listaLiquidaciones = datos.liquidaciones;
+          actualizarResumen();
+          renderizarRecaudaciones(); renderizarLiquidaciones();
+          mostrarToast(avisoBackupAntiguoVacio
+            ? "Datos importados correctamente. Este backup antiguo no incluye datos verificables del Calendario Conductor."
+            : "Datos importados correctamente", "success");
+          return;
+        }
+        // Fallo real de IndexedDB en alguna de las dos restauraciones: no se declara éxito.
+        Promise.all([reemplazarTodos(STORE_RECAUDACIONES, recaudacionesPrevias), reemplazarTodos(STORE_LIQUIDACIONES, liquidacionesPrevias)]).then(function () {
+          listaRecaudaciones = recaudacionesPrevias; listaLiquidaciones = liquidacionesPrevias;
+          actualizarResumen(); renderizarRecaudaciones(); renderizarLiquidaciones();
+        });
+        if (calendarioSolicitado) restaurarCalendarioPrevio();
+        mostrarToast("Error al importar los datos en la base de datos. No se ha restaurado el backup.", "error");
       }).catch(function (err) {
-        mostrarToast("Error al importar los datos en la base de datos.", "error");
+        if (calendarioSolicitado) restaurarCalendarioPrevio();
+        mostrarToast("Error al importar los datos en la base de datos. No se ha restaurado el backup.", "error");
       });
     } catch (err) { mostrarToast("Error al leer el archivo JSON.", "error"); }
   };
@@ -2440,6 +2551,7 @@ var dias={};
 var vY,vM;
 var activeDate=null;
 var pdfPages=[];
+var pdfImportSemanalFile=null;
 var calDataStore=null;
 var cambioImg=null;
 var bDesde=null,bHasta=null,bChk1=false,bChk2=false;
@@ -2464,9 +2576,37 @@ function saveTurnos(){
 }
 function loadDias(){try{dias=JSON.parse(localStorage.getItem(STORE)||'{}');}catch(e){dias={};}}
 function saveDias(){
-  try{localStorage.setItem(STORE,JSON.stringify(dias));}
-  catch(e){tcToast('⚠️ Almacenamiento lleno. Borra días antiguos para liberar espacio.');}
+  try{ localStorage.setItem(STORE,JSON.stringify(dias)); return true; }
+  catch(e){ tcToast('⚠️ Almacenamiento lleno. Borra días antiguos para liberar espacio.'); return false; }
 }
+
+/* Puentes públicos y controlados para las copias de seguridad generales.
+   El código exterior (backup/restauración) nunca debe leer ni escribir
+   directamente "dias"/"STORE": pasa siempre por aquí. */
+window.tcExportarDatosCalendarioConductor=function(){
+  try{ return JSON.parse(JSON.stringify(dias)); }
+  catch(e){ return {}; }
+};
+window.tcImportarDatosCalendarioConductor=function(datos){
+  if(!datos||typeof datos!=='object'||Array.isArray(datos)) return false;
+  var copiaAnterior;
+  try{ copiaAnterior=JSON.parse(JSON.stringify(dias)); }catch(e){ copiaAnterior=dias; }
+  try{
+    var copiaNueva=JSON.parse(JSON.stringify(datos));
+    dias=copiaNueva;
+    if(!saveDias()){
+      /* El guardado ha fallado (p.ej. almacenamiento lleno): se restaura la
+         copia anterior y no se renderizan los datos nuevos. */
+      dias=copiaAnterior;
+      saveDias();
+      return false;
+    }
+    if(typeof tcRenderCal==='function') tcRenderCal();
+    if(activeDate&&dias[activeDate]&&typeof tcRenderView==='function') tcRenderView(activeDate,dias[activeDate]);
+    else if(activeDate&&!dias[activeDate]&&typeof tcClose==='function'){ tcClose(); }
+    return true;
+  }catch(e){ dias=copiaAnterior; return false; }
+};
 
 /* Limpieza dirigida del turno ficticio "M" creado como efecto colateral del bug
    de parseo ya corregido (un código suelto "M" del PDF, sin contexto de partido,
@@ -2954,8 +3094,12 @@ function tcMinAHorasMin(min){
 /* Tarjeta "Datos de jornada" (aditiva, no sustituye nada existente). */
 function tcJornadaCardHtml(reg){
   var jr=reg.jornada;
-  var hayDatos=jr&&(jr.inicioTeorico||jr.finTeorico||(jr.parte1&&(jr.parte1.inicioTeorico||jr.parte1.finTeorico))||(jr.parte2&&(jr.parte2.inicioTeorico||jr.parte2.finTeorico))||jr.computoOficialMinutos!=null);
+  var hayDatos=jr&&(jr.inicioTeorico||jr.finTeorico||(jr.parte1&&(jr.parte1.inicioTeorico||jr.parte1.finTeorico))||(jr.parte2&&(jr.parte2.inicioTeorico||jr.parte2.finTeorico))||jr.computoOficialMinutos!=null||jr.recaudacionesRequierenRevision||jr.horasHistoricasSinAsignar);
   if(!hayDatos){
+    var avisosSueltos='';
+    if(jr&&jr.recaudacionesRequierenRevision) avisosSueltos+='<div style="font-size:13px;color:#C05621;">⚠️ Hay recaudaciones del día con un servicio distinto. Revísalas antes de calcular ampliaciones.</div>';
+    if(jr&&jr.horasHistoricasSinAsignar) avisosSueltos+='<div style="font-size:13px;color:var(--text2);">ℹ️ Hay horas históricas sin parte asignada. Edítalas desde Recaudaciones para indicar si corresponden a primera o segunda parte.</div>';
+    if(avisosSueltos) return '<div class="tc-serv-card"><div class="tc-serv-lbl">Datos de jornada</div>'+avisosSueltos+'</div>';
     if(reg.imgData){
       return '<div class="tc-serv-card"><div class="tc-serv-lbl">Datos de jornada</div>'
         +'<div style="font-size:13px;color:var(--text2);">Esta hoja de ruta no contiene datos de jornada extraídos. Reemplaza o vuelve a importar el PDF.</div></div>';
@@ -2963,7 +3107,7 @@ function tcJornadaCardHtml(reg){
     return '';
   }
   var tipoLabel=jr.tipoTurno==='corrido'?'Corrido':(jr.tipoTurno==='partido'?'Partido':'—');
-  var estadoLabel={completa:'✅ Completa',parcial:'⚠️ Parcial (revisión necesaria)',manual:'✍️ Manual'}[jr.extraccionEstado]||'—';
+  var estadoLabel={completa:'✅ Completa',parcial:'⚠️ Parcial (revisión necesaria)',manual:'✍️ Manual',mixta:'✍️ Mixta: hoja de ruta con correcciones manuales'}[jr.extraccionEstado]||'—';
   var html='<div class="tc-serv-card"><div class="tc-serv-lbl">Datos de jornada</div>';
   html+='<div style="font-size:13px;line-height:1.7;color:var(--text2);">';
   html+='Turno: <strong>'+tcEsc(tipoLabel)+'</strong><br>';
@@ -2980,6 +3124,8 @@ function tcJornadaCardHtml(reg){
   if(jr.horaFinRealParte2) html+='Fin real 2ª parte: <strong>'+tcEsc(jr.horaFinRealParte2)+'</strong><br>';
   html+='Estado de extracción: <strong>'+estadoLabel+'</strong>';
   if(jr.requiereRevision) html+='<br><span style="color:#C05621;">⚠️ Revisión necesaria: hay datos manuales distintos de los detectados en la hoja.</span>';
+  if(jr.recaudacionesRequierenRevision) html+='<br><span style="color:#C05621;">⚠️ Hay recaudaciones del día con un servicio distinto. Revísalas antes de calcular ampliaciones.</span>';
+  if(jr.horasHistoricasSinAsignar) html+='<br><span style="color:var(--text2);">ℹ️ Hay horas históricas sin parte asignada. Edítalas desde Recaudaciones para indicar si corresponden a primera o segunda parte.</span>';
   html+='</div></div>';
   return html;
 }
@@ -3002,7 +3148,9 @@ window.tcSaveEdit=function(){
   reg.incidencia=document.getElementById('ed-incidencia').value.trim();
   reg.notas=document.getElementById('ed-notas').value.trim();
   reg.autoTurno=false;
+  if(reg.jornada) reg.jornada.servicio=reg.servicio||'';
   dias[activeDate]=reg; saveDias(); tcRenderCal(); tcRenderView(activeDate,reg); tcShowPanel('pnl-view');
+  if(typeof tcJornadaSincronizarDesdeRecaudaciones==='function') tcJornadaSincronizarDesdeRecaudaciones(activeDate,reg.servicio);
   tcToast('✔ Cambios guardados');
 };
 window.tcDeleteDay=function(){
@@ -3293,14 +3441,26 @@ function tcJornadaEnsure(reg,key){
       parte2:{inicioTeorico:null,finTeorico:null},
       origen:null,
       horaFinRealParte1:null, horaFinRealParte2:null,
-      ampliaciones:{parte1:null,parte2:null}
+      ampliaciones:{parte1:null,parte2:null},
+      computosEspecificos:tcComputosEspecificosVacio()
     };
   }
   if(!reg.jornada.ampliaciones) reg.jornada.ampliaciones={parte1:null,parte2:null};
   if(!reg.jornada.parte1) reg.jornada.parte1={inicioTeorico:null,finTeorico:null};
   if(!reg.jornada.parte2) reg.jornada.parte2={inicioTeorico:null,finTeorico:null};
   if(!reg.jornada.descanso) reg.jornada.descanso={tipo:null,duracionMinutos:null};
+  /* Preparación interna para DEV-005: no se muestra ni se calcula nada económico
+     todavía. Se añade también de forma segura a jornadas antiguas ya existentes. */
+  if(!reg.jornada.computosEspecificos) reg.jornada.computosEspecificos=tcComputosEspecificosVacio();
   return reg.jornada;
+}
+/* Estructura estable pendiente de condiciones laborales (T.D. y deje no son
+   el mismo concepto que DGA; no se asume ninguna equivalencia entre ellos). */
+function tcComputosEspecificosVacio(){
+  return {
+    tiempoDesplazamiento:{minutos:null,textoOriginal:null,origen:null,estado:"pendiente_condiciones_laborales"},
+    deje:{minutos:null,textoOriginal:null,origen:null,estado:"pendiente_condiciones_laborales"}
+  };
 }
 
 /* Fusiona los datos de jornada extraídos automáticamente de una hoja de ruta
@@ -3312,37 +3472,55 @@ function tcJornadaFusionarExtraccion(reg,key,jornadaExtraida){
   if(!jornadaExtraida) return;
   var previa=reg.jornada?JSON.parse(JSON.stringify(reg.jornada)):null;
   var jr=tcJornadaEnsure(reg,key);
-  var manualDistinto=false;
-  if(previa&&(previa.origen==='manual'||previa.origen==='mixto')){
-    ['inicioTeorico','finTeorico'].forEach(function(campo){
-      if(previa[campo]&&jornadaExtraida[campo]&&previa[campo]!==jornadaExtraida[campo]) manualDistinto=true;
-    });
-    ['parte1','parte2'].forEach(function(p){
-      ['inicioTeorico','finTeorico'].forEach(function(campo){
-        var pv=previa[p]&&previa[p][campo], ev=jornadaExtraida[p]&&jornadaExtraida[p][campo];
-        if(pv&&ev&&pv!==ev) manualDistinto=true;
-      });
-    });
-  }
-  if(manualDistinto){
+  var origenManualOMixto=previa&&(previa.origen==='manual'||previa.origen==='mixto');
+  if(origenManualOMixto){
+    /* Origen manual/mixto: se conservan íntegros los datos manuales tal cual
+       estaban, sin degradar el origen aunque los valores detectados coincidan.
+       La nueva extracción se guarda aparte para su revisión explícita. */
     jr.requiereRevision=true;
-    /* Se conservan íntegros los valores manuales ya guardados */
+    jr.extraccionPendiente={
+      tipoTurno:jornadaExtraida.tipoTurno||null,
+      inicioTeorico:jornadaExtraida.inicioTeorico||null,
+      finTeorico:jornadaExtraida.finTeorico||null,
+      computoOficialMinutos:(jornadaExtraida.computoOficialMinutos!=null)?jornadaExtraida.computoOficialMinutos:null,
+      parte1:{inicioTeorico:(jornadaExtraida.parte1&&jornadaExtraida.parte1.inicioTeorico)||null,finTeorico:(jornadaExtraida.parte1&&jornadaExtraida.parte1.finTeorico)||null},
+      parte2:{inicioTeorico:(jornadaExtraida.parte2&&jornadaExtraida.parte2.inicioTeorico)||null,finTeorico:(jornadaExtraida.parte2&&jornadaExtraida.parte2.finTeorico)||null},
+      descanso:jornadaExtraida.descanso||null
+    };
   } else {
+    /* Origen hoja_ruta (o sin jornada previa): se sustituyen TODOS los campos
+       teóricos por los recién extraídos, incluso cuando el nuevo valor sea
+       null, para no mostrar horarios antiguos como si vinieran de la hoja nueva. */
     jr.servicio=reg.servicio||jr.servicio||'';
-    jr.tipoTurno=jornadaExtraida.tipoTurno||jr.tipoTurno||tcJornadaTipoTurno(reg.turno);
-    jr.inicioTeorico=jornadaExtraida.inicioTeorico||jr.inicioTeorico;
-    jr.finTeorico=jornadaExtraida.finTeorico||jr.finTeorico;
-    if(jornadaExtraida.computoOficialMinutos!=null) jr.computoOficialMinutos=jornadaExtraida.computoOficialMinutos;
-    jr.parte1.inicioTeorico=jornadaExtraida.parte1.inicioTeorico||jr.parte1.inicioTeorico;
-    jr.parte1.finTeorico=jornadaExtraida.parte1.finTeorico||jr.parte1.finTeorico;
-    jr.parte2.inicioTeorico=jornadaExtraida.parte2.inicioTeorico||jr.parte2.inicioTeorico;
-    jr.parte2.finTeorico=jornadaExtraida.parte2.finTeorico||jr.parte2.finTeorico;
-    if(jornadaExtraida.descanso&&jornadaExtraida.descanso.tipo) jr.descanso=jornadaExtraida.descanso;
-    jr.origen=(previa&&previa.origen==='manual')?'mixto':'hoja_ruta';
+    jr.tipoTurno=(jornadaExtraida.tipoTurno!=null)?jornadaExtraida.tipoTurno:null;
+    jr.inicioTeorico=(jornadaExtraida.inicioTeorico!=null)?jornadaExtraida.inicioTeorico:null;
+    jr.finTeorico=(jornadaExtraida.finTeorico!=null)?jornadaExtraida.finTeorico:null;
+    jr.computoOficialMinutos=(jornadaExtraida.computoOficialMinutos!=null)?jornadaExtraida.computoOficialMinutos:null;
+    jr.parte1={
+      inicioTeorico:(jornadaExtraida.parte1&&jornadaExtraida.parte1.inicioTeorico!=null)?jornadaExtraida.parte1.inicioTeorico:null,
+      finTeorico:(jornadaExtraida.parte1&&jornadaExtraida.parte1.finTeorico!=null)?jornadaExtraida.parte1.finTeorico:null
+    };
+    jr.parte2={
+      inicioTeorico:(jornadaExtraida.parte2&&jornadaExtraida.parte2.inicioTeorico!=null)?jornadaExtraida.parte2.inicioTeorico:null,
+      finTeorico:(jornadaExtraida.parte2&&jornadaExtraida.parte2.finTeorico!=null)?jornadaExtraida.parte2.finTeorico:null
+    };
+    jr.descanso=jornadaExtraida.descanso?{tipo:jornadaExtraida.descanso.tipo||null,duracionMinutos:(jornadaExtraida.descanso.duracionMinutos!=null)?jornadaExtraida.descanso.duracionMinutos:null}:{tipo:null,duracionMinutos:null};
+    jr.origen='hoja_ruta';
     jr.extraccionEstado=jornadaExtraida.extraccionEstado||'manual';
+    if(jr.extraccionEstado==='parcial'){
+      jr.requiereRevision=true;
+    } else {
+      /* Extracción completa: una revisión anterior (de una extracción parcial
+         previa) queda resuelta por los nuevos datos ya completos. */
+      jr.requiereRevision=false;
+      jr.extraccionPendiente=null;
+    }
   }
   reg.jornada=jr;
-  /* Recalcula ampliaciones si ya había horas reales, sin reabrir avisos ya resueltos */
+  /* Recalcula ampliaciones si ya había horas reales, sin reabrir avisos ya resueltos.
+     Nunca toca horaFinRealParte1/2, ampliaciones, estados, computableParaNomina
+     ni observaciones: esos campos solo los tocan las funciones de recaudaciones
+     y del panel de ampliaciones. */
   tcJornadaDetectarAmpliacion(key,'parte1');
   tcJornadaDetectarAmpliacion(key,'parte2');
 }
@@ -3451,42 +3629,205 @@ function tcJornadaAsociarRecaudacion(registro){
 }
 
 /* Compara fin real vs fin teórico de una parte y crea/actualiza su ampliación.
-   Solo muestra el aviso "¿quieres prepararla?" cuando aparece una ampliación
-   nueva; si ya había una decisión tomada por el usuario, solo actualiza los
-   minutos si cambian, sin reabrir el aviso ni tocar la otra parte. */
+   Nunca borra en silencio una ampliación ya presentada o pendiente de
+   documento: cualquier cambio pasa por el estado revision_pendiente para que
+   el usuario decida. Solo las ampliaciones "detectada" (sin ninguna decisión
+   tomada aún) se recalculan o eliminan libremente. */
 function tcJornadaDetectarAmpliacion(key,parte){
   var reg=dias[key]; if(!reg||!reg.jornada) return;
   var jr=reg.jornada;
   var horaReal=parte==='parte1'?jr.horaFinRealParte1:jr.horaFinRealParte2;
   var finTeorico=jr[parte]&&jr[parte].finTeorico;
-  if(!horaReal||!finTeorico) return;
-  var diff=tcMinutosEntre(finTeorico,horaReal);
-  if(diff===null) return;
   var ampActual=jr.ampliaciones[parte];
-  if(diff<=0){
-    if(ampActual&&ampActual.estado==='detectada'){ jr.ampliaciones[parte]=null; dias[key]=reg; saveDias(); tcRenderCal(); }
-    return;
-  }
-  if(ampActual&&ampActual.estado!=='detectada'){
-    if(ampActual.minutosAmpliacion!==diff){
-      ampActual.minutosAmpliacion=diff;
-      dias[key]=reg; saveDias(); tcRenderCal();
-      if(activeDate===key) tcRenderView(key,reg);
-      tcToast('ℹ️ Minutos de la ampliación de la '+(parte==='parte1'?'primera':'segunda')+' parte actualizados a '+diff);
+  var parteLabel=parte==='parte1'?'primera':'segunda';
+
+  if(!horaReal||!finTeorico){
+    if(ampActual){
+      if(ampActual.estado==='detectada'){
+        jr.ampliaciones[parte]=null; dias[key]=reg; saveDias(); tcRenderCal();
+      } else if(ampActual.estado==='pendiente_documento'||ampActual.estado==='documento_presentado'){
+        ampActual.minutosPresentadosAnteriores=ampActual.minutosAmpliacion;
+        ampActual.minutosAmpliacion=0;
+        ampActual.estado='revision_pendiente';
+        ampActual.computableParaNomina=false;
+        ampActual.observaciones=(ampActual.observaciones?ampActual.observaciones+' · ':'')+'⚠️ Ya no hay hora de recaudación para esta parte. Revisa la ampliación.';
+        dias[key]=reg; saveDias(); tcRenderCal();
+        if(activeDate===key) tcRenderView(key,reg);
+      }
     }
     return;
   }
-  if(ampActual&&ampActual.estado==='detectada'&&ampActual.minutosAmpliacion===diff) return;
-  jr.ampliaciones[parte]={
-    minutosAmpliacion:diff, estado:'detectada', computableParaNomina:false,
-    reglaConvenioPendiente:true, articuloConvenio:null,
-    minutosValorNormal:null, minutosValorDoble:null,
-    observaciones:ampActual?(ampActual.observaciones||''):''
-  };
-  dias[key]=reg; saveDias(); tcRenderCal();
-  if(activeDate===key) tcRenderView(key,reg);
-  tcJornadaAvisoAmpliacion(key,parte,diff);
+
+  var diff=tcMinutosEntre(finTeorico,horaReal);
+  if(diff===null) return;
+
+  /* Sin ampliación aún, o solo "detectada"/"pendiente_documento": no hay
+     documento ya presentado, así que puede recalcularse con libertad. */
+  if(!ampActual||ampActual.estado==='detectada'||ampActual.estado==='pendiente_documento'){
+    if(diff<=0){
+      if(ampActual&&ampActual.estado==='detectada'){
+        jr.ampliaciones[parte]=null; dias[key]=reg; saveDias(); tcRenderCal();
+      } else if(ampActual&&ampActual.estado==='pendiente_documento'){
+        ampActual.minutosPresentadosAnteriores=ampActual.minutosAmpliacion;
+        ampActual.minutosAmpliacion=0;
+        ampActual.estado='revision_pendiente';
+        ampActual.computableParaNomina=false;
+        ampActual.observaciones=(ampActual.observaciones?ampActual.observaciones+' · ':'')+'⚠️ La hora de recaudación ya no justifica esta ampliación.';
+        dias[key]=reg; saveDias(); tcRenderCal();
+        if(activeDate===key) tcRenderView(key,reg);
+      }
+      return;
+    }
+    if(ampActual){
+      if(ampActual.minutosAmpliacion!==diff){
+        ampActual.minutosAmpliacion=diff;
+        dias[key]=reg; saveDias(); tcRenderCal();
+        if(activeDate===key) tcRenderView(key,reg);
+        tcToast('ℹ️ Minutos de la ampliación de la '+parteLabel+' parte actualizados a '+diff);
+      }
+      return;
+    }
+    jr.ampliaciones[parte]={
+      minutosAmpliacion:diff, estado:'detectada', computableParaNomina:false,
+      reglaConvenioPendiente:true, articuloConvenio:null,
+      minutosValorNormal:null, minutosValorDoble:null,
+      observaciones:''
+    };
+    dias[key]=reg; saveDias(); tcRenderCal();
+    if(activeDate===key) tcRenderView(key,reg);
+    tcJornadaAvisoAmpliacion(key,parte,diff);
+    return;
+  }
+
+  /* Documento ya presentado: cualquier cambio de hora real o de minutos pasa
+     a revisión pendiente y deja de ser computable, sin desaparecer. */
+  if(ampActual.estado==='documento_presentado'){
+    if(ampActual.minutosAmpliacion===diff) return;
+    ampActual.minutosPresentadosAnteriores=ampActual.minutosAmpliacion;
+    ampActual.minutosAmpliacion=diff>0?diff:0;
+    ampActual.estado='revision_pendiente';
+    ampActual.computableParaNomina=false;
+    ampActual.observaciones=(ampActual.observaciones?ampActual.observaciones+' · ':'')+'⚠️ La hora de recaudación cambió tras presentar el documento. Minutos detectados ahora: '+(diff>0?diff:0)+'.';
+    dias[key]=reg; saveDias(); tcRenderCal();
+    if(activeDate===key) tcRenderView(key,reg);
+    tcToast('⚠️ Ampliación de la '+parteLabel+' parte pendiente de revisión');
+    return;
+  }
+
+  /* Descartada o anulada: nunca se reactiva sola. Si aparece una diferencia
+     nueva, se marca para revisión en vez de recuperar el documento antiguo. */
+  if(ampActual.estado==='descartada'||ampActual.estado==='anulada'){
+    if(diff>0&&ampActual.minutosAmpliacion!==diff){
+      ampActual.minutosPresentadosAnteriores=ampActual.minutosAmpliacion;
+      ampActual.minutosAmpliacion=diff;
+      ampActual.estado='revision_pendiente';
+      ampActual.computableParaNomina=false;
+      ampActual.observaciones=(ampActual.observaciones?ampActual.observaciones+' · ':'')+'⚠️ Nueva diferencia detectada tras descartar/anular. Requiere una nueva decisión.';
+      dias[key]=reg; saveDias(); tcRenderCal();
+      if(activeDate===key) tcRenderView(key,reg);
+    }
+    return;
+  }
+
+  /* revision_pendiente: solo se refrescan los minutos detectados; la
+     decisión (confirmar/pendiente/anular) la toma el usuario en el panel. */
+  if(ampActual.estado==='revision_pendiente'){
+    var nuevos=diff>0?diff:0;
+    if(ampActual.minutosAmpliacion!==nuevos){
+      ampActual.minutosAmpliacion=nuevos;
+      dias[key]=reg; saveDias(); tcRenderCal();
+      if(activeDate===key) tcRenderView(key,reg);
+    }
+    return;
+  }
 }
+
+/* Normaliza un valor de servicio para comparar (texto, trim, mayúsculas).
+   Nunca modifica el valor visible original guardado en el registro. */
+function tcNormalizarServicio(s){
+  return (s==null?'':String(s)).trim().toUpperCase();
+}
+
+/* ==================== DEV-004R3: sincronización central de horas ====================
+   Punto de entrada único tras crear, editar, importar por correo o eliminar una
+   recaudación. Recalcula horaFinRealParte1/2 a partir de listaRecaudaciones
+   (fuente real) y recalcula/marca para revisión las ampliaciones de ambas partes.
+   Comprueba que el servicio de la jornada y el de las recaudaciones coincidan
+   antes de aplicar nada, y separa los registros históricos sin parte asignada. */
+window.tcJornadaSincronizarDesdeRecaudaciones=function(fecha,servicio){
+  if(!fecha) return;
+  var fuente=(typeof listaRecaudaciones!=='undefined'&&listaRecaudaciones)?listaRecaudaciones:[];
+  var todasDelDia=fuente.filter(function(r){ return r&&r.fecha===fecha; });
+  var reg=dias[fecha]||{};
+  var jr=tcJornadaEnsure(reg,fecha);
+  var servicioJornadaNorm=tcNormalizarServicio(jr.servicio||reg.servicio||'');
+
+  var serviciosPresentes=[];
+  todasDelDia.forEach(function(r){
+    var n=tcNormalizarServicio(r.servicio);
+    if(n&&serviciosPresentes.indexOf(n)===-1) serviciosPresentes.push(n);
+  });
+
+  var candidatas;
+  if(servicioJornadaNorm){
+    var hayOtroServicio=serviciosPresentes.some(function(s){ return s!==servicioJornadaNorm; });
+    var hayServicioCorrecto=serviciosPresentes.indexOf(servicioJornadaNorm)!==-1;
+    if(hayOtroServicio&&!hayServicioCorrecto){
+      /* Ninguna recaudación de ese día coincide con el servicio de la jornada:
+         no se aplica ni borra nada, se marca para revisión manual. */
+      jr.recaudacionesRequierenRevision=true;
+      reg.jornada=jr; dias[fecha]=reg; saveDias();
+      tcRenderCal(); if(activeDate===fecha) tcRenderView(fecha,dias[fecha]);
+      return;
+    }
+    /* Si hay una recaudación correcta pero también otra de un servicio distinto,
+       se aplican únicamente las horas del servicio correcto, pero el aviso de
+       revisión se mantiene visible: no se oculta solo porque exista una correcta. */
+    jr.recaudacionesRequierenRevision=hayOtroServicio;
+    candidatas=todasDelDia.filter(function(r){ return tcNormalizarServicio(r.servicio)===servicioJornadaNorm; });
+  } else if(serviciosPresentes.length>1){
+    /* Sin servicio asignado a la jornada y varias candidaturas: no se asocia
+       automáticamente para no inventar una relación. */
+    jr.recaudacionesRequierenRevision=true;
+    reg.jornada=jr; dias[fecha]=reg; saveDias();
+    tcRenderCal(); if(activeDate===fecha) tcRenderView(fecha,dias[fecha]);
+    return;
+  } else {
+    jr.recaudacionesRequierenRevision=false;
+    candidatas=todasDelDia;
+  }
+
+  var conParte=candidatas.filter(function(r){ return r.horaParte1||r.horaParte2||r.parteJornada; });
+  var historicosSinParte=candidatas.filter(function(r){ return !(r.horaParte1||r.horaParte2||r.parteJornada)&&r.hora; });
+  jr.horasHistoricasSinAsignar=historicosSinParte.length>0;
+
+  /* Para cada parte, usa la hora del registro con actualizadoEn más reciente.
+     Los registros antiguos sin actualizadoEn se ordenan, como alternativa,
+     según el orden en que aparecen en listaRecaudaciones (sin inventar fechas). */
+  function mejorHora(campo){
+    var mejor=null, mejorTs=null;
+    conParte.forEach(function(r){
+      var v=r[campo];
+      if(!v) return;
+      var ts=r.actualizadoEn||null;
+      if(mejor===null){ mejor=v; mejorTs=ts; return; }
+      if(ts&&mejorTs){ if(ts>=mejorTs){ mejor=v; mejorTs=ts; } }
+      else if(ts&&!mejorTs){ mejor=v; mejorTs=ts; }
+      else if(!ts&&!mejorTs){ mejor=v; }
+    });
+    return mejor;
+  }
+
+  jr.horaFinRealParte1=mejorHora('horaParte1');
+  jr.horaFinRealParte2=mejorHora('horaParte2');
+  reg.jornada=jr;
+  dias[fecha]=reg;
+  saveDias();
+  tcJornadaDetectarAmpliacion(fecha,'parte1');
+  tcJornadaDetectarAmpliacion(fecha,'parte2');
+  tcRenderCal();
+  if(activeDate===fecha) tcRenderView(fecha,dias[fecha]);
+};
 
 function tcJornadaAvisoAmpliacion(fecha,parte,minutos){
   var parteLabel=parte==='parte1'?'primera':'segunda';
@@ -3569,7 +3910,11 @@ window.tcSaveJornada=function(){
     inicioTeorico:document.getElementById('jr-p2-inicio').value||null,
     finTeorico:document.getElementById('jr-p2-fin').value||null
   };
-  jr.origen=(jr.origen==='hoja_ruta')?'mixto':'manual';
+  jr.origen=(jr.origen==='hoja_ruta'||jr.origen==='mixto')?'mixto':'manual';
+  jr.extraccionEstado=(jr.origen==='mixto')?'mixta':'manual';
+  /* Guardado manual explícito: se considera validación del usuario. */
+  jr.requiereRevision=false;
+  jr.extraccionPendiente=null;
   dias[activeDate]=reg;
   saveDias();
   /* Si ya había horas reales pendientes de comparar (recaudaciones guardadas
@@ -3583,7 +3928,8 @@ window.tcSaveJornada=function(){
 /* ---- Panel de ampliaciones: estado y acciones independientes por parte ---- */
 var AMP_ESTADO_LABEL={
   detectada:'🔍 Detectada', pendiente_documento:'📄 Pendiente de documento',
-  documento_presentado:'✅ Documento presentado', descartada:'🚫 Descartada', anulada:'⛔ Anulada'
+  documento_presentado:'✅ Documento presentado', descartada:'🚫 Descartada', anulada:'⛔ Anulada',
+  revision_pendiente:'⚠️ Revisión pendiente'
 };
 
 function tcRenderAmpliaciones(){
@@ -3596,21 +3942,36 @@ function tcRenderAmpliaciones(){
     var label=parte==='parte1'?'Primera parte':'Segunda parte';
     var finTeorico=(jr[parte]&&jr[parte].finTeorico)||'—';
     var horaReal=(parte==='parte1'?jr.horaFinRealParte1:jr.horaFinRealParte2)||'—';
+    var esRevision=a.estado==='revision_pendiente';
     html+='<div style="border:1px solid var(--border,#E5E7EB);border-radius:12px;padding:14px;margin-bottom:14px;">'
       +'<div style="font-weight:700;margin-bottom:6px;">'+tcEsc(label)+'</div>'
       +'<div style="font-size:13px;color:var(--text2);margin-bottom:2px;">Servicio: '+tcEsc(jr.servicio||reg.servicio||'—')+'</div>'
       +'<div style="font-size:13px;color:var(--text2);margin-bottom:2px;">Fin teórico: '+tcEsc(finTeorico)+' · Fin real: '+tcEsc(horaReal)+'</div>'
-      +'<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Estado: <strong>'+(AMP_ESTADO_LABEL[a.estado]||a.estado)+'</strong></div>'
-      +'<div class="tc-fg" style="margin-bottom:8px;"><label class="tc-lbl">Minutos detectados</label>'
+      +'<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Estado: <strong>'+(AMP_ESTADO_LABEL[a.estado]||a.estado)+'</strong></div>';
+    if(esRevision){
+      html+='<div style="font-size:13px;color:#C05621;background:rgba(192,86,33,0.08);border-radius:8px;padding:8px;margin-bottom:8px;">'
+        +'⚠️ Motivo: '+tcEsc(a.observaciones||'Se detectó una diferencia respecto a la ampliación anterior.')+'<br>'
+        +'Minutos presentados anteriormente: <strong>'+(a.minutosPresentadosAnteriores!=null?a.minutosPresentadosAnteriores:'—')+'</strong><br>'
+        +'Minutos detectados actualmente: <strong>'+a.minutosAmpliacion+'</strong><br>'
+        +'Hora teórica: <strong>'+tcEsc(finTeorico)+'</strong> · Hora real actual: <strong>'+tcEsc(horaReal)+'</strong>'
+        +'</div>';
+    }
+    html+='<div class="tc-fg" style="margin-bottom:8px;"><label class="tc-lbl">Minutos detectados</label>'
       +'<input class="tc-inp" type="number" min="0" step="1" id="amp-min-'+parte+'" value="'+a.minutosAmpliacion+'"></div>'
       +'<div class="tc-fg" style="margin-bottom:8px;"><label class="tc-lbl">Observaciones</label>'
       +'<textarea class="tc-ta" rows="2" id="amp-obs-'+parte+'" placeholder="Observaciones…">'+tcEsc(a.observaciones||'')+'</textarea></div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'
-      +'<button class="tc-mini-btn" onclick="tcAmpGuardarCambios(\''+parte+'\')">💾 Guardar cambios</button>'
-      +(a.estado!=='documento_presentado'&&a.estado!=='anulada'?'<button class="tc-mini-btn" onclick="tcAmpDocumentoPresentado(\''+parte+'\')">✅ Documento presentado</button>':'')
-      +(a.estado!=='descartada'&&a.estado!=='anulada'?'<button class="tc-mini-btn" onclick="tcAmpDescartar(\''+parte+'\')">🚫 Descartar</button>':'')
-      +(a.estado!=='anulada'?'<button class="tc-mini-btn" onclick="tcAmpAnular(\''+parte+'\')">⛔ Anular</button>':'')
-      +'</div></div>';
+      +'<button class="tc-mini-btn" onclick="tcAmpGuardarCambios(\''+parte+'\')">💾 Guardar cambios</button>';
+    if(esRevision){
+      html+='<button class="tc-mini-btn" onclick="tcAmpConfirmarNuevos(\''+parte+'\')">✅ Confirmar nuevos minutos como presentados</button>'
+        +'<button class="tc-mini-btn" onclick="tcAmpDejarPendienteDocumento(\''+parte+'\')">📄 Dejar pendiente de documento</button>'
+        +'<button class="tc-mini-btn" onclick="tcAmpAnular(\''+parte+'\')">⛔ Anular ampliación</button>';
+    } else {
+      html+=(a.estado!=='documento_presentado'&&a.estado!=='anulada'?'<button class="tc-mini-btn" onclick="tcAmpDocumentoPresentado(\''+parte+'\')">✅ Documento presentado</button>':'')
+        +(a.estado!=='descartada'&&a.estado!=='anulada'?'<button class="tc-mini-btn" onclick="tcAmpDescartar(\''+parte+'\')">🚫 Descartar</button>':'')
+        +(a.estado!=='anulada'?'<button class="tc-mini-btn" onclick="tcAmpAnular(\''+parte+'\')">⛔ Anular</button>':'');
+    }
+    html+='</div></div>';
   });
   document.getElementById('amp-list').innerHTML=html||'<div class="tc-ruta-empty"><span>⏱️</span><p>Sin ampliaciones</p></div>';
 }
@@ -3626,7 +3987,16 @@ window.tcAmpGuardarCambios=function(parte){
   var minVal=parseInt(document.getElementById('amp-min-'+parte).value,10);
   var obsVal=document.getElementById('amp-obs-'+parte).value.trim();
   if(isNaN(minVal)||minVal<0){ tcToast('⚠️ Minutos no válidos'); return; }
-  tcAmpMutar(parte,function(a){ a.minutosAmpliacion=minVal; a.observaciones=obsVal; });
+  tcAmpMutar(parte,function(a){
+    /* Si ya estaba documento_presentado y se modifican los minutos a mano,
+       deja de ser computable automáticamente y exige nueva confirmación. */
+    if(a.estado==='documento_presentado'&&minVal!==a.minutosAmpliacion){
+      a.minutosPresentadosAnteriores=a.minutosAmpliacion;
+      a.estado='revision_pendiente';
+      a.computableParaNomina=false;
+    }
+    a.minutosAmpliacion=minVal; a.observaciones=obsVal;
+  });
   tcToast('✔ Ampliación actualizada');
 };
 window.tcAmpDocumentoPresentado=function(parte){
@@ -3641,6 +4011,17 @@ window.tcAmpAnular=function(parte){
   tcAmpMutar(parte,function(a){ a.estado='anulada'; a.computableParaNomina=false; });
   tcToast('⛔ Ampliación anulada');
 };
+window.tcAmpConfirmarNuevos=function(parte){
+  tcAmpMutar(parte,function(a){
+    a.estado='documento_presentado'; a.computableParaNomina=true;
+    a.minutosPresentadosAnteriores=null;
+  });
+  tcToast('✅ Nuevos minutos confirmados como presentados');
+};
+window.tcAmpDejarPendienteDocumento=function(parte){
+  tcAmpMutar(parte,function(a){ a.estado='pendiente_documento'; a.computableParaNomina=false; });
+  tcToast('📄 Ampliación dejada pendiente de documento');
+};
 
 window.tcSaveCambio=function(){
   var reg=dias[activeDate]||{};
@@ -3651,7 +4032,7 @@ window.tcSaveCambio=function(){
   var notas=document.getElementById('cambio-notas').value.trim();
   if(cambioImg) reg.imgData=cambioImg;
   if(turno) reg.turno=turno;
-  if(serv) reg.servicio=serv;
+  if(serv){ reg.servicio=serv; if(reg.jornada) reg.jornada.servicio=serv; }
   reg.cambio=true; reg.cambioCompanero=comp; reg.cambioFechaDestino=fechaDest||null; reg.cambioNotas=notas;
   dias[activeDate]=reg;
   if(fechaDest){
@@ -3660,12 +4041,14 @@ window.tcSaveCambio=function(){
     dias[fechaDest]=dest;
   }
   saveDias(); tcRenderCal(); tcRenderView(activeDate,reg); tcShowPanel('pnl-view');
+  if(serv&&typeof tcJornadaSincronizarDesdeRecaudaciones==='function') tcJornadaSincronizarDesdeRecaudaciones(activeDate,serv);
   tcToast('🔄 Cambio guardado'+(fechaDest?' · vinculado con '+tcFmtF(fechaDest):''));
 };
 
 window.tcOpenImport=function(){tcShowPanel('pnl-import');tcOpenOv();};
 window.tcImpReset=function(){
   pdfPages=[];
+  pdfImportSemanalFile=null;
   document.getElementById('imp-file').value='';
   document.getElementById('imp-prog').style.display='none';
   document.getElementById('imp-actions').style.display='none';
@@ -3673,10 +4056,19 @@ window.tcImpReset=function(){
   document.getElementById('imp-go-btn').disabled=true;
   document.getElementById('imp-pages').innerHTML='';
 };
-window.tcImpLoad=function(input){if(input.files[0]){document.getElementById('imp-go-btn').disabled=false;tcToast('📄 '+input.files[0].name);}};
+/* Acepta tanto un <input type="file"> real (Safari/iPhone) como el objeto
+   {files:[file]} que entrega tcPdfPick tras showOpenFilePicker (Chrome/Edge). */
+window.tcImpLoad=function(input){
+  var file=input&&input.files&&input.files[0];
+  if(file){
+    pdfImportSemanalFile=file;
+    document.getElementById('imp-go-btn').disabled=false;
+    tcToast('📄 '+file.name);
+  }
+};
 window.tcImpProcess=function(){
   if(typeof pdfjsLib==='undefined'){tcToast('Error cargando PDF.js');return;}
-  var file=document.getElementById('imp-file').files[0];
+  var file=pdfImportSemanalFile||(document.getElementById('imp-file').files&&document.getElementById('imp-file').files[0]);
   if(!file){tcToast('Elige un PDF primero');return;}
   document.getElementById('imp-zone-wrap').style.display='none';
   document.getElementById('imp-prog').style.display='';
