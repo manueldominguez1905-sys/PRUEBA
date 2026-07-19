@@ -504,8 +504,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-004</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004R6</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección de limpieza completa de origen y conservación de ampliaciones al eliminar una hoja de ruta.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004R7</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección de limpieza de hojas antiguas y validación de fecha al cargar hojas de ruta individuales.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -3376,29 +3376,109 @@ window.tcPdfPick=function(inputId,handler){
   }
 };
 
-/* Añade o reemplaza la hoja de ruta del día abierto, conservando el resto de datos */
+/* Guarda una hoja de ruta ya procesada (imagen+miniatura+texto) en una fecha
+   concreta: comportamiento idéntico al que tenía tcDiaHojaPdf antes de
+   incorporar la validación de fecha (imagen, miniatura, extracción de
+   jornada, fusión segura, renderizado y toast). */
+function tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto){
+  var habiaHoja=!!(dias[fecha]&&dias[fecha].imgData);
+  var reg=dias[fecha]||{};
+  reg.imgData=imgData; reg.thumbData=thumbData;
+  var revisionPrevia=!!(reg.jornada&&reg.jornada.requiereRevision);
+  var jornadaExtraida=tcExtraerJornadaHojaRuta(texto,reg);
+  tcJornadaFusionarExtraccion(reg,fecha,jornadaExtraida);
+  dias[fecha]=reg;
+  saveDias(); tcRenderCal();
+  if(activeDate===fecha) tcRenderView(fecha,reg);
+  document.getElementById('dia-hoja-file').value='';
+  var avisoRevision=reg.jornada&&reg.jornada.requiereRevision&&!revisionPrevia;
+  tcToast((habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida')+(avisoRevision?' · ⚠️ Revisa la jornada: hay datos manuales distintos de los detectados':''));
+}
+
+/* Añade o reemplaza la hoja de ruta del día abierto, conservando el resto de datos.
+   Antes de insertarla, comprueba que la fecha detectada en el PDF coincide con
+   el día abierto; si no coincide o no se puede detectar, pide confirmación
+   explícita en vez de insertarla silenciosamente en el día equivocado. */
 window.tcDiaHojaPdf=function(input){
   var file=input.files&&input.files[0]; if(!file||!activeDate)return;
-  var habiaHoja=!!(dias[activeDate]&&dias[activeDate].imgData);
+  var diaAbierto=activeDate;
   tcProcesarPrimeraPaginaPdf(file,function(imgData,thumbData,texto){
-    var reg=dias[activeDate]||{};
-    reg.imgData=imgData; reg.thumbData=thumbData;
-    var revisionPrevia=!!(reg.jornada&&reg.jornada.requiereRevision);
-    var jornadaExtraida=tcExtraerJornadaHojaRuta(texto,reg);
-    tcJornadaFusionarExtraccion(reg,activeDate,jornadaExtraida);
-    dias[activeDate]=reg;
-    saveDias(); tcRenderCal(); tcRenderView(activeDate,reg);
-    document.getElementById('dia-hoja-file').value='';
-    var avisoRevision=reg.jornada&&reg.jornada.requiereRevision&&!revisionPrevia;
-    tcToast((habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida')+(avisoRevision?' · ⚠️ Revisa la jornada: hay datos manuales distintos de los detectados':''));
+    var fechaDetectada=tcDetectFecha(texto);
+    if(fechaDetectada&&fechaDetectada!==diaAbierto){
+      tcModalPrompt(
+        'Fecha distinta detectada',
+        'La hoja corresponde a '+tcFmtF(fechaDetectada)+'.\nEstás intentando añadirla al día '+tcFmtF(diaAbierto)+'.',
+        [
+          {label:'Cancelar',className:'btn-secondary',onClick:function(){ document.getElementById('dia-hoja-file').value=''; }},
+          {label:'Guardar en la fecha detectada',className:'btn-primary',onClick:function(){ tcDiaHojaGuardarEn(fechaDetectada,imgData,thumbData,texto); }}
+        ]
+      );
+      return;
+    }
+    if(!fechaDetectada){
+      tcModalPrompt(
+        'Fecha no verificada',
+        'No se ha podido comprobar la fecha de esta hoja.',
+        [
+          {label:'Cancelar',className:'btn-secondary',onClick:function(){ document.getElementById('dia-hoja-file').value=''; }},
+          {label:'Guardar en el día abierto',className:'btn-primary',onClick:function(){ tcDiaHojaGuardarEn(diaAbierto,imgData,thumbData,texto); }}
+        ]
+      );
+      return;
+    }
+    tcDiaHojaGuardarEn(diaAbierto,imgData,thumbData,texto);
   });
 };
 
-/* Elimina imgData/thumbData del día abierto. Si la jornada procedía de una hoja
-   de ruta (origen==='hoja_ruta'), limpia también los datos teóricos extraídos
-   de esa hoja y ajusta las ampliaciones ya abiertas; conserva siempre turno,
-   servicio, incidencia, notas, cambios, recaudaciones y horas reales. Si el
-   origen es manual o mixto, solo se borra la imagen: nada de jornada. */
+/* Limpia los datos teóricos extraídos de una hoja de ruta (inicio/fin, cómputo,
+   partes, descanso, estado de extracción, computos específicos) y ajusta las
+   ampliaciones ya abiertas. Conserva siempre turno, servicio, incidencia, notas,
+   cambios, recaudaciones y horas reales, que viven fuera de jornada. Deja el
+   origen a null: así una hoja nueva podrá fusionarse con normalidad y, si el
+   usuario rellena la jornada a mano después, quedará como "manual" y no "mixto". */
+function tcDiaHojaLimpiarDatosJornada(reg){
+  var jr=reg.jornada;
+  if(!jr) return;
+  jr.inicioTeorico=null;
+  jr.finTeorico=null;
+  jr.computoOficialMinutos=null;
+  jr.tipoTurno=null;
+  jr.parte1={inicioTeorico:null,finTeorico:null};
+  jr.parte2={inicioTeorico:null,finTeorico:null};
+  jr.descanso={tipo:null,duracionMinutos:null};
+  jr.extraccionEstado=null;
+  jr.extraccionPendiente=null;
+  jr.requiereRevision=false;
+  jr.origen=null;
+  /* No se muestra ni calcula nada económico: solo se restablece la estructura vacía. */
+  jr.computosEspecificos=tcComputosEspecificosVacio();
+  ['parte1','parte2'].forEach(function(p){
+    var a=jr.ampliaciones&&jr.ampliaciones[p];
+    if(!a) return;
+    if(a.estado==='detectada'){
+      jr.ampliaciones[p]=null;
+    } else if(a.estado==='documento_presentado'){
+      a.minutosPresentadosAnteriores=a.minutosAmpliacion;
+      a.estado='revision_pendiente';
+      a.computableParaNomina=false;
+      a.minutosAmpliacion=0;
+      a.observaciones=(a.observaciones?a.observaciones+' · ':'')+'Hoja de ruta eliminada: revisar ampliación.';
+    } else if(a.estado==='pendiente_documento'){
+      a.minutosPendientesAnteriores=a.minutosAmpliacion;
+      a.estado='revision_pendiente';
+      a.computableParaNomina=false;
+      a.minutosAmpliacion=0;
+      a.observaciones=(a.observaciones?a.observaciones+' · ':'')+'Hoja de ruta eliminada: revisar ampliación.';
+    }
+    /* descartada/anulada: se conservan tal cual, ya no computables. */
+  });
+}
+
+/* Elimina imgData/thumbData del día abierto. Si el origen de la jornada es
+   "hoja_ruta" o null (hojas antiguas sin origen registrado), limpia también
+   los datos teóricos extraídos. Si el origen es manual o mixto, no se puede
+   distinguir con seguridad qué es manual y qué vino de la hoja, así que se
+   pide una decisión explícita antes de tocar la jornada. */
 window.tcDiaHojaDelete=function(){
   var btn=document.querySelector('#vw-ruta-actions .tc-btn-danger');
   if(!btn)return;
@@ -3415,51 +3495,37 @@ window.tcDiaHojaDelete=function(){
   }
   if(!activeDate||!dias[activeDate])return;
   var reg=dias[activeDate];
-  delete reg.imgData; delete reg.thumbData;
   var jr=reg.jornada;
-  var eraHojaRuta=!!(jr&&jr.origen==='hoja_ruta');
-  if(eraHojaRuta){
-    jr.inicioTeorico=null;
-    jr.finTeorico=null;
-    jr.computoOficialMinutos=null;
-    jr.tipoTurno=null;
-    jr.parte1={inicioTeorico:null,finTeorico:null};
-    jr.parte2={inicioTeorico:null,finTeorico:null};
-    jr.descanso={tipo:null,duracionMinutos:null};
-    jr.extraccionEstado=null;
-    jr.extraccionPendiente=null;
-    jr.requiereRevision=false;
-    /* Ya no queda hoja de ruta: el origen se limpia para no bloquear una futura
-       extracción (si se añade otra hoja) ni forzar "mixto" si luego se rellena a mano. */
-    jr.origen=null;
-    /* No se muestra ni calcula nada económico: solo se restablece la estructura vacía. */
-    jr.computosEspecificos=tcComputosEspecificosVacio();
-    ['parte1','parte2'].forEach(function(p){
-      var a=jr.ampliaciones&&jr.ampliaciones[p];
-      if(!a) return;
-      if(a.estado==='detectada'){
-        jr.ampliaciones[p]=null;
-      } else if(a.estado==='documento_presentado'){
-        a.minutosPresentadosAnteriores=a.minutosAmpliacion;
-        a.estado='revision_pendiente';
-        a.computableParaNomina=false;
-        a.minutosAmpliacion=0;
-        a.observaciones=(a.observaciones?a.observaciones+' · ':'')+'Hoja de ruta eliminada: revisar ampliación.';
-      } else if(a.estado==='pendiente_documento'){
-        a.minutosPendientesAnteriores=a.minutosAmpliacion;
-        a.estado='revision_pendiente';
-        a.computableParaNomina=false;
-        a.minutosAmpliacion=0;
-        a.observaciones=(a.observaciones?a.observaciones+' · ':'')+'Hoja de ruta eliminada: revisar ampliación.';
-      }
-      /* descartada/anulada: se conservan tal cual, ya no computables. */
-    });
+  var origen=jr?jr.origen:null;
+  if(origen==='manual'||origen==='mixto'){
+    tcModalPrompt(
+      'Datos manuales en este día',
+      'Este día contiene datos manuales. No se pueden distinguir con seguridad de los datos extraídos.',
+      [
+        {label:'Cancelar',className:'btn-secondary',onClick:function(){}},
+        {label:'Eliminar solo hoja y conservar jornada',className:'btn-secondary',onClick:function(){
+          delete reg.imgData; delete reg.thumbData;
+          dias[activeDate]=reg;
+          saveDias(); tcRenderCal(); tcRenderView(activeDate,reg);
+          tcToast('🗑️ Hoja de ruta eliminada · Se conservaron los datos manuales');
+        }},
+        {label:'Eliminar hoja y limpiar datos de jornada',className:'btn-danger',onClick:function(){
+          delete reg.imgData; delete reg.thumbData;
+          tcDiaHojaLimpiarDatosJornada(reg);
+          dias[activeDate]=reg;
+          saveDias(); tcRenderCal(); tcRenderView(activeDate,reg);
+          tcToast('🗑️ Hoja de ruta eliminada · Datos extraídos limpiados');
+        }}
+      ]
+    );
+    return;
   }
+  // origen === 'hoja_ruta' o null (hoja antigua sin origen registrado): se limpia directamente.
+  delete reg.imgData; delete reg.thumbData;
+  tcDiaHojaLimpiarDatosJornada(reg);
   dias[activeDate]=reg;
   saveDias(); tcRenderCal(); tcRenderView(activeDate,reg);
-  tcToast(eraHojaRuta
-    ? '🗑️ Hoja de ruta eliminada · Datos extraídos limpiados'
-    : '🗑️ Hoja de ruta eliminada · Se conservaron los datos manuales');
+  tcToast('🗑️ Hoja de ruta eliminada · Datos extraídos limpiados');
 };
 
 /* ==================== DEV-004: Control de jornada y ampliaciones ====================
