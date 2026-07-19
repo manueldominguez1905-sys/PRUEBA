@@ -504,8 +504,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-004</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Control de jornada por dos partes, detección de ampliaciones independientes y gestión de documentación presentada.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004R1</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Reparación de la extracción de jornada desde hojas de ruta, conexión con recaudaciones, visualización de datos y conservación de ampliaciones.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -579,6 +579,12 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
         <div class="form-row">
           <label>Fecha <input type="date" id="recFecha" required /></label>
           <label>Hora <input type="time" id="recHora" /></label>
+          <label>La hora corresponde a
+            <select id="recHoraParte">
+              <option value="1">Primera parte</option>
+              <option value="2">Segunda parte</option>
+            </select>
+          </label>
           <label>Servicio <input type="text" id="recServicio" placeholder="Ej: Línea 5" required /></label>
         </div>
         <div class="form-row">
@@ -1476,6 +1482,7 @@ function editarRecaudacion(id) {
   document.getElementById("recaudacionId").value = id;
   document.getElementById("recFecha").value = item.fecha;
   document.getElementById("recHora").value = item.hora || "";
+  document.getElementById("recHoraParte").value = (item.horaParte2 && !item.horaParte1) ? "2" : "1";
   document.getElementById("recServicio").value = item.servicio;
   document.getElementById("recParte1").value = item.parte1;
   document.getElementById("recParte2").value = item.parte2;
@@ -1494,6 +1501,7 @@ function resetearFormRecaudacion() {
   document.getElementById("recaudacionId").value = "";
   document.getElementById("recFecha").value = fechaHoyISO();
   document.getElementById("recHora").value = horaAhoraHM();
+  document.getElementById("recHoraParte").value = "1";
   document.getElementById("recTotal").value = "0.00";
 }
 function inicializarRecaudaciones() {
@@ -1509,15 +1517,23 @@ function inicializarRecaudaciones() {
     e.preventDefault();
     var fecha = document.getElementById("recFecha").value;
     var hora = document.getElementById("recHora").value || "";
+    var horaParteSel = document.getElementById("recHoraParte").value;
     var servicio = document.getElementById("recServicio").value.trim();
     var parte1 = parseFloat(document.getElementById("recParte1").value) || 0;
     var parte2 = parseFloat(document.getElementById("recParte2").value) || 0;
     if (!fecha || !servicio) { mostrarToast("Completa todos los campos obligatorios.", "error"); return; }
-    var registro = { id: editandoRecaudacionId || generarId(), fecha: fecha, hora: hora, servicio: servicio, parte1: parte1, parte2: parte2, total: parte1 + parte2 };
+    var existente = editandoRecaudacionId ? listaRecaudaciones.find(function (i) { return i.id === editandoRecaudacionId; }) : null;
+    var horaParte1 = existente ? (existente.horaParte1 || null) : null;
+    var horaParte2 = existente ? (existente.horaParte2 || null) : null;
+    if (horaParteSel === "2") horaParte2 = hora || horaParte2; else horaParte1 = hora || horaParte1;
+    var registro = { id: editandoRecaudacionId || generarId(), fecha: fecha, hora: hora, servicio: servicio, parte1: parte1, parte2: parte2, total: parte1 + parte2, horaParte1: horaParte1, horaParte2: horaParte2 };
     guardarRegistro(STORE_RECAUDACIONES, registro).then(function () {
       if (editandoRecaudacionId) { listaRecaudaciones[listaRecaudaciones.findIndex(function (i) { return i.id === registro.id; })] = registro; mostrarToast("Recaudación actualizada", "success"); }
       else { listaRecaudaciones.push(registro); mostrarToast("Recaudación añadida", "success"); }
       resetearFormRecaudacion(); actualizarResumen(); renderizarRecaudaciones();
+      if (typeof tcJornadaAsociarRecaudacion === "function" && hora) {
+        tcJornadaAsociarRecaudacion({ fecha: fecha, hora: hora, parteJornada: horaParteSel === "2" ? "parte2" : "parte1" });
+      }
     });
   });
   document.getElementById("btnCancelarRec").addEventListener("click", resetearFormRecaudacion);
@@ -1864,12 +1880,15 @@ function inicializarImportarCorreo() {
         parte1: parte === "1" ? importe : impRecExistente.parte1,
         parte2: parte === "2" ? importe : impRecExistente.parte2,
         parte1Rellena: parte === "1" ? true : (typeof impRecExistente.parte1Rellena === "boolean" ? impRecExistente.parte1Rellena : impRecExistente.parte1 > 0),
-        parte2Rellena: parte === "2" ? true : (typeof impRecExistente.parte2Rellena === "boolean" ? impRecExistente.parte2Rellena : impRecExistente.parte2 > 0) };
+        parte2Rellena: parte === "2" ? true : (typeof impRecExistente.parte2Rellena === "boolean" ? impRecExistente.parte2Rellena : impRecExistente.parte2 > 0),
+        horaParte1: parte === "1" ? hora : (impRecExistente.horaParte1 || null),
+        horaParte2: parte === "2" ? hora : (impRecExistente.horaParte2 || null) };
       registro.total = registro.parte1 + registro.parte2;
     } else {
       var p1 = parte === "1" ? importe : 0, p2 = parte === "2" ? importe : 0;
       registro = { id: generarId(), fecha: fecha, hora: hora, servicio: servicio, parte1: p1, parte2: p2, total: p1 + p2,
-        parte1Rellena: parte === "1", parte2Rellena: parte === "2" };
+        parte1Rellena: parte === "1", parte2Rellena: parte === "2",
+        horaParte1: parte === "1" ? hora : null, horaParte2: parte === "2" ? hora : null };
     }
     guardarRegistro(STORE_RECAUDACIONES, registro).then(function () {
       if (impRecExistente) {
@@ -1878,6 +1897,9 @@ function inicializarImportarCorreo() {
       } else { listaRecaudaciones.push(registro); }
       actualizarResumen(); renderizarRecaudaciones();
       mostrarToast("Recaudaci\u00f3n " + (impRecExistente ? "actualizada" : "importada") + " correctamente", "success");
+      if (typeof tcJornadaAsociarRecaudacion === "function" && hora) {
+        tcJornadaAsociarRecaudacion({ fecha: fecha, hora: hora, parteJornada: parte === "2" ? "parte2" : "parte1" });
+      }
       impRecExistente = null;
       document.getElementById("textoCorreo").value = "";
       document.getElementById("resultadoAnalisis").style.display = "none";
@@ -1973,7 +1995,7 @@ function inicializarHistorial() {
 }
 
 function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
-  var datos = { version: 1, fechaExportacion: new Date().toISOString(), recaudaciones: listaRecaudaciones, liquidaciones: listaLiquidaciones };
+  var datos = { version: 2, fechaExportacion: new Date().toISOString(), recaudaciones: listaRecaudaciones, liquidaciones: listaLiquidaciones, calendarioConductor: (typeof dias !== "undefined" ? dias : {}) };
   var blob = new Blob([JSON.stringify(datos, null, 2)], { type: "application/json" });
   var url = URL.createObjectURL(blob);
   var enlace = document.createElement("a"); enlace.href = url; enlace.download = nombreArchivo;
@@ -1996,6 +2018,16 @@ function importarDatos(archivo) {
         listaRecaudaciones = datos.recaudaciones; listaLiquidaciones = datos.liquidaciones;
         actualizarResumen();
         renderizarRecaudaciones(); renderizarLiquidaciones();
+        // Compatible con backups anteriores a DEV-004R1 que no incluyen este bloque.
+        var bloqueDias = datos.calendarioConductor || datos.diasCalendario;
+        if (bloqueDias && typeof bloqueDias === "object") {
+          try {
+            dias = bloqueDias;
+            localStorage.setItem(STORE, JSON.stringify(dias));
+            if (typeof tcRenderCal === "function") tcRenderCal();
+            if (typeof activeDate !== "undefined" && activeDate && dias[activeDate] && typeof tcRenderView === "function") tcRenderView(activeDate, dias[activeDate]);
+          } catch (e) {}
+        }
         mostrarToast("Datos importados correctamente", "success");
       }).catch(function (err) {
         mostrarToast("Error al importar los datos en la base de datos.", "error");
@@ -2894,9 +2926,62 @@ function tcRenderView(key,reg){
     html+='<div class="tc-cambio-badge-link"><strong>🔄 Cambio registrado</strong><br>Día intercambiado: <strong>'+destFmt+'</strong><br>'+(reg.cambioCompanero?'Compañero: <strong>'+tcEsc(reg.cambioCompanero)+'</strong><br>':'')+(reg.cambioNotas?'<span style="font-size:12px;color:var(--text2)">'+tcEsc(reg.cambioNotas)+'</span>':'')+'</div>';
   }
   if(reg.servicio) html+='<div class="tc-serv-card"><div class="tc-serv-lbl">Servicio</div><div class="tc-serv-val">'+tcEsc(reg.servicio)+'</div></div>';
+  html+=tcJornadaCardHtml(reg);
   if(reg.incidencia) html+='<div class="tc-inc-box">⚠️ '+tcEsc(reg.incidencia)+'</div>';
   if(reg.notas) html+='<div class="tc-nota-box">📋 '+tcEsc(reg.notas)+'</div>';
   document.getElementById('vw-extra').innerHTML=html;
+  var jaw=document.getElementById('vw-jornada-actions');
+  if(jaw){
+    var nAmp=0,pendDoc=false;
+    if(reg.jornada&&reg.jornada.ampliaciones){
+      ['parte1','parte2'].forEach(function(p){
+        var a=reg.jornada.ampliaciones[p];
+        if(a&&a.estado!=='descartada'&&a.estado!=='anulada'){ nAmp++; if(a.estado==='pendiente_documento') pendDoc=true; }
+      });
+    }
+    jaw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcOpenJornada()">🕐 Jornada</button>'
+      +'<button class="tc-btn tc-btn-ghost" style="'+(pendDoc?'border-color:#E6A817;color:#92400E;font-weight:700;':'')+'" onclick="tcOpenAmpliaciones()">⏱️ Ampliaciones'+(nAmp?' ('+nAmp+')':'')+'</button>';
+  }
+}
+
+/* Formatea minutos como "X h MM min" (para cómputo oficial y duración del descanso). */
+function tcMinAHorasMin(min){
+  if(min==null||isNaN(min)) return '—';
+  var h=Math.floor(min/60),m=min%60;
+  return h+' h '+tcPad(m)+' min';
+}
+
+/* Tarjeta "Datos de jornada" (aditiva, no sustituye nada existente). */
+function tcJornadaCardHtml(reg){
+  var jr=reg.jornada;
+  var hayDatos=jr&&(jr.inicioTeorico||jr.finTeorico||(jr.parte1&&(jr.parte1.inicioTeorico||jr.parte1.finTeorico))||(jr.parte2&&(jr.parte2.inicioTeorico||jr.parte2.finTeorico))||jr.computoOficialMinutos!=null);
+  if(!hayDatos){
+    if(reg.imgData){
+      return '<div class="tc-serv-card"><div class="tc-serv-lbl">Datos de jornada</div>'
+        +'<div style="font-size:13px;color:var(--text2);">Esta hoja de ruta no contiene datos de jornada extraídos. Reemplaza o vuelve a importar el PDF.</div></div>';
+    }
+    return '';
+  }
+  var tipoLabel=jr.tipoTurno==='corrido'?'Corrido':(jr.tipoTurno==='partido'?'Partido':'—');
+  var estadoLabel={completa:'✅ Completa',parcial:'⚠️ Parcial (revisión necesaria)',manual:'✍️ Manual'}[jr.extraccionEstado]||'—';
+  var html='<div class="tc-serv-card"><div class="tc-serv-lbl">Datos de jornada</div>';
+  html+='<div style="font-size:13px;line-height:1.7;color:var(--text2);">';
+  html+='Turno: <strong>'+tcEsc(tipoLabel)+'</strong><br>';
+  if(jr.inicioTeorico) html+='Inicio teórico: <strong>'+tcEsc(jr.inicioTeorico)+'</strong><br>';
+  if(jr.finTeorico) html+='Fin teórico: <strong>'+tcEsc(jr.finTeorico)+'</strong><br>';
+  if(jr.computoOficialMinutos!=null) html+='Cómputo oficial: <strong>'+tcMinAHorasMin(jr.computoOficialMinutos)+'</strong><br>';
+  if(jr.parte1&&(jr.parte1.inicioTeorico||jr.parte1.finTeorico)) html+='<br>Primera parte: <strong>'+tcEsc(jr.parte1.inicioTeorico||'—')+' – '+tcEsc(jr.parte1.finTeorico||'—')+'</strong><br>';
+  if(jr.descanso&&jr.descanso.tipo){
+    var descLabel=jr.descanso.tipo==='vuelta_descanso'?'Vuelta de descanso':'Descanso intermedio';
+    html+=tcEsc(descLabel)+': <strong>'+tcMinAHorasMin(jr.descanso.duracionMinutos)+'</strong><br>';
+  }
+  if(jr.parte2&&(jr.parte2.inicioTeorico||jr.parte2.finTeorico)) html+='Segunda parte: <strong>'+tcEsc(jr.parte2.inicioTeorico||'—')+' – '+tcEsc(jr.parte2.finTeorico||'—')+'</strong><br>';
+  if(jr.horaFinRealParte1) html+='Fin real 1ª parte: <strong>'+tcEsc(jr.horaFinRealParte1)+'</strong><br>';
+  if(jr.horaFinRealParte2) html+='Fin real 2ª parte: <strong>'+tcEsc(jr.horaFinRealParte2)+'</strong><br>';
+  html+='Estado de extracción: <strong>'+estadoLabel+'</strong>';
+  if(jr.requiereRevision) html+='<br><span style="color:#C05621;">⚠️ Revisión necesaria: hay datos manuales distintos de los detectados en la hoja.</span>';
+  html+='</div></div>';
+  return html;
 }
 
 window.tcToEdit=function(){
@@ -2980,6 +3065,114 @@ window.tcCambioPdf=function(input){
 /* Procesa la primera página de un PDF y devuelve (vía callback) imgData + thumbData,
    reutilizando el mismo procedimiento/calidad que ya usa la app (escala 1.0, jpeg 0.60;
    miniatura máx. 300px de ancho, jpeg 0.45). */
+/* Reconstruye el texto de una página de PDF agrupando los items por su
+   coordenada Y (misma línea si están a ±4px), ordenados por X dentro de
+   cada línea. Mismo criterio que ya usa el parser del calendario anual,
+   en vez de unir todo el contenido con espacios (evita mezclar columnas). */
+function tcTextoPorLineas(items){
+  var validos=(items||[]).filter(function(it){return it.str&&it.str.trim();});
+  if(!validos.length) return '';
+  var grupos={};
+  validos.forEach(function(it){
+    var y=Math.round(it.transform[5]/4)*4;
+    if(!grupos[y]) grupos[y]=[];
+    grupos[y].push(it);
+  });
+  var ys=Object.keys(grupos).map(Number).sort(function(a,b){return b-a;});
+  var lineas=ys.map(function(y){
+    var row=grupos[y].slice().sort(function(a,b){return a.transform[4]-b.transform[4];});
+    return row.map(function(it){return it.str.trim();}).filter(Boolean).join(' ');
+  });
+  return lineas.join('\n');
+}
+
+/* Normaliza una hora capturada por regex ('HH:MM', 'HH.MM' o 'HH,MM') a 'HH:MM'. */
+function tcNormHora(s){
+  if(!s) return null;
+  var m=String(s).match(/([0-2]?\d)[:.,]([0-5]\d)/);
+  if(!m) return null;
+  var h=parseInt(m[1],10),mi=parseInt(m[2],10);
+  if(isNaN(h)||isNaN(mi)||h>23) return null;
+  return tcPad(h)+':'+tcPad(mi);
+}
+
+/* Extrae los datos de jornada (teóricos globales, cómputo oficial y las dos
+   partes con su descanso) a partir del texto de una página de hoja de ruta.
+   texto: líneas ya reconstruidas (ver tcTextoPorLineas). registroDia: el
+   registro del día (dias[key]) si existe, usado solo para consultar el
+   turno ya guardado en el calendario (fuente fiable de corrido/partido).
+   No inventa datos: cuando algo no puede extraerse con seguridad, se deja
+   en null y se refleja en extraccionEstado. */
+function tcExtraerJornadaHojaRuta(texto,registroDia){
+  var full=texto||'';
+  var jr={
+    inicioTeorico:null, finTeorico:null, computoOficialMinutos:null,
+    parte1:{inicioTeorico:null,finTeorico:null},
+    descanso:{tipo:null,duracionMinutos:null},
+    parte2:{inicioTeorico:null,finTeorico:null},
+    tipoTurno:null, origen:'hoja_ruta', extraccionEstado:'manual'
+  };
+  var codigoTurno=registroDia&&registroDia.turno;
+  jr.tipoTurno=tcJornadaTipoTurno(codigoTurno);
+
+  var mIni=full.match(/Toma\s+servicio[\s\S]{0,40}?Hora[:\s]*([0-2]?\d[:.,][0-5]\d)/i);
+  if(mIni) jr.inicioTeorico=tcNormHora(mIni[1]);
+
+  var mFin=full.match(/Fin\s+de\s+servicio[\s\S]{0,40}?Hora[:\s]*([0-2]?\d[:.,][0-5]\d)/i);
+  if(mFin) jr.finTeorico=tcNormHora(mFin[1]);
+
+  var mComp=full.match(/Horas?\s+c[oó]mputo[:\s]*([0-2]?\d[:.,][0-5]\d)/i);
+  if(mComp){
+    var hc=tcNormHora(mComp[1]);
+    if(hc){
+      var pc=hc.split(':');
+      jr.computoOficialMinutos=parseInt(pc[0],10)*60+parseInt(pc[1],10);
+    }
+  }
+
+  jr.parte1.inicioTeorico=jr.inicioTeorico;
+  jr.parte2.finTeorico=jr.finTeorico;
+
+  /* Descanso: turno corrido → VUE…DES… ; turno partido → DES…INT… */
+  function buscarPar(reA,reB,tipo){
+    var mA=full.match(reA),mB=full.match(reB);
+    if(mA&&mB){
+      var hA=tcNormHora(mA[1]),hB=tcNormHora(mB[1]);
+      if(hA&&hB){
+        jr.parte1.finTeorico=hA;
+        jr.parte2.inicioTeorico=hB;
+        jr.descanso.tipo=tipo;
+        var diff=tcMinutosEntre(hA,hB);
+        jr.descanso.duracionMinutos=(diff!==null&&diff>=0)?diff:null;
+        return true;
+      }
+    }
+    return false;
+  }
+  var reVUE=/\bVUE\D{0,4}([0-2]?\d[:.,][0-5]\d)/i;
+  var reDES=/\bDES\D{0,4}([0-2]?\d[:.,][0-5]\d)/i;
+  var reINT=/\bINT\D{0,4}([0-2]?\d[:.,][0-5]\d)/i;
+  var detectado=false;
+  if(jr.tipoTurno==='partido'){
+    detectado=buscarPar(reDES,reINT,'descanso_intermedio');
+    if(!detectado) detectado=buscarPar(reVUE,reDES,'vuelta_descanso');
+  } else if(jr.tipoTurno==='corrido'){
+    detectado=buscarPar(reVUE,reDES,'vuelta_descanso');
+    if(!detectado) detectado=buscarPar(reDES,reINT,'descanso_intermedio');
+  } else {
+    detectado=buscarPar(reVUE,reDES,'vuelta_descanso');
+    if(!detectado) detectado=buscarPar(reDES,reINT,'descanso_intermedio');
+  }
+
+  var basicOk=!!(jr.inicioTeorico&&jr.finTeorico);
+  var partesOk=!!(jr.parte1.finTeorico&&jr.parte2.inicioTeorico);
+  if(basicOk&&partesOk) jr.extraccionEstado='completa';
+  else if(basicOk||partesOk) jr.extraccionEstado='parcial';
+  else jr.extraccionEstado='manual';
+
+  return jr;
+}
+
 function tcProcesarPrimeraPaginaPdf(file,callback){
   if(typeof pdfjsLib==='undefined'){tcToast('Error cargando PDF.js');return;}
   var reader=new FileReader();
@@ -2988,8 +3181,9 @@ function tcProcesarPrimeraPaginaPdf(file,callback){
       pdf.getPage(1).then(function(page){
         var vp=page.getViewport({scale:1.0});
         var cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
-        page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise.then(function(){
+        Promise.all([page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise,page.getTextContent()]).then(function(res){
           var imgData=cv.toDataURL('image/jpeg',0.60);
+          var texto=tcTextoPorLineas(res[1].items);
           var img=new Image();
           img.onload=function(){
             try{
@@ -2997,10 +3191,10 @@ function tcProcesarPrimeraPaginaPdf(file,callback){
               var thumbH=Math.round(img.height*(thumbW/img.width));
               var tcv=document.createElement('canvas'); tcv.width=thumbW; tcv.height=thumbH;
               tcv.getContext('2d').drawImage(img,0,0,thumbW,thumbH);
-              callback(imgData,tcv.toDataURL('image/jpeg',0.45));
-            }catch(e){callback(imgData,imgData);}
+              callback(imgData,tcv.toDataURL('image/jpeg',0.45),texto);
+            }catch(e){callback(imgData,imgData,texto);}
           };
-          img.onerror=function(){callback(imgData,imgData);};
+          img.onerror=function(){callback(imgData,imgData,texto);};
           img.src=imgData;
         });
       });
@@ -3038,13 +3232,17 @@ window.tcPdfPick=function(inputId,handler){
 window.tcDiaHojaPdf=function(input){
   var file=input.files&&input.files[0]; if(!file||!activeDate)return;
   var habiaHoja=!!(dias[activeDate]&&dias[activeDate].imgData);
-  tcProcesarPrimeraPaginaPdf(file,function(imgData,thumbData){
+  tcProcesarPrimeraPaginaPdf(file,function(imgData,thumbData,texto){
     var reg=dias[activeDate]||{};
     reg.imgData=imgData; reg.thumbData=thumbData;
+    var revisionPrevia=!!(reg.jornada&&reg.jornada.requiereRevision);
+    var jornadaExtraida=tcExtraerJornadaHojaRuta(texto,reg);
+    tcJornadaFusionarExtraccion(reg,activeDate,jornadaExtraida);
     dias[activeDate]=reg;
     saveDias(); tcRenderCal(); tcRenderView(activeDate,reg);
     document.getElementById('dia-hoja-file').value='';
-    tcToast(habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida');
+    var avisoRevision=reg.jornada&&reg.jornada.requiereRevision&&!revisionPrevia;
+    tcToast((habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida')+(avisoRevision?' · ⚠️ Revisa la jornada: hay datos manuales distintos de los detectados':''));
   });
 };
 
@@ -3105,7 +3303,55 @@ function tcJornadaEnsure(reg,key){
   return reg.jornada;
 }
 
-/* Diferencia en minutos entre dos horas 'HH:MM' del mismo día (b-a). */
+/* Fusiona los datos de jornada extraídos automáticamente de una hoja de ruta
+   con la jornada ya existente del día (si la hay). Nunca sobrescribe en
+   silencio datos manuales distintos ni horas reales/ampliaciones/observaciones
+   ya registradas; si detecta un conflicto con datos manuales, los conserva y
+   marca jornada.requiereRevision=true. */
+function tcJornadaFusionarExtraccion(reg,key,jornadaExtraida){
+  if(!jornadaExtraida) return;
+  var previa=reg.jornada?JSON.parse(JSON.stringify(reg.jornada)):null;
+  var jr=tcJornadaEnsure(reg,key);
+  var manualDistinto=false;
+  if(previa&&(previa.origen==='manual'||previa.origen==='mixto')){
+    ['inicioTeorico','finTeorico'].forEach(function(campo){
+      if(previa[campo]&&jornadaExtraida[campo]&&previa[campo]!==jornadaExtraida[campo]) manualDistinto=true;
+    });
+    ['parte1','parte2'].forEach(function(p){
+      ['inicioTeorico','finTeorico'].forEach(function(campo){
+        var pv=previa[p]&&previa[p][campo], ev=jornadaExtraida[p]&&jornadaExtraida[p][campo];
+        if(pv&&ev&&pv!==ev) manualDistinto=true;
+      });
+    });
+  }
+  if(manualDistinto){
+    jr.requiereRevision=true;
+    /* Se conservan íntegros los valores manuales ya guardados */
+  } else {
+    jr.servicio=reg.servicio||jr.servicio||'';
+    jr.tipoTurno=jornadaExtraida.tipoTurno||jr.tipoTurno||tcJornadaTipoTurno(reg.turno);
+    jr.inicioTeorico=jornadaExtraida.inicioTeorico||jr.inicioTeorico;
+    jr.finTeorico=jornadaExtraida.finTeorico||jr.finTeorico;
+    if(jornadaExtraida.computoOficialMinutos!=null) jr.computoOficialMinutos=jornadaExtraida.computoOficialMinutos;
+    jr.parte1.inicioTeorico=jornadaExtraida.parte1.inicioTeorico||jr.parte1.inicioTeorico;
+    jr.parte1.finTeorico=jornadaExtraida.parte1.finTeorico||jr.parte1.finTeorico;
+    jr.parte2.inicioTeorico=jornadaExtraida.parte2.inicioTeorico||jr.parte2.inicioTeorico;
+    jr.parte2.finTeorico=jornadaExtraida.parte2.finTeorico||jr.parte2.finTeorico;
+    if(jornadaExtraida.descanso&&jornadaExtraida.descanso.tipo) jr.descanso=jornadaExtraida.descanso;
+    jr.origen=(previa&&previa.origen==='manual')?'mixto':'hoja_ruta';
+    jr.extraccionEstado=jornadaExtraida.extraccionEstado||'manual';
+  }
+  reg.jornada=jr;
+  /* Recalcula ampliaciones si ya había horas reales, sin reabrir avisos ya resueltos */
+  tcJornadaDetectarAmpliacion(key,'parte1');
+  tcJornadaDetectarAmpliacion(key,'parte2');
+}
+
+/* Diferencia en minutos entre dos horas 'HH:MM' del mismo día (b-a).
+   Solo se considera cruce de medianoche cuando la hora teórica (a) es
+   nocturna (>=18:00) y la hora real (b) cae en la madrugada (<06:00); en
+   ese caso se suman 1440 minutos a b antes de restar. En cualquier otro
+   caso una hora real anterior devuelve una diferencia negativa o cero. */
 function tcMinutosEntre(a,b){
   if(!a||!b) return null;
   var pa=a.split(':'),pb=b.split(':');
@@ -3113,6 +3359,7 @@ function tcMinutosEntre(a,b){
   var ma=parseInt(pa[0],10)*60+parseInt(pa[1],10);
   var mb=parseInt(pb[0],10)*60+parseInt(pb[1],10);
   if(isNaN(ma)||isNaN(mb)) return null;
+  if(ma>=18*60&&mb<6*60){ mb+=1440; }
   return mb-ma;
 }
 
@@ -3451,10 +3698,11 @@ window.tcImpProcess=function(){
           var cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
           Promise.all([page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise,page.getTextContent()]).then(function(res){
             var img=cv.toDataURL('image/jpeg',0.60);
-            var texto=res[1].items.map(function(i){return i.str;}).join(' ');
+            var texto=tcTextoPorLineas(res[1].items);
             var key=tcDetectFecha(texto);
             var serv=tcDetectServicio(texto);
-            pdfPages.push({key:key,imgData:img,servicio:serv,fechaOk:!!key});
+            var jornadaExtraida=tcExtraerJornadaHojaRuta(texto,key?dias[key]:null);
+            pdfPages.push({key:key,imgData:img,servicio:serv,fechaOk:!!key,jornadaExtraida:jornadaExtraida});
             var row=document.createElement('div'); row.className='tc-page-row';
             var thmb=document.createElement('img'); thmb.className='tc-page-thumb'; thmb.src=img;
             var inf=document.createElement('div'); inf.className='tc-page-info';
@@ -3522,7 +3770,7 @@ window.tcImpConfirm=function(){
   var validas=pdfPages.filter(function(p){return p.fechaOk&&p.key;});
   var skip=pdfPages.length-validas.length;
   if(!validas.length){tcToast('No hay páginas válidas para guardar');return;}
-  var pendientes=validas.length,ok=0;
+  var pendientes=validas.length,ok=0,revisar=0;
   function generarThumb(p,callback){
     var img=new Image();
     img.onload=function(){
@@ -3540,14 +3788,30 @@ window.tcImpConfirm=function(){
   validas.forEach(function(p){
     generarThumb(p,function(thumb){
       var ex=dias[p.key]||{};
-      dias[p.key]={turno:ex.turno||'',servicio:p.servicio||ex.servicio||'',imgData:p.imgData,thumbData:thumb,incidencia:ex.incidencia||'',notas:ex.notas||'',autoTurno:ex.autoTurno||false,cambio:ex.cambio||false,cambioCompanero:ex.cambioCompanero||'',cambioFechaDestino:ex.cambioFechaDestino||null,cambioNotas:ex.cambioNotas||''};
+      var revisionPrevia=!!(ex.jornada&&ex.jornada.requiereRevision);
+      ex.turno=ex.turno||'';
+      ex.servicio=p.servicio||ex.servicio||'';
+      ex.imgData=p.imgData;
+      ex.thumbData=thumb;
+      ex.incidencia=ex.incidencia||'';
+      ex.notas=ex.notas||'';
+      ex.autoTurno=ex.autoTurno||false;
+      ex.cambio=ex.cambio||false;
+      ex.cambioCompanero=ex.cambioCompanero||'';
+      ex.cambioFechaDestino=ex.cambioFechaDestino||null;
+      ex.cambioNotas=ex.cambioNotas||'';
+      /* Fusión segura: nunca se pierde jornada, ampliaciones ni ningún otro
+         campo ya existente (se muta el registro previo en vez de sustituirlo). */
+      tcJornadaFusionarExtraccion(ex,p.key,p.jornadaExtraida);
+      if(ex.jornada&&ex.jornada.requiereRevision&&!revisionPrevia) revisar++;
+      dias[p.key]=ex;
       ok++;
       pendientes--;
       if(pendientes===0){
         /* Si ya hay 3 semanas con hojas cargadas, borrar la más antigua antes de guardar */
         tcBorrarSemanaAntigua();
         saveDias(); tcRenderCal(); tcImpReset();
-        tcToast('✔ '+ok+' días guardados'+(skip?' · '+skip+' omitidos':''));
+        tcToast('✔ '+ok+' días guardados'+(skip?' · '+skip+' omitidos':'')+(revisar?' · ⚠️ '+revisar+' día(s) requieren revisión':''));
       }
     });
   });
