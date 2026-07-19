@@ -504,8 +504,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-004</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004R5</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Al eliminar una hoja de ruta se limpian sus datos teóricos extraídos, conservando los datos manuales y personales del día.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004R6</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección de limpieza completa de origen y conservación de ampliaciones al eliminar una hoja de ruta.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -3429,6 +3429,9 @@ window.tcDiaHojaDelete=function(){
     jr.extraccionEstado=null;
     jr.extraccionPendiente=null;
     jr.requiereRevision=false;
+    /* Ya no queda hoja de ruta: el origen se limpia para no bloquear una futura
+       extracción (si se añade otra hoja) ni forzar "mixto" si luego se rellena a mano. */
+    jr.origen=null;
     /* No se muestra ni calcula nada económico: solo se restablece la estructura vacía. */
     jr.computosEspecificos=tcComputosEspecificosVacio();
     ['parte1','parte2'].forEach(function(p){
@@ -3436,7 +3439,14 @@ window.tcDiaHojaDelete=function(){
       if(!a) return;
       if(a.estado==='detectada'){
         jr.ampliaciones[p]=null;
-      } else if(a.estado==='pendiente_documento'||a.estado==='documento_presentado'){
+      } else if(a.estado==='documento_presentado'){
+        a.minutosPresentadosAnteriores=a.minutosAmpliacion;
+        a.estado='revision_pendiente';
+        a.computableParaNomina=false;
+        a.minutosAmpliacion=0;
+        a.observaciones=(a.observaciones?a.observaciones+' · ':'')+'Hoja de ruta eliminada: revisar ampliación.';
+      } else if(a.estado==='pendiente_documento'){
+        a.minutosPendientesAnteriores=a.minutosAmpliacion;
         a.estado='revision_pendiente';
         a.computableParaNomina=false;
         a.minutosAmpliacion=0;
@@ -3984,9 +3994,17 @@ function tcRenderAmpliaciones(){
       +'<div style="font-size:13px;color:var(--text2);margin-bottom:2px;">Fin teórico: '+tcEsc(finTeorico)+' · Fin real: '+tcEsc(horaReal)+'</div>'
       +'<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Estado: <strong>'+(AMP_ESTADO_LABEL[a.estado]||a.estado)+'</strong></div>';
     if(esRevision){
+      var lineaAnterior;
+      if(a.minutosPresentadosAnteriores!=null){
+        lineaAnterior='Minutos presentados anteriormente: <strong>'+a.minutosPresentadosAnteriores+'</strong><br>';
+      } else if(a.minutosPendientesAnteriores!=null){
+        lineaAnterior='Minutos detectados antes de eliminar la hoja: <strong>'+a.minutosPendientesAnteriores+'</strong><br>';
+      } else {
+        lineaAnterior='';
+      }
       html+='<div style="font-size:13px;color:#C05621;background:rgba(192,86,33,0.08);border-radius:8px;padding:8px;margin-bottom:8px;">'
         +'⚠️ Motivo: '+tcEsc(a.observaciones||'Se detectó una diferencia respecto a la ampliación anterior.')+'<br>'
-        +'Minutos presentados anteriormente: <strong>'+(a.minutosPresentadosAnteriores!=null?a.minutosPresentadosAnteriores:'—')+'</strong><br>'
+        +lineaAnterior
         +'Minutos detectados actualmente: <strong>'+a.minutosAmpliacion+'</strong><br>'
         +'Hora teórica: <strong>'+tcEsc(finTeorico)+'</strong> · Hora real actual: <strong>'+tcEsc(horaReal)+'</strong>'
         +'</div>';
