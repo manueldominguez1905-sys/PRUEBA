@@ -504,8 +504,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-004</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004R4</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección final de restauración de backups y avisos de sincronización.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004R5</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Al eliminar una hoja de ruta se limpian sus datos teóricos extraídos, conservando los datos manuales y personales del día.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -3394,7 +3394,11 @@ window.tcDiaHojaPdf=function(input){
   });
 };
 
-/* Elimina únicamente imgData/thumbData del día abierto, sin tocar el resto de campos */
+/* Elimina imgData/thumbData del día abierto. Si la jornada procedía de una hoja
+   de ruta (origen==='hoja_ruta'), limpia también los datos teóricos extraídos
+   de esa hoja y ajusta las ampliaciones ya abiertas; conserva siempre turno,
+   servicio, incidencia, notas, cambios, recaudaciones y horas reales. Si el
+   origen es manual o mixto, solo se borra la imagen: nada de jornada. */
 window.tcDiaHojaDelete=function(){
   var btn=document.querySelector('#vw-ruta-actions .tc-btn-danger');
   if(!btn)return;
@@ -3412,9 +3416,40 @@ window.tcDiaHojaDelete=function(){
   if(!activeDate||!dias[activeDate])return;
   var reg=dias[activeDate];
   delete reg.imgData; delete reg.thumbData;
+  var jr=reg.jornada;
+  var eraHojaRuta=!!(jr&&jr.origen==='hoja_ruta');
+  if(eraHojaRuta){
+    jr.inicioTeorico=null;
+    jr.finTeorico=null;
+    jr.computoOficialMinutos=null;
+    jr.tipoTurno=null;
+    jr.parte1={inicioTeorico:null,finTeorico:null};
+    jr.parte2={inicioTeorico:null,finTeorico:null};
+    jr.descanso={tipo:null,duracionMinutos:null};
+    jr.extraccionEstado=null;
+    jr.extraccionPendiente=null;
+    jr.requiereRevision=false;
+    /* No se muestra ni calcula nada económico: solo se restablece la estructura vacía. */
+    jr.computosEspecificos=tcComputosEspecificosVacio();
+    ['parte1','parte2'].forEach(function(p){
+      var a=jr.ampliaciones&&jr.ampliaciones[p];
+      if(!a) return;
+      if(a.estado==='detectada'){
+        jr.ampliaciones[p]=null;
+      } else if(a.estado==='pendiente_documento'||a.estado==='documento_presentado'){
+        a.estado='revision_pendiente';
+        a.computableParaNomina=false;
+        a.minutosAmpliacion=0;
+        a.observaciones=(a.observaciones?a.observaciones+' · ':'')+'Hoja de ruta eliminada: revisar ampliación.';
+      }
+      /* descartada/anulada: se conservan tal cual, ya no computables. */
+    });
+  }
   dias[activeDate]=reg;
   saveDias(); tcRenderCal(); tcRenderView(activeDate,reg);
-  tcToast('🗑️ Hoja de ruta eliminada');
+  tcToast(eraHojaRuta
+    ? '🗑️ Hoja de ruta eliminada · Datos extraídos limpiados'
+    : '🗑️ Hoja de ruta eliminada · Se conservaron los datos manuales');
 };
 
 /* ==================== DEV-004: Control de jornada y ampliaciones ====================
