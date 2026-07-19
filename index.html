@@ -503,13 +503,25 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
     <div style="background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
-        <div><strong>Aplicación:</strong> DEV-003</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-003</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Gestión individual de hojas de ruta y recuerdo de la última ubicación utilizada para seleccionar archivos PDF.</div>
+        <div><strong>Aplicación:</strong> DEV-004</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Control de jornada por dos partes, detección de ampliaciones independientes y gestión de documentación presentada.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
       <button id="btnCerrarSettings" class="btn btn-secondary" style="width:100%; margin-top:10px;">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Modal genérico de confirmación/elección para el control de jornada y ampliaciones (DEV-004).
+       Reutilizado para: elegir parte de la jornada, confirmar sobrescritura de hora real,
+       y avisar de una ampliación detectada. No usa alert/confirm/prompt nativos (poco fiables
+       en PWA de iOS en modo standalone), sino el mismo patrón visual que modalSettings. -->
+  <div id="modalJornadaPrompt" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#ffffff; color:#1a1a1a; border-radius:16px; padding:24px 22px; max-width:340px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.25);">
+      <h3 id="jpTitulo" style="margin:0 0 10px; font-size:1.05rem;">&#8212;</h3>
+      <p id="jpMensaje" style="margin:0 0 18px; font-size:0.9rem; color:var(--color-text-secondary); line-height:1.5; white-space:pre-line;"></p>
+      <div id="jpBotones" style="display:flex; flex-direction:column; gap:8px;"></div>
     </div>
   </div>
 
@@ -872,6 +884,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
               <button class="tc-btn tc-btn-orange" onclick="tcToCambio()">&#128260; Cambio</button>
               <button class="tc-btn tc-btn-danger" id="tc-btn-borrar-dia" onclick="tcDeleteDay()">&#128465;&#65039; Borrar</button>
             </div>
+            <div class="tc-day-actions" id="vw-jornada-actions"></div>
           </div>
         </div>
 
@@ -973,6 +986,54 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
               <button class="tc-btn tc-btn-danger" style="flex:0 0 auto;padding:13px 16px;" onclick="tcCalReset()">&#10005; Descartar</button>
               <button class="tc-btn tc-btn-primary" onclick="tcCalConfirm()">&#10004; Guardar en calendario</button>
             </div>
+          </div>
+        </div>
+
+        <!-- PANEL JORNADA (DEV-004 — control de jornada por dos partes, sin cálculos económicos) -->
+        <div id="pnl-jornada" style="display:none">
+          <div class="tc-sh-hd">
+            <div><div class="tc-sh-title">&#128337; Jornada</div><div class="tc-sh-sub">Datos te&#243;ricos de la jornada, en dos partes</div></div>
+            <button class="tc-xbtn" onclick="tcShowPanel('pnl-view')">&#10005;</button>
+          </div>
+          <div class="tc-form">
+            <div class="tc-cambio-info">&#8505;&#65039; Estos datos son la base para detectar ampliaciones y preparar la futura n&#243;mina. No se calcula ning&#250;n importe todav&#237;a.</div>
+            <div class="tc-fg"><label class="tc-lbl">Tipo de turno</label>
+              <select class="tc-sel" id="jr-tipo" onchange="tcJornadaTipoChange()">
+                <option value="">&#8212; Sin determinar &#8212;</option>
+                <option value="corrido">Corrido (vuelta de descanso)</option>
+                <option value="partido">Partido (descanso intermedio)</option>
+              </select>
+            </div>
+            <div class="tc-fg"><label class="tc-lbl">Inicio te&#243;rico (jornada completa)</label><input class="tc-inp" id="jr-inicio" type="time"></div>
+            <div class="tc-fg"><label class="tc-lbl">Fin te&#243;rico (jornada completa)</label><input class="tc-inp" id="jr-fin" type="time"></div>
+            <div class="tc-fg"><label class="tc-lbl">C&#243;mputo oficial (minutos, si la hoja lo indica)</label><input class="tc-inp" id="jr-computo" type="number" min="0" step="1" placeholder="Ej. 480"></div>
+            <div style="font-weight:700;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 2px;">Primera parte</div>
+            <div class="tc-fg"><label class="tc-lbl">Inicio te&#243;rico</label><input class="tc-inp" id="jr-p1-inicio" type="time"></div>
+            <div class="tc-fg"><label class="tc-lbl">Fin te&#243;rico</label><input class="tc-inp" id="jr-p1-fin" type="time"></div>
+            <div style="font-weight:700;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 2px;">Descanso</div>
+            <div class="tc-fg"><label class="tc-lbl">Tipo de descanso</label>
+              <select class="tc-sel" id="jr-desc-tipo">
+                <option value="">&#8212; Sin determinar &#8212;</option>
+                <option value="vuelta_descanso">Vuelta de descanso</option>
+                <option value="descanso_intermedio">Descanso intermedio</option>
+              </select>
+            </div>
+            <div class="tc-fg"><label class="tc-lbl">Duraci&#243;n (minutos)</label><input class="tc-inp" id="jr-desc-min" type="number" min="0" step="1" placeholder="Ej. 30"></div>
+            <div style="font-weight:700;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 2px;">Segunda parte</div>
+            <div class="tc-fg"><label class="tc-lbl">Inicio te&#243;rico</label><input class="tc-inp" id="jr-p2-inicio" type="time"></div>
+            <div class="tc-fg"><label class="tc-lbl">Fin te&#243;rico</label><input class="tc-inp" id="jr-p2-fin" type="time"></div>
+            <button class="tc-save-btn" onclick="tcSaveJornada()">Guardar datos de jornada</button>
+          </div>
+        </div>
+
+        <!-- PANEL AMPLIACIONES (DEV-004) -->
+        <div id="pnl-ampliaciones" style="display:none">
+          <div class="tc-sh-hd">
+            <div><div class="tc-sh-title">&#9201;&#65039; Ampliaciones</div><div class="tc-sh-sub">Gesti&#243;n independiente por parte de la jornada</div></div>
+            <button class="tc-xbtn" onclick="tcShowPanel('pnl-view')">&#10005;</button>
+          </div>
+          <div class="tc-form">
+            <div id="amp-list"></div>
           </div>
         </div>
 
@@ -2790,7 +2851,7 @@ function tcOpenOv(){document.getElementById('tc-ov').classList.add('open');}
 window.tcClose=function(){document.getElementById('tc-ov').classList.remove('open');activeDate=null;};
 window.tcCloseOnBg=function(e){if(e.target===document.getElementById('tc-ov'))tcClose();};
 window.showPanel=function(id){
-  var panels=['pnl-view','pnl-edit','pnl-cambio','pnl-import','pnl-cal','pnl-borrar','pnl-ajustes','pnl-edit-turno','pnl-asignar','pnl-eventos'];
+  var panels=['pnl-view','pnl-edit','pnl-cambio','pnl-import','pnl-cal','pnl-borrar','pnl-ajustes','pnl-edit-turno','pnl-asignar','pnl-eventos','pnl-jornada','pnl-ampliaciones'];
   panels.forEach(function(x){document.getElementById(x).style.display=(x===id)?'':'none';});
 };
 function tcShowPanel(id){window.showPanel(id);}
@@ -3008,6 +3069,330 @@ window.tcDiaHojaDelete=function(){
   dias[activeDate]=reg;
   saveDias(); tcRenderCal(); tcRenderView(activeDate,reg);
   tcToast('🗑️ Hoja de ruta eliminada');
+};
+
+/* ==================== DEV-004: Control de jornada y ampliaciones ====================
+   No calcula dinero, pluses ni multiplicadores de convenio. Solo registra datos
+   teóricos de jornada (en dos partes, siempre), las horas reales de fin de cada
+   parte (procedentes de las recaudaciones) y, cuando el fin real es posterior al
+   teórico, una ampliación independiente por parte con su propio estado. */
+
+/* Tipo de turno a partir del código ya configurado en TURNO (fuente fiable y
+   existente: TURNO[code].partido). No inventa nada nuevo. */
+function tcJornadaTipoTurno(codigoTurno){
+  if(!codigoTurno||!TURNO[codigoTurno]) return null;
+  return TURNO[codigoTurno].partido?'partido':'corrido';
+}
+
+/* Crea (si hace falta) la estructura jornada del día sin tocar el resto del registro. */
+function tcJornadaEnsure(reg,key){
+  if(!reg.jornada){
+    reg.jornada={
+      fecha:key, servicio:reg.servicio||'', tipoTurno:tcJornadaTipoTurno(reg.turno),
+      inicioTeorico:null, finTeorico:null, computoOficialMinutos:null,
+      parte1:{inicioTeorico:null,finTeorico:null},
+      descanso:{tipo:null,duracionMinutos:null},
+      parte2:{inicioTeorico:null,finTeorico:null},
+      origen:null,
+      horaFinRealParte1:null, horaFinRealParte2:null,
+      ampliaciones:{parte1:null,parte2:null}
+    };
+  }
+  if(!reg.jornada.ampliaciones) reg.jornada.ampliaciones={parte1:null,parte2:null};
+  if(!reg.jornada.parte1) reg.jornada.parte1={inicioTeorico:null,finTeorico:null};
+  if(!reg.jornada.parte2) reg.jornada.parte2={inicioTeorico:null,finTeorico:null};
+  if(!reg.jornada.descanso) reg.jornada.descanso={tipo:null,duracionMinutos:null};
+  return reg.jornada;
+}
+
+/* Diferencia en minutos entre dos horas 'HH:MM' del mismo día (b-a). */
+function tcMinutosEntre(a,b){
+  if(!a||!b) return null;
+  var pa=a.split(':'),pb=b.split(':');
+  if(pa.length<2||pb.length<2) return null;
+  var ma=parseInt(pa[0],10)*60+parseInt(pa[1],10);
+  var mb=parseInt(pb[0],10)*60+parseInt(pb[1],10);
+  if(isNaN(ma)||isNaN(mb)) return null;
+  return mb-ma;
+}
+
+/* Modal genérico de confirmación/elección (ver #modalJornadaPrompt en el HTML).
+   botones: [{label,className,onClick}]. Sustituye a alert/confirm/prompt nativos. */
+function tcModalPrompt(titulo,mensaje,botones){
+  var modal=document.getElementById('modalJornadaPrompt');
+  document.getElementById('jpTitulo').textContent=titulo;
+  document.getElementById('jpMensaje').textContent=mensaje;
+  var wrap=document.getElementById('jpBotones'); wrap.innerHTML='';
+  (botones||[]).forEach(function(b){
+    var btn=document.createElement('button');
+    btn.className='btn '+(b.className||'btn-secondary');
+    btn.style.width='100%';
+    btn.textContent=b.label;
+    btn.onclick=function(){ modal.style.display='none'; if(b.onClick) b.onClick(); };
+    wrap.appendChild(btn);
+  });
+  modal.style.display='flex';
+}
+
+/* Intenta determinar a qué parte corresponde la hora de una recaudación,
+   comparando con los teóricos de la jornada de ese día (si existen). Devuelve
+   'parte1'/'parte2', o null si no se puede determinar con fiabilidad. */
+function tcJornadaResolverParte(registro){
+  if(registro.parteJornada==='parte1'||registro.parteJornada==='parte2') return registro.parteJornada;
+  var reg=dias[registro.fecha];
+  if(!reg||!reg.jornada||!registro.hora) return null;
+  var jr=reg.jornada;
+  var f1=jr.parte1&&jr.parte1.finTeorico;
+  var i2=jr.parte2&&jr.parte2.inicioTeorico;
+  var f2=jr.parte2&&jr.parte2.finTeorico;
+  if(f1&&registro.hora<=f1) return 'parte1';
+  if(i2&&f2&&registro.hora>=i2&&registro.hora<=f2) return 'parte2';
+  if(f1&&i2&&registro.hora>f1&&registro.hora<i2) return null; /* dentro del descanso: ambiguo */
+  if(f2&&registro.hora>f2) return 'parte2'; /* posterior al fin teórico de la 2ª parte: sigue siendo la 2ª parte */
+  return null;
+}
+
+/* Aplica una hora real de fin de parte, pidiendo confirmación explícita antes
+   de sobrescribir una ya existente distinta. Dispara la detección de ampliación. */
+function tcJornadaAplicarHoraReal(fecha,parte,hora,forzar){
+  var reg=dias[fecha]||{};
+  var jr=tcJornadaEnsure(reg,fecha);
+  var campo=parte==='parte1'?'horaFinRealParte1':'horaFinRealParte2';
+  if(jr[campo]&&jr[campo]!==hora&&!forzar){
+    tcJornadaPedirConfirmSobrescribir(fecha,parte,hora,jr[campo]);
+    return;
+  }
+  jr[campo]=hora;
+  dias[fecha]=reg;
+  saveDias();
+  tcJornadaDetectarAmpliacion(fecha,parte);
+  if(activeDate===fecha) tcRenderView(fecha,dias[fecha]);
+  tcRenderCal();
+}
+
+function tcJornadaPedirParteManual(registro){
+  tcModalPrompt(
+    'Asociar recaudación',
+    'No se ha podido determinar automáticamente a qué parte de la jornada del '+registro.fecha+' corresponde la hora '+(registro.hora||'—')+'. Selecciona la parte correspondiente:',
+    [
+      {label:'Primera parte',className:'btn-primary',onClick:function(){tcJornadaAplicarHoraReal(registro.fecha,'parte1',registro.hora);}},
+      {label:'Segunda parte',className:'btn-primary',onClick:function(){tcJornadaAplicarHoraReal(registro.fecha,'parte2',registro.hora);}},
+      {label:'No asociar',className:'btn-secondary',onClick:function(){}}
+    ]
+  );
+}
+
+function tcJornadaPedirConfirmSobrescribir(fecha,parte,horaNueva,horaActual){
+  tcModalPrompt(
+    'Hora real ya registrada',
+    'Ya existe una hora real ('+horaActual+') para la '+(parte==='parte1'?'primera':'segunda')+' parte del '+fecha+'. ¿Sustituirla por '+horaNueva+'?',
+    [
+      {label:'Sí, sustituir',className:'btn-danger',onClick:function(){tcJornadaAplicarHoraReal(fecha,parte,horaNueva,true);}},
+      {label:'Cancelar',className:'btn-secondary',onClick:function(){}}
+    ]
+  );
+}
+
+/* Punto de entrada llamado al guardar/actualizar una recaudación con fecha y hora.
+   registro.parteJornada, si ya viene informado (p.ej. desde la importación por
+   correo, que ya distingue 1ª/2ª parte), se usa directamente sin heurística. */
+function tcJornadaAsociarRecaudacion(registro){
+  if(!registro||!registro.fecha||!registro.hora) return;
+  var parte=tcJornadaResolverParte(registro);
+  if(!parte){ tcJornadaPedirParteManual(registro); return; }
+  tcJornadaAplicarHoraReal(registro.fecha,parte,registro.hora);
+}
+
+/* Compara fin real vs fin teórico de una parte y crea/actualiza su ampliación.
+   Solo muestra el aviso "¿quieres prepararla?" cuando aparece una ampliación
+   nueva; si ya había una decisión tomada por el usuario, solo actualiza los
+   minutos si cambian, sin reabrir el aviso ni tocar la otra parte. */
+function tcJornadaDetectarAmpliacion(key,parte){
+  var reg=dias[key]; if(!reg||!reg.jornada) return;
+  var jr=reg.jornada;
+  var horaReal=parte==='parte1'?jr.horaFinRealParte1:jr.horaFinRealParte2;
+  var finTeorico=jr[parte]&&jr[parte].finTeorico;
+  if(!horaReal||!finTeorico) return;
+  var diff=tcMinutosEntre(finTeorico,horaReal);
+  if(diff===null) return;
+  var ampActual=jr.ampliaciones[parte];
+  if(diff<=0){
+    if(ampActual&&ampActual.estado==='detectada'){ jr.ampliaciones[parte]=null; dias[key]=reg; saveDias(); tcRenderCal(); }
+    return;
+  }
+  if(ampActual&&ampActual.estado!=='detectada'){
+    if(ampActual.minutosAmpliacion!==diff){
+      ampActual.minutosAmpliacion=diff;
+      dias[key]=reg; saveDias(); tcRenderCal();
+      if(activeDate===key) tcRenderView(key,reg);
+      tcToast('ℹ️ Minutos de la ampliación de la '+(parte==='parte1'?'primera':'segunda')+' parte actualizados a '+diff);
+    }
+    return;
+  }
+  if(ampActual&&ampActual.estado==='detectada'&&ampActual.minutosAmpliacion===diff) return;
+  jr.ampliaciones[parte]={
+    minutosAmpliacion:diff, estado:'detectada', computableParaNomina:false,
+    reglaConvenioPendiente:true, articuloConvenio:null,
+    minutosValorNormal:null, minutosValorDoble:null,
+    observaciones:ampActual?(ampActual.observaciones||''):''
+  };
+  dias[key]=reg; saveDias(); tcRenderCal();
+  if(activeDate===key) tcRenderView(key,reg);
+  tcJornadaAvisoAmpliacion(key,parte,diff);
+}
+
+function tcJornadaAvisoAmpliacion(fecha,parte,minutos){
+  var parteLabel=parte==='parte1'?'primera':'segunda';
+  tcModalPrompt(
+    'Ampliación detectada',
+    'Se han detectado '+minutos+' minutos adicionales en la '+parteLabel+' parte.\n¿Quieres prepararla?',
+    [
+      {label:'Sí, preparar',className:'btn-primary',onClick:function(){
+        var reg=dias[fecha];
+        if(reg&&reg.jornada&&reg.jornada.ampliaciones[parte]&&reg.jornada.ampliaciones[parte].estado==='detectada'){
+          reg.jornada.ampliaciones[parte].estado='pendiente_documento';
+          dias[fecha]=reg; saveDias(); tcRenderCal();
+          if(activeDate===fecha) tcRenderView(fecha,reg);
+        }
+        tcToast('⏱️ Ampliación preparada');
+      }},
+      {label:'No, descartar',className:'btn-secondary',onClick:function(){
+        var reg=dias[fecha];
+        if(reg&&reg.jornada&&reg.jornada.ampliaciones[parte]&&reg.jornada.ampliaciones[parte].estado==='detectada'){
+          reg.jornada.ampliaciones[parte].estado='descartada';
+          dias[fecha]=reg; saveDias(); tcRenderCal();
+          if(activeDate===fecha) tcRenderView(fecha,reg);
+        }
+      }}
+    ]
+  );
+}
+
+/* ---- Editor manual de jornada (siempre origen 'manual' o 'mixto': no hay
+   extracción automática fiable de horas desde la hoja de ruta todavía) ---- */
+window.tcOpenJornada=function(){
+  if(!activeDate) return;
+  var reg=dias[activeDate]||{};
+  var jr=reg.jornada||{};
+  document.getElementById('jr-tipo').value=jr.tipoTurno||tcJornadaTipoTurno(reg.turno)||'';
+  document.getElementById('jr-inicio').value=jr.inicioTeorico||'';
+  document.getElementById('jr-fin').value=jr.finTeorico||'';
+  document.getElementById('jr-computo').value=(jr.computoOficialMinutos!=null)?jr.computoOficialMinutos:'';
+  document.getElementById('jr-p1-inicio').value=(jr.parte1&&jr.parte1.inicioTeorico)||'';
+  document.getElementById('jr-p1-fin').value=(jr.parte1&&jr.parte1.finTeorico)||'';
+  document.getElementById('jr-desc-tipo').value=(jr.descanso&&jr.descanso.tipo)||'';
+  document.getElementById('jr-desc-min').value=(jr.descanso&&jr.descanso.duracionMinutos!=null)?jr.descanso.duracionMinutos:'';
+  document.getElementById('jr-p2-inicio').value=(jr.parte2&&jr.parte2.inicioTeorico)||'';
+  document.getElementById('jr-p2-fin').value=(jr.parte2&&jr.parte2.finTeorico)||'';
+  tcShowPanel('pnl-jornada');
+};
+
+window.tcJornadaTipoChange=function(){
+  var tipo=document.getElementById('jr-tipo').value;
+  var descTipoEl=document.getElementById('jr-desc-tipo');
+  var descMinEl=document.getElementById('jr-desc-min');
+  if(tipo==='corrido'){
+    if(!descTipoEl.value) descTipoEl.value='vuelta_descanso';
+    if(descTipoEl.value==='vuelta_descanso'&&!descMinEl.value) descMinEl.value='30';
+  } else if(tipo==='partido'){
+    if(!descTipoEl.value) descTipoEl.value='descanso_intermedio';
+  }
+};
+
+window.tcSaveJornada=function(){
+  if(!activeDate) return;
+  var reg=dias[activeDate]||{};
+  var jr=tcJornadaEnsure(reg,activeDate);
+  jr.servicio=reg.servicio||'';
+  jr.tipoTurno=document.getElementById('jr-tipo').value||null;
+  jr.inicioTeorico=document.getElementById('jr-inicio').value||null;
+  jr.finTeorico=document.getElementById('jr-fin').value||null;
+  var computo=document.getElementById('jr-computo').value;
+  jr.computoOficialMinutos=(computo!=='')?parseInt(computo,10):null;
+  jr.parte1={
+    inicioTeorico:document.getElementById('jr-p1-inicio').value||null,
+    finTeorico:document.getElementById('jr-p1-fin').value||null
+  };
+  var descMin=document.getElementById('jr-desc-min').value;
+  jr.descanso={
+    tipo:document.getElementById('jr-desc-tipo').value||null,
+    duracionMinutos:(descMin!=='')?parseInt(descMin,10):null
+  };
+  jr.parte2={
+    inicioTeorico:document.getElementById('jr-p2-inicio').value||null,
+    finTeorico:document.getElementById('jr-p2-fin').value||null
+  };
+  jr.origen=(jr.origen==='hoja_ruta')?'mixto':'manual';
+  dias[activeDate]=reg;
+  saveDias();
+  /* Si ya había horas reales pendientes de comparar (recaudaciones guardadas
+     antes de definir la jornada), se recalculan ahora sin perder decisiones ya tomadas. */
+  tcJornadaDetectarAmpliacion(activeDate,'parte1');
+  tcJornadaDetectarAmpliacion(activeDate,'parte2');
+  tcRenderCal(); tcRenderView(activeDate,dias[activeDate]); tcShowPanel('pnl-view');
+  tcToast('✔ Datos de jornada guardados');
+};
+
+/* ---- Panel de ampliaciones: estado y acciones independientes por parte ---- */
+var AMP_ESTADO_LABEL={
+  detectada:'🔍 Detectada', pendiente_documento:'📄 Pendiente de documento',
+  documento_presentado:'✅ Documento presentado', descartada:'🚫 Descartada', anulada:'⛔ Anulada'
+};
+
+function tcRenderAmpliaciones(){
+  var reg=dias[activeDate]||{};
+  var jr=reg.jornada||{ampliaciones:{}};
+  var amps=jr.ampliaciones||{};
+  var html='';
+  ['parte1','parte2'].forEach(function(parte){
+    var a=amps[parte]; if(!a) return;
+    var label=parte==='parte1'?'Primera parte':'Segunda parte';
+    var finTeorico=(jr[parte]&&jr[parte].finTeorico)||'—';
+    var horaReal=(parte==='parte1'?jr.horaFinRealParte1:jr.horaFinRealParte2)||'—';
+    html+='<div style="border:1px solid var(--border,#E5E7EB);border-radius:12px;padding:14px;margin-bottom:14px;">'
+      +'<div style="font-weight:700;margin-bottom:6px;">'+tcEsc(label)+'</div>'
+      +'<div style="font-size:13px;color:var(--text2);margin-bottom:2px;">Servicio: '+tcEsc(jr.servicio||reg.servicio||'—')+'</div>'
+      +'<div style="font-size:13px;color:var(--text2);margin-bottom:2px;">Fin teórico: '+tcEsc(finTeorico)+' · Fin real: '+tcEsc(horaReal)+'</div>'
+      +'<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Estado: <strong>'+(AMP_ESTADO_LABEL[a.estado]||a.estado)+'</strong></div>'
+      +'<div class="tc-fg" style="margin-bottom:8px;"><label class="tc-lbl">Minutos detectados</label>'
+      +'<input class="tc-inp" type="number" min="0" step="1" id="amp-min-'+parte+'" value="'+a.minutosAmpliacion+'"></div>'
+      +'<div class="tc-fg" style="margin-bottom:8px;"><label class="tc-lbl">Observaciones</label>'
+      +'<textarea class="tc-ta" rows="2" id="amp-obs-'+parte+'" placeholder="Observaciones…">'+tcEsc(a.observaciones||'')+'</textarea></div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+      +'<button class="tc-mini-btn" onclick="tcAmpGuardarCambios(\''+parte+'\')">💾 Guardar cambios</button>'
+      +(a.estado!=='documento_presentado'&&a.estado!=='anulada'?'<button class="tc-mini-btn" onclick="tcAmpDocumentoPresentado(\''+parte+'\')">✅ Documento presentado</button>':'')
+      +(a.estado!=='descartada'&&a.estado!=='anulada'?'<button class="tc-mini-btn" onclick="tcAmpDescartar(\''+parte+'\')">🚫 Descartar</button>':'')
+      +(a.estado!=='anulada'?'<button class="tc-mini-btn" onclick="tcAmpAnular(\''+parte+'\')">⛔ Anular</button>':'')
+      +'</div></div>';
+  });
+  document.getElementById('amp-list').innerHTML=html||'<div class="tc-ruta-empty"><span>⏱️</span><p>Sin ampliaciones</p></div>';
+}
+
+window.tcOpenAmpliaciones=function(){ tcRenderAmpliaciones(); tcShowPanel('pnl-ampliaciones'); };
+
+function tcAmpMutar(parte,fn){
+  var reg=dias[activeDate]; if(!reg||!reg.jornada||!reg.jornada.ampliaciones[parte]) return;
+  fn(reg.jornada.ampliaciones[parte]);
+  dias[activeDate]=reg; saveDias(); tcRenderCal(); tcRenderView(activeDate,reg); tcRenderAmpliaciones();
+}
+window.tcAmpGuardarCambios=function(parte){
+  var minVal=parseInt(document.getElementById('amp-min-'+parte).value,10);
+  var obsVal=document.getElementById('amp-obs-'+parte).value.trim();
+  if(isNaN(minVal)||minVal<0){ tcToast('⚠️ Minutos no válidos'); return; }
+  tcAmpMutar(parte,function(a){ a.minutosAmpliacion=minVal; a.observaciones=obsVal; });
+  tcToast('✔ Ampliación actualizada');
+};
+window.tcAmpDocumentoPresentado=function(parte){
+  tcAmpMutar(parte,function(a){ a.estado='documento_presentado'; a.computableParaNomina=true; });
+  tcToast('✅ Documento presentado registrado');
+};
+window.tcAmpDescartar=function(parte){
+  tcAmpMutar(parte,function(a){ a.estado='descartada'; a.computableParaNomina=false; });
+  tcToast('🚫 Ampliación descartada');
+};
+window.tcAmpAnular=function(parte){
+  tcAmpMutar(parte,function(a){ a.estado='anulada'; a.computableParaNomina=false; });
+  tcToast('⛔ Ampliación anulada');
 };
 
 window.tcSaveCambio=function(){
