@@ -334,6 +334,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-dtag{font-size:9px;font-weight:700;letter-spacing:.3px;margin-top:3px;padding:2px 6px;border-radius:5px;position:relative;z-index:1;}
 #tc .tc-ddot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:3px;right:4px;z-index:2;}
 #tc .tc-d.has-cambio{box-shadow:0 0 0 2px #E65100;overflow:visible;}
+#tc .tc-d.has-cambio-pend{box-shadow:0 0 0 2px #B45309;overflow:visible;}
+#tc .tc-dpend{position:absolute;top:2px;right:3px;font-size:9px;line-height:1;z-index:2;}
 #tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:6px;pointer-events:none;z-index:0;}
 
 /* Modificador --mini: mismo componente .tc-d, reducido para la vista Anual (12 meses).
@@ -374,6 +376,14 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-cambio-badge{background:#FFF3E0;border-left:3px solid #E65100;border-radius:var(--r-s);padding:9px 12px;font-size:13px;color:#E65100;margin-top:10px;}
 #tc .tc-cambio-badge-link{background:#FFF3E0;border:2px solid #E65100;border-radius:var(--r-s);padding:10px 13px;font-size:13px;color:#7A3000;margin-top:10px;line-height:1.6;}
 #tc .tc-cambio-badge-link strong{color:#E65100;}
+#tc .tc-cambio-pend-box{background:#FEF3C7;border:2px solid #B45309;border-radius:var(--r-s);padding:10px 13px;font-size:13px;color:#78350F;margin-top:10px;line-height:1.6;font-weight:700;}
+#tc .tc-cg-item{background:var(--surface2);border-radius:var(--r-m);padding:11px 13px;font-size:13px;color:var(--text2);margin-bottom:9px;line-height:1.6;border-left:3px solid #E65100;}
+#tc .tc-cg-item.pend{border-left-color:#B45309;background:#FEF9EC;}
+#tc .tc-cg-item strong{color:var(--text);}
+#tc .tc-cg-acts{display:flex;gap:8px;margin-top:9px;}
+#tc .tc-cg-acts .tc-btn{padding:9px;font-size:13px;}
+#tc .tc-cg-empty{text-align:center;color:var(--text3);font-size:13px;padding:22px 6px;}
+#tc .tc-cg-turnos{background:var(--surface2);border-radius:var(--r-s);padding:10px 13px;font-size:13px;color:var(--text2);margin-top:4px;margin-bottom:10px;line-height:1.7;}
 #tc .tc-serv-card{background:var(--surface2);border-radius:var(--r-m);padding:10px 14px;margin-top:10px;}
 #tc .tc-serv-lbl{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;}
 #tc .tc-serv-val{font-size:16px;font-weight:700;margin-top:2px;}
@@ -503,9 +513,9 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
     <div style="background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
-        <div><strong>Aplicación:</strong> DEV-004</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004R12</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección final de la reversión y validación íntegra de las copias de seguridad.</div>
+        <div><strong>Aplicación:</strong> DEV-005</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-005R1</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección de vínculos, validaciones y resolución de cambios por día a convenir.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -825,6 +835,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
               <div class="tc-dropdown" id="tc-dropdown">
                 <button class="tc-dd-item" onclick="tcMenuAction(tcOpenImport)">&#128196; Subir hojas de ruta</button>
                 <button class="tc-dd-item" onclick="tcMenuAction(tcOpenAsignar)">&#128295; Asignar turnos</button>
+                <button class="tc-dd-item" onclick="tcMenuAction(tcOpenGestorCambios)">&#128260; Gestionar cambios</button>
                 <button class="tc-dd-item" onclick="tcMenuAction(tcLeyenda)">&#127912; Tipos de turnos</button>
                 <button class="tc-dd-item" onclick="tcMenuAction(tcOpenCal)">&#128197; Importar Calendario de Turnos</button>
                 <button class="tc-dd-item" onclick="tcMenuAction(tcOpenEventos)">&#127881; Importar Calendario de Eventos Laborales</button>
@@ -887,7 +898,6 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
             <div class="tc-view-extra" id="vw-extra"></div>
             <div class="tc-day-actions">
               <button class="tc-btn tc-btn-ghost" onclick="tcToEdit()">&#9999;&#65039; Editar</button>
-              <button class="tc-btn tc-btn-orange" onclick="tcToCambio()">&#128260; Cambio</button>
               <button class="tc-btn tc-btn-danger" id="tc-btn-borrar-dia" onclick="tcDeleteDay()">&#128465;&#65039; Borrar</button>
             </div>
             <div class="tc-day-actions" id="vw-jornada-actions"></div>
@@ -909,28 +919,76 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
           </div>
         </div>
 
-        <!-- PANEL CAMBIO -->
+        <!-- PANEL GESTOR DE CAMBIOS (DEV-005) — reutiliza y adapta el antiguo diálogo de cambio -->
         <div id="pnl-cambio" style="display:none">
           <div class="tc-sh-hd">
-            <div><div class="tc-sh-title">&#128260; Registrar cambio</div><div class="tc-sh-sub" id="cambio-date">&#8212;</div></div>
-            <button class="tc-xbtn" onclick="tcShowPanel('pnl-view')">&#10005;</button>
+            <div><div class="tc-sh-title">&#128260; Gestionar cambios</div><div class="tc-sh-sub" id="cambio-date">Cambios de turno</div></div>
+            <button class="tc-xbtn" onclick="tcClose()">&#10005;</button>
           </div>
           <div class="tc-form">
-            <div class="tc-cambio-info">&#8505;&#65039; Registra el intercambio de d&#237;as. Ambos d&#237;as quedar&#225;n vinculados.</div>
-            <div class="tc-fg"><label class="tc-lbl">Nombre del compa&#241;ero</label><input class="tc-inp" id="cambio-companero" type="text" placeholder="Nombre del compa&#241;ero"></div>
-            <div class="tc-fg"><label class="tc-lbl">&#128197; D&#237;a destino</label><input class="tc-inp" id="cambio-fecha-destino" type="date"></div>
-            <div class="tc-fg"><label class="tc-lbl">Nuevo tipo de turno</label><select class="tc-sel" id="cambio-turno"></select></div>
-            <div class="tc-fg"><label class="tc-lbl">Nuevo servicio</label><input class="tc-inp" id="cambio-servicio" type="text" placeholder="Servicio del compa&#241;ero"></div>
-            <div class="tc-fg">
-              <label class="tc-lbl">Nueva hoja de ruta (PDF) <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label>
-              <div class="tc-pdf-row">
-                <div class="tc-pdf-name" id="cambio-pdf-name">Sin hoja seleccionada</div>
-                <button class="tc-mini-btn" onclick="tcPdfPick('cambio-pdf-file',tcCambioPdf)">Elegir PDF</button>
-                <input type="file" id="cambio-pdf-file" accept="application/pdf" onchange="tcCambioPdf(this)" style="display:none">
-              </div>
+
+            <!-- MENÚ DEL GESTOR -->
+            <div id="cg-menu">
+              <div class="tc-cambio-info">&#8505;&#65039; Los cambios gestionan <strong>turnos</strong>. Las hojas de ruta y los servicios nunca se intercambian.</div>
+              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCgVista('cg-md')">&#128260; Cambio de servicio en el mismo día</button>
+              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCgVista('cg-fx')">&#128197; Cambio entre días diferentes</button>
+              <button class="tc-save-btn" style="background:#B45309;" onclick="tcCgVista('cg-dc')">&#9203; Cambio por día a convenir</button>
+              <button class="tc-save-btn" style="background:var(--surface2);color:var(--text2);" onclick="tcCgVista('cg-lista')">&#128203; Cambios pendientes y registrados</button>
             </div>
-            <div class="tc-fg"><label class="tc-lbl">&#128203; Notas del cambio</label><textarea class="tc-ta" id="cambio-notas" rows="2" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
-            <button class="tc-save-btn" style="background:#E65100;" onclick="tcSaveCambio()">Guardar cambio</button>
+
+            <!-- 1. MISMO DÍA -->
+            <div id="cg-md" style="display:none">
+              <div class="tc-cambio-info">&#8505;&#65039; Cambio de servicio dentro del mismo día. El servicio real llegará después con la hoja de ruta.</div>
+              <div class="tc-fg"><label class="tc-lbl">&#128197; Fecha</label><input class="tc-inp" id="cg-md-fecha" type="date" onchange="tcCgRefrescarMd()"></div>
+              <div class="tc-cg-turnos" id="cg-md-info">Selecciona una fecha.</div>
+              <div class="tc-fg"><label class="tc-lbl">Turno tras el cambio</label><select class="tc-sel" id="cg-md-turno"></select></div>
+              <div class="tc-fg"><label class="tc-lbl">Compañero <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label><input class="tc-inp" id="cg-md-comp" type="text" placeholder="Nombre del compañero"></div>
+              <div class="tc-fg"><label class="tc-lbl">&#128203; Notas</label><textarea class="tc-ta" id="cg-md-notas" rows="2" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
+              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCambioGuardarMismoDia()">Guardar cambio</button>
+              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-menu')">&#8592; Volver</button>
+            </div>
+
+            <!-- 2. DÍAS DIFERENTES -->
+            <div id="cg-fx" style="display:none">
+              <div class="tc-cambio-info">&#8505;&#65039; Se intercambian únicamente los <strong>códigos de turno</strong> de ambos días. Pueden ser de meses distintos.</div>
+              <div class="tc-frow">
+                <div class="tc-fg"><label class="tc-lbl">Día A</label><input class="tc-inp" id="cg-fx-f1" type="date" onchange="tcCgRefrescarFx()"></div>
+                <div class="tc-fg"><label class="tc-lbl">Día B</label><input class="tc-inp" id="cg-fx-f2" type="date" onchange="tcCgRefrescarFx()"></div>
+              </div>
+              <div class="tc-cg-turnos" id="cg-fx-info">Selecciona las dos fechas.</div>
+              <div class="tc-fg"><label class="tc-lbl">Compañero <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label><input class="tc-inp" id="cg-fx-comp" type="text" placeholder="Nombre del compañero"></div>
+              <div class="tc-fg"><label class="tc-lbl">&#128203; Notas</label><textarea class="tc-ta" id="cg-fx-notas" rows="2" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
+              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCambioGuardarFechas()">Intercambiar turnos</button>
+              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-menu')">&#8592; Volver</button>
+            </div>
+
+            <!-- 3. DÍA A CONVENIR -->
+            <div id="cg-dc" style="display:none">
+              <div class="tc-cambio-info">&#8505;&#65039; Queda registrado como <strong>pendiente</strong> hasta que se acuerde el día de devolución.</div>
+              <div class="tc-fg"><label class="tc-lbl">&#128197; Fecha trabajada</label><input class="tc-inp" id="cg-dc-fecha" type="date" onchange="tcCgRefrescarDc()"></div>
+              <div class="tc-cg-turnos" id="cg-dc-info">Selecciona una fecha.</div>
+              <div class="tc-fg"><label class="tc-lbl">Turno realizado</label><select class="tc-sel" id="cg-dc-turno"></select></div>
+              <div class="tc-fg"><label class="tc-lbl">Compañero <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label><input class="tc-inp" id="cg-dc-comp" type="text" placeholder="Nombre del compañero"></div>
+              <div class="tc-fg"><label class="tc-lbl">&#128203; Notas</label><textarea class="tc-ta" id="cg-dc-notas" rows="2" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
+              <button class="tc-save-btn" style="background:#B45309;" onclick="tcCambioGuardarConvenir()">Guardar como pendiente</button>
+              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-menu')">&#8592; Volver</button>
+            </div>
+
+            <!-- 4. LISTA DE CAMBIOS / 5. DESHACER -->
+            <div id="cg-lista" style="display:none">
+              <div id="cg-lista-body"></div>
+              <button class="tc-btn tc-btn-ghost" style="width:100%;margin-top:6px;" onclick="tcCgVista('cg-menu')">&#8592; Volver</button>
+            </div>
+
+            <!-- ASIGNAR DÍA A UN CAMBIO PENDIENTE -->
+            <div id="cg-asig" style="display:none">
+              <div class="tc-cambio-info" id="cg-asig-head">&#8505;&#65039;</div>
+              <div class="tc-fg"><label class="tc-lbl">&#128197; Día acordado</label><input class="tc-inp" id="cg-asig-fecha" type="date" onchange="tcCgRefrescarAsig()"></div>
+              <div class="tc-cg-turnos" id="cg-asig-info">Selecciona la fecha acordada.</div>
+              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCambioConfirmarAsignacion()">Asignar y resolver</button>
+              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-lista')">&#8592; Volver</button>
+            </div>
+
           </div>
         </div>
 
@@ -1276,7 +1334,11 @@ function eliminarRegistro(storeName, id) {
 
 function reemplazarTodos(storeName, registros) {
   return new Promise(function (resolve) {
-    var lista = registros || [];
+    // DEV-004R13: solo se aceptan arrays reales. Un valor que no sea array
+    // (null, undefined, objeto, número...) NO se convierte en [] a la ligera:
+    // se rechaza, para que quien llama no crea que ha guardado algo.
+    if (!Array.isArray(registros)) { resolve(false); return; }
+    var lista = registros;
     function sincronizarLocalStorage() {
       // DEV-004R11: se escribe siempre, incluso con lista vacía, para que
       // un import con 0 registros no deje resucitar los antiguos desde el
@@ -1301,6 +1363,10 @@ function reemplazarTodos(storeName, registros) {
         store.clear();
         lista.forEach(function (item) { store.put(item); });
       } catch (err) {
+        // DEV-004R13: si clear() o put() lanzan, se aborta la transacción para
+        // no dejar el almacén a medias, y NO se toca el espejo de localStorage
+        // (ambos quedan como estaban, sincronizados).
+        try { tx.abort(); } catch (e2) {}
         resolve(false);
         return;
       }
@@ -2088,48 +2154,68 @@ function tcContarCalendarioConductor(mapaDias) {
   }
   return { total: total, hojas: hojas, jornadas: jornadas };
 }
+// DEV-004R13: comprobación compartida por exportación e importación.
+function esObjetoBackup(valor) {
+  return !!valor && typeof valor === "object" && !Array.isArray(valor);
+}
 function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
+  // DEV-004R13: TODA la validación se hace ANTES de construir el Blob. Si el
+  // Calendario Conductor no es válido no se descarga absolutamente nada y la
+  // función devuelve false: ya no existen copias parciales ni "copias
+  // exportadas pero sin calendario".
   var calendarioConductor = null;
   try {
     if (typeof window.tcExportarDatosCalendarioConductor === "function") {
       calendarioConductor = window.tcExportarDatosCalendarioConductor();
     }
   } catch (e) { calendarioConductor = null; }
-  // DEV-004R10: solo se declara incluido si el bloque es un objeto real,
-  // con su mapa de días, y verificable (round-trip JSON sin excepción).
-  // Nunca se marca "incluido" por defecto: si algo falla, se exporta un
-  // bloque vacío y se marca honestamente como no incluido.
-  // DEV-004R12: además de "dias", se exige que turnos/datosCalendarioTurnos/
-  // datosCalendarioTurnosMeta estén presentes como objetos (el exportador ya
-  // los incluye siempre, o devuelve null si alguno está dañado): una copia
-  // completa trae los cuatro bloques, aunque estén vacíos.
-  var calendarioVerificado = false;
-  var calendarioParaGuardar = { schema: 1, dias: {}, turnos: {}, datosCalendarioTurnos: {}, datosCalendarioTurnosMeta: {} };
-  if (calendarioConductor && typeof calendarioConductor === "object" && !Array.isArray(calendarioConductor)
-      && calendarioConductor.schema === 1
-      && calendarioConductor.dias && typeof calendarioConductor.dias === "object" && !Array.isArray(calendarioConductor.dias)
-      && calendarioConductor.turnos && typeof calendarioConductor.turnos === "object" && !Array.isArray(calendarioConductor.turnos)
-      && calendarioConductor.datosCalendarioTurnos && typeof calendarioConductor.datosCalendarioTurnos === "object" && !Array.isArray(calendarioConductor.datosCalendarioTurnos)
-      && calendarioConductor.datosCalendarioTurnosMeta && typeof calendarioConductor.datosCalendarioTurnosMeta === "object" && !Array.isArray(calendarioConductor.datosCalendarioTurnosMeta)) {
-    try {
-      calendarioParaGuardar = JSON.parse(JSON.stringify(calendarioConductor));
-      calendarioVerificado = true;
-    } catch (e) { calendarioVerificado = false; calendarioParaGuardar = { schema: 1, dias: {}, turnos: {}, datosCalendarioTurnos: {}, datosCalendarioTurnosMeta: {} }; }
+
+  // Una copia completa exige los cuatro bloques del calendario como objetos,
+  // aunque vengan vacíos: así la restauración distingue "estaba vacío de
+  // verdad" de "no venía en este backup".
+  var calendarioValido = esObjetoBackup(calendarioConductor)
+    && calendarioConductor.schema === 1
+    && esObjetoBackup(calendarioConductor.dias)
+    && esObjetoBackup(calendarioConductor.turnos)
+    && esObjetoBackup(calendarioConductor.datosCalendarioTurnos)
+    && esObjetoBackup(calendarioConductor.datosCalendarioTurnosMeta);
+  if (!calendarioValido) {
+    if (mostrarAviso) mostrarToast("No se pudo verificar el Calendario Conductor. No se ha generado ninguna copia.", "error");
+    return false;
   }
-  var conteo = tcContarCalendarioConductor(calendarioVerificado ? calendarioParaGuardar.dias : null);
+  if (!Array.isArray(listaRecaudaciones) || !Array.isArray(listaLiquidaciones)) {
+    if (mostrarAviso) mostrarToast("Los datos en memoria no son válidos. No se ha generado ninguna copia.", "error");
+    return false;
+  }
+
+  // Copia profunda verificable de todo lo que va a guardarse.
+  var calendarioParaGuardar, recaudacionesParaGuardar, liquidacionesParaGuardar;
+  try {
+    calendarioParaGuardar = JSON.parse(JSON.stringify(calendarioConductor));
+    recaudacionesParaGuardar = JSON.parse(JSON.stringify(listaRecaudaciones));
+    liquidacionesParaGuardar = JSON.parse(JSON.stringify(listaLiquidaciones));
+  } catch (e) {
+    if (mostrarAviso) mostrarToast("No se pudo generar la copia: los datos no son serializables.", "error");
+    return false;
+  }
+  calendarioParaGuardar.schema = 1;
+  if (!esObjetoBackup(calendarioParaGuardar.dias)) calendarioParaGuardar.dias = {};
+  if (!esObjetoBackup(calendarioParaGuardar.turnos)) calendarioParaGuardar.turnos = {};
+  if (!esObjetoBackup(calendarioParaGuardar.datosCalendarioTurnos)) calendarioParaGuardar.datosCalendarioTurnos = {};
+  if (!esObjetoBackup(calendarioParaGuardar.datosCalendarioTurnosMeta)) calendarioParaGuardar.datosCalendarioTurnosMeta = {};
+
+  var conteo = tcContarCalendarioConductor(calendarioParaGuardar.dias);
+  var fechaExportacion = new Date().toISOString();
   var datos = {
-    version: 2,
-    fechaExportacion: new Date().toISOString(),
-    recaudaciones: listaRecaudaciones,
-    liquidaciones: listaLiquidaciones,
+    version: 3,
+    backupCompleto: true,
+    fechaExportacion: fechaExportacion,
+    recaudaciones: recaudacionesParaGuardar,
+    liquidaciones: liquidacionesParaGuardar,
     calendarioConductor: calendarioParaGuardar,
-    calendarioConductorIncluido: calendarioVerificado,
-    calendarioConductorMeta: { totalDias: conteo.total, hojasRuta: conteo.hojas, jornadas: conteo.jornadas, fechaExportacion: new Date().toISOString() }
+    calendarioConductorIncluido: true,
+    calendarioConductorMeta: { totalDias: conteo.total, hojasRuta: conteo.hojas, jornadas: conteo.jornadas, fechaExportacion: fechaExportacion }
   };
-  // DEV-004R11: exportarDatosArchivo() solo devuelve true cuando el JSON se
-  // ha construido de verdad Y el calendario ha quedado verificado. Si el
-  // propio JSON.stringify fallara (datos no serializables), no hay copia
-  // real que descargar: se aborta sin declarar éxito.
   var json;
   try {
     json = JSON.stringify(datos, null, 2);
@@ -2137,20 +2223,36 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     if (mostrarAviso) mostrarToast("No se pudo generar la copia: los datos no son serializables.", "error");
     return false;
   }
-  var blob = new Blob([json], { type: "application/json" });
-  var url = URL.createObjectURL(blob);
-  var enlace = document.createElement("a"); enlace.href = url; enlace.download = nombreArchivo;
-  document.body.appendChild(enlace); enlace.click(); document.body.removeChild(enlace); URL.revokeObjectURL(url);
-  var exportacionCompleta = calendarioVerificado;
-  if (mostrarAviso) {
-    mostrarToast(
-      exportacionCompleta
-        ? ("Copia exportada: " + conteo.total + " días de calendario y " + conteo.hojas + " hojas de ruta.")
-        : "Copia exportada, pero el Calendario Conductor no se pudo verificar y se ha marcado como no incluido.",
-      exportacionCompleta ? "success" : "error"
-    );
+  if (typeof json !== "string" || json.length === 0) {
+    if (mostrarAviso) mostrarToast("No se pudo generar la copia: el archivo habría quedado vacío.", "error");
+    return false;
   }
-  return exportacionCompleta;
+
+  // Blob, enlace y descarga protegidos: si algo de esto falla no hay archivo
+  // real, así que no se declara éxito bajo ningún concepto.
+  var url = null;
+  try {
+    var blob = new Blob([json], { type: "application/json" });
+    url = URL.createObjectURL(blob);
+    var enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = nombreArchivo;
+    document.body.appendChild(enlace);
+    enlace.click();
+    document.body.removeChild(enlace);
+  } catch (e) {
+    if (url) { try { URL.revokeObjectURL(url); } catch (e2) {} }
+    if (mostrarAviso) mostrarToast("No se pudo descargar la copia de seguridad.", "error");
+    return false;
+  }
+  // Safari/iPhone necesita que la URL siga viva mientras arranca la descarga:
+  // se revoca en diferido, nunca de forma inmediata.
+  setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) {} }, 4000);
+
+  if (mostrarAviso) {
+    mostrarToast("Copia exportada: " + conteo.total + " días de calendario y " + conteo.hojas + " hojas de ruta.", "success");
+  }
+  return true;
 }
 function exportarDatos() { exportarDatosArchivo("BackupTUSSAM_" + fechaHoyISO() + ".json", true); }
 function importarDatos(archivo) {
@@ -2159,9 +2261,26 @@ function importarDatos(archivo) {
   lector.onload = function (event) {
     try {
       var datos = JSON.parse(event.target.result);
-      // Validar todo el backup ANTES de borrar ningún dato existente.
-      if (!datos || typeof datos !== "object" || !Array.isArray(datos.recaudaciones) || !Array.isArray(datos.liquidaciones)) {
+      // ============================================================
+      // 1) VALIDACIÓN COMPLETA DEL BACKUP (antes de tocar ningún dato)
+      // ============================================================
+      if (!esObjetoBackup(datos) || !Array.isArray(datos.recaudaciones) || !Array.isArray(datos.liquidaciones)) {
         mostrarToast("Formato incorrecto.", "error"); return;
+      }
+      // DEV-004R13: un backup que se declara version 3 tiene que ser completo
+      // de verdad: backupCompleto:true y calendario con schema 1 y sus cuatro
+      // objetos. Si falta cualquiera de ellos, es una copia incompleta y se
+      // rechaza entera sin modificar nada.
+      if (datos.version === 3) {
+        var cc3 = datos.calendarioConductor;
+        var version3Valida = datos.backupCompleto === true
+          && esObjetoBackup(cc3) && cc3.schema === 1
+          && esObjetoBackup(cc3.dias) && esObjetoBackup(cc3.turnos)
+          && esObjetoBackup(cc3.datosCalendarioTurnos) && esObjetoBackup(cc3.datosCalendarioTurnosMeta);
+        if (!version3Valida) {
+          mostrarToast("La copia de seguridad está incompleta o dañada. No se ha importado nada.", "error");
+          return;
+        }
       }
       // DEV-004R12: si el backup se declara a sí mismo como "calendario
       // incluido", tiene que existir de verdad y ser válido (schema:1 con
@@ -2171,16 +2290,15 @@ function importarDatos(archivo) {
       // en este bloque y siguen su compatibilidad de siempre más abajo.
       if (datos.calendarioConductorIncluido === true) {
         var cc = datos.calendarioConductor;
-        var calendarioIncluidoValido = cc && typeof cc === "object" && !Array.isArray(cc)
-          && cc.schema === 1 && cc.dias && typeof cc.dias === "object" && !Array.isArray(cc.dias);
+        var calendarioIncluidoValido = esObjetoBackup(cc) && cc.schema === 1 && esObjetoBackup(cc.dias);
         if (!calendarioIncluidoValido) {
           mostrarToast("El backup indica un Calendario Conductor incluido pero no es válido. No se ha importado nada.", "error");
           return;
         }
       }
-      // Compatible con backups anteriores a DEV-004R1 (sin bloque de calendario)
-      // y con backups anteriores a DEV-004R10 (calendarioConductor era
-      // directamente el mapa de días, sin schema/turnos/datosCalendarioTurnos).
+      // Compatible con backups version 1 (anteriores a DEV-004R1, sin bloque
+      // de calendario) y version 2 (calendarioConductor podía ser directamente
+      // el mapa de días, sin schema/turnos/datosCalendarioTurnos).
       // DEV-004R11: se distingue "declara ser el esquema nuevo" (tiene la
       // propiedad "schema") de "es válido como esquema nuevo". Un bloque que
       // se declara nuevo pero está mal formado NUNCA se reinterpreta como un
@@ -2188,12 +2306,11 @@ function importarDatos(archivo) {
       // (tcImportarDatosCalendarioConductor), que lo rechaza con un error
       // claro y no toca nada.
       var bloqueCrudo = datos.calendarioConductor || datos.diasCalendario;
-      var declaraEsquemaNuevo = !!(bloqueCrudo && typeof bloqueCrudo === "object" && !Array.isArray(bloqueCrudo)
+      var declaraEsquemaNuevo = !!(esObjetoBackup(bloqueCrudo)
         && Object.prototype.hasOwnProperty.call(bloqueCrudo, "schema"));
-      var esNuevoEsquemaValido = declaraEsquemaNuevo && bloqueCrudo.schema === 1
-        && bloqueCrudo.dias && typeof bloqueCrudo.dias === "object" && !Array.isArray(bloqueCrudo.dias);
+      var esNuevoEsquemaValido = declaraEsquemaNuevo && bloqueCrudo.schema === 1 && esObjetoBackup(bloqueCrudo.dias);
       var bloqueDias = declaraEsquemaNuevo ? (esNuevoEsquemaValido ? bloqueCrudo.dias : null) : bloqueCrudo;
-      var esObjetoDias = declaraEsquemaNuevo ? esNuevoEsquemaValido : (bloqueDias && typeof bloqueDias === "object" && !Array.isArray(bloqueDias));
+      var esObjetoDias = declaraEsquemaNuevo ? esNuevoEsquemaValido : esObjetoBackup(bloqueDias);
       var marcaCalendarioIncluido = datos.calendarioConductorIncluido === true;
       var esVacio = esObjetoDias && Object.keys(bloqueDias).length === 0;
       var avisoBackupVacio = false;
@@ -2216,22 +2333,75 @@ function importarDatos(archivo) {
       datos.recaudaciones.forEach(function (r) { if (!r.id) r.id = generarId(); });
       datos.liquidaciones.forEach(function (l) { if (!l.id) l.id = generarId(); });
 
-      // Copias profundas previas para poder restaurar si algo falla después.
-      var recaudacionesPrevias = JSON.parse(JSON.stringify(listaRecaudaciones || []));
-      var liquidacionesPrevias = JSON.parse(JSON.stringify(listaLiquidaciones || []));
-      var calendarioPrevio = (typeof window.tcExportarDatosCalendarioConductor === "function")
-        ? window.tcExportarDatosCalendarioConductor() : null;
-
-      function restaurarCalendarioPrevio() {
-        if (calendarioPrevio && typeof window.tcImportarDatosCalendarioConductor === "function") {
-          window.tcImportarDatosCalendarioConductor(calendarioPrevio);
+      // ============================================================
+      // 2) COPIAS PROFUNDAS DEL ESTADO ACTUAL (seguro de vuelta atrás)
+      // ============================================================
+      var recaudacionesPrevias, liquidacionesPrevias;
+      try {
+        recaudacionesPrevias = JSON.parse(JSON.stringify(listaRecaudaciones || []));
+        liquidacionesPrevias = JSON.parse(JSON.stringify(listaLiquidaciones || []));
+      } catch (e) {
+        mostrarToast("No se pudo asegurar el estado actual. No se ha importado nada.", "error");
+        return;
+      }
+      var calendarioPrevio = null;
+      try {
+        if (typeof window.tcExportarDatosCalendarioConductor === "function") {
+          calendarioPrevio = window.tcExportarDatosCalendarioConductor();
         }
+      } catch (e) { calendarioPrevio = null; }
+      var calendarioPrevioValido = esObjetoBackup(calendarioPrevio) && calendarioPrevio.schema === 1 && esObjetoBackup(calendarioPrevio.dias);
+      // DEV-004R13: si hay que tocar el calendario pero no se puede garantizar
+      // su vuelta atrás, se cancela ANTES de modificar nada.
+      if (calendarioSolicitado && !calendarioPrevioValido) {
+        mostrarToast("No se puede asegurar la vuelta atrás del Calendario Conductor. No se ha importado nada.", "error");
+        return;
       }
 
-      // 1) El calendario se restaura primero (días, turnos y datos de eventos si
-      //    el backup los trae). Se le pasa el bloque original (bloqueCrudo): la
-      //    función bridge distingue por sí sola el esquema nuevo del antiguo.
-      //    Si falla, no se toca recaudaciones/liquidaciones.
+      // ============================================================
+      // 3) REVERSIÓN ÚNICA Y VERIFICADA
+      //    Restaura y ESPERA: recaudaciones y liquidaciones (IndexedDB +
+      //    localStorage) y días/turnos/eventos/metadatos/EVENTOS en memoria.
+      //    Devuelve una promesa con true solo si TODO volvió a su sitio.
+      // ============================================================
+      function revertirImportacion() {
+        var calendarioRevertido = true;
+        if (calendarioSolicitado) {
+          calendarioRevertido = false;
+          try {
+            if (typeof window.tcImportarDatosCalendarioConductor === "function") {
+              calendarioRevertido = window.tcImportarDatosCalendarioConductor(calendarioPrevio) === true;
+            }
+          } catch (e) { calendarioRevertido = false; }
+        }
+        return Promise.all([
+          reemplazarTodos(STORE_RECAUDACIONES, recaudacionesPrevias),
+          reemplazarTodos(STORE_LIQUIDACIONES, liquidacionesPrevias)
+        ]).then(function (resultados) {
+          var datosRevertidos = (resultados[0] === true && resultados[1] === true);
+          if (datosRevertidos) {
+            listaRecaudaciones = recaudacionesPrevias;
+            listaLiquidaciones = liquidacionesPrevias;
+            try { actualizarResumen(); renderizarRecaudaciones(); renderizarLiquidaciones(); } catch (e) {}
+          }
+          return datosRevertidos && calendarioRevertido;
+        }).catch(function () { return false; });
+      }
+      function avisarFalloImportacion(mensaje) {
+        revertirImportacion().then(function (reversionCorrecta) {
+          if (reversionCorrecta) {
+            mostrarToast(mensaje, "error");
+          } else {
+            mostrarToast("ERROR CRÍTICO: la importación ha fallado y no se ha podido devolver la app a su estado anterior. Restaura una copia de seguridad antes de seguir usándola.", "error");
+          }
+        });
+      }
+
+      // ============================================================
+      // 4) El calendario se restaura primero (días, turnos y datos de eventos
+      //    si el backup los trae). Se le pasa el bloque original (bloqueCrudo):
+      //    la función bridge distingue por sí sola el esquema nuevo del antiguo.
+      // ============================================================
       if (calendarioSolicitado) {
         var calendarioRestaurado = false;
         try {
@@ -2240,13 +2410,16 @@ function importarDatos(archivo) {
           }
         } catch (e) { calendarioRestaurado = false; }
         if (!calendarioRestaurado) {
-          mostrarToast("No se pudo restaurar el Calendario Conductor. No se ha importado nada.", "error");
+          avisarFalloImportacion("No se pudo restaurar el Calendario Conductor. No se ha importado nada.");
           return;
         }
       }
 
-      // 2) Recaudaciones y liquidaciones. Se comprueba expresamente el resultado real de
-      //    cada restauración: Promise.all no falla aunque reemplazarTodos resuelva false.
+      // ============================================================
+      // 5) Recaudaciones y liquidaciones. Se comprueban TODOS los resultados
+      //    reales antes de mostrar mensajes o cambiar las listas en memoria:
+      //    Promise.all no falla aunque reemplazarTodos resuelva false.
+      // ============================================================
       Promise.all([reemplazarTodos(STORE_RECAUDACIONES, datos.recaudaciones), reemplazarTodos(STORE_LIQUIDACIONES, datos.liquidaciones)]).then(function (resultados) {
         if (resultados[0] === true && resultados[1] === true) {
           listaRecaudaciones = datos.recaudaciones; listaLiquidaciones = datos.liquidaciones;
@@ -2262,16 +2435,11 @@ function importarDatos(archivo) {
           }
           return;
         }
-        // Fallo real de IndexedDB en alguna de las dos restauraciones: no se declara éxito.
-        Promise.all([reemplazarTodos(STORE_RECAUDACIONES, recaudacionesPrevias), reemplazarTodos(STORE_LIQUIDACIONES, liquidacionesPrevias)]).then(function () {
-          listaRecaudaciones = recaudacionesPrevias; listaLiquidaciones = liquidacionesPrevias;
-          actualizarResumen(); renderizarRecaudaciones(); renderizarLiquidaciones();
-        });
-        if (calendarioSolicitado) restaurarCalendarioPrevio();
-        mostrarToast("Error al importar los datos en la base de datos. No se ha restaurado el backup.", "error");
+        // Fallo real de IndexedDB en alguna de las dos restauraciones: se espera
+        // a la reversión completa antes de decir nada.
+        avisarFalloImportacion("Error al importar los datos en la base de datos. No se ha restaurado el backup.");
       }).catch(function (err) {
-        if (calendarioSolicitado) restaurarCalendarioPrevio();
-        mostrarToast("Error al importar los datos en la base de datos. No se ha restaurado el backup.", "error");
+        avisarFalloImportacion("Error al importar los datos en la base de datos. No se ha restaurado el backup.");
       });
     } catch (err) { mostrarToast("Error al leer el archivo JSON.", "error"); }
   };
@@ -2299,7 +2467,7 @@ function comprobarBackupAutomatico() {
       var horaActual=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
       localStorage.setItem('tussam_ultimo_backup_auto_hora', horaActual);
     }catch(e){}
-    mostrarToast("Copia automática descargada", "success");
+    mostrarToast("Copia automática generada", "success");
   } else {
     mostrarToast("No se pudo generar una copia completa. No se ha registrado como realizada.", "error");
   }
@@ -2687,7 +2855,6 @@ var activeDate=null;
 var pdfPages=[];
 var pdfImportSemanalFile=null;
 var calDataStore=null;
-var cambioImg=null;
 /* DEV-004R9: hoja de ruta individual pendiente de confirmar turno/servicio.
    Mientras no sea null, NO se ha tocado dias[] con esta hoja: solo se
    escribe en dias[] al pulsar "Guardar cambios" en el editor; si el editor
@@ -2895,11 +3062,22 @@ window.tcImportarDatosCalendarioConductor=function(bloque){
       localStorage.setItem('tc_v1_eventos_meta',JSON.stringify(copiaEventosMeta));
     }catch(e){ revertirTodo(); return false; }
   }
-  if(typeof tcRenderCal==='function') tcRenderCal();
-  if(typeof tcRenderLeyenda==='function') tcRenderLeyenda();
-  if(typeof tcBuildTurnoSelects==='function') tcBuildTurnoSelects();
-  if(activeDate&&dias[activeDate]&&typeof tcRenderView==='function') tcRenderView(activeDate,dias[activeDate]);
-  else if(activeDate&&!dias[activeDate]&&typeof tcClose==='function'){ tcClose(); }
+  /* DEV-004R13: persistencia y pantalla separadas. Llegados aquí los datos YA
+     están guardados y verificados; un fallo pintando la interfaz no invalida
+     la restauración ni revierte nada. Se avisa de que hay que reiniciar la
+     app, pero se devuelve true: nunca se dice que no se importó nada cuando
+     los datos sí se han guardado. */
+  var errorRender=false;
+  try{ if(typeof tcRenderCal==='function') tcRenderCal(); }catch(e){ errorRender=true; }
+  try{ if(typeof tcRenderLeyenda==='function') tcRenderLeyenda(); }catch(e){ errorRender=true; }
+  try{ if(typeof tcBuildTurnoSelects==='function') tcBuildTurnoSelects(); }catch(e){ errorRender=true; }
+  try{
+    if(activeDate&&dias[activeDate]&&typeof tcRenderView==='function') tcRenderView(activeDate,dias[activeDate]);
+    else if(activeDate&&!dias[activeDate]&&typeof tcClose==='function'){ tcClose(); }
+  }catch(e){ errorRender=true; }
+  if(errorRender&&typeof tcToast==='function'){
+    tcToast('✅ Datos restaurados correctamente, pero no se ha podido actualizar la pantalla. Cierra y vuelve a abrir la app.');
+  }
   return true;
 };
 
@@ -2961,15 +3139,21 @@ window.tcLeyenda=function(){
 };
 
 function tcBuildTurnoSelects(){
-  var edSel=document.getElementById('ed-turno');
-  var camSel=document.getElementById('cambio-turno');
-  edSel.innerHTML='<option value="">— sin definir —</option>';
-  camSel.innerHTML='<option value="">— sin cambio —</option>';
+  /* DEV-005: un solo constructor para todos los desplegables de turno
+     (editor del día y formularios del gestor de cambios). */
+  var selects=[
+    {el:document.getElementById('ed-turno'),vacio:'— sin definir —'},
+    {el:document.getElementById('cg-md-turno'),vacio:'— sin turno —'},
+    {el:document.getElementById('cg-dc-turno'),vacio:'— sin turno —'}
+  ];
+  selects.forEach(function(s){ if(s.el) s.el.innerHTML='<option value="">'+s.vacio+'</option>'; });
   Object.keys(TURNO).forEach(function(k){
     var t=TURNO[k];
-    var opt1=document.createElement('option'); opt1.value=k; opt1.textContent=(t.icon||'')+'  '+k+' · '+t.label;
-    var opt2=opt1.cloneNode(true);
-    edSel.appendChild(opt1); camSel.appendChild(opt2);
+    selects.forEach(function(s){
+      if(!s.el) return;
+      var opt=document.createElement('option'); opt.value=k; opt.textContent=(t.icon||'')+'  '+k+' · '+t.label;
+      s.el.appendChild(opt);
+    });
   });
 }
 
@@ -3148,6 +3332,7 @@ function tcRenderCal(){
       var cell=document.createElement('div');
       var cls='tc-d'+(dow>=5?' weekend':'')+(esHoy?' today':'')+(c.inMonth?'':' empty-mes');
       if(reg&&reg.cambio) cls+=' has-cambio';
+      if(reg&&reg.cambioPendiente) cls+=' has-cambio-pend';
       cell.className=cls;
       if(reg&&reg.turno&&TURNO[reg.turno]){
         var t=TURNO[reg.turno];
@@ -3185,6 +3370,11 @@ function tcRenderCal(){
         tagEl.textContent=TURNO[reg.turno].tag;
         tagEl.style.background=TURNO[reg.turno].tagColor; tagEl.style.color='#fff';
         cell.appendChild(tagEl);
+      }
+      if(reg&&reg.cambioPendiente){
+        var pd=document.createElement('div'); pd.className='tc-dpend'; pd.textContent='⚠️';
+        pd.title='Cambio pendiente · Día por convenir';
+        cell.appendChild(pd);
       }
       if(reg&&reg.incidencia){
         var dot=document.createElement('div'); dot.className='tc-ddot'; dot.style.background='var(--danger)';
@@ -3272,6 +3462,7 @@ function tcRenderAnual(){
         var esHoy=anio===hoy.getFullYear()&&m===hoy.getMonth()&&d===hoy.getDate();
         var cls='tc-d tc-d-mini'+(dow>=5?' weekend':'')+(esHoy?' today':'');
         if(reg&&reg.cambio) cls+=' has-cambio';
+        if(reg&&reg.cambioPendiente) cls+=' has-cambio-pend';
         cell.className=cls;
         if(reg&&reg.turno&&TURNO[reg.turno]){
           var t=TURNO[reg.turno];
@@ -3290,6 +3481,11 @@ function tcRenderAnual(){
           tagEl.textContent=TURNO[reg.turno].tag;
           tagEl.style.background=TURNO[reg.turno].tagColor; tagEl.style.color='#fff';
           cell.appendChild(tagEl);
+        }
+        if(reg&&reg.cambioPendiente){
+          var pd=document.createElement('div'); pd.className='tc-dpend'; pd.textContent='⚠️';
+          pd.title='Cambio pendiente · Día por convenir';
+          cell.appendChild(pd);
         }
         if(reg&&reg.incidencia){
           var dot=document.createElement('div'); dot.className='tc-ddot'; dot.style.background='var(--danger)';
@@ -3373,10 +3569,10 @@ function tcRenderView(key,reg){
     raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)">➕ Añadir hoja de ruta</button>';
   }
   var html='';
-  if(reg.cambio){
-    var destFmt=reg.cambioFechaDestino?tcFmtF(reg.cambioFechaDestino):'—';
-    html+='<div class="tc-cambio-badge-link"><strong>🔄 Cambio registrado</strong><br>Día intercambiado: <strong>'+destFmt+'</strong><br>'+(reg.cambioCompanero?'Compañero: <strong>'+tcEsc(reg.cambioCompanero)+'</strong><br>':'')+(reg.cambioNotas?'<span style="font-size:12px;color:var(--text2)">'+tcEsc(reg.cambioNotas)+'</span>':'')+'</div>';
+  if(reg.cambioPendiente){
+    html+='<div class="tc-cambio-pend-box">⚠️ Cambio pendiente · Día por convenir</div>';
   }
+  if(reg.cambio) html+=tcCambioBadgeHtml(reg);
   if(reg.servicio) html+='<div class="tc-serv-card"><div class="tc-serv-lbl">Servicio</div><div class="tc-serv-val">'+tcEsc(reg.servicio)+'</div></div>';
   html+=tcJornadaCardHtml(reg);
   if(reg.incidencia) html+='<div class="tc-inc-box">⚠️ '+tcEsc(reg.incidencia)+'</div>';
@@ -3486,6 +3682,16 @@ window.tcSaveEdit=function(){
 window.tcDeleteDay=function(){
   var btn=document.getElementById('tc-btn-borrar-dia');
   if(!btn)return;
+  /* DEV-005R1 — Un día vinculado a un cambio no se borra: rompería el vínculo
+     y dejaría el otro lado huérfano. Hay que deshacer el cambio primero. */
+  var regDel=dias[activeDate]||{};
+  if(regDel.cambio){
+    btn.removeAttribute('data-confirmando'); btn.textContent='🗑️ Borrar';
+    tcModalPrompt('No se puede borrar el día',
+      'El día '+tcFmtF(activeDate)+' forma parte de un cambio de turno. Deshaz primero el cambio desde «Gestionar cambios» y vuelve a intentarlo.',
+      [{label:'Entendido',className:'btn-secondary',onClick:function(){}}]);
+    return;
+  }
   if(btn.getAttribute('data-confirmando')==='true'){
     btn.removeAttribute('data-confirmando'); btn.textContent='🗑️ Borrar';
   } else {
@@ -3497,49 +3703,12 @@ window.tcDeleteDay=function(){
     },3000);
     return;
   }
-  var reg=dias[activeDate]||{};
-  if(reg.cambioFechaDestino&&dias[reg.cambioFechaDestino]){
-    var dest=dias[reg.cambioFechaDestino];
-    dest.cambio=false; dest.cambioFechaDestino=null; dest.cambioCompanero=''; dest.cambioNotas='';
-    dias[reg.cambioFechaDestino]=dest;
-  }
+  /* DEV-005R1 — Llegados aquí el día no pertenece a ningún cambio, así que
+     no hay ningún vínculo que romper. */
   delete dias[activeDate]; saveDias(); tcClose(); tcRenderCal();
   tcToast('🗑️ Día eliminado');
 };
 
-window.tcToCambio=function(){
-  var reg=dias[activeDate]||{};
-  var kp=activeDate.split('-');
-  document.getElementById('cambio-date').textContent=parseInt(kp[2],10)+' de '+MESES[parseInt(kp[1],10)-1]+' de '+kp[0];
-  document.getElementById('cambio-companero').value=reg.cambioCompanero||'';
-  document.getElementById('cambio-fecha-destino').value=reg.cambioFechaDestino||'';
-  document.getElementById('cambio-turno').value='';
-  document.getElementById('cambio-servicio').value='';
-  document.getElementById('cambio-notas').value=reg.cambioNotas||'';
-  cambioImg=null;
-  var nm=document.getElementById('cambio-pdf-name');
-  nm.textContent='Sin hoja seleccionada'; nm.classList.remove('ok');
-  tcShowPanel('pnl-cambio');
-};
-window.tcCambioPdf=function(input){
-  if(typeof pdfjsLib==='undefined'){tcToast('Error cargando PDF.js');return;}
-  var file=input.files[0]; if(!file)return;
-  var reader=new FileReader();
-  reader.onload=function(ev){
-    pdfjsLib.getDocument({data:new Uint8Array(ev.target.result)}).promise.then(function(pdf){
-      pdf.getPage(1).then(function(page){
-        var vp=page.getViewport({scale:1.0});
-        var cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
-        page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise.then(function(){
-          cambioImg=cv.toDataURL('image/jpeg',0.60);
-          var nm=document.getElementById('cambio-pdf-name');
-          nm.textContent=file.name; nm.classList.add('ok');
-        });
-      });
-    });
-  };
-  reader.readAsArrayBuffer(file);
-};
 /* Procesa la primera página de un PDF y devuelve (vía callback) imgData + thumbData,
    reutilizando el mismo procedimiento/calidad que ya usa la app (escala 1.0, jpeg 0.60;
    miniatura máx. 300px de ancho, jpeg 0.45). */
@@ -4576,26 +4745,555 @@ window.tcAmpDejarPendienteDocumento=function(parte){
   tcToast('📄 Ampliación dejada pendiente de documento');
 };
 
-window.tcSaveCambio=function(){
-  var reg=dias[activeDate]||{};
-  var comp=document.getElementById('cambio-companero').value.trim();
-  var fechaDest=document.getElementById('cambio-fecha-destino').value;
-  var turno=document.getElementById('cambio-turno').value;
-  var serv=document.getElementById('cambio-servicio').value.trim();
-  var notas=document.getElementById('cambio-notas').value.trim();
-  if(cambioImg) reg.imgData=cambioImg;
-  if(turno) reg.turno=turno;
-  if(serv){ reg.servicio=serv; if(reg.jornada) reg.jornada.servicio=serv; }
-  reg.cambio=true; reg.cambioCompanero=comp; reg.cambioFechaDestino=fechaDest||null; reg.cambioNotas=notas;
-  dias[activeDate]=reg;
-  if(fechaDest){
-    var dest=dias[fechaDest]||{};
-    dest.cambio=true; dest.cambioCompanero=comp; dest.cambioFechaDestino=activeDate; dest.cambioNotas=notas;
-    dias[fechaDest]=dest;
+/* ==================================================================
+   DEV-005 — GESTIÓN CENTRALIZADA DE CAMBIOS DE TURNO
+   ------------------------------------------------------------------
+   Los cambios gestionan EXCLUSIVAMENTE códigos de turno. Nunca tocan
+   hojas de ruta, servicios, jornadas, ampliaciones, recaudaciones ni
+   notas/incidencias del día. Toda la información se guarda dentro de
+   dias[fecha], por lo que entra en el backup actual sin cambios en el
+   sistema de copias de seguridad.
+
+   Metadatos escritos en cada día implicado:
+     cambio                 (bool, compatibilidad con datos antiguos)
+     cambioId               (string, vincula los dos días de un cambio)
+     tipoCambio             'servicio_mismo_dia' | 'intercambio_fechas' | 'dia_a_convenir'
+     estadoCambio           'registrado' | 'pendiente_fecha' | 'resuelto'
+     cambioPendiente        (bool)
+     cambioTurnoOriginal    turno del día ANTES del cambio (para deshacer)
+     cambioTurnoFinal       turno del día DESPUÉS del cambio
+     cambioTurnoRecibido    turno recibido del día vinculado (intercambios)
+     cambioTurnoRealizado   turno realmente trabajado (día a convenir)
+     cambioFechaVinculada   fecha del otro día del cambio (o null)
+     cambioFechaDestino     alias heredado de cambioFechaVinculada
+     cambioCompanero, cambioNotas, cambioFechaRegistro
+   ================================================================== */
+
+function tcCambioNuevoId(){
+  return 'cmb_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
+}
+
+function tcCambioSinAcentos(s){
+  return String(s||'').toLowerCase()
+    .replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i')
+    .replace(/[óòöô]/g,'o').replace(/[úùüû]/g,'u');
+}
+
+/* Única función de clasificación de turnos. Consulta primero la configuración
+   real de tipos de turno (TURNO), incluidos los creados por el importador del
+   calendario anual, y solo al final recurre a códigos conocidos. */
+function tcCambioClasificarTurno(codigo){
+  if(!codigo) return 'laborable';
+  var t=TURNO[codigo];
+  if(t){
+    if(t.noLaborable===true) return 'no_laborable';
+    if(t.laborable===true) return 'laborable';
+    var txt=tcCambioSinAcentos((t.label||'')+' '+(t.tag||''));
+    if(/descans|vacacion|libran|libre|permiso|asuntos propios|baja/.test(txt)) return 'no_laborable';
+    return 'laborable';
   }
-  saveDias(); tcRenderCal(); tcRenderView(activeDate,reg); tcShowPanel('pnl-view');
-  if(serv&&typeof tcJornadaSincronizarDesdeRecaudaciones==='function') tcJornadaSincronizarDesdeRecaudaciones(activeDate,serv);
-  tcToast('🔄 Cambio guardado'+(fechaDest?' · vinculado con '+tcFmtF(fechaDest):''));
+  var c=tcCambioSinAcentos(codigo).toUpperCase();
+  if(c==='D'||c==='V'||c==='DI'||c==='DESC'||c==='DESC.'||c==='VACA'||c==='VACA.'||c==='L') return 'no_laborable';
+  return 'laborable';
+}
+function tcCambioEsNoLaborable(codigo){ return tcCambioClasificarTurno(codigo)==='no_laborable'; }
+
+/* DEV-005R1 — Mensaje único de turno sin asignar. Un turno vacío NO es
+   laborable y nunca puede participar en un cambio entre fechas. */
+var TC_CAMBIO_MSG_SIN_TURNO='No se puede realizar el cambio porque uno de los días no tiene turno asignado.';
+
+/* DEV-005R1 — Devuelve el texto que bloquea la operación, o null si la fecha
+   está libre. Nunca se sobrescribe un cambioId existente: primero hay que
+   deshacer el cambio. */
+function tcCambioBloqueoVinculo(fecha,idPermitido){
+  var r=dias[fecha];
+  if(!r||!r.cambio) return null;
+  var gid=r.cambioId||('legacy_'+fecha);
+  if(idPermitido&&gid===idPermitido) return null;
+  if(r.cambioPendiente)
+    return 'El día '+tcFmtF(fecha)+' tiene un cambio pendiente sin resolver. Deshaz o resuelve ese cambio antes de vincular la fecha a otro cambio.';
+  return 'El día '+tcFmtF(fecha)+' ya pertenece a un cambio registrado. Deshaz primero el cambio existente para poder volver a usar esta fecha.';
+}
+
+
+function tcCambioFechaValida(iso){
+  if(!iso||!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+  var p=iso.split('-'), y=parseInt(p[0],10), m=parseInt(p[1],10), d=parseInt(p[2],10);
+  if(m<1||m>12||d<1) return false;
+  var dt=new Date(y,m-1,d);
+  return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;
+}
+
+function tcCambioTurnoLabel(codigo){
+  if(!codigo) return '— sin turno —';
+  var t=TURNO[codigo];
+  return t?((t.icon||'')+' '+codigo+' · '+t.label):codigo;
+}
+
+function tcCambioTipoLabel(tipo){
+  if(tipo==='servicio_mismo_dia') return 'Cambio de servicio en el mismo día';
+  if(tipo==='intercambio_fechas') return 'Cambio entre días diferentes';
+  if(tipo==='dia_a_convenir') return 'Cambio por día a convenir';
+  return 'Cambio registrado';
+}
+
+/* Limpia TODOS los metadatos de cambio de un registro sin tocar hoja,
+   servicio, turno, jornada, ampliaciones, notas ni incidencias. */
+function tcCambioLimpiarMeta(reg){
+  if(!reg) return;
+  reg.cambio=false;
+  reg.cambioId=null;
+  reg.tipoCambio=null;
+  reg.estadoCambio=null;
+  reg.cambioPendiente=false;
+  reg.cambioTurnoOriginal=null;
+  reg.cambioTurnoFinal=null;
+  reg.cambioTurnoRecibido=null;
+  reg.cambioTurnoRealizado=null;
+  reg.cambioFechaVinculada=null;
+  reg.cambioFechaDestino=null;
+  reg.cambioCompanero='';
+  reg.cambioNotas='';
+  reg.cambioFechaRegistro=null;
+}
+
+/* Escribe los metadatos en un día. Nunca sobreescribe cambioTurnoOriginal si
+   ya existe un cambio activo: así "deshacer" siempre vuelve al turno real. */
+function tcCambioEscribirMeta(fecha,meta){
+  var reg=dias[fecha]||{};
+  var yaActivo=!!reg.cambio;
+  reg.cambio=true;
+  reg.cambioId=meta.cambioId;
+  reg.tipoCambio=meta.tipoCambio;
+  reg.estadoCambio=meta.estadoCambio;
+  reg.cambioPendiente=!!meta.cambioPendiente;
+  if(!yaActivo||reg.cambioTurnoOriginal==null) reg.cambioTurnoOriginal=meta.turnoOriginal||'';
+  reg.cambioTurnoFinal=meta.turnoFinal||'';
+  if(meta.turnoRecibido!==undefined) reg.cambioTurnoRecibido=meta.turnoRecibido;
+  if(meta.turnoRealizado!==undefined) reg.cambioTurnoRealizado=meta.turnoRealizado;
+  reg.cambioFechaVinculada=meta.fechaVinculada||null;
+  reg.cambioFechaDestino=meta.fechaVinculada||null; /* compatibilidad con datos antiguos */
+  reg.cambioCompanero=meta.companero||'';
+  reg.cambioNotas=meta.notas||'';
+  reg.cambioFechaRegistro=reg.cambioFechaRegistro||new Date().toISOString();
+  reg.turno=meta.turnoFinal||'';
+  reg.autoTurno=false;
+  dias[fecha]=reg;
+}
+
+function tcCambioBadgeHtml(reg){
+  var html='<div class="tc-cambio-badge-link"><strong>🔄 '+tcEsc(tcCambioTipoLabel(reg.tipoCambio))+'</strong><br>';
+  if(reg.cambioTurnoOriginal!=null&&reg.cambioTurnoFinal!=null&&(reg.cambioTurnoOriginal||reg.cambioTurnoFinal)){
+    html+='Turno original: <strong>'+tcEsc(tcCambioTurnoLabel(reg.cambioTurnoOriginal))+'</strong><br>';
+    html+='Turno actual del cambio: <strong>'+tcEsc(tcCambioTurnoLabel(reg.cambioTurnoFinal))+'</strong><br>';
+  }
+  var vinc=reg.cambioFechaVinculada||reg.cambioFechaDestino;
+  if(vinc) html+='Día vinculado: <strong>'+tcFmtF(vinc)+'</strong><br>';
+  if(reg.cambioCompanero) html+='Compañero: <strong>'+tcEsc(reg.cambioCompanero)+'</strong><br>';
+  if(reg.cambioNotas) html+='<span style="font-size:12px;color:var(--text2)">'+tcEsc(reg.cambioNotas)+'</span>';
+  return html+'</div>';
+}
+
+/* ---------------- Persistencia y refresco común ---------------- */
+function tcCambioPersistir(){
+  saveDias();
+  tcRenderCal();
+  if(activeDate&&dias[activeDate]) tcRenderView(activeDate,dias[activeDate]);
+  if(typeof tcCgRenderLista==='function') tcCgRenderLista();
+}
+
+/* ---------------- Navegación del gestor ---------------- */
+var TC_CG_VISTAS=['cg-menu','cg-md','cg-fx','cg-dc','cg-lista','cg-asig'];
+var tcCgAsigId=null;
+
+window.tcCgVista=function(id){
+  TC_CG_VISTAS.forEach(function(v){
+    var el=document.getElementById(v);
+    if(el) el.style.display=(v===id)?'':'none';
+  });
+  if(id==='cg-lista') tcCgRenderLista();
+  var sh=document.querySelector('#tc-ov .tc-sh');
+  if(sh) sh.scrollTop=0;
+};
+
+window.tcOpenGestorCambios=function(){
+  tcBuildTurnoSelects();
+  ['cg-md-fecha','cg-md-comp','cg-md-notas','cg-fx-f1','cg-fx-f2','cg-fx-comp','cg-fx-notas',
+   'cg-dc-fecha','cg-dc-comp','cg-dc-notas','cg-asig-fecha'].forEach(function(i){
+    var el=document.getElementById(i); if(el) el.value='';
+  });
+  document.getElementById('cg-md-turno').value='';
+  document.getElementById('cg-dc-turno').value='';
+  document.getElementById('cg-md-info').textContent='Selecciona una fecha.';
+  document.getElementById('cg-fx-info').textContent='Selecciona las dos fechas.';
+  document.getElementById('cg-dc-info').textContent='Selecciona una fecha.';
+  document.getElementById('cg-asig-info').textContent='Selecciona la fecha acordada.';
+  tcCgAsigId=null;
+  tcCgVista('cg-menu');
+  tcShowPanel('pnl-cambio');
+  tcOpenOv();
+};
+
+/* ---------------- Refrescos de información ---------------- */
+function tcCgTextoDia(fecha){
+  if(!tcCambioFechaValida(fecha)) return 'Fecha no válida.';
+  var reg=dias[fecha]||{};
+  var clase=tcCambioEsNoLaborable(reg.turno)?'no laborable':'laborable';
+  var txt=tcFmtF(fecha)+' → '+tcCambioTurnoLabel(reg.turno)+' ('+clase+')';
+  if(reg.imgData) txt+=' · tiene hoja de ruta';
+  if(reg.cambioPendiente) txt+=' · ⚠️ cambio pendiente';
+  else if(reg.cambio) txt+=' · 🔒 ya vinculada a un cambio';
+  if(!(reg.turno||'')) txt+=' · ⚠️ sin turno asignado';
+  return txt;
+}
+
+window.tcCgRefrescarMd=function(){
+  var f=document.getElementById('cg-md-fecha').value;
+  document.getElementById('cg-md-info').textContent=tcCgTextoDia(f);
+  if(tcCambioFechaValida(f)) document.getElementById('cg-md-turno').value=(dias[f]&&dias[f].turno)||'';
+};
+
+window.tcCgRefrescarDc=function(){
+  var f=document.getElementById('cg-dc-fecha').value;
+  document.getElementById('cg-dc-info').textContent=tcCgTextoDia(f);
+  if(tcCambioFechaValida(f)) document.getElementById('cg-dc-turno').value=(dias[f]&&dias[f].turno)||'';
+};
+
+window.tcCgRefrescarFx=function(){
+  var f1=document.getElementById('cg-fx-f1').value;
+  var f2=document.getElementById('cg-fx-f2').value;
+  var l=[];
+  if(f1) l.push('A · '+tcCgTextoDia(f1));
+  if(f2) l.push('B · '+tcCgTextoDia(f2));
+  document.getElementById('cg-fx-info').innerHTML=l.length?l.map(tcEsc).join('<br>'):'Selecciona las dos fechas.';
+};
+
+window.tcCgRefrescarAsig=function(){
+  var f=document.getElementById('cg-asig-fecha').value;
+  document.getElementById('cg-asig-info').textContent=tcCgTextoDia(f);
+};
+
+/* ---------------- Validación común de intercambios ---------------- */
+/* Devuelve null si todo es correcto, o un texto de error que bloquea. */
+function tcCambioValidarPar(f1,f2){
+  if(!tcCambioFechaValida(f1)||!tcCambioFechaValida(f2)) return 'Selecciona dos fechas válidas.';
+  if(f1===f2) return 'No se puede realizar el cambio: has seleccionado la misma fecha en los dos campos.';
+  var r1=dias[f1]||{}, r2=dias[f2]||{};
+  /* DEV-005R1 — Fechas ya vinculadas: se bloquean ANTES de tocar ningún dato. */
+  var b1=tcCambioBloqueoVinculo(f1,null); if(b1) return b1;
+  var b2=tcCambioBloqueoVinculo(f2,null); if(b2) return b2;
+  /* DEV-005R1 — Turnos obligatorios en los dos días. */
+  if(!(r1.turno||'')||!(r2.turno||'')) return TC_CAMBIO_MSG_SIN_TURNO;
+  if(tcCambioEsNoLaborable(r1.turno)&&tcCambioEsNoLaborable(r2.turno))
+    return 'No se puede realizar el cambio. Los dos días seleccionados son de descanso o vacaciones. Selecciona al menos un día laborable.';
+  return null;
+}
+
+/* Ejecuta el intercambio de códigos de turno entre dos fechas y vincula ambos
+   días con el mismo cambioId. No mueve hojas, servicios, jornadas ni ampliaciones. */
+function tcCambioIntercambiarTurnos(f1,f2,cambioId,companero,notas,tipo){
+  var r1=dias[f1]||{}, r2=dias[f2]||{};
+  var t1=r1.turno||'', t2=r2.turno||'';
+  tcCambioEscribirMeta(f1,{cambioId:cambioId,tipoCambio:tipo,estadoCambio:'resuelto',cambioPendiente:false,
+    turnoOriginal:t1,turnoFinal:t2,turnoRecibido:t2,fechaVinculada:f2,companero:companero,notas:notas});
+  tcCambioEscribirMeta(f2,{cambioId:cambioId,tipoCambio:tipo,estadoCambio:'resuelto',cambioPendiente:false,
+    turnoOriginal:t2,turnoFinal:t1,turnoRecibido:t1,fechaVinculada:f1,companero:companero,notas:notas});
+  tcCambioPersistir();
+}
+
+/* ---------------- 1. Cambio de servicio en el mismo día ---------------- */
+window.tcCambioGuardarMismoDia=function(){
+  var f=document.getElementById('cg-md-fecha').value;
+  if(!tcCambioFechaValida(f)){ tcToast('⚠️ Selecciona una fecha válida'); return; }
+  /* DEV-005R1 — Una fecha ya vinculada no puede reutilizarse. */
+  var bloq=tcCambioBloqueoVinculo(f,null);
+  if(bloq){ tcModalPrompt('Cambio no permitido',bloq,[{label:'Entendido',className:'btn-secondary',onClick:function(){}}]); return; }
+  var reg=dias[f]||{};
+  var turnoActual=reg.turno||'';
+  var turnoFinal=document.getElementById('cg-md-turno').value;
+  /* DEV-005R1 — Hay que seleccionar el turno realizado. */
+  if(!turnoFinal){
+    tcModalPrompt('Cambio no permitido','Selecciona el turno realizado para poder guardar el cambio del mismo día.',
+      [{label:'Entendido',className:'btn-secondary',onClick:function(){}}]);
+    return;
+  }
+  var comp=document.getElementById('cg-md-comp').value.trim();
+  var notas=document.getElementById('cg-md-notas').value.trim();
+  var id=tcCambioNuevoId();
+
+  var guardar=function(){
+    tcCambioEscribirMeta(f,{cambioId:id,tipoCambio:'servicio_mismo_dia',estadoCambio:'registrado',
+      cambioPendiente:false,turnoOriginal:turnoActual,turnoFinal:turnoFinal,fechaVinculada:null,
+      companero:comp,notas:notas});
+    tcCambioPersistir();
+    tcCgVista('cg-menu');
+    tcToast('🔄 Cambio del mismo día guardado · '+tcFmtF(f));
+  };
+
+  if(turnoFinal&&turnoFinal!==turnoActual){
+    tcModalPrompt('Cambiar el turno del día',
+      'Turno actual: '+tcCambioTurnoLabel(turnoActual)+'\nTurno tras el cambio: '+tcCambioTurnoLabel(turnoFinal)+'\n\nEl servicio real llegará después con la hoja de ruta. No se modificará hoja, servicio, jornada ni ampliaciones.',
+      [{label:'Sí, cambiar el turno',className:'btn-primary',onClick:guardar},
+       {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
+    return;
+  }
+  turnoFinal=turnoActual;
+  guardar();
+};
+
+/* ---------------- 2. Cambio entre días diferentes ---------------- */
+window.tcCambioGuardarFechas=function(){
+  var f1=document.getElementById('cg-fx-f1').value;
+  var f2=document.getElementById('cg-fx-f2').value;
+  var err=tcCambioValidarPar(f1,f2);
+  if(err){ tcModalPrompt('Cambio no permitido',err,[{label:'Entendido',className:'btn-secondary',onClick:function(){}}]); return; }
+  var comp=document.getElementById('cg-fx-comp').value.trim();
+  var notas=document.getElementById('cg-fx-notas').value.trim();
+  var id=tcCambioNuevoId();
+  var r1=dias[f1]||{}, r2=dias[f2]||{};
+
+  var confirmar=function(){
+    tcModalPrompt('Confirmar intercambio',
+      tcFmtF(f1)+': '+tcCambioTurnoLabel(r1.turno)+' → '+tcCambioTurnoLabel(r2.turno)+'\n'+
+      tcFmtF(f2)+': '+tcCambioTurnoLabel(r2.turno)+' → '+tcCambioTurnoLabel(r1.turno)+'\n\nSolo se intercambian los códigos de turno.',
+      [{label:'Intercambiar turnos',className:'btn-primary',onClick:function(){
+          tcCambioIntercambiarTurnos(f1,f2,id,comp,notas,'intercambio_fechas');
+          tcCgVista('cg-menu');
+          tcToast('🔄 Turnos intercambiados · '+tcFmtF(f1)+' ↔ '+tcFmtF(f2));
+        }},
+       {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
+  };
+
+  if(r1.imgData||r2.imgData){
+    tcModalPrompt('Hojas de ruta existentes',
+      'Las hojas de ruta no se intercambiarán. Deberás actualizarlas manualmente si fuese necesario.',
+      [{label:'Continuar',className:'btn-primary',onClick:confirmar},
+       {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
+    return;
+  }
+  confirmar();
+};
+
+/* ---------------- 3. Cambio por día a convenir ---------------- */
+window.tcCambioGuardarConvenir=function(){
+  var f=document.getElementById('cg-dc-fecha').value;
+  if(!tcCambioFechaValida(f)){ tcToast('⚠️ Selecciona una fecha válida'); return; }
+  /* DEV-005R1 — Una fecha ya vinculada (pendiente o resuelta) se bloquea. */
+  var bloqDc=tcCambioBloqueoVinculo(f,null);
+  if(bloqDc){ tcModalPrompt('Cambio no permitido',bloqDc,[{label:'Entendido',className:'btn-secondary',onClick:function(){}}]); return; }
+  var reg=dias[f]||{};
+  var turnoActual=reg.turno||'';
+  /* DEV-005R1 — Hay que seleccionar el turno realizado; no se hereda el actual. */
+  var turnoRealizado=document.getElementById('cg-dc-turno').value;
+  if(!turnoRealizado){
+    tcModalPrompt('Cambio no permitido','Selecciona el turno realizado para poder registrar el día por convenir.',
+      [{label:'Entendido',className:'btn-secondary',onClick:function(){}}]);
+    return;
+  }
+  /* DEV-005R1 — El día cedido debe tener turno asignado para poder devolverlo. */
+  if(!turnoActual){
+    tcModalPrompt('Cambio no permitido',TC_CAMBIO_MSG_SIN_TURNO,
+      [{label:'Entendido',className:'btn-secondary',onClick:function(){}}]);
+    return;
+  }
+  var comp=document.getElementById('cg-dc-comp').value.trim();
+  var notas=document.getElementById('cg-dc-notas').value.trim();
+  var id=tcCambioNuevoId();
+  tcCambioEscribirMeta(f,{cambioId:id,tipoCambio:'dia_a_convenir',estadoCambio:'pendiente_fecha',
+    cambioPendiente:true,turnoOriginal:turnoActual,turnoFinal:turnoRealizado,turnoRealizado:turnoRealizado,
+    fechaVinculada:null,companero:comp,notas:notas});
+  tcCambioPersistir();
+  tcCgVista('cg-menu');
+  tcToast('⚠️ Cambio pendiente registrado · Día por convenir');
+};
+
+/* ---------------- 4. Lista de cambios pendientes/registrados ---------------- */
+function tcCambioAgrupar(){
+  var grupos=[], porId={};
+  Object.keys(dias).sort().reverse().forEach(function(k){
+    var r=dias[k];
+    if(!r||!r.cambio) return;
+    var id=r.cambioId||('legacy_'+k);
+    if(porId[id]){ porId[id].fechas.push(k); return; }
+    var g={id:id,fechas:[k],reg:r,pendiente:!!r.cambioPendiente,
+           tipo:r.tipoCambio||'intercambio_fechas',legacy:!r.cambioId};
+    porId[id]=g; grupos.push(g);
+  });
+  grupos.forEach(function(g){ g.fechas.sort(); });
+  grupos.sort(function(a,b){
+    if(a.pendiente!==b.pendiente) return a.pendiente?-1:1;
+    return a.fechas[0]<b.fechas[0]?1:-1;
+  });
+  return grupos;
+}
+
+window.tcCgRenderLista=function(){
+  var cont=document.getElementById('cg-lista-body');
+  if(!cont) return;
+  var grupos=tcCambioAgrupar();
+  if(!grupos.length){ cont.innerHTML='<div class="tc-cg-empty">No hay cambios registrados.</div>'; return; }
+  var html='';
+  grupos.forEach(function(g){
+    var r=g.reg;
+    html+='<div class="tc-cg-item'+(g.pendiente?' pend':'')+'">';
+    html+='<strong>'+(g.pendiente?'⚠️ ':'🔄 ')+tcEsc(tcCambioTipoLabel(g.tipo))+'</strong><br>';
+    html+='Fechas: <strong>'+g.fechas.map(tcFmtF).join(' ↔ ')+'</strong><br>';
+    if(g.pendiente) html+='Estado: <strong>Pendiente · Día por convenir</strong><br>';
+    else if(g.legacy) html+='Estado: <strong>Registrado (formato anterior)</strong><br>';
+    else html+='Estado: <strong>'+(g.tipo==='servicio_mismo_dia'?'Registrado':'Resuelto')+'</strong><br>';
+    g.fechas.forEach(function(f){
+      var rr=dias[f]||{};
+      if(rr.cambioTurnoOriginal!=null||rr.cambioTurnoFinal!=null){
+        html+='<span style="font-size:12px">'+tcFmtF(f)+': '+tcEsc(tcCambioTurnoLabel(rr.cambioTurnoOriginal))+' → '+tcEsc(tcCambioTurnoLabel(rr.cambioTurnoFinal))+'</span><br>';
+      }
+    });
+    if(r.cambioCompanero) html+='Compañero: <strong>'+tcEsc(r.cambioCompanero)+'</strong><br>';
+    if(r.cambioNotas) html+='<span style="font-size:12px;color:var(--text3)">'+tcEsc(r.cambioNotas)+'</span><br>';
+    html+='<div class="tc-cg-acts">';
+    if(g.pendiente) html+='<button class="tc-btn tc-btn-primary" onclick="tcCambioAbrirAsignar(\''+g.id+'\')">📅 Asignar día</button>';
+    html+='<button class="tc-btn tc-btn-danger" onclick="tcCambioDeshacer(\''+g.id+'\')">↩️ Deshacer</button>';
+    html+='</div></div>';
+  });
+  cont.innerHTML=html;
+};
+
+function tcCambioFechasDeGrupo(id){
+  var out=[];
+  Object.keys(dias).forEach(function(k){
+    var r=dias[k];
+    if(!r||!r.cambio) return;
+    var gid=r.cambioId||('legacy_'+k);
+    if(gid===id) out.push(k);
+  });
+  return out.sort();
+}
+
+window.tcCambioAbrirAsignar=function(id){
+  var fechas=tcCambioFechasDeGrupo(id);
+  if(!fechas.length){ tcToast('⚠️ Cambio no encontrado'); tcCgRenderLista(); return; }
+  tcCgAsigId=id;
+  var f=fechas[0];
+  var r=dias[f]||{};
+  document.getElementById('cg-asig-head').innerHTML='ℹ️ Asignando el día de devolución del pendiente del <strong>'+tcFmtF(f)+'</strong>. '+
+    'Ese día conserva el turno realizado (<strong>'+tcEsc(tcCambioTurnoLabel(r.cambioTurnoRealizado||r.turno))+'</strong>) '+
+    'y el día acordado recibirá su turno original (<strong>'+tcEsc(tcCambioTurnoLabel(r.cambioTurnoOriginal))+'</strong>).';
+  document.getElementById('cg-asig-fecha').value='';
+  document.getElementById('cg-asig-info').textContent='Selecciona la fecha acordada.';
+  tcCgVista('cg-asig');
+};
+
+/* DEV-005R1 — Resolución del día a convenir. NO se intercambian los turnos
+   actuales: el primer día mantiene el turno REALIZADO y el segundo día recibe
+   el turno ORIGINAL del primero, guardando su propio turno original para poder
+   deshacer. Ambos quedan vinculados con el mismo cambioId. No toca hojas,
+   servicios ni jornadas. */
+function tcCambioResolverConvenir(f1,f2,cambioId,companero,notas){
+  var r1=dias[f1]||{}, r2=dias[f2]||{};
+  var originalF1=r1.cambioTurnoOriginal||'';           /* p. ej. D  */
+  var realizadoF1=r1.cambioTurnoRealizado||r1.turno||''; /* p. ej. CT */
+  var originalF2=r2.turno||'';                          /* p. ej. CM */
+
+  /* Primer día: conserva el turno realizado, se marca como resuelto. */
+  tcCambioEscribirMeta(f1,{cambioId:cambioId,tipoCambio:'dia_a_convenir',estadoCambio:'resuelto',
+    cambioPendiente:false,turnoOriginal:originalF1,turnoFinal:realizadoF1,turnoRealizado:realizadoF1,
+    turnoRecibido:null,fechaVinculada:f2,companero:companero,notas:notas});
+  /* Segundo día: recibe el turno original del primero; se guarda el suyo. */
+  tcCambioEscribirMeta(f2,{cambioId:cambioId,tipoCambio:'dia_a_convenir',estadoCambio:'resuelto',
+    cambioPendiente:false,turnoOriginal:originalF2,turnoFinal:originalF1,turnoRecibido:originalF1,
+    fechaVinculada:f1,companero:companero,notas:notas});
+  tcCambioPersistir();
+}
+
+window.tcCambioConfirmarAsignacion=function(){
+  if(!tcCgAsigId){ tcCgVista('cg-lista'); return; }
+  var fechas=tcCambioFechasDeGrupo(tcCgAsigId);
+  if(!fechas.length){ tcToast('⚠️ Cambio no encontrado'); tcCgVista('cg-lista'); return; }
+  var f1=fechas[0];
+  var f2=document.getElementById('cg-asig-fecha').value;
+  var r1=dias[f1]||{}, r2=dias[f2]||{};
+  var id=tcCgAsigId;
+
+  if(!tcCambioFechaValida(f2)){ tcToast('⚠️ Selecciona una fecha válida'); return; }
+
+  /* DEV-005R1 — Solo se admite el pendiente que se está resolviendo: la
+     segunda fecha no puede pertenecer a ningún otro cambio. */
+  var err=null;
+  if(f1===f2) err='No se puede realizar el cambio: has seleccionado la misma fecha en los dos campos.';
+  if(!err) err=tcCambioBloqueoVinculo(f2,id);
+  /* DEV-005R1 — Turnos obligatorios: el original cedido y el del día acordado. */
+  if(!err&&(!(r1.cambioTurnoOriginal||'')||!(r2.turno||''))) err=TC_CAMBIO_MSG_SIN_TURNO;
+  /* DEV-005R1 — El primer día se clasifica por su turno ORIGINAL, no por el
+     turno realizado que muestra ahora. */
+  if(!err&&tcCambioEsNoLaborable(r1.cambioTurnoOriginal)&&tcCambioEsNoLaborable(r2.turno))
+    err='No se puede realizar el cambio. Los dos días seleccionados son de descanso o vacaciones. Selecciona al menos un día laborable.';
+  if(err){ tcModalPrompt('Cambio no permitido',err,[{label:'Entendido',className:'btn-secondary',onClick:function(){}}]); return; }
+
+  var comp=r1.cambioCompanero||'';
+  var notas=r1.cambioNotas||'';
+  var realizadoF1=r1.cambioTurnoRealizado||r1.turno||'';
+
+  var confirmar=function(){
+    tcModalPrompt('Confirmar día acordado',
+      tcFmtF(f1)+': conserva el turno realizado '+tcCambioTurnoLabel(realizadoF1)+'\n'+
+      tcFmtF(f2)+': '+tcCambioTurnoLabel(r2.turno)+' → '+tcCambioTurnoLabel(r1.cambioTurnoOriginal)+'\n\nEl cambio pendiente quedará resuelto. Solo se modifican códigos de turno.',
+      [{label:'Asignar y resolver',className:'btn-primary',onClick:function(){
+          tcCambioResolverConvenir(f1,f2,id,comp,notas);
+          tcCgAsigId=null;
+          tcCgVista('cg-lista');
+          tcToast('✔ Cambio resuelto · '+tcFmtF(f1)+' ↔ '+tcFmtF(f2));
+        }},
+       {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
+  };
+
+  if(r1.imgData||r2.imgData){
+    tcModalPrompt('Hojas de ruta existentes',
+      'Las hojas de ruta no se intercambiarán. Deberás actualizarlas manualmente si fuese necesario.',
+      [{label:'Continuar',className:'btn-primary',onClick:confirmar},
+       {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
+    return;
+  }
+  confirmar();
+};
+
+/* ---------------- 5. Deshacer cambio ---------------- */
+window.tcCambioDeshacer=function(id){
+  var fechas=tcCambioFechasDeGrupo(id);
+  if(!fechas.length){ tcToast('⚠️ Cambio no encontrado'); tcCgRenderLista(); return; }
+
+  /* Aviso si algún turno fue editado a mano después de guardar el cambio. */
+  var editados=fechas.filter(function(f){
+    var r=dias[f]||{};
+    return r.cambioTurnoFinal!=null&&(r.turno||'')!==(r.cambioTurnoFinal||'');
+  });
+
+  var ejecutar=function(){
+    fechas.forEach(function(f){
+      var r=dias[f]||{};
+      if(r.cambioTurnoOriginal!=null) r.turno=r.cambioTurnoOriginal||'';
+      tcCambioLimpiarMeta(r);
+      dias[f]=r;
+    });
+    tcCambioPersistir();
+    tcCgVista('cg-lista');
+    tcToast('↩️ Cambio deshecho · turnos restaurados');
+  };
+
+  var detalle=fechas.map(function(f){
+    var r=dias[f]||{};
+    return tcFmtF(f)+': '+tcCambioTurnoLabel(r.turno)+' → '+tcCambioTurnoLabel(r.cambioTurnoOriginal);
+  }).join('\n');
+
+  if(editados.length){
+    tcModalPrompt('Turno modificado después del cambio',
+      'El turno de '+editados.map(tcFmtF).join(' y ')+' se ha editado después de registrar el cambio. Al deshacerlo se sobrescribirá.\n\n'+detalle,
+      [{label:'Sobrescribir y deshacer',className:'btn-danger',onClick:ejecutar},
+       {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
+    return;
+  }
+  tcModalPrompt('Deshacer cambio',
+    'Se restaurarán los turnos originales. No se borrarán hojas de ruta, servicios, notas, jornadas ni ampliaciones.\n\n'+detalle,
+    [{label:'Sí, deshacer',className:'btn-danger',onClick:ejecutar},
+     {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
 };
 
 window.tcOpenImport=function(){tcShowPanel('pnl-import');tcOpenOv();};
@@ -5093,10 +5791,14 @@ window.tcCalConfirm=function(){
     }
   });
   /* Luego guardar los días */
+  var omitidosCambio=0;
   Object.keys(calDataStore).forEach(function(key){
     var turno=calDataStore[key];
     if(!TURNO[turno]){errores++;return;}
     var ex=dias[key]||{};
+    /* DEV-005R1 — Un día que pertenece a un cambio conserva su turno cambiado:
+       la reimportación nunca lo sobrescribe en silencio. */
+    if(ex.cambio){ omitidosCambio++; return; }
     ex.turno=turno; ex.autoTurno=true; dias[key]=ex; n++;
   });
   saveDias();
@@ -5104,6 +5806,7 @@ window.tcCalConfirm=function(){
   calDataStore=null; tcCalReset(); tcClose(); tcRenderCal();
   var msg='✔ '+n+' días guardados';
   if(nuevosCreados.length>0) msg+=' · '+nuevosCreados.length+' turno'+(nuevosCreados.length>1?'s':'')+' nuevo'+(nuevosCreados.length>1?'s':'')+': '+nuevosCreados.join(', ');
+  if(omitidosCambio>0) msg+=' · ⚠️ '+omitidosCambio+' día'+(omitidosCambio>1?'s':'')+' omitido'+(omitidosCambio>1?'s':'')+' por pertenecer a un cambio';
   if(errores>0) msg+=' · ⚠️ '+errores+' sin guardar';
   tcToast(msg);
 };
@@ -5148,10 +5851,18 @@ window.tcBvolver1=function(){document.getElementById('bp2').style.display='none'
 window.tcBvolver2=function(){document.getElementById('bp3').style.display='none';document.getElementById('bp2').style.display='';};
 window.tcBejecutar=function(){
   if(!bChk1||!bChk2||!bDesde||!bHasta)return;
-  var n=0;
-  Object.keys(dias).forEach(function(k){if(k>=bDesde&&k<=bHasta){delete dias[k];n++;}});
+  var n=0,omitidos=0;
+  Object.keys(dias).forEach(function(k){
+    if(k<bDesde||k>bHasta) return;
+    /* DEV-005R1 — Los días vinculados a un cambio se omiten: nunca se borra
+       un vínculo de forma silenciosa. */
+    if(dias[k]&&dias[k].cambio){ omitidos++; return; }
+    delete dias[k]; n++;
+  });
   saveDias(); tcClose(); tcRenderCal();
-  tcToast('🗑️ '+n+' días eliminados');
+  var msg='🗑️ '+n+' días eliminados';
+  if(omitidos>0) msg+=' · ⚠️ '+omitidos+' omitido'+(omitidos>1?'s':'')+' por pertenecer a un cambio';
+  tcToast(msg);
 };
 
 var asgnDesde=null,asgnHasta=null,asgnTurno=null,asgnChk=false;
@@ -5200,14 +5911,19 @@ window.tcAsignarTog=function(){
 window.tcAsignarVolver=function(){document.getElementById('asgn-p2').style.display='none';document.getElementById('asgn-p1').style.display='';};
 window.tcAsignarEjecutar=function(){
   if(!asgnChk||!asgnDesde||!asgnHasta||!asgnTurno)return;
-  var n=0, d=new Date(asgnDesde),fin=new Date(asgnHasta);
+  var n=0, omitidos=0, d=new Date(asgnDesde),fin=new Date(asgnHasta);
   while(d<=fin){
     var key=d.getFullYear()+'-'+tcPad(d.getMonth()+1)+'-'+tcPad(d.getDate());
-    var ex=dias[key]||{}; ex.turno=asgnTurno; ex.autoTurno=false; dias[key]=ex; n++;
+    var ex=dias[key]||{};
+    /* DEV-005R1 — No se sobrescribe el turno de un día que pertenece a un cambio. */
+    if(ex.cambio){ omitidos++; d.setDate(d.getDate()+1); continue; }
+    ex.turno=asgnTurno; ex.autoTurno=false; dias[key]=ex; n++;
     d.setDate(d.getDate()+1);
   }
   saveDias(); tcClose(); tcRenderCal();
-  tcToast('✔ Turno '+asgnTurno+' asignado a '+n+' días');
+  var msgA='✔ Turno '+asgnTurno+' asignado a '+n+' días';
+  if(omitidos>0) msgA+=' · ⚠️ '+omitidos+' omitido'+(omitidos>1?'s':'')+' por pertenecer a un cambio';
+  tcToast(msgA);
 };
 
 function tcFk(y,m,d){return y+'-'+tcPad(m+1)+'-'+tcPad(d);}
