@@ -351,10 +351,10 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 /* OVERLAY TC */
 #tc .tc-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:flex-end;justify-content:center;}
 #tc .tc-ov.open{display:flex;}
-#tc .tc-sh{background:var(--surface);border-radius:var(--r-l) var(--r-l) 0 0;width:100%;max-width:520px;max-height:96vh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;animation:tcSlideUp .25s cubic-bezier(.32,1,.6,1);}
+#tc .tc-sh{background:var(--surface);border-radius:var(--r-l) var(--r-l) 0 0;width:100%;max-width:520px;max-height:96vh;max-height:100dvh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;animation:tcSlideUp .25s cubic-bezier(.32,1,.6,1);padding-bottom:env(safe-area-inset-bottom);}
 @keyframes tcSlideUp{from{transform:translateY(100%);opacity:0;}to{transform:none;opacity:1;}}
 #tc .tc-sh-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 0;}
-#tc .tc-sh-hd{display:flex;align-items:flex-start;justify-content:space-between;padding:13px 16px 11px;border-bottom:1px solid var(--border);}
+#tc .tc-sh-hd{display:flex;align-items:flex-start;justify-content:space-between;padding:13px 16px 11px;padding-top:calc(13px + env(safe-area-inset-top));border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;}
 #tc .tc-sh-title{font-size:18px;font-weight:700;}
 #tc .tc-sh-sub{font-size:12px;color:var(--text2);margin-top:2px;}
 #tc .tc-xbtn{width:30px;height:30px;background:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text2);flex-shrink:0;margin-top:1px;}
@@ -504,8 +504,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-004</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004R7</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección de limpieza de hojas antiguas y validación de fecha al cargar hojas de ruta individuales.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-004R12</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección final de la reversión y validación íntegra de las copias de seguridad.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -898,7 +898,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
         <div id="pnl-edit" style="display:none">
           <div class="tc-sh-hd">
             <div><div class="tc-sh-title" id="ed-title">Editar</div><div class="tc-sh-sub" id="ed-date">&#8212;</div></div>
-            <button class="tc-xbtn" onclick="tcShowPanel('pnl-view')">&#10005;</button>
+            <button class="tc-xbtn" onclick="tcCancelarEdit()">&#10005;</button>
           </div>
           <div class="tc-form">
             <div class="tc-fg"><label class="tc-lbl">Tipo de turno</label><select class="tc-sel" id="ed-turno"></select></div>
@@ -999,7 +999,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
         <div id="pnl-jornada" style="display:none">
           <div class="tc-sh-hd">
             <div><div class="tc-sh-title">&#128337; Jornada</div><div class="tc-sh-sub">Datos te&#243;ricos de la jornada, en dos partes</div></div>
-            <button class="tc-xbtn" onclick="tcShowPanel('pnl-view')">&#10005;</button>
+            <button class="tc-xbtn" onclick="tcVolverVistaDia()">&#10005;</button>
           </div>
           <div class="tc-form">
             <div class="tc-cambio-info">&#8505;&#65039; Estos datos son la base para detectar ampliaciones y preparar la futura n&#243;mina. No se calcula ning&#250;n importe todav&#237;a.</div>
@@ -1036,7 +1036,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
         <div id="pnl-ampliaciones" style="display:none">
           <div class="tc-sh-hd">
             <div><div class="tc-sh-title">&#9201;&#65039; Ampliaciones</div><div class="tc-sh-sub">Gesti&#243;n independiente por parte de la jornada</div></div>
-            <button class="tc-xbtn" onclick="tcShowPanel('pnl-view')">&#10005;</button>
+            <button class="tc-xbtn" onclick="tcVolverVistaDia()">&#10005;</button>
           </div>
           <div class="tc-form">
             <div id="amp-list"></div>
@@ -1276,16 +1276,42 @@ function eliminarRegistro(storeName, id) {
 
 function reemplazarTodos(storeName, registros) {
   return new Promise(function (resolve) {
+    var lista = registros || [];
+    function sincronizarLocalStorage() {
+      // DEV-004R11: se escribe siempre, incluso con lista vacía, para que
+      // un import con 0 registros no deje resucitar los antiguos desde el
+      // espejo de localStorage tras reiniciar la app.
+      try {
+        localStorage.setItem("tussam_" + storeName, JSON.stringify(lista));
+        return true;
+      } catch (e) { return false; }
+    }
     if (db) {
-      var tx = db.transaction(storeName, "readwrite");
-      var store = tx.objectStore(storeName);
-      store.clear();
-      registros.forEach(function (item) { store.put(item); });
-      tx.oncomplete = function () { resolve(true); };
+      var tx;
+      try {
+        tx = db.transaction(storeName, "readwrite");
+      } catch (err) {
+        // Fallo al crear la transacción (p.ej. base de datos cerrándose):
+        // la promesa nunca debe quedar rechazada sin control.
+        resolve(false);
+        return;
+      }
+      try {
+        var store = tx.objectStore(storeName);
+        store.clear();
+        lista.forEach(function (item) { store.put(item); });
+      } catch (err) {
+        resolve(false);
+        return;
+      }
+      tx.oncomplete = function () {
+        // No se declara éxito hasta completar también el espejo en localStorage.
+        resolve(sincronizarLocalStorage());
+      };
       tx.onerror = function () { resolve(false); };
+      tx.onabort = function () { resolve(false); };
     } else {
-      localStorage.setItem("tussam_" + storeName, JSON.stringify(registros));
-      resolve(true);
+      resolve(sincronizarLocalStorage());
     }
   });
 }
@@ -2046,19 +2072,85 @@ function inicializarHistorial() {
   document.getElementById("ordenHistorial").addEventListener("change", renderizarHistorial);
 }
 
+/* Cuenta días/hojas de ruta/jornadas dentro de un mapa de días del Calendario
+   Conductor (formato dias[] de toda la vida). Se usa tanto al exportar
+   (metadatos reales del bloque que se va a guardar) como al importar (resumen
+   de lo que realmente se ha restaurado), nunca valores inventados. */
+function tcContarCalendarioConductor(mapaDias) {
+  var total = 0, hojas = 0, jornadas = 0;
+  if (mapaDias && typeof mapaDias === "object") {
+    Object.keys(mapaDias).forEach(function (k) {
+      var d = mapaDias[k]; if (!d) return;
+      total++;
+      if (d.imgData) hojas++;
+      if (d.jornada) jornadas++;
+    });
+  }
+  return { total: total, hojas: hojas, jornadas: jornadas };
+}
 function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
-  var calendarioConductor = {};
+  var calendarioConductor = null;
   try {
     if (typeof window.tcExportarDatosCalendarioConductor === "function") {
-      calendarioConductor = window.tcExportarDatosCalendarioConductor() || {};
+      calendarioConductor = window.tcExportarDatosCalendarioConductor();
     }
-  } catch (e) { calendarioConductor = {}; }
-  var datos = { version: 2, fechaExportacion: new Date().toISOString(), recaudaciones: listaRecaudaciones, liquidaciones: listaLiquidaciones, calendarioConductor: calendarioConductor, calendarioConductorIncluido: true };
-  var blob = new Blob([JSON.stringify(datos, null, 2)], { type: "application/json" });
+  } catch (e) { calendarioConductor = null; }
+  // DEV-004R10: solo se declara incluido si el bloque es un objeto real,
+  // con su mapa de días, y verificable (round-trip JSON sin excepción).
+  // Nunca se marca "incluido" por defecto: si algo falla, se exporta un
+  // bloque vacío y se marca honestamente como no incluido.
+  // DEV-004R12: además de "dias", se exige que turnos/datosCalendarioTurnos/
+  // datosCalendarioTurnosMeta estén presentes como objetos (el exportador ya
+  // los incluye siempre, o devuelve null si alguno está dañado): una copia
+  // completa trae los cuatro bloques, aunque estén vacíos.
+  var calendarioVerificado = false;
+  var calendarioParaGuardar = { schema: 1, dias: {}, turnos: {}, datosCalendarioTurnos: {}, datosCalendarioTurnosMeta: {} };
+  if (calendarioConductor && typeof calendarioConductor === "object" && !Array.isArray(calendarioConductor)
+      && calendarioConductor.schema === 1
+      && calendarioConductor.dias && typeof calendarioConductor.dias === "object" && !Array.isArray(calendarioConductor.dias)
+      && calendarioConductor.turnos && typeof calendarioConductor.turnos === "object" && !Array.isArray(calendarioConductor.turnos)
+      && calendarioConductor.datosCalendarioTurnos && typeof calendarioConductor.datosCalendarioTurnos === "object" && !Array.isArray(calendarioConductor.datosCalendarioTurnos)
+      && calendarioConductor.datosCalendarioTurnosMeta && typeof calendarioConductor.datosCalendarioTurnosMeta === "object" && !Array.isArray(calendarioConductor.datosCalendarioTurnosMeta)) {
+    try {
+      calendarioParaGuardar = JSON.parse(JSON.stringify(calendarioConductor));
+      calendarioVerificado = true;
+    } catch (e) { calendarioVerificado = false; calendarioParaGuardar = { schema: 1, dias: {}, turnos: {}, datosCalendarioTurnos: {}, datosCalendarioTurnosMeta: {} }; }
+  }
+  var conteo = tcContarCalendarioConductor(calendarioVerificado ? calendarioParaGuardar.dias : null);
+  var datos = {
+    version: 2,
+    fechaExportacion: new Date().toISOString(),
+    recaudaciones: listaRecaudaciones,
+    liquidaciones: listaLiquidaciones,
+    calendarioConductor: calendarioParaGuardar,
+    calendarioConductorIncluido: calendarioVerificado,
+    calendarioConductorMeta: { totalDias: conteo.total, hojasRuta: conteo.hojas, jornadas: conteo.jornadas, fechaExportacion: new Date().toISOString() }
+  };
+  // DEV-004R11: exportarDatosArchivo() solo devuelve true cuando el JSON se
+  // ha construido de verdad Y el calendario ha quedado verificado. Si el
+  // propio JSON.stringify fallara (datos no serializables), no hay copia
+  // real que descargar: se aborta sin declarar éxito.
+  var json;
+  try {
+    json = JSON.stringify(datos, null, 2);
+  } catch (e) {
+    if (mostrarAviso) mostrarToast("No se pudo generar la copia: los datos no son serializables.", "error");
+    return false;
+  }
+  var blob = new Blob([json], { type: "application/json" });
   var url = URL.createObjectURL(blob);
   var enlace = document.createElement("a"); enlace.href = url; enlace.download = nombreArchivo;
   document.body.appendChild(enlace); enlace.click(); document.body.removeChild(enlace); URL.revokeObjectURL(url);
-  if (mostrarAviso) mostrarToast("Copia exportada correctamente", "success");
+  var exportacionCompleta = calendarioVerificado;
+  if (mostrarAviso) {
+    mostrarToast(
+      exportacionCompleta
+        ? ("Copia exportada: " + conteo.total + " días de calendario y " + conteo.hojas + " hojas de ruta.")
+        : "Copia exportada, pero el Calendario Conductor no se pudo verificar y se ha marcado como no incluido.",
+      exportacionCompleta ? "success" : "error"
+    );
+  }
+  return exportacionCompleta;
 }
 function exportarDatos() { exportarDatosArchivo("BackupTUSSAM_" + fechaHoyISO() + ".json", true); }
 function importarDatos(archivo) {
@@ -2071,23 +2163,53 @@ function importarDatos(archivo) {
       if (!datos || typeof datos !== "object" || !Array.isArray(datos.recaudaciones) || !Array.isArray(datos.liquidaciones)) {
         mostrarToast("Formato incorrecto.", "error"); return;
       }
-      // Compatible con backups anteriores a DEV-004R1 que no incluyen este bloque.
-      var bloqueDias = datos.calendarioConductor || datos.diasCalendario;
-      var esObjetoDias = bloqueDias && typeof bloqueDias === "object" && !Array.isArray(bloqueDias);
+      // DEV-004R12: si el backup se declara a sí mismo como "calendario
+      // incluido", tiene que existir de verdad y ser válido (schema:1 con
+      // dias como objeto); si falta o está mal formado, se rechaza TODO el
+      // backup aquí mismo, antes de tocar nada. Backups antiguos que ni
+      // siquiera tienen la propiedad calendarioConductorIncluido no entran
+      // en este bloque y siguen su compatibilidad de siempre más abajo.
+      if (datos.calendarioConductorIncluido === true) {
+        var cc = datos.calendarioConductor;
+        var calendarioIncluidoValido = cc && typeof cc === "object" && !Array.isArray(cc)
+          && cc.schema === 1 && cc.dias && typeof cc.dias === "object" && !Array.isArray(cc.dias);
+        if (!calendarioIncluidoValido) {
+          mostrarToast("El backup indica un Calendario Conductor incluido pero no es válido. No se ha importado nada.", "error");
+          return;
+        }
+      }
+      // Compatible con backups anteriores a DEV-004R1 (sin bloque de calendario)
+      // y con backups anteriores a DEV-004R10 (calendarioConductor era
+      // directamente el mapa de días, sin schema/turnos/datosCalendarioTurnos).
+      // DEV-004R11: se distingue "declara ser el esquema nuevo" (tiene la
+      // propiedad "schema") de "es válido como esquema nuevo". Un bloque que
+      // se declara nuevo pero está mal formado NUNCA se reinterpreta como un
+      // mapa antiguo de días: se fuerza a pasar por la restauración real
+      // (tcImportarDatosCalendarioConductor), que lo rechaza con un error
+      // claro y no toca nada.
+      var bloqueCrudo = datos.calendarioConductor || datos.diasCalendario;
+      var declaraEsquemaNuevo = !!(bloqueCrudo && typeof bloqueCrudo === "object" && !Array.isArray(bloqueCrudo)
+        && Object.prototype.hasOwnProperty.call(bloqueCrudo, "schema"));
+      var esNuevoEsquemaValido = declaraEsquemaNuevo && bloqueCrudo.schema === 1
+        && bloqueCrudo.dias && typeof bloqueCrudo.dias === "object" && !Array.isArray(bloqueCrudo.dias);
+      var bloqueDias = declaraEsquemaNuevo ? (esNuevoEsquemaValido ? bloqueCrudo.dias : null) : bloqueCrudo;
+      var esObjetoDias = declaraEsquemaNuevo ? esNuevoEsquemaValido : (bloqueDias && typeof bloqueDias === "object" && !Array.isArray(bloqueDias));
       var marcaCalendarioIncluido = datos.calendarioConductorIncluido === true;
       var esVacio = esObjetoDias && Object.keys(bloqueDias).length === 0;
-      var avisoBackupAntiguoVacio = false;
+      var avisoBackupVacio = false;
       var calendarioSolicitado;
-      if (!esObjetoDias) {
+      if (declaraEsquemaNuevo && !esNuevoEsquemaValido) {
+        calendarioSolicitado = true; // bloque mal formado: se rechaza en la restauración real, no en silencio
+      } else if (!esObjetoDias) {
         calendarioSolicitado = false; // backup muy antiguo, sin bloque de calendario: comportamiento previo
       } else if (marcaCalendarioIncluido) {
-        calendarioSolicitado = true; // backup nuevo: se restaura aunque esté vacío
+        calendarioSolicitado = true; // backup verificado al exportar: se restaura aunque esté vacío
       } else if (esVacio) {
-        // Backup antiguo sin marca y con calendario vacío: no es fiable, no se borra el actual.
+        // Sin marca de verificado y con calendario vacío: no es fiable, no se borra el actual.
         calendarioSolicitado = false;
-        avisoBackupAntiguoVacio = true;
+        avisoBackupVacio = true;
       } else {
-        calendarioSolicitado = true; // backup antiguo con datos reales de calendario
+        calendarioSolicitado = true; // backup antiguo (pre-R10) con datos reales de calendario
       }
       // Aseguramos que cada registro tenga un id válido antes de guardar en IndexedDB
       // (un registro sin id provoca un fallo silencioso al escribir en la base de datos).
@@ -2106,12 +2228,15 @@ function importarDatos(archivo) {
         }
       }
 
-      // 1) El calendario se restaura primero. Si falla, no se toca recaudaciones/liquidaciones.
+      // 1) El calendario se restaura primero (días, turnos y datos de eventos si
+      //    el backup los trae). Se le pasa el bloque original (bloqueCrudo): la
+      //    función bridge distingue por sí sola el esquema nuevo del antiguo.
+      //    Si falla, no se toca recaudaciones/liquidaciones.
       if (calendarioSolicitado) {
         var calendarioRestaurado = false;
         try {
           if (typeof window.tcImportarDatosCalendarioConductor === "function") {
-            calendarioRestaurado = window.tcImportarDatosCalendarioConductor(bloqueDias) === true;
+            calendarioRestaurado = window.tcImportarDatosCalendarioConductor(bloqueCrudo) === true;
           }
         } catch (e) { calendarioRestaurado = false; }
         if (!calendarioRestaurado) {
@@ -2127,9 +2252,14 @@ function importarDatos(archivo) {
           listaRecaudaciones = datos.recaudaciones; listaLiquidaciones = datos.liquidaciones;
           actualizarResumen();
           renderizarRecaudaciones(); renderizarLiquidaciones();
-          mostrarToast(avisoBackupAntiguoVacio
-            ? "Datos importados correctamente. Este backup antiguo no incluye datos verificables del Calendario Conductor."
-            : "Datos importados correctamente", "success");
+          if (avisoBackupVacio) {
+            mostrarToast("Datos importados correctamente. Este backup no incluye datos verificables del Calendario Conductor.", "success");
+          } else {
+            var conteo = calendarioSolicitado ? tcContarCalendarioConductor(bloqueDias) : { total: 0, hojas: 0, jornadas: 0 };
+            var resumen = "Recaudaciones: " + datos.recaudaciones.length + " · Liquidaciones: " + datos.liquidaciones.length
+              + (calendarioSolicitado ? (" · Calendario: " + conteo.total + " días, " + conteo.hojas + " hojas, " + conteo.jornadas + " jornadas") : "");
+            mostrarToast("Datos importados correctamente. " + resumen, "success");
+          }
           return;
         }
         // Fallo real de IndexedDB en alguna de las dos restauraciones: no se declara éxito.
@@ -2162,13 +2292,17 @@ var BACKUP_AUTO_NOMBRE = "BackupTUSSAM_automatico.json";
 function comprobarBackupAutomatico() {
   var hoy = fechaHoyISO(), ultimoBackup = localStorage.getItem(BACKUP_AUTO_KEY);
   if (ultimoBackup === hoy) return;
-  exportarDatosArchivo(BACKUP_AUTO_NOMBRE, false);
-  localStorage.setItem(BACKUP_AUTO_KEY, hoy);
-  try{
-    var horaActual=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-    localStorage.setItem('tussam_ultimo_backup_auto_hora', horaActual);
-  }catch(e){}
-  mostrarToast("Copia de seguridad automática descargada", "success");
+  var copiaCompleta = exportarDatosArchivo(BACKUP_AUTO_NOMBRE, false);
+  if (copiaCompleta === true) {
+    localStorage.setItem(BACKUP_AUTO_KEY, hoy);
+    try{
+      var horaActual=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      localStorage.setItem('tussam_ultimo_backup_auto_hora', horaActual);
+    }catch(e){}
+    mostrarToast("Copia automática descargada", "success");
+  } else {
+    mostrarToast("No se pudo generar una copia completa. No se ha registrado como realizada.", "error");
+  }
   mostrarEstadoBackupAuto();
 }
 function mostrarEstadoBackupAuto() {
@@ -2554,6 +2688,11 @@ var pdfPages=[];
 var pdfImportSemanalFile=null;
 var calDataStore=null;
 var cambioImg=null;
+/* DEV-004R9: hoja de ruta individual pendiente de confirmar turno/servicio.
+   Mientras no sea null, NO se ha tocado dias[] con esta hoja: solo se
+   escribe en dias[] al pulsar "Guardar cambios" en el editor; si el editor
+   se cierra o cancela, esta variable se descarta y nada se guarda. */
+var tcHojaPendiente=null;
 var bDesde=null,bHasta=null,bChk1=false,bChk2=false;
 
 function loadTurnos(){
@@ -2571,8 +2710,8 @@ function loadTurnos(){
   });
 }
 function saveTurnos(){
-  try{localStorage.setItem(STORE_TURNOS,JSON.stringify(TURNO));}
-  catch(e){tcToast('⚠️ Error guardando configuración');}
+  try{localStorage.setItem(STORE_TURNOS,JSON.stringify(TURNO)); return true;}
+  catch(e){tcToast('⚠️ Error guardando configuración'); return false;}
 }
 function loadDias(){try{dias=JSON.parse(localStorage.getItem(STORE)||'{}');}catch(e){dias={};}}
 function saveDias(){
@@ -2582,30 +2721,186 @@ function saveDias(){
 
 /* Puentes públicos y controlados para las copias de seguridad generales.
    El código exterior (backup/restauración) nunca debe leer ni escribir
-   directamente "dias"/"STORE": pasa siempre por aquí. */
+   directamente "dias"/"STORE"/"TURNO"/"STORE_TURNOS"/"STORE_EVENTOS": pasa
+   siempre por aquí.
+   DEV-004R10: el bloque exportado pasa a tener una estructura explícita
+   {schema:1, dias, turnos, datosCalendarioTurnos}, auditando TODOS los datos
+   persistentes del módulo (días con turno/hoja de ruta/miniatura/jornada/
+   ampliaciones/cambios/notas/incidencias, configuración de tipos de turno, y
+   el calendario de eventos importado si existe como almacenamiento
+   independiente).
+   DEV-004R11: se añade también "datosCalendarioTurnosMeta", copia de la
+   clave 'tc_v1_eventos_meta' (metadatos del panel de administración de
+   recursos oficiales). Esa clave vive como variable local del bloque de
+   administración, por eso aquí se referencia como cadena literal en vez de
+   una constante compartida.
+   DEV-004R12: "turnos", "datosCalendarioTurnos" y "datosCalendarioTurnosMeta"
+   pasan a incluirse SIEMPRE como objeto (si no existen datos reales, {}): un
+   backup completo debe traer los tres bloques aunque estén vacíos, para que
+   una restauración pueda distinguir "estaba vacío de verdad" de "no venía en
+   este backup" (ver tcImportarDatosCalendarioConductor). Si alguno de los
+   tres SÍ existe pero no se puede analizar o serializar, ya no se omite en
+   silencio: se considera el bloque entero dañado y se devuelve null (nunca
+   un objeto a medias disfrazado de éxito). */
 window.tcExportarDatosCalendarioConductor=function(){
-  try{ return JSON.parse(JSON.stringify(dias)); }
-  catch(e){ return {}; }
-};
-window.tcImportarDatosCalendarioConductor=function(datos){
-  if(!datos||typeof datos!=='object'||Array.isArray(datos)) return false;
-  var copiaAnterior;
-  try{ copiaAnterior=JSON.parse(JSON.stringify(dias)); }catch(e){ copiaAnterior=dias; }
   try{
-    var copiaNueva=JSON.parse(JSON.stringify(datos));
-    dias=copiaNueva;
-    if(!saveDias()){
-      /* El guardado ha fallado (p.ej. almacenamiento lleno): se restaura la
-         copia anterior y no se renderizan los datos nuevos. */
-      dias=copiaAnterior;
-      saveDias();
-      return false;
+    var bloque={ schema:1, dias:JSON.parse(JSON.stringify(dias)) };
+
+    if(TURNO&&typeof TURNO==='object'&&!Array.isArray(TURNO)&&Object.keys(TURNO).length>0){
+      bloque.turnos=JSON.parse(JSON.stringify(TURNO)); /* si esto lanza, cae al catch exterior: bloque dañado -> null */
+    } else {
+      bloque.turnos={};
     }
-    if(typeof tcRenderCal==='function') tcRenderCal();
-    if(activeDate&&dias[activeDate]&&typeof tcRenderView==='function') tcRenderView(activeDate,dias[activeDate]);
-    else if(activeDate&&!dias[activeDate]&&typeof tcClose==='function'){ tcClose(); }
-    return true;
-  }catch(e){ dias=copiaAnterior; return false; }
+
+    var eventosRaw=(typeof STORE_EVENTOS!=='undefined')?localStorage.getItem(STORE_EVENTOS):null;
+    if(eventosRaw!=null){
+      var eventosCopia=JSON.parse(eventosRaw);
+      if(!eventosCopia||typeof eventosCopia!=='object'||Array.isArray(eventosCopia)) return null;
+      bloque.datosCalendarioTurnos=eventosCopia;
+    } else {
+      bloque.datosCalendarioTurnos={};
+    }
+
+    var eventosMetaRaw=localStorage.getItem('tc_v1_eventos_meta');
+    if(eventosMetaRaw!=null){
+      var eventosMetaCopia=JSON.parse(eventosMetaRaw);
+      if(!eventosMetaCopia||typeof eventosMetaCopia!=='object'||Array.isArray(eventosMetaCopia)) return null;
+      bloque.datosCalendarioTurnosMeta=eventosMetaCopia;
+    } else {
+      bloque.datosCalendarioTurnosMeta={};
+    }
+
+    /* Verificación final: todo el bloque debe poder serializarse de verdad. */
+    JSON.parse(JSON.stringify(bloque));
+    return bloque;
+  }catch(e){ return null; }
+};
+
+/* DEV-004R10: restaura dias/turnos/datosCalendarioTurnos de forma atómica:
+   si cualquiera de los bloques solicitados (presentes en el backup) falla al
+   guardarse, se revierte todo y no se declara éxito. Compatible con backups
+   antiguos, donde el bloque es directamente el mapa de días (sin schema).
+   DEV-004R11: además de datosCalendarioTurnosMeta (misma lógica atómica que
+   el resto), se añade una validación estricta de esquema ANTES de tocar
+   nada: si el bloque declara "schema", tiene que ser exactamente 1 y traer
+   "dias" como objeto, y turnos/datosCalendarioTurnos/su meta (si aparecen)
+   tienen que ser objetos válidos; si no, se rechaza el bloque entero. Un
+   bloque que se anuncia como "nuevo" pero está mal formado NUNCA se
+   reinterpreta como si fuera un mapa antiguo de días.
+   DEV-004R12: la reversión de datosCalendarioTurnos/su meta pasa a ser real.
+   Antes de tocar nada se guarda no solo el contenido previo, sino si la
+   clave EXISTÍA o no, y el valor previo de EVENTOS en memoria. Al revertir:
+   si existía, se restaura su valor; si NO existía, se hace removeItem() en
+   vez de dejar la clave nueva puesta; EVENTOS en memoria también se
+   restaura. saveDias()/saveTurnos() se comprueban también durante la
+   reversión: si algo de la reversión falla, se avisa con un error
+   específico y en ningún caso se declara éxito (la función ya devuelve
+   false en todos los caminos que llaman a revertirTodo()).
+   Por último: un backup nuevo que incluya datosCalendarioTurnos/su meta como
+   {} SÍ debe limpiar los datos actuales (se aplica igual que cualquier otro
+   valor real); si esos campos no aparecen en absoluto (backups anteriores a
+   R12), se conservan tal cual por compatibilidad. */
+window.tcImportarDatosCalendarioConductor=function(bloque){
+  if(!bloque||typeof bloque!=='object'||Array.isArray(bloque)) return false;
+
+  var declaraEsquemaNuevo=Object.prototype.hasOwnProperty.call(bloque,'schema');
+  if(declaraEsquemaNuevo){
+    if(bloque.schema!==1) return false;
+    if(!bloque.dias||typeof bloque.dias!=='object'||Array.isArray(bloque.dias)) return false;
+    if(bloque.turnos!==undefined&&(!bloque.turnos||typeof bloque.turnos!=='object'||Array.isArray(bloque.turnos))) return false;
+    if(bloque.datosCalendarioTurnos!==undefined&&(!bloque.datosCalendarioTurnos||typeof bloque.datosCalendarioTurnos!=='object'||Array.isArray(bloque.datosCalendarioTurnos))) return false;
+    if(bloque.datosCalendarioTurnosMeta!==undefined&&(!bloque.datosCalendarioTurnosMeta||typeof bloque.datosCalendarioTurnosMeta!=='object'||Array.isArray(bloque.datosCalendarioTurnosMeta))) return false;
+  }
+  var esNuevoEsquema=declaraEsquemaNuevo; /* ya validado arriba si es true */
+  var nuevosDias=esNuevoEsquema?bloque.dias:bloque;
+  if(!nuevosDias||typeof nuevosDias!=='object'||Array.isArray(nuevosDias)) return false;
+  /* !==undefined (no truthy simple) para que un bloque explícitamente {} SÍ
+     se aplique (limpia lo actual) y solo la AUSENCIA del campo lo deje intacto. */
+  var nuevosTurnos=(esNuevoEsquema&&bloque.turnos!==undefined)?bloque.turnos:null;
+  var nuevosEventos=(esNuevoEsquema&&bloque.datosCalendarioTurnos!==undefined)?bloque.datosCalendarioTurnos:null;
+  var nuevosEventosMeta=(esNuevoEsquema&&bloque.datosCalendarioTurnosMeta!==undefined)?bloque.datosCalendarioTurnosMeta:null;
+
+  var copiaDias,copiaTurnos,copiaEventos,copiaEventosMeta;
+  try{
+    copiaDias=JSON.parse(JSON.stringify(nuevosDias));
+    copiaTurnos=nuevosTurnos?JSON.parse(JSON.stringify(nuevosTurnos)):null;
+    copiaEventos=nuevosEventos?JSON.parse(JSON.stringify(nuevosEventos)):null;
+    copiaEventosMeta=nuevosEventosMeta?JSON.parse(JSON.stringify(nuevosEventosMeta)):null;
+  }catch(e){ return false; }
+
+  var diasAnteriores,turnoAnterior;
+  try{ diasAnteriores=JSON.parse(JSON.stringify(dias)); }catch(e){ diasAnteriores=dias; }
+  try{ turnoAnterior=JSON.parse(JSON.stringify(TURNO)); }catch(e){ turnoAnterior=TURNO; }
+
+  var eventosExistiaAntes=false, eventosAnteriorRaw=null, eventosEnMemoriaAnterior;
+  try{
+    if(typeof STORE_EVENTOS!=='undefined'){
+      eventosAnteriorRaw=localStorage.getItem(STORE_EVENTOS);
+      eventosExistiaAntes=(eventosAnteriorRaw!=null);
+    }
+  }catch(e){ eventosExistiaAntes=false; eventosAnteriorRaw=null; }
+  try{ eventosEnMemoriaAnterior=(typeof EVENTOS!=='undefined')?JSON.parse(JSON.stringify(EVENTOS)):undefined; }
+  catch(e){ eventosEnMemoriaAnterior=(typeof EVENTOS!=='undefined')?EVENTOS:undefined; }
+
+  var eventosMetaExistiaAntes=false, eventosMetaAnteriorRaw=null;
+  try{
+    eventosMetaAnteriorRaw=localStorage.getItem('tc_v1_eventos_meta');
+    eventosMetaExistiaAntes=(eventosMetaAnteriorRaw!=null);
+  }catch(e){ eventosMetaExistiaAntes=false; eventosMetaAnteriorRaw=null; }
+
+  function revertirTodo(){
+    var fallo=false;
+    dias=diasAnteriores;
+    if(!saveDias()) fallo=true;
+    TURNO=turnoAnterior;
+    if(!saveTurnos()) fallo=true;
+    try{
+      if(typeof STORE_EVENTOS!=='undefined'){
+        if(eventosExistiaAntes) localStorage.setItem(STORE_EVENTOS,eventosAnteriorRaw);
+        else localStorage.removeItem(STORE_EVENTOS);
+      }
+    }catch(e){ fallo=true; }
+    if(typeof EVENTOS!=='undefined') EVENTOS=eventosEnMemoriaAnterior;
+    try{
+      if(eventosMetaExistiaAntes) localStorage.setItem('tc_v1_eventos_meta',eventosMetaAnteriorRaw);
+      else localStorage.removeItem('tc_v1_eventos_meta');
+    }catch(e){ fallo=true; }
+    if(fallo&&typeof tcToast==='function'){
+      tcToast('⚠️ Error al revertir la restauración del Calendario Conductor: los datos podrían haber quedado inconsistentes.');
+    }
+  }
+
+  dias=copiaDias;
+  if(!saveDias()){
+    /* El guardado ha fallado (p.ej. almacenamiento lleno): se restaura la
+       copia anterior y no se renderizan los datos nuevos. */
+    dias=diasAnteriores;
+    if(!saveDias()&&typeof tcToast==='function'){
+      tcToast('⚠️ Error al revertir la restauración del Calendario Conductor: los datos podrían haber quedado inconsistentes.');
+    }
+    return false;
+  }
+  if(copiaTurnos){
+    TURNO=copiaTurnos;
+    if(!saveTurnos()){ revertirTodo(); return false; }
+  }
+  if(copiaEventos){
+    try{
+      if(typeof STORE_EVENTOS!=='undefined'){ localStorage.setItem(STORE_EVENTOS,JSON.stringify(copiaEventos)); }
+      if(typeof EVENTOS!=='undefined'){ EVENTOS=copiaEventos; }
+    }catch(e){ revertirTodo(); return false; }
+  }
+  if(copiaEventosMeta){
+    try{
+      localStorage.setItem('tc_v1_eventos_meta',JSON.stringify(copiaEventosMeta));
+    }catch(e){ revertirTodo(); return false; }
+  }
+  if(typeof tcRenderCal==='function') tcRenderCal();
+  if(typeof tcRenderLeyenda==='function') tcRenderLeyenda();
+  if(typeof tcBuildTurnoSelects==='function') tcBuildTurnoSelects();
+  if(activeDate&&dias[activeDate]&&typeof tcRenderView==='function') tcRenderView(activeDate,dias[activeDate]);
+  else if(activeDate&&!dias[activeDate]&&typeof tcClose==='function'){ tcClose(); }
+  return true;
 };
 
 /* Limpieza dirigida del turno ficticio "M" creado como efecto colateral del bug
@@ -3020,13 +3315,30 @@ function tcAdjustHex(hex,amount){
 function tcPad2(s){return s.length<2?'0'+s:s;}
 
 function tcOpenOv(){document.getElementById('tc-ov').classList.add('open');}
-window.tcClose=function(){document.getElementById('tc-ov').classList.remove('open');activeDate=null;};
+window.tcClose=function(){tcDescartarHojaPendiente();document.getElementById('tc-ov').classList.remove('open');activeDate=null;};
 window.tcCloseOnBg=function(e){if(e.target===document.getElementById('tc-ov'))tcClose();};
 window.showPanel=function(id){
   var panels=['pnl-view','pnl-edit','pnl-cambio','pnl-import','pnl-cal','pnl-borrar','pnl-ajustes','pnl-edit-turno','pnl-asignar','pnl-eventos','pnl-jornada','pnl-ampliaciones'];
   panels.forEach(function(x){document.getElementById(x).style.display=(x===id)?'':'none';});
 };
 function tcShowPanel(id){window.showPanel(id);}
+
+/* DEV-004R8: vuelve siempre a la ficha del día (pnl-view) y desplaza el panel
+   (contenedor compartido .tc-sh) al inicio, para que la cabecera y el botón X
+   queden visibles aunque se venga de un panel largo (Jornada, Ampliaciones). */
+function tcVolverVistaDia(){
+  tcShowPanel('pnl-view');
+  var sh=document.querySelector('#tc-ov .tc-sh');
+  if(sh) sh.scrollTop=0;
+}
+
+/* DEV-004R9: al cerrar el editor de turno/servicio sin pulsar "Guardar
+   cambios" (botón X), se descarta la hoja pendiente si la había: no se
+   modifica imagen, servicio, turno ni jornada. */
+function tcCancelarEdit(){
+  tcDescartarHojaPendiente();
+  tcVolverVistaDia();
+}
 
 function tcOpenDay(key,reg){
   activeDate=key; tcRenderView(key,reg||{}); tcShowPanel('pnl-view'); tcOpenOv();
@@ -3130,13 +3442,18 @@ function tcJornadaCardHtml(reg){
   return html;
 }
 
-window.tcToEdit=function(){
+/* servicioOverride (opcional, DEV-004R8): precarga el campo Servicio con un
+   valor propuesto (p.ej. detectado en una hoja de ruta) en vez del ya
+   guardado, sin tocar dias[] hasta que el usuario pulse "Guardar cambios".
+   El turno siempre se precarga con el ya asignado al día: el usuario lo
+   cambia manualmente si lo desea, nunca se adivina. */
+window.tcToEdit=function(servicioOverride){
   var reg=dias[activeDate]||{};
   var kp=activeDate.split('-');
   document.getElementById('ed-title').textContent='Editar · '+parseInt(kp[2],10)+' '+MESES[parseInt(kp[1],10)-1];
   document.getElementById('ed-date').textContent=activeDate;
   document.getElementById('ed-turno').value=reg.turno||'';
-  document.getElementById('ed-servicio').value=reg.servicio||'';
+  document.getElementById('ed-servicio').value=(servicioOverride!=null?servicioOverride:(reg.servicio||''));
   document.getElementById('ed-incidencia').value=reg.incidencia||'';
   document.getElementById('ed-notas').value=reg.notas||'';
   tcShowPanel('pnl-edit');
@@ -3149,9 +3466,22 @@ window.tcSaveEdit=function(){
   reg.notas=document.getElementById('ed-notas').value.trim();
   reg.autoTurno=false;
   if(reg.jornada) reg.jornada.servicio=reg.servicio||'';
-  dias[activeDate]=reg; saveDias(); tcRenderCal(); tcRenderView(activeDate,reg); tcShowPanel('pnl-view');
+  dias[activeDate]=reg; saveDias();
+  /* DEV-004R9: si había una hoja individual pendiente de "Revisar/cambiar
+     turno", este es el único momento en que se guarda de verdad: turno y
+     servicio ya han quedado guardados arriba; ahora se guarda la hoja nueva
+     y se aplica la opción de datos teóricos elegida, con una sola
+     confirmación final (la que muestra tcDiaHojaGuardarEn). */
+  var pend=(tcHojaPendiente&&tcHojaPendiente.fecha===activeDate)?tcHojaPendiente:null;
+  tcHojaPendiente=null;
+  if(pend){
+    tcDiaHojaGuardarEn(activeDate,pend.imgData,pend.thumbData,pend.texto,pend.opcionDatos);
+    tcVolverVistaDia();
+  } else {
+    tcRenderCal(); tcRenderView(activeDate,reg); tcVolverVistaDia();
+    tcToast('✔ Cambios guardados');
+  }
   if(typeof tcJornadaSincronizarDesdeRecaudaciones==='function') tcJornadaSincronizarDesdeRecaudaciones(activeDate,reg.servicio);
-  tcToast('✔ Cambios guardados');
 };
 window.tcDeleteDay=function(){
   var btn=document.getElementById('tc-btn-borrar-dia');
@@ -3379,20 +3709,38 @@ window.tcPdfPick=function(inputId,handler){
 /* Guarda una hoja de ruta ya procesada (imagen+miniatura+texto) en una fecha
    concreta: comportamiento idéntico al que tenía tcDiaHojaPdf antes de
    incorporar la validación de fecha (imagen, miniatura, extracción de
-   jornada, fusión segura, renderizado y toast). */
-function tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto){
+   jornada, fusión segura, renderizado y toast).
+   opcionDatos (opcional, DEV-004R9): se reenvía tal cual a
+   tcJornadaFusionarExtraccion; ver esa función para su significado. Esta es
+   también la única función que guarda de verdad en dias[] y la única que
+   muestra el toast final de "hoja reemplazada/añadida": se llama siempre al
+   final de cualquier camino (directo, aplicar-servicio o guardado
+   transaccional desde el editor), nunca antes de tener todo decidido. */
+function tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto,opcionDatos){
   var habiaHoja=!!(dias[fecha]&&dias[fecha].imgData);
   var reg=dias[fecha]||{};
   reg.imgData=imgData; reg.thumbData=thumbData;
   var revisionPrevia=!!(reg.jornada&&reg.jornada.requiereRevision);
   var jornadaExtraida=tcExtraerJornadaHojaRuta(texto,reg);
-  tcJornadaFusionarExtraccion(reg,fecha,jornadaExtraida);
+  tcJornadaFusionarExtraccion(reg,fecha,jornadaExtraida,opcionDatos);
   dias[fecha]=reg;
   saveDias(); tcRenderCal();
   if(activeDate===fecha) tcRenderView(fecha,reg);
   document.getElementById('dia-hoja-file').value='';
   var avisoRevision=reg.jornada&&reg.jornada.requiereRevision&&!revisionPrevia;
   tcToast((habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida')+(avisoRevision?' · ⚠️ Revisa la jornada: hay datos manuales distintos de los detectados':''));
+}
+
+/* Descarta la hoja individual pendiente de confirmación (DEV-004R9), si la
+   había, sin tocar imagen, servicio, turno ni jornada del día. Se llama al
+   cancelar/cerrar el editor de turno/servicio sin pulsar "Guardar cambios",
+   y también al cerrar el calendario por cualquier otra vía. */
+function tcDescartarHojaPendiente(){
+  if(tcHojaPendiente){
+    tcHojaPendiente=null;
+    var inp=document.getElementById('dia-hoja-file');
+    if(inp) inp.value='';
+  }
 }
 
 /* Añade o reemplaza la hoja de ruta del día abierto, conservando el resto de datos.
@@ -3410,7 +3758,7 @@ window.tcDiaHojaPdf=function(input){
         'La hoja corresponde a '+tcFmtF(fechaDetectada)+'.\nEstás intentando añadirla al día '+tcFmtF(diaAbierto)+'.',
         [
           {label:'Cancelar',className:'btn-secondary',onClick:function(){ document.getElementById('dia-hoja-file').value=''; }},
-          {label:'Guardar en la fecha detectada',className:'btn-primary',onClick:function(){ tcDiaHojaGuardarEn(fechaDetectada,imgData,thumbData,texto); }}
+          {label:'Guardar en la fecha detectada',className:'btn-primary',onClick:function(){ tcDiaHojaConfirmarYGuardar(fechaDetectada,imgData,thumbData,texto); }}
         ]
       );
       return;
@@ -3421,14 +3769,87 @@ window.tcDiaHojaPdf=function(input){
         'No se ha podido comprobar la fecha de esta hoja.',
         [
           {label:'Cancelar',className:'btn-secondary',onClick:function(){ document.getElementById('dia-hoja-file').value=''; }},
-          {label:'Guardar en el día abierto',className:'btn-primary',onClick:function(){ tcDiaHojaGuardarEn(diaAbierto,imgData,thumbData,texto); }}
+          {label:'Guardar en el día abierto',className:'btn-primary',onClick:function(){ tcDiaHojaConfirmarYGuardar(diaAbierto,imgData,thumbData,texto); }}
         ]
       );
       return;
     }
-    tcDiaHojaGuardarEn(diaAbierto,imgData,thumbData,texto);
+    tcDiaHojaConfirmarYGuardar(diaAbierto,imgData,thumbData,texto);
   });
 };
+
+/* DEV-004R9: primer paso de la confirmación de una hoja individual (añadida o
+   de reemplazo). Si la hoja reemplaza otra Y la jornada actual es manual o
+   mixta, pregunta primero qué hacer con los datos teóricos (la jornada
+   manual conservaba siempre los datos antiguos sin dejar aplicar los de la
+   hoja nueva; ahora se puede elegir). Esa decisión (opcionDatos) viaja al
+   siguiente paso (servicio/turno) y de ahí hasta el guardado final. */
+function tcDiaHojaConfirmarYGuardar(fecha,imgData,thumbData,texto){
+  var reg=dias[fecha]||{};
+  var habiaHoja=!!reg.imgData;
+  var servicioActual=reg.servicio||'';
+  var servicioDetectado=tcDetectServicio(texto);
+  var servicioDistinto=!!(servicioDetectado&&tcNormalizarServicio(servicioDetectado)!==tcNormalizarServicio(servicioActual));
+  var origenManualOMixto=!!(reg.jornada&&(reg.jornada.origen==='manual'||reg.jornada.origen==='mixto'));
+
+  if(habiaHoja&&origenManualOMixto){
+    tcModalPrompt(
+      'Datos de jornada manuales',
+      'Este día ya tiene datos de jornada introducidos a mano (o mezclados con una hoja anterior).\n¿Qué quieres hacer con los horarios de la hoja nueva?',
+      [
+        {label:'Usar datos de la hoja nueva',className:'btn-primary',onClick:function(){
+          tcDiaHojaConfirmarServicio(fecha,imgData,thumbData,texto,servicioActual,servicioDetectado,servicioDistinto,habiaHoja,'usar_nueva');
+        }},
+        {label:'Conservar datos manuales',className:'btn-secondary',onClick:function(){
+          tcDiaHojaConfirmarServicio(fecha,imgData,thumbData,texto,servicioActual,servicioDetectado,servicioDistinto,habiaHoja,'conservar');
+        }},
+        {label:'Cancelar',className:'btn-secondary',onClick:function(){ document.getElementById('dia-hoja-file').value=''; }}
+      ]
+    );
+    return;
+  }
+  tcDiaHojaConfirmarServicio(fecha,imgData,thumbData,texto,servicioActual,servicioDetectado,servicioDistinto,habiaHoja,undefined);
+}
+
+/* DEV-004R9 (antes DEV-004R8): segundo paso, servicio/turno. servicios se
+   comparan ya normalizados (tcNormalizarServicio) en el paso anterior. El
+   turno NUNCA se adivina aquí (ni por la hora de inicio ni por ningún otro
+   criterio automático): solo se ofrece mantenerlo o revisarlo a mano.
+   "Revisar/cambiar turno" YA NO guarda nada todavía: deja la hoja pendiente
+   en memoria (tcHojaPendiente) y abre el editor; el guardado real (turno,
+   servicio, hoja y opción de datos teóricos, todo junto) ocurre solo al
+   pulsar "Guardar cambios" en tcSaveEdit. */
+function tcDiaHojaConfirmarServicio(fecha,imgData,thumbData,texto,servicioActual,servicioDetectado,servicioDistinto,habiaHoja,opcionDatos){
+  if(!habiaHoja&&!servicioDistinto){
+    tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto,opcionDatos);
+    return;
+  }
+  var reg=dias[fecha]||{};
+  var turnoActualCodigo=reg.turno||'';
+  var turnoActualLabel=(turnoActualCodigo&&TURNO[turnoActualCodigo])?TURNO[turnoActualCodigo].label:(turnoActualCodigo?turnoActualCodigo:'— Sin turno —');
+  tcModalPrompt(
+    'Confirmar hoja de ruta',
+    'Servicio actual: '+(servicioActual||'—')+'\nServicio detectado: '+(servicioDetectado||'— No detectado —')+'\nTurno actual: '+turnoActualLabel,
+    [
+      {label:'Aplicar servicio detectado y mantener turno',className:'btn-primary',onClick:function(){
+        if(servicioDetectado){
+          var r=dias[fecha]||{};
+          r.servicio=servicioDetectado;
+          if(r.jornada) r.jornada.servicio=servicioDetectado;
+          dias[fecha]=r;
+        }
+        tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto,opcionDatos);
+        if(servicioDetectado&&typeof tcJornadaSincronizarDesdeRecaudaciones==='function') tcJornadaSincronizarDesdeRecaudaciones(fecha,servicioDetectado);
+      }},
+      {label:'Revisar/cambiar turno',className:'btn-secondary',onClick:function(){
+        tcHojaPendiente={fecha:fecha,imgData:imgData,thumbData:thumbData,texto:texto,servicioDetectado:servicioDetectado,opcionDatos:opcionDatos};
+        activeDate=fecha;
+        window.tcToEdit(servicioDetectado||servicioActual);
+      }},
+      {label:'Cancelar',className:'btn-secondary',onClick:function(){ document.getElementById('dia-hoja-file').value=''; }}
+    ]
+  );
+}
 
 /* Limpia los datos teóricos extraídos de una hoja de ruta (inicio/fin, cómputo,
    partes, descanso, estado de extracción, computos específicos) y ajusta las
@@ -3578,16 +3999,26 @@ function tcComputosEspecificosVacio(){
    con la jornada ya existente del día (si la hay). Nunca sobrescribe en
    silencio datos manuales distintos ni horas reales/ampliaciones/observaciones
    ya registradas; si detecta un conflicto con datos manuales, los conserva y
-   marca jornada.requiereRevision=true. */
-function tcJornadaFusionarExtraccion(reg,key,jornadaExtraida){
+   marca jornada.requiereRevision=true.
+   opcionDatos (opcional, DEV-004R9): cuando el origen previo es 'manual' o
+   'mixto', el llamador puede haber preguntado ya al usuario qué hacer. Si
+   opcionDatos==='usar_nueva', se sustituyen igualmente los campos teóricos
+   (como si no hubiera conflicto), dejando origen='hoja_ruta'. Cualquier otro
+   valor (incluido "sin definir", como en la importación semanal, que no pasa
+   este argumento) mantiene el comportamiento de siempre: conservar y marcar
+   revisión. En ningún caso se tocan aquí horaFinRealParte1/2, ampliaciones,
+   notas, incidencias, cambios, turno ni servicio (salvo el mero reflejo de
+   jr.servicio=reg.servicio, que no cambia el servicio, solo lo sincroniza). */
+function tcJornadaFusionarExtraccion(reg,key,jornadaExtraida,opcionDatos){
   if(!jornadaExtraida) return;
   var previa=reg.jornada?JSON.parse(JSON.stringify(reg.jornada)):null;
   var jr=tcJornadaEnsure(reg,key);
   var origenManualOMixto=previa&&(previa.origen==='manual'||previa.origen==='mixto');
-  if(origenManualOMixto){
-    /* Origen manual/mixto: se conservan íntegros los datos manuales tal cual
-       estaban, sin degradar el origen aunque los valores detectados coincidan.
-       La nueva extracción se guarda aparte para su revisión explícita. */
+  if(origenManualOMixto&&opcionDatos!=='usar_nueva'){
+    /* Origen manual/mixto sin decisión explícita de usar la hoja nueva: se
+       conservan íntegros los datos manuales tal cual estaban, sin degradar
+       el origen aunque los valores detectados coincidan. La nueva extracción
+       se guarda aparte para su revisión explícita. */
     jr.requiereRevision=true;
     jr.extraccionPendiente={
       tipoTurno:jornadaExtraida.tipoTurno||null,
@@ -3599,9 +4030,11 @@ function tcJornadaFusionarExtraccion(reg,key,jornadaExtraida){
       descanso:jornadaExtraida.descanso||null
     };
   } else {
-    /* Origen hoja_ruta (o sin jornada previa): se sustituyen TODOS los campos
-       teóricos por los recién extraídos, incluso cuando el nuevo valor sea
-       null, para no mostrar horarios antiguos como si vinieran de la hoja nueva. */
+    /* Origen hoja_ruta (o sin jornada previa), o bien manual/mixto con
+       "usar_nueva" elegido explícitamente por el usuario: se sustituyen
+       TODOS los campos teóricos por los recién extraídos, incluso cuando el
+       nuevo valor sea null, para no mostrar horarios antiguos como si
+       vinieran de la hoja nueva. */
     jr.servicio=reg.servicio||jr.servicio||'';
     jr.tipoTurno=(jornadaExtraida.tipoTurno!=null)?jornadaExtraida.tipoTurno:null;
     jr.inicioTeorico=(jornadaExtraida.inicioTeorico!=null)?jornadaExtraida.inicioTeorico:null;
@@ -3622,7 +4055,8 @@ function tcJornadaFusionarExtraccion(reg,key,jornadaExtraida){
       jr.requiereRevision=true;
     } else {
       /* Extracción completa: una revisión anterior (de una extracción parcial
-         previa) queda resuelta por los nuevos datos ya completos. */
+         previa, o de un conflicto manual/mixto ya resuelto con "usar_nueva")
+         queda resuelta por los nuevos datos ya completos. */
       jr.requiereRevision=false;
       jr.extraccionPendiente=null;
     }
@@ -4032,7 +4466,7 @@ window.tcSaveJornada=function(){
      antes de definir la jornada), se recalculan ahora sin perder decisiones ya tomadas. */
   tcJornadaDetectarAmpliacion(activeDate,'parte1');
   tcJornadaDetectarAmpliacion(activeDate,'parte2');
-  tcRenderCal(); tcRenderView(activeDate,dias[activeDate]); tcShowPanel('pnl-view');
+  tcRenderCal(); tcRenderView(activeDate,dias[activeDate]); tcVolverVistaDia();
   tcToast('✔ Datos de jornada guardados');
 };
 
