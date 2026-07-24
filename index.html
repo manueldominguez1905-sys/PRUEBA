@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#7a1f2b" />
-  <title>Control de Recaudaciones y Liquidaciones - Liquidación</title>
+  <title>Registro del Conductor</title>
 
   <style>
 /* =========================================================
@@ -500,7 +500,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
     <div class="header-left">
       <button id="btnVolver" class="icon-btn volver-btn" style="display:none;" aria-label="Volver al menú">←</button>
       <span class="material-icon" id="headerIcon">🚌</span>
-      <h1 id="headerTitle">Control Liquidación</h1>
+      <h1 id="headerTitle">Registro del Conductor</h1>
     </div>
     <div class="header-right">
       <button id="btnSettings" class="icon-btn" title="Ajustes" aria-label="Ajustes">⚙️</button>
@@ -513,9 +513,9 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
     <div style="background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
-        <div><strong>Aplicación:</strong> DEV-005</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-005R1</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección de vínculos, validaciones y resolución de cambios por día a convenir.</div>
+        <div><strong>Aplicación:</strong> DEV-006</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-006R1</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección de la conservación y revisión de T.D. y deje al sustituir hojas de ruta.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -933,6 +933,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
               <button class="tc-save-btn" style="background:#E65100;" onclick="tcCgVista('cg-md')">&#128260; Cambio de servicio en el mismo día</button>
               <button class="tc-save-btn" style="background:#E65100;" onclick="tcCgVista('cg-fx')">&#128197; Cambio entre días diferentes</button>
               <button class="tc-save-btn" style="background:#B45309;" onclick="tcCgVista('cg-dc')">&#9203; Cambio por día a convenir</button>
+              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCgVista('cg-sem')">&#128198; Cambio de semana completa</button>
               <button class="tc-save-btn" style="background:var(--surface2);color:var(--text2);" onclick="tcCgVista('cg-lista')">&#128203; Cambios pendientes y registrados</button>
             </div>
 
@@ -974,7 +975,22 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
               <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-menu')">&#8592; Volver</button>
             </div>
 
-            <!-- 4. LISTA DE CAMBIOS / 5. DESHACER -->
+            <!-- 4. SEMANA COMPLETA (DEV-005R2) -->
+            <div id="cg-sem" style="display:none">
+              <div class="tc-cambio-info">&#8505;&#65039; Cambia de una vez el turno de todos los <strong>días laborables</strong> de la semana. Descansos, vacaciones y días no laborables se conservan. No se tocan hojas, servicios, jornadas ni ampliaciones.</div>
+              <div class="tc-frow">
+                <div class="tc-fg"><label class="tc-lbl">A&#241;o</label><select class="tc-sel" id="cg-sem-anio" onchange="tcCgSemAnioCambiado()"></select></div>
+                <div class="tc-fg"><label class="tc-lbl">Semana</label><select class="tc-sel" id="cg-sem-num" onchange="tcCgRefrescarSem()"></select></div>
+              </div>
+              <div class="tc-cg-turnos" id="cg-sem-info">Selecciona el a&#241;o y la semana.</div>
+              <div class="tc-fg"><label class="tc-lbl">Turno recibido</label><select class="tc-sel" id="cg-sem-turno" onchange="tcCgRefrescarSem()"></select></div>
+              <div class="tc-fg"><label class="tc-lbl">Compa&#241;ero <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label><input class="tc-inp" id="cg-sem-comp" type="text" placeholder="Nombre del compañero"></div>
+              <div class="tc-fg"><label class="tc-lbl">&#128203; Notas</label><textarea class="tc-ta" id="cg-sem-notas" rows="2" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
+              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCambioGuardarSemana()">Guardar cambio de semana</button>
+              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-menu')">&#8592; Volver</button>
+            </div>
+
+            <!-- 5. LISTA DE CAMBIOS / 6. DESHACER -->
             <div id="cg-lista" style="display:none">
               <div id="cg-lista-body"></div>
               <button class="tc-btn tc-btn-ghost" style="width:100%;margin-top:6px;" onclick="tcCgVista('cg-menu')">&#8592; Volver</button>
@@ -1098,6 +1114,29 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
           </div>
           <div class="tc-form">
             <div id="amp-list"></div>
+          </div>
+        </div>
+
+        <!-- PANEL T.D. Y DEJE (DEV-006 — cómputos específicos, sin cálculos económicos) -->
+        <div id="pnl-computos" style="display:none">
+          <div class="tc-sh-hd">
+            <div><div class="tc-sh-title">&#128652; T.D. y deje</div><div class="tc-sh-sub">C&#243;mputos espec&#237;ficos, independientes del c&#243;mputo oficial</div></div>
+            <button class="tc-xbtn" onclick="tcVolverVistaDia()">&#10005;</button>
+          </div>
+          <div class="tc-form">
+            <div class="tc-cambio-info">&#8505;&#65039; T.D. y deje se registran aparte y <strong>nunca se suman al c&#243;mputo oficial</strong>. Quedan pendientes de Condiciones Laborales.</div>
+            <div id="ce-revision" style="display:none;"></div>
+            <div class="tc-fg"><label class="tc-lbl">T.D. (minutos)</label><input class="tc-inp" id="ce-td" type="number" min="0" max="1440" step="1" inputmode="numeric" placeholder="Ej. 20"></div>
+            <div class="tc-fg"><label class="tc-lbl">Deje base (minutos)</label><input class="tc-inp" id="ce-deje-base" type="number" min="0" max="1440" step="1" inputmode="numeric" placeholder="Ej. 6" oninput="tcComputosRecalcularTotal()"></div>
+            <div class="tc-fg" style="margin-bottom:8px;">
+              <label class="tc-lbl" style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;">
+                <input id="ce-calle7" type="checkbox" style="width:20px;height:20px;flex:0 0 auto;margin:0;" onchange="tcComputosRecalcularTotal()">
+                <span>Deje realizado en Calle 7 (+5 min)</span>
+              </label>
+            </div>
+            <div class="tc-fg"><label class="tc-lbl">Total de deje (minutos)</label><input class="tc-inp" id="ce-deje-total" type="text" readonly style="background:var(--bg2,#F3F4F6);font-weight:700;"></div>
+            <div id="ce-origen-info" style="font-size:13px;color:var(--text2);line-height:1.7;margin:4px 0 10px;"></div>
+            <button class="tc-save-btn" onclick="tcSaveComputos()">Guardar</button>
           </div>
         </div>
 
@@ -1473,7 +1512,7 @@ function abrirSeccion(tabId) {
     historial: "📜 Historial", backup: "💾 Copias de Seguridad",
     calendario: "📅 Diario del Conductor"
   };
-  document.getElementById("headerTitle").textContent = titulos[tabId] || "Control Liquidación";
+  document.getElementById("headerTitle").textContent = titulos[tabId] || "Registro del Conductor";
   document.getElementById("headerIcon").style.display = "none";
   document.getElementById("btnVolver").style.display = "inline-flex";
   if (tabId === "estadillo") renderizarEstadillo();
@@ -1503,7 +1542,7 @@ function cargarPDFjsSiNecesario() {
 function volverAlMenu() {
   document.getElementById("contenidoSecciones").style.display = "none";
   document.getElementById("menuPrincipal").style.display = "flex";
-  document.getElementById("headerTitle").textContent = "Control Liquidación";
+  document.getElementById("headerTitle").textContent = "Registro del Conductor";
   document.getElementById("headerIcon").style.display = "inline";
   document.getElementById("btnVolver").style.display = "none";
   actualizarResumen();
@@ -3144,7 +3183,8 @@ function tcBuildTurnoSelects(){
   var selects=[
     {el:document.getElementById('ed-turno'),vacio:'— sin definir —'},
     {el:document.getElementById('cg-md-turno'),vacio:'— sin turno —'},
-    {el:document.getElementById('cg-dc-turno'),vacio:'— sin turno —'}
+    {el:document.getElementById('cg-dc-turno'),vacio:'— sin turno —'},
+    {el:document.getElementById('cg-sem-turno'),vacio:'— sin turno —'}
   ];
   selects.forEach(function(s){ if(s.el) s.el.innerHTML='<option value="">'+s.vacio+'</option>'; });
   Object.keys(TURNO).forEach(function(k){
@@ -3514,7 +3554,7 @@ function tcOpenOv(){document.getElementById('tc-ov').classList.add('open');}
 window.tcClose=function(){tcDescartarHojaPendiente();document.getElementById('tc-ov').classList.remove('open');activeDate=null;};
 window.tcCloseOnBg=function(e){if(e.target===document.getElementById('tc-ov'))tcClose();};
 window.showPanel=function(id){
-  var panels=['pnl-view','pnl-edit','pnl-cambio','pnl-import','pnl-cal','pnl-borrar','pnl-ajustes','pnl-edit-turno','pnl-asignar','pnl-eventos','pnl-jornada','pnl-ampliaciones'];
+  var panels=['pnl-view','pnl-edit','pnl-cambio','pnl-import','pnl-cal','pnl-borrar','pnl-ajustes','pnl-edit-turno','pnl-asignar','pnl-eventos','pnl-jornada','pnl-ampliaciones','pnl-computos'];
   panels.forEach(function(x){document.getElementById(x).style.display=(x===id)?'':'none';});
 };
 function tcShowPanel(id){window.showPanel(id);}
@@ -3588,7 +3628,8 @@ function tcRenderView(key,reg){
       });
     }
     jaw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcOpenJornada()">🕐 Jornada</button>'
-      +'<button class="tc-btn tc-btn-ghost" style="'+(pendDoc?'border-color:#E6A817;color:#92400E;font-weight:700;':'')+'" onclick="tcOpenAmpliaciones()">⏱️ Ampliaciones'+(nAmp?' ('+nAmp+')':'')+'</button>';
+      +'<button class="tc-btn tc-btn-ghost" style="'+(pendDoc?'border-color:#E6A817;color:#92400E;font-weight:700;':'')+'" onclick="tcOpenAmpliaciones()">⏱️ Ampliaciones'+(nAmp?' ('+nAmp+')':'')+'</button>'
+      +'<button class="tc-btn tc-btn-ghost" onclick="tcOpenComputos()">🚌 T.D. y deje</button>';
   }
 }
 
@@ -3602,7 +3643,8 @@ function tcMinAHorasMin(min){
 /* Tarjeta "Datos de jornada" (aditiva, no sustituye nada existente). */
 function tcJornadaCardHtml(reg){
   var jr=reg.jornada;
-  var hayDatos=jr&&(jr.inicioTeorico||jr.finTeorico||(jr.parte1&&(jr.parte1.inicioTeorico||jr.parte1.finTeorico))||(jr.parte2&&(jr.parte2.inicioTeorico||jr.parte2.finTeorico))||jr.computoOficialMinutos!=null||jr.recaudacionesRequierenRevision||jr.horasHistoricasSinAsignar);
+  var ceHtml=jr?tcComputosEspecificosCardHtml(jr):'';
+  var hayDatos=jr&&(jr.inicioTeorico||jr.finTeorico||(jr.parte1&&(jr.parte1.inicioTeorico||jr.parte1.finTeorico))||(jr.parte2&&(jr.parte2.inicioTeorico||jr.parte2.finTeorico))||jr.computoOficialMinutos!=null||jr.recaudacionesRequierenRevision||jr.horasHistoricasSinAsignar||!!ceHtml);
   if(!hayDatos){
     var avisosSueltos='';
     if(jr&&jr.recaudacionesRequierenRevision) avisosSueltos+='<div style="font-size:13px;color:#C05621;">⚠️ Hay recaudaciones del día con un servicio distinto. Revísalas antes de calcular ampliaciones.</div>';
@@ -3634,7 +3676,42 @@ function tcJornadaCardHtml(reg){
   if(jr.requiereRevision) html+='<br><span style="color:#C05621;">⚠️ Revisión necesaria: hay datos manuales distintos de los detectados en la hoja.</span>';
   if(jr.recaudacionesRequierenRevision) html+='<br><span style="color:#C05621;">⚠️ Hay recaudaciones del día con un servicio distinto. Revísalas antes de calcular ampliaciones.</span>';
   if(jr.horasHistoricasSinAsignar) html+='<br><span style="color:var(--text2);">ℹ️ Hay horas históricas sin parte asignada. Edítalas desde Recaudaciones para indicar si corresponden a primera o segunda parte.</span>';
-  html+='</div></div>';
+  html+='</div>'+ceHtml+'</div>';
+  return html;
+}
+
+/* Bloque "T.D. y deje" dentro de la tarjeta del día (DEV-006). Se muestra
+   siempre separado del cómputo oficial: estos minutos no se suman a él.
+   Devuelve '' cuando no hay ningún dato registrado. */
+function tcComputosEspecificosCardHtml(jr){
+  var ce=tcComputosEspecificosNormalizar(jr&&jr.computosEspecificos);
+  var td=ce.tiempoDesplazamiento, dj=ce.deje;
+  var hayRevision=!!(td.requiereRevision||dj.requiereRevision);
+  /* DEV-006R1: un concepto eliminado a mano no tiene minutos, pero si una hoja
+     nueva trae otro valor sigue habiendo revisión pendiente que mostrar. */
+  if(td.minutos==null&&dj.minutos==null&&!hayRevision) return '';
+  var html='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border,#E5E7EB);font-size:13px;line-height:1.7;color:var(--text2);">';
+  html+='<div style="font-weight:700;color:var(--text,#1a1a1a);margin-bottom:2px;">T.D. y deje</div>';
+  if(td.minutos!=null){
+    html+='T.D.: <strong>'+td.minutos+' min</strong> · Pendiente de Condiciones Laborales<br>';
+  }
+  if(dj.minutos!=null){
+    html+='Deje: <strong>'+dj.minutos+' min</strong>';
+    if(dj.calle7) html+=' ('+dj.minutosBase+' + '+dj.extraCalle7Minutos+' Calle 7)';
+    html+=' · Pendiente de Condiciones Laborales<br>';
+  }
+  var origenes=[];
+  if(td.minutos!=null) origenes.push('T.D. '+tcComputosOrigenLabel(td.origen));
+  if(dj.minutos!=null) origenes.push('deje '+tcComputosOrigenLabel(dj.origen));
+  if(origenes.length) html+='Origen: <strong>'+tcEsc(origenes.join(' · '))+'</strong><br>';
+  if(hayRevision){
+    var pend=[];
+    if(td.requiereRevision) pend.push('T.D.');
+    if(dj.requiereRevision) pend.push('deje');
+    html+='<span style="color:#C05621;">⚠️ Revisión pendiente de '+tcEsc(pend.join(' y '))+': la última hoja de ruta no coincide con lo registrado a mano. Ábrelo en «🚌 T.D. y deje».</span><br>';
+  }
+  html+='<span style="font-size:12px;">No se suman al cómputo oficial.</span>';
+  html+='</div>';
   return html;
 }
 
@@ -3757,7 +3834,8 @@ function tcExtraerJornadaHojaRuta(texto,registroDia){
     parte1:{inicioTeorico:null,finTeorico:null},
     descanso:{tipo:null,duracionMinutos:null},
     parte2:{inicioTeorico:null,finTeorico:null},
-    tipoTurno:null, origen:'hoja_ruta', extraccionEstado:'manual'
+    tipoTurno:null, origen:'hoja_ruta', extraccionEstado:'manual',
+    computosEspecificos:tcComputosEspecificosVacio()
   };
   var codigoTurno=registroDia&&registroDia.turno;
   jr.tipoTurno=tcJornadaTipoTurno(codigoTurno);
@@ -3809,6 +3887,31 @@ function tcExtraerJornadaHojaRuta(texto,registroDia){
   } else {
     detectado=buscarPar(reVUE,reDES,'vuelta_descanso');
     if(!detectado) detectado=buscarPar(reDES,reINT,'descanso_intermedio');
+  }
+
+  /* DEV-006 — T.D. y deje: se leen literalmente de la hoja de ruta y se
+     guardan aparte. No se derivan de DESPLA/SINBUS, no se inventan cuando no
+     aparecen y nunca modifican computoOficialMinutos. */
+  var mTD=full.match(/(?:^|[^A-Za-zÁÉÍÓÚÜÑ])T\s*\.?\s*D\s*\.?\s*:?\s*(\d{1,4})\s*MIN/i);
+  if(mTD){
+    var vTD=parseInt(mTD[1],10);
+    if(!isNaN(vTD)&&vTD>=0&&vTD<=1440){
+      jr.computosEspecificos.tiempoDesplazamiento.minutos=vTD;
+      jr.computosEspecificos.tiempoDesplazamiento.textoOriginal=mTD[0].replace(/^[^A-Za-z]+/,'').trim();
+      jr.computosEspecificos.tiempoDesplazamiento.origen='hoja_ruta';
+    }
+  }
+  var mDJ=full.match(/(?:^|[^A-Za-zÁÉÍÓÚÜÑ])DEJ\s*E?\s*\.?\s*:?\s*(\d{1,4})\s*MIN/i);
+  if(mDJ){
+    var vDJ=parseInt(mDJ[1],10);
+    if(!isNaN(vDJ)&&vDJ>=0&&vDJ<=1440){
+      jr.computosEspecificos.deje.minutosBase=vDJ;
+      jr.computosEspecificos.deje.calle7=false;
+      jr.computosEspecificos.deje.extraCalle7Minutos=0;
+      jr.computosEspecificos.deje.minutos=vDJ;
+      jr.computosEspecificos.deje.textoOriginal=mDJ[0].replace(/^[^A-Za-z]+/,'').trim();
+      jr.computosEspecificos.deje.origen='hoja_ruta';
+    }
   }
 
   var basicOk=!!(jr.inicioTeorico&&jr.finTeorico);
@@ -3889,14 +3992,14 @@ function tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto,opcionDatos){
   var habiaHoja=!!(dias[fecha]&&dias[fecha].imgData);
   var reg=dias[fecha]||{};
   reg.imgData=imgData; reg.thumbData=thumbData;
-  var revisionPrevia=!!(reg.jornada&&reg.jornada.requiereRevision);
+  var revisionPrevia=tcJornadaRevisionPendiente(reg.jornada);
   var jornadaExtraida=tcExtraerJornadaHojaRuta(texto,reg);
   tcJornadaFusionarExtraccion(reg,fecha,jornadaExtraida,opcionDatos);
   dias[fecha]=reg;
   saveDias(); tcRenderCal();
   if(activeDate===fecha) tcRenderView(fecha,reg);
   document.getElementById('dia-hoja-file').value='';
-  var avisoRevision=reg.jornada&&reg.jornada.requiereRevision&&!revisionPrevia;
+  var avisoRevision=tcJornadaRevisionPendiente(reg.jornada)&&!revisionPrevia;
   tcToast((habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida')+(avisoRevision?' · ⚠️ Revisa la jornada: hay datos manuales distintos de los detectados':''));
 }
 
@@ -4042,6 +4145,7 @@ function tcDiaHojaLimpiarDatosJornada(reg){
   jr.origen=null;
   /* No se muestra ni calcula nada económico: solo se restablece la estructura vacía. */
   jr.computosEspecificos=tcComputosEspecificosVacio();
+  jr.computosRequierenRevision=false;
   ['parte1','parte2'].forEach(function(p){
     var a=jr.ampliaciones&&jr.ampliaciones[p];
     if(!a) return;
@@ -4143,25 +4247,129 @@ function tcJornadaEnsure(reg,key){
       origen:null,
       horaFinRealParte1:null, horaFinRealParte2:null,
       ampliaciones:{parte1:null,parte2:null},
-      computosEspecificos:tcComputosEspecificosVacio()
+      computosEspecificos:tcComputosEspecificosVacio(),
+      computosRequierenRevision:false
     };
   }
   if(!reg.jornada.ampliaciones) reg.jornada.ampliaciones={parte1:null,parte2:null};
   if(!reg.jornada.parte1) reg.jornada.parte1={inicioTeorico:null,finTeorico:null};
   if(!reg.jornada.parte2) reg.jornada.parte2={inicioTeorico:null,finTeorico:null};
   if(!reg.jornada.descanso) reg.jornada.descanso={tipo:null,duracionMinutos:null};
-  /* Preparación interna para DEV-005: no se muestra ni se calcula nada económico
-     todavía. Se añade también de forma segura a jornadas antiguas ya existentes. */
-  if(!reg.jornada.computosEspecificos) reg.jornada.computosEspecificos=tcComputosEspecificosVacio();
+  /* DEV-006: T.D. y deje. No se calcula nada económico. Se normaliza también de
+     forma segura en jornadas antiguas ya existentes (deje.minutos → minutosBase). */
+  reg.jornada.computosEspecificos=tcComputosEspecificosNormalizar(reg.jornada.computosEspecificos);
+  /* DEV-006R1: marca de revisión propia de T.D./deje, siempre derivada de los
+     conceptos y separada de reg.jornada.requiereRevision (horarios/cómputo). */
+  reg.jornada.computosRequierenRevision=tcComputosRevisionPendiente(reg.jornada.computosEspecificos);
   return reg.jornada;
 }
 /* Estructura estable pendiente de condiciones laborales (T.D. y deje no son
-   el mismo concepto que DGA; no se asume ninguna equivalencia entre ellos). */
+   el mismo concepto que DGA; no se asume ninguna equivalencia entre ellos).
+   DEV-006: el deje se desglosa en minutosBase (lo que indica la hoja de ruta)
+   más un suplemento fijo de 5 minutos cuando el deje se realiza en Calle 7.
+   "minutos" es siempre el total ya calculado (minutosBase + extraCalle7Minutos)
+   y nunca se suma al cómputo oficial. */
 function tcComputosEspecificosVacio(){
   return {
-    tiempoDesplazamiento:{minutos:null,textoOriginal:null,origen:null,estado:"pendiente_condiciones_laborales"},
-    deje:{minutos:null,textoOriginal:null,origen:null,estado:"pendiente_condiciones_laborales"}
+    tiempoDesplazamiento:{minutos:null,textoOriginal:null,origen:null,estado:"pendiente_condiciones_laborales",requiereRevision:false,extraidoPendiente:null},
+    deje:{minutosBase:null,calle7:false,extraCalle7Minutos:0,minutos:null,textoOriginal:null,origen:null,estado:"pendiente_condiciones_laborales",requiereRevision:false,extraidoPendiente:null}
   };
+}
+
+/* DEV-006R1 — Copia limpia del concepto detectado en una hoja nueva que se
+   guarda en extraidoPendiente mientras se conserva el valor decidido a mano.
+   Nunca anida requiereRevision ni extraidoPendiente dentro de sí misma. */
+function tcComputosPendienteTD(td){
+  if(!td||typeof td!=='object') return null;
+  return {
+    minutos:(td.minutos!=null&&!isNaN(td.minutos))?parseInt(td.minutos,10):null,
+    textoOriginal:td.textoOriginal||null,
+    origen:td.origen||null
+  };
+}
+function tcComputosPendienteDeje(dj){
+  if(!dj||typeof dj!=='object') return null;
+  var mb=(dj.minutosBase!=null&&!isNaN(dj.minutosBase))?parseInt(dj.minutosBase,10):null;
+  var c7=(dj.calle7===true)&&(mb!=null);
+  var ex=c7?TC_DEJE_CALLE7_MIN:0;
+  return {
+    minutosBase:mb,
+    calle7:c7,
+    extraCalle7Minutos:ex,
+    minutos:(mb!=null)?(mb+ex):null,
+    textoOriginal:dj.textoOriginal||null,
+    origen:dj.origen||null
+  };
+}
+
+/* Suplemento fijo por deje realizado en Calle 7 (DEV-006). */
+var TC_DEJE_CALLE7_MIN=5;
+
+/* Devuelve siempre una estructura de cómputos específicos completa y coherente
+   a partir de lo que haya guardado, sin mutar el original. Compatibilidad:
+   un registro antiguo que solo tenga deje.minutos se interpreta como
+   minutosBase con calle7=false, de modo que el total sigue siendo el mismo. */
+function tcComputosEspecificosNormalizar(ce){
+  var base=tcComputosEspecificosVacio();
+  if(!ce||typeof ce!=='object') return base;
+  var td=ce.tiempoDesplazamiento||{};
+  base.tiempoDesplazamiento={
+    minutos:(td.minutos!=null&&!isNaN(td.minutos))?parseInt(td.minutos,10):null,
+    textoOriginal:td.textoOriginal||null,
+    origen:td.origen||null,
+    estado:td.estado||'pendiente_condiciones_laborales',
+    /* DEV-006R1: revisión propia del concepto, independiente de horarios. */
+    requiereRevision:(td.requiereRevision===true),
+    extraidoPendiente:tcComputosPendienteTD(td.extraidoPendiente)
+  };
+  var dj=ce.deje||{};
+  var minutosBase=null;
+  if(dj.minutosBase!=null&&!isNaN(dj.minutosBase)) minutosBase=parseInt(dj.minutosBase,10);
+  else if(dj.minutos!=null&&!isNaN(dj.minutos)) minutosBase=parseInt(dj.minutos,10); /* registro antiguo */
+  var calle7=(dj.calle7===true)&&(minutosBase!=null);
+  var extra=calle7?TC_DEJE_CALLE7_MIN:0;
+  base.deje={
+    minutosBase:minutosBase,
+    calle7:calle7,
+    extraCalle7Minutos:extra,
+    minutos:(minutosBase!=null)?(minutosBase+extra):null,
+    textoOriginal:dj.textoOriginal||null,
+    origen:dj.origen||null,
+    estado:dj.estado||'pendiente_condiciones_laborales',
+    /* DEV-006R1: revisión propia del concepto, independiente de horarios. */
+    requiereRevision:(dj.requiereRevision===true),
+    extraidoPendiente:tcComputosPendienteDeje(dj.extraidoPendiente)
+  };
+  return base;
+}
+
+/* DEV-006R1 — Marca de revisión de los cómputos específicos (T.D. y deje).
+   Es SIEMPRE independiente de jornada.requiereRevision, que pertenece a los
+   horarios teóricos y al cómputo oficial y no debe mezclarse con esto. */
+function tcComputosRevisionPendiente(ce){
+  var n=tcComputosEspecificosNormalizar(ce);
+  return !!(n.tiempoDesplazamiento.requiereRevision||n.deje.requiereRevision);
+}
+
+/* Revisión pendiente de una jornada por cualquiera de los dos motivos
+   (horarios/cómputo oficial o cómputos específicos), solo para avisos. */
+function tcJornadaRevisionPendiente(jr){
+  if(!jr) return false;
+  return !!(jr.requiereRevision||tcComputosRevisionPendiente(jr.computosEspecificos));
+}
+
+/* Etiqueta legible del origen de un concepto específico. */
+function tcComputosOrigenLabel(origen){
+  if(origen==='hoja_ruta') return 'automático';
+  if(origen==='manual') return 'manual';
+  if(origen==='mixto') return 'mixto';
+  return '—';
+}
+
+/* Una edición manual solo degrada el origen de ESE concepto: nunca toca
+   jornada.origen ni los horarios teóricos. */
+function tcComputosOrigenManual(origenPrevio){
+  return (origenPrevio==='hoja_ruta'||origenPrevio==='mixto')?'mixto':'manual';
 }
 
 /* Fusiona los datos de jornada extraídos automáticamente de una hoja de ruta
@@ -4178,6 +4386,87 @@ function tcComputosEspecificosVacio(){
    revisión. En ningún caso se tocan aquí horaFinRealParte1/2, ampliaciones,
    notas, incidencias, cambios, turno ni servicio (salvo el mero reflejo de
    jr.servicio=reg.servicio, que no cambia el servicio, solo lo sincroniza). */
+/* Fusiona los cómputos específicos (T.D. y deje) de una hoja de ruta recién
+   leída con los ya guardados. Devuelve true si algún concepto corregido a mano
+   discrepa de lo detectado y, por tanto, requiere revisión.
+   - Concepto con origen automático (o sin origen): la hoja nueva lo sustituye
+     siempre, incluso cuando el valor nuevo sea null, para no arrastrar datos
+     antiguos como si vinieran de la hoja actual.
+   - Concepto corregido manualmente (manual/mixto): se conserva tal cual.
+   - opcionDatos==='usar_nueva': se sustituye igualmente y el deje vuelve a
+     calle7=false, porque el suplemento de Calle 7 es siempre manual. */
+function tcComputosEspecificosFusionar(jr,ceExtraidos,opcionDatos){
+  var actual=tcComputosEspecificosNormalizar(jr.computosEspecificos);
+  var nuevos=tcComputosEspecificosNormalizar(ceExtraidos);
+  var usarNueva=(opcionDatos==='usar_nueva');
+
+  /* ---- T.D. ---- */
+  var tdAct=actual.tiempoDesplazamiento, tdNue=nuevos.tiempoDesplazamiento;
+  var tdDecididoAMano=(tdAct.origen==='manual'||tdAct.origen==='mixto');
+  if(tdDecididoAMano&&!usarNueva){
+    /* Se conserva SIEMPRE el valor decidido a mano, incluida una eliminación
+       manual (minutos=null con origen manual/mixto). La comparación incluye
+       null en ambos lados: que la hoja nueva no traiga T.D. también es una
+       diferencia y debe avisarse, nunca resolverse en silencio. */
+    if(tdNue.minutos!==tdAct.minutos){
+      tdAct.requiereRevision=true;
+      tdAct.extraidoPendiente=tcComputosPendienteTD(tdNue);
+    } else {
+      /* La hoja nueva confirma el valor manual: la revisión queda resuelta. */
+      tdAct.requiereRevision=false;
+      tdAct.extraidoPendiente=null;
+    }
+  } else {
+    /* Origen automático o sin origen (o "usar_nueva" elegido explícitamente):
+       la hoja nueva sustituye siempre, incluso por null. */
+    actual.tiempoDesplazamiento={
+      minutos:tdNue.minutos,
+      textoOriginal:tdNue.textoOriginal,
+      origen:tdNue.origen,
+      estado:'pendiente_condiciones_laborales',
+      requiereRevision:false,
+      extraidoPendiente:null
+    };
+  }
+
+  /* ---- Deje ---- */
+  var djAct=actual.deje, djNue=nuevos.deje;
+  var djDecididoAMano=(djAct.origen==='manual'||djAct.origen==='mixto');
+  if(djDecididoAMano&&!usarNueva){
+    /* Además de comparar minutosBase (incluido null), un deje marcado como
+       realizado en Calle 7 es SIEMPRE discrepancia: la hoja de ruta nunca
+       confirma Calle 7, así que ese suplemento no puede darse por válido con
+       una hoja nueva sin que el usuario lo confirme. */
+    var difDeje=(djNue.minutosBase!==djAct.minutosBase)||(djAct.calle7===true);
+    if(difDeje){
+      djAct.requiereRevision=true;
+      djAct.extraidoPendiente=tcComputosPendienteDeje(djNue);
+    } else {
+      djAct.requiereRevision=false;
+      djAct.extraidoPendiente=null;
+    }
+  } else {
+    /* Sustitución normal: la hoja nueva nunca aporta Calle 7 (es siempre
+       manual), por lo que el suplemento se reinicia. */
+    actual.deje={
+      minutosBase:djNue.minutosBase,
+      calle7:false,
+      extraCalle7Minutos:0,
+      minutos:djNue.minutosBase,
+      textoOriginal:djNue.textoOriginal,
+      origen:djNue.origen,
+      estado:'pendiente_condiciones_laborales',
+      requiereRevision:false,
+      extraidoPendiente:null
+    };
+  }
+
+  jr.computosEspecificos=actual;
+  /* Marca propia: NUNCA se usa jornada.requiereRevision para esto. */
+  jr.computosRequierenRevision=!!(actual.tiempoDesplazamiento.requiereRevision||actual.deje.requiereRevision);
+  return jr.computosRequierenRevision;
+}
+
 function tcJornadaFusionarExtraccion(reg,key,jornadaExtraida,opcionDatos){
   if(!jornadaExtraida) return;
   var previa=reg.jornada?JSON.parse(JSON.stringify(reg.jornada)):null;
@@ -4230,6 +4519,13 @@ function tcJornadaFusionarExtraccion(reg,key,jornadaExtraida,opcionDatos){
       jr.extraccionPendiente=null;
     }
   }
+  /* DEV-006 / DEV-006R1 — T.D. y deje se fusionan concepto a concepto, con
+     independencia del resto de la jornada: una hoja nueva sustituye siempre
+     los valores automáticos anteriores (incluso por null), mientras que un
+     concepto corregido o eliminado a mano se conserva y marca su propia
+     revisión (jornada.computosRequierenRevision, nunca jornada.requiereRevision)
+     salvo que el usuario haya elegido explícitamente usar la hoja nueva. */
+  tcComputosEspecificosFusionar(jr,jornadaExtraida.computosEspecificos,opcionDatos);
   reg.jornada=jr;
   /* Recalcula ampliaciones si ya había horas reales, sin reabrir avisos ya resueltos.
      Nunca toca horaFinRealParte1/2, ampliaciones, estados, computableParaNomina
@@ -4639,6 +4935,173 @@ window.tcSaveJornada=function(){
   tcToast('✔ Datos de jornada guardados');
 };
 
+/* ---- Panel T.D. y deje (DEV-006) ----------------------------------------
+   Registra dos conceptos independientes del cómputo oficial. La edición manual
+   solo cambia el origen de estos conceptos (manual/mixto): nunca toca
+   jornada.origen, los horarios teóricos, las ampliaciones ni el cómputo. ---- */
+window.tcOpenComputos=function(){
+  if(!activeDate) return;
+  var reg=dias[activeDate]||{};
+  var ce=tcComputosEspecificosNormalizar(reg.jornada&&reg.jornada.computosEspecificos);
+  document.getElementById('ce-td').value=(ce.tiempoDesplazamiento.minutos!=null)?ce.tiempoDesplazamiento.minutos:'';
+  document.getElementById('ce-deje-base').value=(ce.deje.minutosBase!=null)?ce.deje.minutosBase:'';
+  document.getElementById('ce-calle7').checked=!!ce.deje.calle7;
+  var info='';
+  if(ce.tiempoDesplazamiento.minutos!=null) info+='T.D. · origen '+tcComputosOrigenLabel(ce.tiempoDesplazamiento.origen)+(ce.tiempoDesplazamiento.textoOriginal?' · "'+tcEsc(ce.tiempoDesplazamiento.textoOriginal)+'"':'')+'<br>';
+  if(ce.deje.minutosBase!=null) info+='Deje · origen '+tcComputosOrigenLabel(ce.deje.origen)+(ce.deje.textoOriginal?' · "'+tcEsc(ce.deje.textoOriginal)+'"':'')+'';
+  document.getElementById('ce-origen-info').innerHTML=info;
+  tcComputosRenderRevision(ce);
+  tcComputosRecalcularTotal();
+  tcShowPanel('pnl-computos');
+  var sh=document.querySelector('#tc-ov .tc-sh');
+  if(sh) sh.scrollTop=0;
+};
+
+/* DEV-006R1 — Bloque de revisión del panel: solo aparece cuando un concepto
+   decidido a mano no coincide con la última hoja de ruta cargada. Muestra el
+   valor actual, el detectado en la hoja nueva (o "No detectado") y pide
+   confirmar cuál se conserva. No decide nada por su cuenta. */
+function tcComputosRenderRevision(ce){
+  var box=document.getElementById('ce-revision');
+  if(!box) return;
+  var td=ce.tiempoDesplazamiento, dj=ce.deje;
+  if(!td.requiereRevision&&!dj.requiereRevision){ box.style.display='none'; box.innerHTML=''; return; }
+  var h='<div style="border:1px solid #F6AD55;background:#FFFAF0;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.7;color:#7B341E;">';
+  h+='<div style="font-weight:700;margin-bottom:4px;">⚠️ Revisión de T.D. y deje</div>';
+  if(td.requiereRevision){
+    var pt=td.extraidoPendiente||{};
+    h+='<div style="margin-bottom:6px;"><strong>T.D.</strong><br>';
+    h+='Valor actual: <strong>'+((td.minutos!=null)?(td.minutos+' min'):'sin valor')+'</strong><br>';
+    h+='En la hoja nueva: <strong>'+((pt.minutos!=null)?(pt.minutos+' min'):'No detectado')+'</strong></div>';
+  }
+  if(dj.requiereRevision){
+    var pd=dj.extraidoPendiente||{};
+    h+='<div style="margin-bottom:6px;"><strong>Deje</strong><br>';
+    h+='Valor actual: <strong>'+((dj.minutos!=null)?(dj.minutos+' min'+(dj.calle7?' ('+dj.minutosBase+' + '+dj.extraCalle7Minutos+' Calle 7)':'')):'sin valor')+'</strong><br>';
+    h+='En la hoja nueva: <strong>'+((pd.minutosBase!=null)?(pd.minutosBase+' min'):'No detectado')+'</strong>';
+    if(dj.calle7) h+='<br><span style="font-size:12px;">La hoja de ruta nunca confirma Calle 7: ese suplemento debes confirmarlo tú.</span>';
+    h+='</div>';
+  }
+  h+='<div style="margin-bottom:8px;">Confirma cuál conservar: revisa los campos y pulsa <strong>Guardar</strong> para dar por buenos los valores actuales.</div>';
+  h+='<button class="tc-mini-btn" type="button" onclick="tcComputosUsarDetectado()">Cargar los valores detectados</button>';
+  h+='</div>';
+  box.innerHTML=h;
+  box.style.display='';
+}
+
+/* Vuelca en los campos del formulario lo detectado en la hoja nueva. No guarda
+   nada: el usuario sigue teniendo que pulsar Guardar. */
+window.tcComputosUsarDetectado=function(){
+  if(!activeDate) return;
+  var reg=dias[activeDate]||{};
+  var ce=tcComputosEspecificosNormalizar(reg.jornada&&reg.jornada.computosEspecificos);
+  if(ce.tiempoDesplazamiento.requiereRevision){
+    var pt=ce.tiempoDesplazamiento.extraidoPendiente||{};
+    document.getElementById('ce-td').value=(pt.minutos!=null)?pt.minutos:'';
+  }
+  if(ce.deje.requiereRevision){
+    var pd=ce.deje.extraidoPendiente||{};
+    document.getElementById('ce-deje-base').value=(pd.minutosBase!=null)?pd.minutosBase:'';
+    /* La hoja de ruta nunca aporta Calle 7. */
+    document.getElementById('ce-calle7').checked=false;
+  }
+  tcComputosRecalcularTotal();
+  tcToast('ℹ️ Valores detectados cargados · pulsa Guardar para confirmarlos');
+};
+
+/* Devuelve el entero de minutos si el texto es un entero válido de 0 a 1440;
+   en cualquier otro caso devuelve null. */
+function tcComputosMinutosValidos(txt){
+  if(!/^\d{1,4}$/.test(txt)) return null;
+  var v=parseInt(txt,10);
+  if(isNaN(v)||v<0||v>1440) return null;
+  return v;
+}
+
+window.tcComputosRecalcularTotal=function(){
+  var baseTxt=(document.getElementById('ce-deje-base').value||'').trim();
+  var calle7=document.getElementById('ce-calle7').checked;
+  var totalEl=document.getElementById('ce-deje-total');
+  var base=tcComputosMinutosValidos(baseTxt);
+  if(baseTxt===''){
+    totalEl.value=calle7?'— (falta el deje base)':'—';
+    return;
+  }
+  if(base===null){ totalEl.value='— (valor no válido)'; return; }
+  var extra=calle7?TC_DEJE_CALLE7_MIN:0;
+  totalEl.value=(base+extra)+' min'+(calle7?' ('+base+' + '+extra+' Calle 7)':'');
+};
+
+window.tcSaveComputos=function(){
+  if(!activeDate) return;
+  var tdTxt=(document.getElementById('ce-td').value||'').trim();
+  var djTxt=(document.getElementById('ce-deje-base').value||'').trim();
+  var calle7=document.getElementById('ce-calle7').checked;
+  var tdVal=null,djVal=null;
+  if(tdTxt!==''){
+    tdVal=tcComputosMinutosValidos(tdTxt);
+    if(tdVal===null){ tcToast('⚠️ T.D.: introduce un número entero de minutos entre 0 y 1440'); return; }
+  }
+  if(djTxt!==''){
+    djVal=tcComputosMinutosValidos(djTxt);
+    if(djVal===null){ tcToast('⚠️ Deje base: introduce un número entero de minutos entre 0 y 1440'); return; }
+  }
+  if(calle7&&djVal===null){
+    tcToast('⚠️ Indica primero los minutos de deje base para aplicar Calle 7');
+    var el=document.getElementById('ce-deje-base'); if(el) el.focus();
+    return;
+  }
+  var reg=dias[activeDate]||{};
+  var jr=tcJornadaEnsure(reg,activeDate);
+  var ce=tcComputosEspecificosNormalizar(jr.computosEspecificos);
+
+  /* T.D. */
+  if(tdVal===null){
+    /* DEV-006R1 — Vaciar a mano un valor que existía es una decisión manual y
+       queda protegida frente a reimportaciones: minutos=null pero origen
+       manual/mixto. Solo se mantiene origen=null si nunca hubo valor. */
+    var habiaTD=(ce.tiempoDesplazamiento.minutos!=null)||(ce.tiempoDesplazamiento.origen!=null);
+    ce.tiempoDesplazamiento.minutos=null;
+    ce.tiempoDesplazamiento.textoOriginal=null;
+    ce.tiempoDesplazamiento.origen=habiaTD?tcComputosOrigenManual(ce.tiempoDesplazamiento.origen):null;
+  } else if(tdVal!==ce.tiempoDesplazamiento.minutos){
+    ce.tiempoDesplazamiento.minutos=tdVal;
+    ce.tiempoDesplazamiento.origen=tcComputosOrigenManual(ce.tiempoDesplazamiento.origen);
+  }
+  ce.tiempoDesplazamiento.estado='pendiente_condiciones_laborales';
+  /* Guardado manual explícito: el valor actual queda confirmado. */
+  ce.tiempoDesplazamiento.requiereRevision=false;
+  ce.tiempoDesplazamiento.extraidoPendiente=null;
+
+  /* Deje: total = base + 5 si el deje se realizó en Calle 7. */
+  if(djVal===null){
+    var habiaDeje=(ce.deje.minutosBase!=null)||(ce.deje.origen!=null);
+    ce.deje.minutosBase=null; ce.deje.calle7=false; ce.deje.extraCalle7Minutos=0;
+    ce.deje.minutos=null; ce.deje.textoOriginal=null;
+    ce.deje.origen=habiaDeje?tcComputosOrigenManual(ce.deje.origen):null;
+  } else {
+    var cambia=(djVal!==ce.deje.minutosBase)||(calle7!==ce.deje.calle7);
+    ce.deje.minutosBase=djVal;
+    ce.deje.calle7=!!calle7;
+    ce.deje.extraCalle7Minutos=calle7?TC_DEJE_CALLE7_MIN:0;
+    ce.deje.minutos=djVal+ce.deje.extraCalle7Minutos;
+    if(cambia) ce.deje.origen=tcComputosOrigenManual(ce.deje.origen);
+  }
+  ce.deje.estado='pendiente_condiciones_laborales';
+  ce.deje.requiereRevision=false;
+  ce.deje.extraidoPendiente=null;
+
+  jr.computosEspecificos=ce;
+  /* Solo se resuelve la revisión de T.D./deje: jr.requiereRevision y
+     jr.extraccionPendiente pertenecen a horarios y cómputo oficial y no se
+     tocan aquí bajo ningún concepto. */
+  jr.computosRequierenRevision=false;
+  dias[activeDate]=reg;
+  saveDias();
+  tcRenderCal(); tcRenderView(activeDate,dias[activeDate]); tcVolverVistaDia();
+  tcToast('✔ T.D. y deje guardados');
+};
+
 /* ---- Panel de ampliaciones: estado y acciones independientes por parte ---- */
 var AMP_ESTADO_LABEL={
   detectada:'🔍 Detectada', pendiente_documento:'📄 Pendiente de documento',
@@ -4834,6 +5297,7 @@ function tcCambioTipoLabel(tipo){
   if(tipo==='servicio_mismo_dia') return 'Cambio de servicio en el mismo día';
   if(tipo==='intercambio_fechas') return 'Cambio entre días diferentes';
   if(tipo==='dia_a_convenir') return 'Cambio por día a convenir';
+  if(tipo==='cambio_semana') return 'Cambio de semana completa';
   return 'Cambio registrado';
 }
 
@@ -4852,6 +5316,8 @@ function tcCambioLimpiarMeta(reg){
   reg.cambioTurnoRealizado=null;
   reg.cambioFechaVinculada=null;
   reg.cambioFechaDestino=null;
+  reg.cambioSemanaAnio=null;   /* DEV-005R2 */
+  reg.cambioSemanaNum=null;    /* DEV-005R2 */
   reg.cambioCompanero='';
   reg.cambioNotas='';
   reg.cambioFechaRegistro=null;
@@ -4873,6 +5339,9 @@ function tcCambioEscribirMeta(fecha,meta){
   if(meta.turnoRealizado!==undefined) reg.cambioTurnoRealizado=meta.turnoRealizado;
   reg.cambioFechaVinculada=meta.fechaVinculada||null;
   reg.cambioFechaDestino=meta.fechaVinculada||null; /* compatibilidad con datos antiguos */
+  /* DEV-005R2 — Solo el cambio de semana completa aporta estos dos campos. */
+  if(meta.semanaAnio!==undefined) reg.cambioSemanaAnio=meta.semanaAnio;
+  if(meta.semanaNum!==undefined) reg.cambioSemanaNum=meta.semanaNum;
   reg.cambioCompanero=meta.companero||'';
   reg.cambioNotas=meta.notas||'';
   reg.cambioFechaRegistro=reg.cambioFechaRegistro||new Date().toISOString();
@@ -4887,6 +5356,8 @@ function tcCambioBadgeHtml(reg){
     html+='Turno original: <strong>'+tcEsc(tcCambioTurnoLabel(reg.cambioTurnoOriginal))+'</strong><br>';
     html+='Turno actual del cambio: <strong>'+tcEsc(tcCambioTurnoLabel(reg.cambioTurnoFinal))+'</strong><br>';
   }
+  if(reg.tipoCambio==='cambio_semana'&&reg.cambioSemanaNum!=null)
+    html+='Semana: <strong>'+tcEsc(String(reg.cambioSemanaNum))+'</strong> de <strong>'+tcEsc(String(reg.cambioSemanaAnio||''))+'</strong><br>';
   var vinc=reg.cambioFechaVinculada||reg.cambioFechaDestino;
   if(vinc) html+='Día vinculado: <strong>'+tcFmtF(vinc)+'</strong><br>';
   if(reg.cambioCompanero) html+='Compañero: <strong>'+tcEsc(reg.cambioCompanero)+'</strong><br>';
@@ -4903,7 +5374,7 @@ function tcCambioPersistir(){
 }
 
 /* ---------------- Navegación del gestor ---------------- */
-var TC_CG_VISTAS=['cg-menu','cg-md','cg-fx','cg-dc','cg-lista','cg-asig'];
+var TC_CG_VISTAS=['cg-menu','cg-md','cg-fx','cg-dc','cg-sem','cg-lista','cg-asig'];
 var tcCgAsigId=null;
 
 window.tcCgVista=function(id){
@@ -4919,11 +5390,12 @@ window.tcCgVista=function(id){
 window.tcOpenGestorCambios=function(){
   tcBuildTurnoSelects();
   ['cg-md-fecha','cg-md-comp','cg-md-notas','cg-fx-f1','cg-fx-f2','cg-fx-comp','cg-fx-notas',
-   'cg-dc-fecha','cg-dc-comp','cg-dc-notas','cg-asig-fecha'].forEach(function(i){
+   'cg-dc-fecha','cg-dc-comp','cg-dc-notas','cg-asig-fecha','cg-sem-comp','cg-sem-notas'].forEach(function(i){
     var el=document.getElementById(i); if(el) el.value='';
   });
   document.getElementById('cg-md-turno').value='';
   document.getElementById('cg-dc-turno').value='';
+  tcCgSemReset(); /* DEV-005R2 */
   document.getElementById('cg-md-info').textContent='Selecciona una fecha.';
   document.getElementById('cg-fx-info').textContent='Selecciona las dos fechas.';
   document.getElementById('cg-dc-info').textContent='Selecciona una fecha.';
@@ -5107,7 +5579,247 @@ window.tcCambioGuardarConvenir=function(){
   tcToast('⚠️ Cambio pendiente registrado · Día por convenir');
 };
 
-/* ---------------- 4. Lista de cambios pendientes/registrados ---------------- */
+/* ================= 4. Cambio de semana completa (DEV-005R2) =================
+   Usa la MISMA numeración semanal que el resto de la aplicación (tcSemanaISO):
+   la semana se etiqueta por el año de su LUNES y la semana 1 empieza en el
+   primer lunes del año. Solo se tocan códigos de turno de los días laborables.
+   ========================================================================== */
+
+/* Primer lunes del año, con la convención de tcSemanaISO. */
+function tcCgPrimerLunes(anio){
+  var jan1=new Date(Date.UTC(anio,0,1));
+  var dow=jan1.getUTCDay()||7;
+  var fm=new Date(jan1);
+  fm.setUTCDate(jan1.getUTCDate()+(dow===1?0:(8-dow)));
+  return fm;
+}
+/* Número de semanas (lunes) que contiene un año. */
+function tcCgSemanasDelAnio(anio){
+  return Math.round((tcCgPrimerLunes(anio+1)-tcCgPrimerLunes(anio))/(7*86400000));
+}
+/* Las 7 fechas ISO de la semana, de lunes a domingo. Puede cruzar mes o año. */
+function tcCgFechasSemana(anio,num){
+  var fm=tcCgPrimerLunes(anio), out=[];
+  for(var i=0;i<7;i++){
+    var d=new Date(fm);
+    d.setUTCDate(fm.getUTCDate()+(num-1)*7+i);
+    out.push(d.toISOString().slice(0,10));
+  }
+  return out;
+}
+
+function tcCgSemPoblarAnios(){
+  var el=document.getElementById('cg-sem-anio');
+  if(!el) return;
+  var actual=new Date().getFullYear();
+  var min=actual-1, max=actual+1;
+  Object.keys(dias).forEach(function(k){
+    var y=parseInt(String(k).slice(0,4),10);
+    if(!isNaN(y)){ if(y<min) min=y; if(y>max) max=y; }
+  });
+  var html='';
+  for(var y=min;y<=max;y++) html+='<option value="'+y+'">'+y+'</option>';
+  el.innerHTML=html;
+  el.value=String(actual);
+}
+
+function tcCgSemPoblarSemanas(){
+  var anioEl=document.getElementById('cg-sem-anio');
+  var selEl=document.getElementById('cg-sem-num');
+  if(!anioEl||!selEl) return;
+  var anio=parseInt(anioEl.value,10);
+  if(!anio){ selEl.innerHTML='<option value="">— selecciona —</option>'; return; }
+  var prev=selEl.value;
+  var n=tcCgSemanasDelAnio(anio);
+  var html='<option value="">— selecciona —</option>';
+  for(var i=1;i<=n;i++){
+    var fs=tcCgFechasSemana(anio,i);
+    html+='<option value="'+i+'">Semana '+i+' · '+tcFmtF(fs[0])+' → '+tcFmtF(fs[6])+'</option>';
+  }
+  selEl.innerHTML=html;
+  var p=parseInt(prev,10);
+  if(p>=1&&p<=n) selEl.value=String(p);
+}
+
+function tcCgSemReset(){
+  var turnoEl=document.getElementById('cg-sem-turno');
+  if(turnoEl) turnoEl.value='';
+  tcCgSemPoblarAnios();
+  /* Semana actual por defecto, según la numeración de la aplicación. */
+  var hoy=(typeof fechaHoyISO==='function')?fechaHoyISO():'';
+  if(hoy){
+    var partes=tcSemanaISO(hoy).split('W');
+    var anioEl=document.getElementById('cg-sem-anio');
+    if(anioEl){
+      var opt=anioEl.querySelector('option[value="'+partes[0]+'"]');
+      if(opt) anioEl.value=partes[0];
+    }
+    tcCgSemPoblarSemanas();
+    var selEl=document.getElementById('cg-sem-num');
+    if(selEl&&selEl.querySelector('option[value="'+partes[1]+'"]')) selEl.value=partes[1];
+  }else{
+    tcCgSemPoblarSemanas();
+  }
+  tcCgRefrescarSem();
+}
+
+window.tcCgSemAnioCambiado=function(){
+  tcCgSemPoblarSemanas();
+  tcCgRefrescarSem();
+};
+
+/* Lee el formulario y clasifica los siete días. No modifica nada. */
+function tcCgSemLeer(){
+  var anioEl=document.getElementById('cg-sem-anio');
+  var numEl=document.getElementById('cg-sem-num');
+  var out={valida:false,anio:0,num:0,fechas:[],laborables:[],noLaborables:[],sinTurno:[],bloqueados:[],motivos:[]};
+  if(!anioEl||!numEl) return out;
+  var anio=parseInt(anioEl.value,10), num=parseInt(numEl.value,10);
+  if(!anio||!num||num<1||num>tcCgSemanasDelAnio(anio)) return out;
+  out.valida=true; out.anio=anio; out.num=num;
+  out.fechas=tcCgFechasSemana(anio,num);
+  out.fechas.forEach(function(f){
+    var r=dias[f]||{};
+    var t=r.turno||'';
+    if(!t){ out.sinTurno.push(f); return; }
+    if(tcCambioEsNoLaborable(t)){ out.noLaborables.push(f); return; }
+    out.laborables.push(f);
+    var b=tcCambioBloqueoVinculo(f,null);
+    if(b){ out.bloqueados.push(f); out.motivos.push(b); }
+  });
+  return out;
+}
+
+window.tcCgRefrescarSem=function(){
+  var cont=document.getElementById('cg-sem-info');
+  if(!cont) return;
+  var d=tcCgSemLeer();
+  if(!d.valida){ cont.textContent='Selecciona el año y la semana.'; return; }
+  var turnoEl=document.getElementById('cg-sem-turno');
+  var destino=turnoEl?turnoEl.value:'';
+  var html='';
+  d.fechas.forEach(function(f){
+    var r=dias[f]||{};
+    var t=r.turno||'';
+    var linea=tcFmtF(f)+' · '+tcCambioTurnoLabel(t);
+    if(!t) linea+=' · ⚠️ sin turno asignado';
+    else if(tcCambioEsNoLaborable(t)) linea+=' · no laborable (se conserva)';
+    else{
+      if(r.cambioPendiente) linea+=' · ⚠️ cambio pendiente';
+      else if(r.cambio) linea+=' · 🔒 ya vinculado a un cambio';
+      else if(destino&&t===destino) linea+=' · sin cambio'; /* DEV-005R3 */
+      else if(destino) linea+=' → '+destino;
+      else linea+=' · laborable';
+    }
+    html+=tcEsc(linea)+'<br>';
+  });
+  /* DEV-005R3 — Los laborables que ya tienen el turno destino no se cuentan. */
+  var yaIguales=destino?d.laborables.filter(function(f){ return ((dias[f]||{}).turno||'')===destino; }).length:0;
+  html+='<strong>'+(d.laborables.length-yaIguales)+' laborable(s) · '+d.noLaborables.length+' conservado(s)';
+  if(yaIguales) html+=' · '+yaIguales+' sin cambio';
+  if(d.sinTurno.length) html+=' · '+d.sinTurno.length+' sin turno';
+  if(d.bloqueados.length) html+=' · '+d.bloqueados.length+' bloqueado(s)';
+  html+='</strong>';
+  cont.innerHTML=html;
+};
+
+window.tcCambioGuardarSemana=function(){
+  var aviso=function(msg){
+    tcModalPrompt('Cambio no permitido',msg,[{label:'Entendido',className:'btn-secondary',onClick:function(){}}]);
+  };
+  var d=tcCgSemLeer();
+  if(!d.valida){ aviso('Selecciona un año y un número de semana válidos.'); return; }
+  var turnoEl=document.getElementById('cg-sem-turno');
+  var turnoRecibido=turnoEl?turnoEl.value:'';
+  /* Turno recibido obligatorio. */
+  if(!turnoRecibido){ aviso('Selecciona el turno recibido para poder guardar el cambio de semana completa.'); return; }
+  /* DEV-005R3 — El destino de una semana completa debe ser un turno laborable. */
+  if(tcCambioEsNoLaborable(turnoRecibido)){
+    aviso('El turno recibido debe ser laborable. No puedes aplicar Descanso, Vacaciones u otro turno no laborable como destino de una semana completa.');
+    return;
+  }
+  /* Ningún día de la semana puede quedarse sin turno: se bloquea entera. */
+  if(d.sinTurno.length){
+    aviso(TC_CAMBIO_MSG_SIN_TURNO+'\n\nDías sin turno en la semana '+d.num+': '+d.sinTurno.map(tcFmtF).join(', ')+
+      '\n\nAsigna sus turnos antes de cambiar la semana completa. No se ha modificado ningún día.');
+    return;
+  }
+  /* Al menos un día laborable. */
+  if(!d.laborables.length){
+    aviso('La semana '+d.num+' de '+d.anio+' no tiene ningún día laborable. Solo hay descansos, vacaciones u otros días no laborables, que nunca se cambian.');
+    return;
+  }
+  /* Un solo día vinculado bloquea TODA la operación: nunca cambios parciales. */
+  if(d.bloqueados.length){
+    aviso('No se puede cambiar la semana completa porque hay días laborables que ya pertenecen a otro cambio: '+
+      d.bloqueados.map(tcFmtF).join(', ')+'.\n\n'+d.motivos[0]+'\n\nNo se ha modificado ningún día.');
+    return;
+  }
+
+  /* DEV-005R3 — Solo se registran los días laborables cuyo turno cambia de
+     verdad. Los que ya tienen el turno recibido no reciben cambioId, no quedan
+     bloqueados y no cuentan en el resumen. */
+  var diasModificados=d.laborables.filter(function(fecha){
+    return ((dias[fecha]||{}).turno||'')!==turnoRecibido;
+  });
+  if(!diasModificados.length){
+    aviso('Todos los días laborables ya tienen el turno seleccionado. No hay ningún cambio que registrar.');
+    return;
+  }
+  var yaIguales=d.laborables.filter(function(fecha){
+    return ((dias[fecha]||{}).turno||'')===turnoRecibido;
+  });
+
+  var comp=document.getElementById('cg-sem-comp').value.trim();
+  var notas=document.getElementById('cg-sem-notas').value.trim();
+  var id=tcCambioNuevoId();
+
+  var detalle=diasModificados.map(function(f){
+    return tcFmtF(f)+': '+tcCambioTurnoLabel((dias[f]||{}).turno)+' → '+tcCambioTurnoLabel(turnoRecibido);
+  }).join('\n');
+  var conservados=d.noLaborables.length
+    ? '\n\nSe conservan sin cambios: '+d.noLaborables.map(function(f){
+        return tcFmtF(f)+' ('+tcCambioTurnoLabel((dias[f]||{}).turno)+')';
+      }).join(', ')
+    : '';
+  var sinCambio=yaIguales.length
+    ? '\n\nYa tienen ese turno (no se registran): '+yaIguales.map(tcFmtF).join(', ')
+    : '';
+
+  tcModalPrompt('Confirmar cambio de semana '+d.num,
+    'Semana '+d.num+' de '+d.anio+' · '+tcFmtF(d.fechas[0])+' → '+tcFmtF(d.fechas[6])+'\n'+
+    diasModificados.length+' día(s) laborable(s) pasarán a '+tcCambioTurnoLabel(turnoRecibido)+':\n\n'+detalle+sinCambio+conservados+
+    '\n\nSolo se modifican códigos de turno. No se tocan hojas de ruta, servicios, jornadas ni ampliaciones.',
+    [{label:'Sí, cambiar la semana',className:'btn-primary',onClick:function(){
+        diasModificados.forEach(function(f){
+          var r=dias[f]||{};
+          tcCambioEscribirMeta(f,{cambioId:id,tipoCambio:'cambio_semana',estadoCambio:'registrado',
+            cambioPendiente:false,turnoOriginal:r.turno||'',turnoFinal:turnoRecibido,turnoRecibido:turnoRecibido,
+            fechaVinculada:null,companero:comp,notas:notas,semanaAnio:d.anio,semanaNum:d.num});
+        });
+        tcCambioPersistir();
+        tcCgVista('cg-menu');
+        tcToast('📆 Semana '+d.num+' cambiada · '+diasModificados.length+' día(s)');
+      }},
+     {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
+};
+
+/* Resumen de una línea para la lista: «Cambio semana 30 · 4 días · CT → CM» */
+function tcCambioResumenSemana(g){
+  var reg=g.reg||{};
+  var num=(reg.cambioSemanaNum!=null&&reg.cambioSemanaNum!=='')?reg.cambioSemanaNum:'?';
+  var orig={}, dest={};
+  g.fechas.forEach(function(f){
+    var rr=dias[f]||{};
+    orig[rr.cambioTurnoOriginal||'—']=1;
+    dest[rr.cambioTurnoFinal||'—']=1;
+  });
+  var ko=Object.keys(orig), kd=Object.keys(dest);
+  return 'Cambio semana '+num+' · '+g.fechas.length+' día'+(g.fechas.length===1?'':'s')+
+         ' · '+(ko.length===1?ko[0]:'varios')+' → '+(kd.length===1?kd[0]:'varios');
+}
+
+/* ---------------- 5. Lista de cambios pendientes/registrados ---------------- */
 function tcCambioAgrupar(){
   var grupos=[], porId={};
   Object.keys(dias).sort().reverse().forEach(function(k){
@@ -5136,11 +5848,18 @@ window.tcCgRenderLista=function(){
   grupos.forEach(function(g){
     var r=g.reg;
     html+='<div class="tc-cg-item'+(g.pendiente?' pend':'')+'">';
+    if(g.tipo==='cambio_semana'){
+      /* DEV-005R2 — Un solo registro para toda la semana. */
+      html+='<strong>📆 '+tcEsc(tcCambioResumenSemana(g))+'</strong><br>';
+      html+='Semana <strong>'+tcEsc(String(r.cambioSemanaNum!=null?r.cambioSemanaNum:'?'))+'</strong> de <strong>'+tcEsc(String(r.cambioSemanaAnio||''))+'</strong> · '+tcFmtF(g.fechas[0])+' → '+tcFmtF(g.fechas[g.fechas.length-1])+'<br>';
+      html+='Estado: <strong>Registrado</strong><br>';
+    }else{
     html+='<strong>'+(g.pendiente?'⚠️ ':'🔄 ')+tcEsc(tcCambioTipoLabel(g.tipo))+'</strong><br>';
     html+='Fechas: <strong>'+g.fechas.map(tcFmtF).join(' ↔ ')+'</strong><br>';
     if(g.pendiente) html+='Estado: <strong>Pendiente · Día por convenir</strong><br>';
     else if(g.legacy) html+='Estado: <strong>Registrado (formato anterior)</strong><br>';
     else html+='Estado: <strong>'+(g.tipo==='servicio_mismo_dia'?'Registrado':'Resuelto')+'</strong><br>';
+    }
     g.fechas.forEach(function(f){
       var rr=dias[f]||{};
       if(rr.cambioTurnoOriginal!=null||rr.cambioTurnoFinal!=null){
@@ -5255,7 +5974,7 @@ window.tcCambioConfirmarAsignacion=function(){
   confirmar();
 };
 
-/* ---------------- 5. Deshacer cambio ---------------- */
+/* ---------------- 6. Deshacer cambio ---------------- */
 window.tcCambioDeshacer=function(id){
   var fechas=tcCambioFechasDeGrupo(id);
   if(!fechas.length){ tcToast('⚠️ Cambio no encontrado'); tcCgRenderLista(); return; }
@@ -5431,7 +6150,7 @@ window.tcImpConfirm=function(){
   validas.forEach(function(p){
     generarThumb(p,function(thumb){
       var ex=dias[p.key]||{};
-      var revisionPrevia=!!(ex.jornada&&ex.jornada.requiereRevision);
+      var revisionPrevia=tcJornadaRevisionPendiente(ex.jornada);
       ex.turno=ex.turno||'';
       ex.servicio=p.servicio||ex.servicio||'';
       ex.imgData=p.imgData;
@@ -5446,7 +6165,7 @@ window.tcImpConfirm=function(){
       /* Fusión segura: nunca se pierde jornada, ampliaciones ni ningún otro
          campo ya existente (se muta el registro previo en vez de sustituirlo). */
       tcJornadaFusionarExtraccion(ex,p.key,p.jornadaExtraida);
-      if(ex.jornada&&ex.jornada.requiereRevision&&!revisionPrevia) revisar++;
+      if(tcJornadaRevisionPendiente(ex.jornada)&&!revisionPrevia) revisar++;
       dias[p.key]=ex;
       ok++;
       pendientes--;
