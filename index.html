@@ -514,8 +514,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-006</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-006R1</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Corrección de la conservación y revisión de T.D. y deje al sustituir hojas de ruta.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-006R3</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> OCR de hojas de ruta con imagen exclusiva de alta resolución, validación de fecha previa a sinClave/error y control de fallos de OCR en la importación semanal.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -2687,6 +2687,129 @@ function leerTicketConOCRSpace(imagenBase64, apiKey) {
     });
 }
 
+/* ==========================================================================
+   DEV-006R2 — OCR para hojas de ruta escaneadas.
+   Reutiliza obtenerApiKeyOCR / comprimirImagen / leerTicketConOCRSpace sin
+   añadir librerías. NO toca el OCR de liquidaciones (tickets), que sigue con
+   su propio flujo. La clave nunca se guarda dentro del calendario ni del
+   backup: solo se lee de localStorage mediante obtenerApiKeyOCR.
+   ========================================================================== */
+
+/* Decide si el texto que PDF.js extrajo de una página es aprovechable o si la
+   página es realmente una imagen escaneada (getTextContent() vacío o casi).
+   Una hoja de ruta real tiene decenas/cientos de caracteres; menos de 20
+   caracteres no-espacio se considera "escaneada / insuficiente". */
+function tcTextoPdfSuficiente(texto){
+  if(!texto) return false;
+  var limpio=String(texto).replace(/\s+/g,'');
+  if(limpio.length<20) return false;
+  /* DEV-006R3 — La longitud no basta: el texto solo se considera válido si
+     además contiene algún marcador propio de una hoja de ruta. Si no aparece
+     ninguno, la página se trata como escaneada/insuficiente y se aplica OCR. */
+  return /Toma\s*servicio|Fin\s*de\s*servicio|Horas\s*c[oó]mputo|Servicio|\bT\s*\.?\s*D\s*\.?|\bDEJE\b/i.test(String(texto));
+}
+
+/* Núcleo reutilizable: devuelve el texto utilizable de una página de hoja de
+   ruta a partir del texto de PDF.js y de la imagen ya renderizada.
+   - Si el texto de PDF.js es suficiente → lo devuelve tal cual (NUNCA OCR).
+   - Si está vacío/insuficiente y hay clave OCR → comprime y llama a OCR.space.
+   - Si no hay clave → devuelve sinClave:true (el llamador decide: guardar solo
+     la imagen y avisar de configurar la clave). No inventa datos.
+   Nunca rechaza (resolve siempre): un fallo de OCR devuelve el texto que haya
+   más el error, de modo que en la importación semanal un fallo en una página
+   no bloquea las demás.
+   onEstado (opcional): se invoca con un mensaje cuando va a empezar el OCR, para
+   que el llamador muestre "PDF escaneado · Aplicando OCR…".
+   Resuelve con {texto, fuente:'pdf'|'ocr', ocrIntentado, sinClave, error}. */
+function tcObtenerTextoHoja(textoPdf,imagenDataURL,onEstado){
+  return new Promise(function(resolve){
+    /* 1) Texto de PDF suficiente: no se ejecuta OCR. */
+    if(tcTextoPdfSuficiente(textoPdf)){
+      resolve({texto:textoPdf,fuente:'pdf',ocrIntentado:false,sinClave:false,error:null});
+      return;
+    }
+    /* 2) Escaneada sin clave: no inventar datos, avisar al llamador. */
+    var apiKey=(typeof obtenerApiKeyOCR==='function')?obtenerApiKeyOCR():null;
+    if(!apiKey){
+      resolve({texto:(textoPdf||''),fuente:'pdf',ocrIntentado:false,sinClave:true,error:null});
+      return;
+    }
+    /* 3) Escaneada, sin imagen aprovechable: no bloquear. */
+    if(!imagenDataURL){
+      resolve({texto:(textoPdf||''),fuente:'pdf',ocrIntentado:false,sinClave:false,error:'sin_imagen'});
+      return;
+    }
+    /* 4) Escaneada con clave: comprimir + OCR.space (reutilizados tal cual). */
+    if(typeof onEstado==='function'){ try{ onEstado('PDF escaneado · Aplicando OCR…'); }catch(e){} }
+    comprimirImagen(imagenDataURL).then(function(comprimida){
+      return leerTicketConOCRSpace(comprimida,apiKey);
+    }).then(function(textoOcr){
+      resolve({texto:(textoOcr||''),fuente:'ocr',ocrIntentado:true,sinClave:false,error:null});
+    }).catch(function(err){
+      /* Un fallo de OCR nunca bloquea: se sigue con el texto PDF (posiblemente
+         vacío) y se informa del error para que el llamador lo muestre. */
+      resolve({texto:(textoPdf||''),fuente:'pdf',ocrIntentado:true,sinClave:false,error:(err&&err.message)?err.message:'ocr_error'});
+    });
+  });
+}
+
+/* DEV-006R3 — Imagen EXCLUSIVA para OCR. Solo cuando la página está escaneada
+   (texto PDF insuficiente) se renderiza de nuevo a escala 2.0 y JPEG 0.75, para
+   dar a OCR.space una imagen mucho más nítida. Esta imagen NO se guarda en
+   ningún sitio (no aumenta IndexedDB): la imagen almacenada sigue siendo la de
+   baja resolución que ya se generaba. Si la página tiene texto suficiente
+   devuelve null (no habrá OCR). Si el renderizado de alta resolución falla,
+   devuelve la imagen de reserva para no bloquear el OCR. Nunca rechaza. */
+function tcImagenOcrSiEscaneada(page,textoPdf,imgFallback){
+  return new Promise(function(resolve){
+    if(tcTextoPdfSuficiente(textoPdf)){ resolve(null); return; }
+    try{
+      var vp=page.getViewport({scale:2.0});
+      var cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
+      page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise.then(function(){
+        try{ resolve(cv.toDataURL('image/jpeg',0.75)); }
+        catch(e){ resolve(imgFallback||null); }
+      }).catch(function(){ resolve(imgFallback||null); });
+    }catch(e){ resolve(imgFallback||null); }
+  });
+}
+
+/* Último recurso SOLO para una hoja individual: deducir la fecha del nombre del
+   archivo cuando ni el texto PDF ni el OCR la detectan. NUNCA se usa para
+   páginas de un PDF semanal multipágina (allí no se llama a esta función).
+   Formatos admitidos: DDMMYY, DD-MM-YYYY, DD_MM_YYYY, YYYYMMDD (y variantes con
+   separador). Valida día, mes, año reales. Devuelve 'YYYY-MM-DD' o null. */
+function tcFechaDesdeNombre(nombre){
+  if(!nombre) return null;
+  var base=String(nombre).replace(/^.*[\\\/]/,'').replace(/\.[^.]*$/,'').trim();
+  function valida(y,mo,d){
+    if(isNaN(y)||isNaN(mo)||isNaN(d)) return null;
+    if(y<2020||y>2035) return null;
+    if(mo<1||mo>12) return null;
+    if(d<1||d>31) return null;
+    var dt=new Date(y,mo-1,d);
+    if(dt.getFullYear()!==y||dt.getMonth()!==(mo-1)||dt.getDate()!==d) return null;
+    return y+'-'+tcPad(mo)+'-'+tcPad(d);
+  }
+  var m;
+  /* DD-MM-YYYY / DD_MM_YYYY */
+  m=base.match(/^(\d{1,2})[-_](\d{1,2})[-_](\d{4})$/);
+  if(m) return valida(parseInt(m[3],10),parseInt(m[2],10),parseInt(m[1],10));
+  /* YYYY-MM-DD / YYYY_MM_DD */
+  m=base.match(/^(\d{4})[-_](\d{1,2})[-_](\d{1,2})$/);
+  if(m) return valida(parseInt(m[1],10),parseInt(m[2],10),parseInt(m[3],10));
+  /* YYYYMMDD (8 dígitos que empiezan por 20xx) */
+  m=base.match(/^(20\d{2})(\d{2})(\d{2})$/);
+  if(m) return valida(parseInt(m[1],10),parseInt(m[2],10),parseInt(m[3],10));
+  /* DDMMYYYY (8 dígitos que no empiezan por 20xx) */
+  m=base.match(/^(\d{2})(\d{2})(\d{4})$/);
+  if(m) return valida(parseInt(m[3],10),parseInt(m[2],10),parseInt(m[1],10));
+  /* DDMMYY (6 dígitos) → siglo 20xx (ej. 190626 → 2026-06-19) */
+  m=base.match(/^(\d{2})(\d{2})(\d{2})$/);
+  if(m) return valida(2000+parseInt(m[3],10),parseInt(m[2],10),parseInt(m[1],10));
+  return null;
+}
+
 /**
  * Inicializa el módulo de cámara y OCR en la pestaña de liquidaciones.
  */
@@ -3891,8 +4014,15 @@ function tcExtraerJornadaHojaRuta(texto,registroDia){
 
   /* DEV-006 — T.D. y deje: se leen literalmente de la hoja de ruta y se
      guardan aparte. No se derivan de DESPLA/SINBUS, no se inventan cuando no
-     aparecen y nunca modifican computoOficialMinutos. */
-  var mTD=full.match(/(?:^|[^A-Za-zÁÉÍÓÚÜÑ])T\s*\.?\s*D\s*\.?\s*:?\s*(\d{1,4})\s*MIN/i);
+     aparecen y nunca modifican computoOficialMinutos.
+     DEV-006R2 — Reconocimiento flexible para texto por columnas u OCR:
+       · etiqueta "T.D." tolerante: T.D. / T. D. / T D / TD
+       · unidad de minutos tolerante: "MIN", "MI N", "M1N", "M I N" e incluso
+         "MI" (la hoja de ruta escribe "48 MI" y la "N" cae en otra columna).
+         Se admiten espacios/saltos entre M, I y N y errores OCR I/1/L; la N
+         final es opcional.
+       · nunca se acepta un número sin que aparezca claramente la etiqueta. */
+  var mTD=full.match(/(?:^|[^A-Za-zÁÉÍÓÚÜÑ0-9])T[\s.·]*D[\s.:·]*(\d{1,4})\s*M\s*[I1L]\s*N?/i);
   if(mTD){
     var vTD=parseInt(mTD[1],10);
     if(!isNaN(vTD)&&vTD>=0&&vTD<=1440){
@@ -3901,7 +4031,7 @@ function tcExtraerJornadaHojaRuta(texto,registroDia){
       jr.computosEspecificos.tiempoDesplazamiento.origen='hoja_ruta';
     }
   }
-  var mDJ=full.match(/(?:^|[^A-Za-zÁÉÍÓÚÜÑ])DEJ\s*E?\s*\.?\s*:?\s*(\d{1,4})\s*MIN/i);
+  var mDJ=full.match(/(?:^|[^A-Za-zÁÉÍÓÚÜÑ0-9])DEJ\s*E?[\s.:·]*(\d{1,4})\s*M\s*[I1L]\s*N?/i);
   if(mDJ){
     var vDJ=parseInt(mDJ[1],10);
     if(!isNaN(vDJ)&&vDJ>=0&&vDJ<=1440){
@@ -3933,19 +4063,33 @@ function tcProcesarPrimeraPaginaPdf(file,callback){
         var cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
         Promise.all([page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise,page.getTextContent()]).then(function(res){
           var imgData=cv.toDataURL('image/jpeg',0.60);
-          var texto=tcTextoPorLineas(res[1].items);
-          var img=new Image();
-          img.onload=function(){
-            try{
-              var thumbW=Math.min(img.width,300);
-              var thumbH=Math.round(img.height*(thumbW/img.width));
-              var tcv=document.createElement('canvas'); tcv.width=thumbW; tcv.height=thumbH;
-              tcv.getContext('2d').drawImage(img,0,0,thumbW,thumbH);
-              callback(imgData,tcv.toDataURL('image/jpeg',0.45),texto);
-            }catch(e){callback(imgData,imgData,texto);}
-          };
-          img.onerror=function(){callback(imgData,imgData,texto);};
-          img.src=imgData;
+          var textoPdf=tcTextoPorLineas(res[1].items);
+          var fileName=(file&&file.name)?file.name:'';
+          /* DEV-006R2 — Si la hoja está escaneada (sin texto PDF), aplicar OCR
+             antes de continuar. tcObtenerTextoHoja nunca rechaza; el callback se
+             invoca una sola vez (guarda anti-doble por la respuesta asíncrona).
+             DEV-006R3 — La imagen guardada (imgData, 1.0/0.60) no cambia; para OCR
+             se usa una imagen exclusiva de alta resolución solo si está escaneada. */
+          tcImagenOcrSiEscaneada(page,textoPdf,imgData).then(function(imgOcr){
+          tcObtenerTextoHoja(textoPdf,imgOcr,function(msg){tcToast(msg);}).then(function(r){
+            var texto=r.texto;
+            var meta={sinClave:r.sinClave,ocrError:r.error,fuente:r.fuente,fileName:fileName};
+            var yaLlamado=false;
+            function emitir(a,b,c){ if(yaLlamado)return; yaLlamado=true; callback(a,b,c,meta); }
+            var img=new Image();
+            img.onload=function(){
+              try{
+                var thumbW=Math.min(img.width,300);
+                var thumbH=Math.round(img.height*(thumbW/img.width));
+                var tcv=document.createElement('canvas'); tcv.width=thumbW; tcv.height=thumbH;
+                tcv.getContext('2d').drawImage(img,0,0,thumbW,thumbH);
+                emitir(imgData,tcv.toDataURL('image/jpeg',0.45),texto);
+              }catch(e){emitir(imgData,imgData,texto);}
+            };
+            img.onerror=function(){emitir(imgData,imgData,texto);};
+            img.src=imgData;
+          });
+          });
         });
       });
     }).catch(function(){tcToast('Error leyendo PDF');});
@@ -4022,14 +4166,51 @@ function tcDescartarHojaPendiente(){
 window.tcDiaHojaPdf=function(input){
   var file=input.files&&input.files[0]; if(!file||!activeDate)return;
   var diaAbierto=activeDate;
-  tcProcesarPrimeraPaginaPdf(file,function(imgData,thumbData,texto){
-    var fechaDetectada=tcDetectFecha(texto);
+  tcProcesarPrimeraPaginaPdf(file,function(imgData,thumbData,texto,meta){
+    meta=meta||{};
+    /* DEV-006R3 — La fecha se comprueba SIEMPRE (texto/OCR o, como alternativa,
+       el nombre del archivo: 190626.pdf → 2026-06-19) ANTES de tratar los casos
+       sinClave u ocrError, para no insertar nunca una hoja en un día equivocado. */
+    var fechaDetectada=tcDetectFecha(texto)||tcFechaDesdeNombre(meta.fileName);
+    var cierra=function(){ document.getElementById('dia-hoja-file').value=''; };
+
+    /* DEV-006R3 — Hoja escaneada sin clave OCR o con error de OCR: no se inventan
+       datos, pero igualmente se valida la fecha, se avisa si pertenece a otro día,
+       se muestra el motivo del error y solo se permite "Guardar solo la imagen" o
+       "Cancelar". Nunca se inserta en silencio en un día diferente. */
+    if(meta.sinClave||meta.ocrError){
+      var msgOCR=meta.sinClave
+        ? 'Esta hoja está escaneada. Configura la clave OCR.space para extraer automáticamente sus datos.'
+        : ('No se pudo aplicar OCR a esta hoja escaneada.\nMotivo: '+meta.ocrError);
+      if(fechaDetectada&&fechaDetectada!==diaAbierto){
+        tcModalPrompt(
+          'Fecha distinta detectada',
+          msgOCR+'\n\nLa hoja corresponde a '+tcFmtF(fechaDetectada)+', no al día abierto ('+tcFmtF(diaAbierto)+').',
+          [
+            {label:'Cancelar',className:'btn-secondary',onClick:cierra},
+            {label:'Guardar solo la imagen en '+tcFmtF(fechaDetectada),className:'btn-primary',onClick:function(){ tcDiaHojaConfirmarYGuardar(fechaDetectada,imgData,thumbData,texto); }}
+          ]
+        );
+        return;
+      }
+      tcModalPrompt(
+        meta.sinClave?'Hoja escaneada':'Error de OCR',
+        msgOCR+(fechaDetectada?'':'\n\nAdemás, no se ha podido comprobar la fecha de esta hoja.'),
+        [
+          {label:'Cancelar',className:'btn-secondary',onClick:cierra},
+          {label:'Guardar solo la imagen',className:'btn-primary',onClick:function(){ tcDiaHojaConfirmarYGuardar(diaAbierto,imgData,thumbData,texto); }}
+        ]
+      );
+      return;
+    }
+
+    /* Texto PDF suficiente u OCR correcto: validación de fecha habitual. */
     if(fechaDetectada&&fechaDetectada!==diaAbierto){
       tcModalPrompt(
         'Fecha distinta detectada',
         'La hoja corresponde a '+tcFmtF(fechaDetectada)+'.\nEstás intentando añadirla al día '+tcFmtF(diaAbierto)+'.',
         [
-          {label:'Cancelar',className:'btn-secondary',onClick:function(){ document.getElementById('dia-hoja-file').value=''; }},
+          {label:'Cancelar',className:'btn-secondary',onClick:cierra},
           {label:'Guardar en la fecha detectada',className:'btn-primary',onClick:function(){ tcDiaHojaConfirmarYGuardar(fechaDetectada,imgData,thumbData,texto); }}
         ]
       );
@@ -4040,7 +4221,7 @@ window.tcDiaHojaPdf=function(input){
         'Fecha no verificada',
         'No se ha podido comprobar la fecha de esta hoja.',
         [
-          {label:'Cancelar',className:'btn-secondary',onClick:function(){ document.getElementById('dia-hoja-file').value=''; }},
+          {label:'Cancelar',className:'btn-secondary',onClick:cierra},
           {label:'Guardar en el día abierto',className:'btn-primary',onClick:function(){ tcDiaHojaConfirmarYGuardar(diaAbierto,imgData,thumbData,texto); }}
         ]
       );
@@ -6047,11 +6228,16 @@ window.tcImpProcess=function(){
   reader.onload=function(ev){
     pdfjsLib.getDocument({data:new Uint8Array(ev.target.result)}).promise.then(function(pdf){
       var total=pdf.numPages;
+      /* DEV-006R2 — Marca si alguna página estaba escaneada y no había clave OCR,
+         para avisar una sola vez al terminar (nunca se inventan datos). */
+      var impSinClaveOCR=false;
       function procPag(n){
         if(n>total){
           document.getElementById('imp-prog-txt').textContent='✔ '+total+' páginas extraídas.';
           document.getElementById('imp-bar').style.width='100%';
-          document.getElementById('imp-actions').style.display='flex'; return;
+          document.getElementById('imp-actions').style.display='flex';
+          if(impSinClaveOCR){ tcToast('Esta hoja está escaneada. Configura la clave OCR.space para extraer automáticamente sus datos.'); }
+          return;
         }
         document.getElementById('imp-prog-txt').textContent='Extrayendo página '+n+' de '+total+'…';
         document.getElementById('imp-bar').style.width=Math.round((n-1)/total*100)+'%';
@@ -6060,23 +6246,48 @@ window.tcImpProcess=function(){
           var cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
           Promise.all([page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise,page.getTextContent()]).then(function(res){
             var img=cv.toDataURL('image/jpeg',0.60);
-            var texto=tcTextoPorLineas(res[1].items);
-            var key=tcDetectFecha(texto);
-            var serv=tcDetectServicio(texto);
-            var jornadaExtraida=tcExtraerJornadaHojaRuta(texto,key?dias[key]:null);
-            pdfPages.push({key:key,imgData:img,servicio:serv,fechaOk:!!key,jornadaExtraida:jornadaExtraida});
-            var row=document.createElement('div'); row.className='tc-page-row';
-            var thmb=document.createElement('img'); thmb.className='tc-page-thumb'; thmb.src=img;
-            var inf=document.createElement('div'); inf.className='tc-page-info';
-            var fLabel,stCls;
-            if(key){
-              var kp2=key.split('-');
-              fLabel=parseInt(kp2[2],10)+' '+MESES[parseInt(kp2[1],10)-1]+' '+kp2[0]; stCls='ok';
-            } else { fLabel='⚠️ Fecha no detectada'; stCls='warn'; }
-            inf.innerHTML='<div class="tc-page-num">Pág. '+n+'</div><div class="tc-page-date">'+fLabel+'</div><div class="tc-page-st '+stCls+'">'+(serv?'Servicio: '+tcEsc(serv):'Sin servicio detectado')+'</div>';
-            row.appendChild(thmb); row.appendChild(inf);
-            document.getElementById('imp-pages').appendChild(row);
-            procPag(n+1);
+            var textoPdf=tcTextoPorLineas(res[1].items);
+            /* DEV-006R2 — OCR secuencial: se espera el texto (PDF u OCR) de esta
+               página antes de detectar fecha/servicio/jornada y de pasar a la
+               siguiente. Las páginas NUNCA se procesan en paralelo y un fallo de
+               OCR no bloquea el resto (tcObtenerTextoHoja nunca rechaza).
+               No se usa el nombre del archivo como fecha en la importación
+               semanal multipágina.
+               DEV-006R3 — La imagen mostrada/guardada (img, 1.2/0.60) no cambia;
+               para OCR se usa una imagen exclusiva de alta resolución solo si la
+               página está escaneada. */
+            tcImagenOcrSiEscaneada(page,textoPdf,img).then(function(imgOcr){
+            tcObtenerTextoHoja(textoPdf,imgOcr,function(msg){
+              document.getElementById('imp-prog-txt').textContent='Página '+n+' de '+total+' · '+msg;
+            }).then(function(r){
+              if(r.sinClave) impSinClaveOCR=true;
+              /* DEV-006R3 — Si el OCR se intentó y falló, la página se marca como
+                 "OCR fallido", se muestra el motivo y NO se extrae ni se anuncia
+                 ningún dato. El bucle continúa con las demás páginas. */
+              var ocrFallido=!!(r.ocrIntentado&&r.error);
+              var texto=r.texto;
+              var key=ocrFallido?null:tcDetectFecha(texto);
+              var serv=ocrFallido?null:tcDetectServicio(texto);
+              var jornadaExtraida=ocrFallido?null:tcExtraerJornadaHojaRuta(texto,key?dias[key]:null);
+              pdfPages.push({key:key,imgData:img,servicio:serv,fechaOk:!!key,jornadaExtraida:jornadaExtraida,ocrError:ocrFallido?(r.error||'OCR fallido'):null});
+              var row=document.createElement('div'); row.className='tc-page-row';
+              var thmb=document.createElement('img'); thmb.className='tc-page-thumb'; thmb.src=img;
+              var inf=document.createElement('div'); inf.className='tc-page-info';
+              if(ocrFallido){
+                inf.innerHTML='<div class="tc-page-num">Pág. '+n+'</div><div class="tc-page-date">❌ OCR fallido</div><div class="tc-page-st warn">Motivo: '+tcEsc(r.error||'desconocido')+'</div>';
+              } else {
+                var fLabel,stCls;
+                if(key){
+                  var kp2=key.split('-');
+                  fLabel=parseInt(kp2[2],10)+' '+MESES[parseInt(kp2[1],10)-1]+' '+kp2[0]; stCls='ok';
+                } else { fLabel='⚠️ Fecha no detectada'; stCls='warn'; }
+                inf.innerHTML='<div class="tc-page-num">Pág. '+n+'</div><div class="tc-page-date">'+fLabel+'</div><div class="tc-page-st '+stCls+'">'+(serv?'Servicio: '+tcEsc(serv):'Sin servicio detectado')+'</div>';
+              }
+              row.appendChild(thmb); row.appendChild(inf);
+              document.getElementById('imp-pages').appendChild(row);
+              procPag(n+1);
+            });
+            });
           });
         });
       }
