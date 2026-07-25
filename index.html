@@ -514,7 +514,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-006</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-006R5</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-006R6</span></div>
         <div style="margin-top:8px;"><strong>Descripción:</strong> OCR de hojas de ruta con imagen exclusiva de alta resolución, validación de fecha previa a sinClave/error y control de fallos de OCR en la importación semanal.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
@@ -4173,6 +4173,7 @@ function tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto,opcionDatos){
   var habiaHoja=!!(dias[fecha]&&dias[fecha].imgData);
   var reg=dias[fecha]||{};
   reg.imgData=imgData; reg.thumbData=thumbData;
+  tcCambioMarcarHojaAnadida(reg); /* DEV-006R6 */
   var revisionPrevia=tcJornadaRevisionPendiente(reg.jornada);
   var jornadaExtraida=tcExtraerJornadaHojaRuta(texto,reg);
   tcJornadaFusionarExtraccion(reg,fecha,jornadaExtraida,opcionDatos);
@@ -5539,6 +5540,8 @@ function tcCambioLimpiarMeta(reg){
   reg.cambioSemanaNum=null;    /* DEV-005R2 */
   reg.cambioTurnoPendiente=false; /* DEV-006R4 */
   reg.cambioModoTurno=null;       /* DEV-006R4 */
+  reg.cambioEstadoAnterior=null;            /* DEV-006R6 */
+  reg.cambioHojaAnadidaDuranteCambio=false; /* DEV-006R6 */
   reg.cambioCompanero='';
   reg.cambioNotas='';
   reg.cambioFechaRegistro=null;
@@ -5574,6 +5577,87 @@ function tcCambioEscribirMeta(fecha,meta){
   reg.turno=meta.turnoFinal||'';
   reg.autoTurno=false;
   dias[fecha]=reg;
+}
+
+/* ==================================================================
+   DEV-006R6 — RESTAURACIÓN COMPLETA AL DESHACER UN CAMBIO ENTRE FECHAS
+   ------------------------------------------------------------------
+   Un cambio entre días diferentes (intercambio_fechas) guarda en cada día
+   el estado previo completo (cambioEstadoAnterior) para poder reponerlo
+   entero al deshacer: turno, autoTurno, servicio y jornada (copia profunda).
+   No se duplican imgData ni thumbData (para no agotar localStorage); si el
+   día no tenía hoja y se añadió una durante el cambio, se marca
+   cambioHojaAnadidaDuranteCambio=true y al deshacer se elimina.
+   Las recaudaciones y liquidaciones NUNCA forman parte del estado previo ni
+   se borran: si existen en las fechas afectadas, el deshacer se bloquea.
+   ================================================================== */
+
+/* Copia del estado de un día ANTES de aplicar el cambio. La jornada se guarda
+   como copia profunda; imgData/thumbData no se duplican (solo se anota si
+   había hoja mediante teniaHoja). */
+function tcCambioCapturarEstadoAnterior(reg){
+  reg=reg||{};
+  return {
+    turno:reg.turno||'',
+    autoTurno:!!reg.autoTurno,
+    servicio:reg.servicio||'',
+    teniaHoja:!!reg.imgData,
+    jornada:reg.jornada?JSON.parse(JSON.stringify(reg.jornada)):null,
+    fechaCaptura:new Date().toISOString()
+  };
+}
+
+/* Marca que se ha añadido una hoja de ruta durante un cambio entre fechas a un
+   día que originalmente no la tenía, para poder eliminarla al deshacer. Solo
+   afecta a cambios con estado previo guardado (intercambio_fechas). */
+function tcCambioMarcarHojaAnadida(reg){
+  if(reg&&reg.cambio&&reg.cambioEstadoAnterior&&reg.cambioEstadoAnterior.teniaHoja===false){
+    reg.cambioHojaAnadidaDuranteCambio=true;
+  }
+}
+
+/* ¿La fecha tiene recaudaciones o liquidaciones asociadas? Los datos económicos
+   nunca se tocan; si existen, el deshacer se bloquea para revisarlos antes. */
+function tcCambioTieneEconomico(fecha){
+  var enRec=(typeof listaRecaudaciones!=='undefined'&&listaRecaudaciones)?
+    listaRecaudaciones.some(function(r){ return r&&r.fecha===fecha; }):false;
+  if(enRec) return true;
+  return (typeof listaLiquidaciones!=='undefined'&&listaLiquidaciones)?
+    listaLiquidaciones.some(function(l){ return l&&l.fecha===fecha; }):false;
+}
+
+/* Restaura por completo un día al deshacer un cambio entre fechas.
+   Con estado previo (cambioEstadoAnterior): repone turno, autoTurno, servicio y
+   la jornada anterior (copia profunda); si el día no tenía hoja y se añadió una
+   durante el cambio, elimina hoja, miniatura y —al reponer la jornada previa—
+   los datos extraídos y T.D./deje asociados. Sin estado previo (cambios
+   antiguos): repone el turno original y, si era no laborable y ahora hay hoja,
+   elimina hoja, servicio y jornada. Conserva notas e incidencias y NUNCA toca
+   recaudaciones ni liquidaciones. */
+function tcCambioRestaurarDia(r){
+  if(!r) return;
+  var prev=r.cambioEstadoAnterior;
+  if(prev){
+    r.turno=prev.turno||'';
+    r.autoTurno=!!prev.autoTurno;
+    r.servicio=prev.servicio||'';
+    r.jornada=prev.jornada?JSON.parse(JSON.stringify(prev.jornada)):null;
+    if(prev.teniaHoja===false&&r.cambioHojaAnadidaDuranteCambio){
+      delete r.imgData;
+      delete r.thumbData;
+      /* Los datos extraídos y T.D./deje ya desaparecen al reponer la jornada
+         previa (que no los contenía): si era null, no queda nada; si existía
+         una jornada manual anterior, se conserva intacta. */
+    }
+    return;
+  }
+  /* Cambio antiguo sin estado previo. */
+  if(r.cambioTurnoOriginal!=null) r.turno=r.cambioTurnoOriginal||'';
+  if(r.cambioTurnoOriginal!=null&&tcCambioEsNoLaborable(r.cambioTurnoOriginal)&&r.imgData){
+    delete r.imgData; delete r.thumbData;
+    r.servicio='';
+    r.jornada=null;
+  }
 }
 
 function tcCambioBadgeHtml(reg){
@@ -5696,10 +5780,15 @@ function tcCambioValidarPar(f1,f2){
 function tcCambioIntercambiarTurnos(f1,f2,cambioId,companero,notas,tipo){
   var r1=dias[f1]||{}, r2=dias[f2]||{};
   var t1=r1.turno||'', t2=r2.turno||'';
+  /* DEV-006R6 — Estado previo completo (solo cambios entre fechas). */
+  var prev1=(tipo==='intercambio_fechas')?tcCambioCapturarEstadoAnterior(r1):null;
+  var prev2=(tipo==='intercambio_fechas')?tcCambioCapturarEstadoAnterior(r2):null;
   tcCambioEscribirMeta(f1,{cambioId:cambioId,tipoCambio:tipo,estadoCambio:'resuelto',cambioPendiente:false,
     turnoOriginal:t1,turnoFinal:t2,turnoRecibido:t2,fechaVinculada:f2,companero:companero,notas:notas});
   tcCambioEscribirMeta(f2,{cambioId:cambioId,tipoCambio:tipo,estadoCambio:'resuelto',cambioPendiente:false,
     turnoOriginal:t2,turnoFinal:t1,turnoRecibido:t1,fechaVinculada:f1,companero:companero,notas:notas});
+  if(prev1) dias[f1].cambioEstadoAnterior=prev1; /* DEV-006R6 */
+  if(prev2) dias[f2].cambioEstadoAnterior=prev2; /* DEV-006R6 */
   tcCambioPersistir();
 }
 
@@ -5819,12 +5908,17 @@ function tcCambioMixtoAuto(roles,comp,notas){
   var worked=roles.worked, other=roles.other, nlc=roles.nonLaborCode;
   var wOrig=(dias[worked]&&dias[worked].turno)||'';
   var oOrig=(dias[other]&&dias[other].turno)||'';
+  /* DEV-006R6 — Estado previo completo de ambos días antes de aplicar. */
+  var prevW=tcCambioCapturarEstadoAnterior(dias[worked]||{});
+  var prevO=tcCambioCapturarEstadoAnterior(dias[other]||{});
   tcCambioEscribirMeta(worked,{cambioId:id,tipoCambio:'intercambio_fechas',estadoCambio:'pendiente_turno',
     cambioPendiente:true,turnoOriginal:wOrig,turnoFinal:'',turnoRecibido:'',fechaVinculada:other,
     turnoPendiente:true,modoTurno:'automatico_hoja',companero:comp,notas:notas});
   tcCambioEscribirMeta(other,{cambioId:id,tipoCambio:'intercambio_fechas',estadoCambio:'resuelto',
     cambioPendiente:false,turnoOriginal:oOrig,turnoFinal:nlc,turnoRecibido:nlc,fechaVinculada:worked,
     turnoPendiente:false,modoTurno:'automatico_hoja',companero:comp,notas:notas});
+  dias[worked].cambioEstadoAnterior=prevW; /* DEV-006R6 */
+  dias[other].cambioEstadoAnterior=prevO;  /* DEV-006R6 */
   tcCambioPersistir();
   tcCgVista('cg-menu');
   tcToast('⚠️ Cambio guardado · turno de '+tcFmtF(worked)+' pendiente de hoja');
@@ -5874,12 +5968,17 @@ window.tcCambioTurnoManualAplicar=function(){
   if(ctx.mode==='registro'){
     var wOrig=(dias[ctx.worked]&&dias[ctx.worked].turno)||'';
     var oOrig=(dias[ctx.other]&&dias[ctx.other].turno)||'';
+    /* DEV-006R6 — Estado previo completo de ambos días antes de aplicar. */
+    var prevW=tcCambioCapturarEstadoAnterior(dias[ctx.worked]||{});
+    var prevO=tcCambioCapturarEstadoAnterior(dias[ctx.other]||{});
     tcCambioEscribirMeta(ctx.worked,{cambioId:ctx.id,tipoCambio:'intercambio_fechas',estadoCambio:'resuelto',
       cambioPendiente:false,turnoOriginal:wOrig,turnoFinal:code,turnoRecibido:code,fechaVinculada:ctx.other,
       turnoPendiente:false,modoTurno:'manual',companero:ctx.comp,notas:ctx.notas});
     tcCambioEscribirMeta(ctx.other,{cambioId:ctx.id,tipoCambio:'intercambio_fechas',estadoCambio:'resuelto',
       cambioPendiente:false,turnoOriginal:oOrig,turnoFinal:ctx.nonLaborCode,turnoRecibido:ctx.nonLaborCode,fechaVinculada:ctx.worked,
       turnoPendiente:false,modoTurno:'manual',companero:ctx.comp,notas:ctx.notas});
+    dias[ctx.worked].cambioEstadoAnterior=prevW; /* DEV-006R6 */
+    dias[ctx.other].cambioEstadoAnterior=prevO;  /* DEV-006R6 */
     tcCgTurCtx=null;
     tcCambioPersistir();
     tcCgVista('cg-menu');
@@ -6392,28 +6491,62 @@ window.tcCambioDeshacer=function(id){
   var fechas=tcCambioFechasDeGrupo(id);
   if(!fechas.length){ tcToast('⚠️ Cambio no encontrado'); tcCgRenderLista(); return; }
 
+  /* DEV-006R6 — El estado previo completo solo existe en los cambios entre
+     fechas (intercambio_fechas). El resto de tipos conserva su deshacer
+     anterior (solo restaura el turno). */
+  var tipoGrupo=null;
+  for(var i=0;i<fechas.length;i++){ var rr=dias[fechas[i]]; if(rr&&rr.tipoCambio){ tipoGrupo=rr.tipoCambio; break; } }
+  var esEntreFechas=(tipoGrupo==='intercambio_fechas'||tipoGrupo==null);
+
   /* Aviso si algún turno fue editado a mano después de guardar el cambio. */
   var editados=fechas.filter(function(f){
     var r=dias[f]||{};
     return r.cambioTurnoFinal!=null&&(r.turno||'')!==(r.cambioTurnoFinal||'');
   });
 
+  var detalle=fechas.map(function(f){
+    var r=dias[f]||{};
+    var destino=(esEntreFechas&&r.cambioEstadoAnterior)?r.cambioEstadoAnterior.turno:r.cambioTurnoOriginal;
+    return tcFmtF(f)+': '+tcCambioTurnoLabel(r.turno)+' → '+tcCambioTurnoLabel(destino);
+  }).join('\n');
+
+  /* DEV-006R6 — Datos económicos: nunca se tocan. Si existen recaudaciones o
+     liquidaciones en las fechas afectadas, se bloquea el deshacer. */
+  if(esEntreFechas&&fechas.some(tcCambioTieneEconomico)){
+    tcModalPrompt('No se puede deshacer',
+      'Este cambio tiene recaudaciones o liquidaciones posteriores asociadas. Revisa esos datos antes de deshacerlo.',
+      [{label:'Entendido',className:'btn-secondary',onClick:function(){}}]);
+    return;
+  }
+
   var ejecutar=function(){
     fechas.forEach(function(f){
       var r=dias[f]||{};
-      if(r.cambioTurnoOriginal!=null) r.turno=r.cambioTurnoOriginal||'';
+      if(esEntreFechas) tcCambioRestaurarDia(r);                     /* DEV-006R6 — restauración completa */
+      else if(r.cambioTurnoOriginal!=null) r.turno=r.cambioTurnoOriginal||''; /* resto de tipos: comportamiento anterior */
       tcCambioLimpiarMeta(r);
       dias[f]=r;
     });
     tcCambioPersistir();
     tcCgVista('cg-lista');
-    tcToast('↩️ Cambio deshecho · turnos restaurados');
+    tcToast('↩️ Cambio deshecho'+(esEntreFechas?' · días restaurados':' · turnos restaurados'));
   };
 
-  var detalle=fechas.map(function(f){
-    var r=dias[f]||{};
-    return tcFmtF(f)+': '+tcCambioTurnoLabel(r.turno)+' → '+tcCambioTurnoLabel(r.cambioTurnoOriginal);
-  }).join('\n');
+  /* DEV-006R6 — Cambios antiguos sin estado previo: turno original no laborable
+     y hoja actual → al deshacer se eliminarán hoja, servicio y jornada. */
+  if(esEntreFechas){
+    var antiguos=fechas.filter(function(f){
+      var r=dias[f]||{};
+      return !r.cambioEstadoAnterior&&r.imgData&&r.cambioTurnoOriginal!=null&&tcCambioEsNoLaborable(r.cambioTurnoOriginal);
+    });
+    if(antiguos.length){
+      tcModalPrompt('Cambio antiguo sin estado previo',
+        'Este cambio se registró en una versión anterior y no guardó el estado previo. En '+antiguos.map(tcFmtF).join(' y ')+' el turno original era no laborable y ahora hay una hoja de ruta.\n\nAl deshacerlo se eliminarán la hoja, el servicio y la jornada de esos días. Las recaudaciones y liquidaciones no se tocarán.\n\n'+detalle,
+        [{label:'Deshacer y eliminar hoja',className:'btn-danger',onClick:ejecutar},
+         {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
+      return;
+    }
+  }
 
   if(editados.length){
     tcModalPrompt('Turno modificado después del cambio',
@@ -6423,7 +6556,9 @@ window.tcCambioDeshacer=function(id){
     return;
   }
   tcModalPrompt('Deshacer cambio',
-    'Se restaurarán los turnos originales. No se borrarán hojas de ruta, servicios, notas, jornadas ni ampliaciones.\n\n'+detalle,
+    (esEntreFechas
+      ? 'Se restaurará cada día a su estado anterior (turno, servicio y jornada). Las hojas añadidas durante el cambio se eliminarán; las anteriores, las notas, las incidencias y los datos económicos se conservan.'
+      : 'Se restaurarán los turnos originales. No se borrarán hojas de ruta, servicios, notas, jornadas ni ampliaciones.')+'\n\n'+detalle,
     [{label:'Sí, deshacer',className:'btn-danger',onClick:ejecutar},
      {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
 };
@@ -6598,6 +6733,7 @@ window.tcImpConfirm=function(){
       ex.servicio=p.servicio||ex.servicio||'';
       ex.imgData=p.imgData;
       ex.thumbData=thumb;
+      tcCambioMarcarHojaAnadida(ex); /* DEV-006R6 */
       ex.incidencia=ex.incidencia||'';
       ex.notas=ex.notas||'';
       ex.autoTurno=ex.autoTurno||false;
