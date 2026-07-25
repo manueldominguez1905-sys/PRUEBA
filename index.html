@@ -514,7 +514,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-006</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-006R3</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-006R5</span></div>
         <div style="margin-top:8px;"><strong>Descripción:</strong> OCR de hojas de ruta con imagen exclusiva de alta resolución, validación de fecha previa a sinClave/error y control de fallos de OCR en la importación semanal.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
@@ -1002,6 +1002,15 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
               <div class="tc-fg"><label class="tc-lbl">&#128197; Día acordado</label><input class="tc-inp" id="cg-asig-fecha" type="date" onchange="tcCgRefrescarAsig()"></div>
               <div class="tc-cg-turnos" id="cg-asig-info">Selecciona la fecha acordada.</div>
               <button class="tc-save-btn" style="background:#E65100;" onclick="tcCambioConfirmarAsignacion()">Asignar y resolver</button>
+              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-lista')">&#8592; Volver</button>
+            </div>
+
+            <!-- DEV-006R4 — ASIGNAR TURNO AL DÍA TRABAJADO (cambio laborable/no laborable) -->
+            <div id="cg-tur" style="display:none">
+              <div class="tc-cambio-info" id="cg-tur-head">&#8505;&#65039;</div>
+              <div class="tc-fg"><label class="tc-lbl">Turno realizado (día trabajado)</label><select class="tc-sel" id="cg-tur-turno"></select></div>
+              <div class="tc-cg-turnos" id="cg-tur-info">Selecciona el turno realizado (debe ser laborable).</div>
+              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCambioTurnoManualAplicar()">Aplicar turno y resolver</button>
               <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-lista')">&#8592; Volver</button>
             </div>
 
@@ -3307,7 +3316,8 @@ function tcBuildTurnoSelects(){
     {el:document.getElementById('ed-turno'),vacio:'— sin definir —'},
     {el:document.getElementById('cg-md-turno'),vacio:'— sin turno —'},
     {el:document.getElementById('cg-dc-turno'),vacio:'— sin turno —'},
-    {el:document.getElementById('cg-sem-turno'),vacio:'— sin turno —'}
+    {el:document.getElementById('cg-sem-turno'),vacio:'— sin turno —'},
+    {el:document.getElementById('cg-tur-turno'),vacio:'— sin turno —'}
   ];
   selects.forEach(function(s){ if(s.el) s.el.innerHTML='<option value="">'+s.vacio+'</option>'; });
   Object.keys(TURNO).forEach(function(k){
@@ -3732,7 +3742,9 @@ function tcRenderView(key,reg){
     raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)">➕ Añadir hoja de ruta</button>';
   }
   var html='';
-  if(reg.cambioPendiente){
+  if(reg.cambioTurnoPendiente){
+    html+='<div class="tc-cambio-pend-box">⚠️ Cambio pendiente · Turno pendiente de hoja</div>'; /* DEV-006R4 */
+  } else if(reg.cambioPendiente){
     html+='<div class="tc-cambio-pend-box">⚠️ Cambio pendiente · Día por convenir</div>';
   }
   if(reg.cambio) html+=tcCambioBadgeHtml(reg);
@@ -3856,7 +3868,32 @@ window.tcToEdit=function(servicioOverride){
 };
 window.tcSaveEdit=function(){
   var reg=dias[activeDate]||{};
-  reg.turno=document.getElementById('ed-turno').value;
+  var turnoSel=document.getElementById('ed-turno').value; /* DEV-006R5 */
+  /* DEV-006R5 — Protege la elección manual del turno en un cambio con turno
+     pendiente de hoja. Si el usuario seleccionó un turno laborable, se resuelve
+     a mano aquí ANTES de tcDiaHojaGuardarEn y se marca cambioModoTurno="manual",
+     de modo que la detección automática (tcCambioResolverPendiente) ya no pueda
+     sobrescribirlo. Si eligió un turno no laborable, se bloquea el guardado. Si
+     no eligió turno, el pendiente se conserva y la hoja podrá detectarlo. */
+  if(reg.cambioTurnoPendiente&&turnoSel){
+    if(tcCambioEsNoLaborable(turnoSel)){
+      tcModalPrompt('Turno no válido','El día trabajado de un cambio debe recibir un turno laborable (no Descanso ni Vacaciones). Elige un turno laborable, o deja el turno sin asignar para detectarlo automáticamente desde la hoja.',[{label:'Entendido',className:'btn-secondary',onClick:function(){}}]);
+      return;
+    }
+    reg.cambioTurnoFinal=turnoSel;
+    reg.cambioTurnoRecibido=turnoSel;
+    reg.cambioTurnoPendiente=false;
+    reg.cambioPendiente=false;
+    reg.estadoCambio='resuelto';
+    reg.cambioModoTurno='manual';
+    /* Propaga el modo manual al día vinculado del mismo cambioId. */
+    if(reg.cambioId){
+      tcCambioFechasDeGrupo(reg.cambioId).forEach(function(f){
+        if(f!==activeDate&&dias[f]&&dias[f].cambio) dias[f].cambioModoTurno='manual';
+      });
+    }
+  }
+  reg.turno=turnoSel;
   reg.servicio=document.getElementById('ed-servicio').value.trim();
   reg.incidencia=document.getElementById('ed-incidencia').value.trim();
   reg.notas=document.getElementById('ed-notas').value.trim();
@@ -4139,12 +4176,13 @@ function tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto,opcionDatos){
   var revisionPrevia=tcJornadaRevisionPendiente(reg.jornada);
   var jornadaExtraida=tcExtraerJornadaHojaRuta(texto,reg);
   tcJornadaFusionarExtraccion(reg,fecha,jornadaExtraida,opcionDatos);
+  var cambioResuelto=tcCambioResolverPendiente(reg,fecha); /* DEV-006R4 */
   dias[fecha]=reg;
   saveDias(); tcRenderCal();
   if(activeDate===fecha) tcRenderView(fecha,reg);
   document.getElementById('dia-hoja-file').value='';
   var avisoRevision=tcJornadaRevisionPendiente(reg.jornada)&&!revisionPrevia;
-  tcToast((habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida')+(avisoRevision?' · ⚠️ Revisa la jornada: hay datos manuales distintos de los detectados':''));
+  tcToast((habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida')+(avisoRevision?' · ⚠️ Revisa la jornada: hay datos manuales distintos de los detectados':'')+(cambioResuelto?' · 🔄 Turno del cambio resuelto: '+reg.turno:''));
 }
 
 /* Descarta la hoja individual pendiente de confirmación (DEV-004R9), si la
@@ -5499,6 +5537,8 @@ function tcCambioLimpiarMeta(reg){
   reg.cambioFechaDestino=null;
   reg.cambioSemanaAnio=null;   /* DEV-005R2 */
   reg.cambioSemanaNum=null;    /* DEV-005R2 */
+  reg.cambioTurnoPendiente=false; /* DEV-006R4 */
+  reg.cambioModoTurno=null;       /* DEV-006R4 */
   reg.cambioCompanero='';
   reg.cambioNotas='';
   reg.cambioFechaRegistro=null;
@@ -5523,6 +5563,11 @@ function tcCambioEscribirMeta(fecha,meta){
   /* DEV-005R2 — Solo el cambio de semana completa aporta estos dos campos. */
   if(meta.semanaAnio!==undefined) reg.cambioSemanaAnio=meta.semanaAnio;
   if(meta.semanaNum!==undefined) reg.cambioSemanaNum=meta.semanaNum;
+  /* DEV-006R4 — Turno pendiente de hoja (cambio laborable/no laborable). Se
+     reinician siempre salvo que la meta los declare, para que ningún otro tipo
+     de cambio herede un pendiente antiguo. */
+  reg.cambioTurnoPendiente=!!meta.turnoPendiente;
+  reg.cambioModoTurno=meta.modoTurno||null;
   reg.cambioCompanero=meta.companero||'';
   reg.cambioNotas=meta.notas||'';
   reg.cambioFechaRegistro=reg.cambioFechaRegistro||new Date().toISOString();
@@ -5539,6 +5584,7 @@ function tcCambioBadgeHtml(reg){
   }
   if(reg.tipoCambio==='cambio_semana'&&reg.cambioSemanaNum!=null)
     html+='Semana: <strong>'+tcEsc(String(reg.cambioSemanaNum))+'</strong> de <strong>'+tcEsc(String(reg.cambioSemanaAnio||''))+'</strong><br>';
+  if(reg.cambioTurnoPendiente) html+='<span style="color:#C05621">⏳ Turno pendiente de hoja de ruta</span><br>'; /* DEV-006R4 */
   var vinc=reg.cambioFechaVinculada||reg.cambioFechaDestino;
   if(vinc) html+='Día vinculado: <strong>'+tcFmtF(vinc)+'</strong><br>';
   if(reg.cambioCompanero) html+='Compañero: <strong>'+tcEsc(reg.cambioCompanero)+'</strong><br>';
@@ -5555,8 +5601,10 @@ function tcCambioPersistir(){
 }
 
 /* ---------------- Navegación del gestor ---------------- */
-var TC_CG_VISTAS=['cg-menu','cg-md','cg-fx','cg-dc','cg-sem','cg-lista','cg-asig'];
+var TC_CG_VISTAS=['cg-menu','cg-md','cg-fx','cg-dc','cg-sem','cg-lista','cg-asig','cg-tur'];
 var tcCgAsigId=null;
+/* DEV-006R4 — contexto de asignación manual de turno al día trabajado. */
+var tcCgTurCtx=null;
 
 window.tcCgVista=function(id){
   TC_CG_VISTAS.forEach(function(v){
@@ -5582,6 +5630,7 @@ window.tcOpenGestorCambios=function(){
   document.getElementById('cg-dc-info').textContent='Selecciona una fecha.';
   document.getElementById('cg-asig-info').textContent='Selecciona la fecha acordada.';
   tcCgAsigId=null;
+  tcCgTurCtx=null; /* DEV-006R4 */
   tcCgVista('cg-menu');
   tcShowPanel('pnl-cambio');
   tcOpenOv();
@@ -5694,6 +5743,174 @@ window.tcCambioGuardarMismoDia=function(){
   guardar();
 };
 
+/* ==================================================================
+   DEV-006R4 — CAMBIO ENTRE UN DÍA LABORABLE Y OTRO NO LABORABLE
+   ------------------------------------------------------------------
+   Dos días laborables: intercambio normal (como hasta ahora).
+   Dos días no laborables: bloqueado (lo hace tcCambioValidarPar).
+   Uno no laborable y otro laborable: NO se intercambian los códigos.
+     · El día originalmente no laborable es el DÍA TRABAJADO y recibe el
+       turno real del compañero (manual o pendiente de hoja).
+     · El día originalmente laborable pasa a Descanso/Vacaciones según el
+       código original del día trabajado.
+   ================================================================== */
+
+/* Devuelve los roles del par cuando es mixto (exactamente uno no laborable),
+   o null si ambos son laborables (o ambos no laborables, ya bloqueado antes). */
+function tcCambioMixtoRoles(f1,f2){
+  var r1=dias[f1]||{}, r2=dias[f2]||{};
+  var nl1=tcCambioEsNoLaborable(r1.turno), nl2=tcCambioEsNoLaborable(r2.turno);
+  if(nl1===nl2) return null;
+  if(nl1) return {worked:f1, other:f2, nonLaborCode:(r1.turno||'')};
+  return {worked:f2, other:f1, nonLaborCode:(r2.turno||'')};
+}
+
+/* Resuelve el código de turno (CM/CT/CN o PM/PT/PN) a partir de la jornada
+   extraída de una hoja de ruta. Devuelve el código si los datos están
+   completos y existe en TURNO; null si no puede determinarse con seguridad. */
+function tcCambioResolverTurnoDesdeJornada(jr){
+  if(!jr) return null;
+  var prefijo=null;
+  if(jr.descanso){
+    if(jr.descanso.tipo==='descanso_intermedio') prefijo='P';
+    else if(jr.descanso.tipo==='vuelta_descanso') prefijo='C';
+  }
+  if(!prefijo) return null;
+  var ini=jr.inicioTeorico, fin=jr.finTeorico;
+  if(!ini||!fin) return null;
+  var pi=ini.split(':'), pf=fin.split(':');
+  var hIni=parseInt(pi[0],10), mIni=parseInt(pi[1],10);
+  var hFin=parseInt(pf[0],10), mFin=parseInt(pf[1],10);
+  if(isNaN(hIni)||isNaN(mIni)||isNaN(hFin)||isNaN(mFin)) return null;
+  var totIni=hIni*60+mIni, totFin=hFin*60+mFin;
+  var letra;
+  if(totFin<totIni) letra='N';        /* cruza medianoche → noche */
+  else if(hIni<12) letra='M';         /* no cruza y empieza antes de 12:00 → mañana */
+  else letra='T';                     /* no cruza y empieza desde 12:00 → tarde */
+  var code=prefijo+letra;
+  if(!TURNO[code]) return null;
+  return code;
+}
+
+/* Intenta resolver un turno pendiente de hoja al cargar la hoja de ruta del
+   día trabajado. No toca nada si no hay pendiente, si es manual o si la
+   jornada no es concluyente. Nunca sobrescribe un turno elegido a mano. */
+function tcCambioResolverPendiente(reg,fecha){
+  if(!reg||!reg.cambio) return false;
+  if(reg.cambioModoTurno==='manual') return false; /* DEV-006R5 — nunca sobrescribe un turno elegido a mano */
+  if(!reg.cambioTurnoPendiente||reg.cambioModoTurno!=='automatico_hoja') return false;
+  if(reg.estadoCambio!=='pendiente_turno') return false;
+  var code=tcCambioResolverTurnoDesdeJornada(reg.jornada);
+  if(!code) return false; /* sigue pendiente; se pedirá asignación manual */
+  reg.turno=code;
+  reg.cambioTurnoFinal=code;
+  reg.cambioTurnoRecibido=code;
+  reg.cambioTurnoPendiente=false;
+  reg.estadoCambio='resuelto';
+  reg.cambioPendiente=false;
+  reg.autoTurno=false;
+  return true;
+}
+
+/* Registra el cambio mixto en modo automático: el día trabajado queda
+   pendiente de hoja y el otro día pasa de inmediato a Descanso/Vacaciones. */
+function tcCambioMixtoAuto(roles,comp,notas){
+  var id=tcCambioNuevoId();
+  var worked=roles.worked, other=roles.other, nlc=roles.nonLaborCode;
+  var wOrig=(dias[worked]&&dias[worked].turno)||'';
+  var oOrig=(dias[other]&&dias[other].turno)||'';
+  tcCambioEscribirMeta(worked,{cambioId:id,tipoCambio:'intercambio_fechas',estadoCambio:'pendiente_turno',
+    cambioPendiente:true,turnoOriginal:wOrig,turnoFinal:'',turnoRecibido:'',fechaVinculada:other,
+    turnoPendiente:true,modoTurno:'automatico_hoja',companero:comp,notas:notas});
+  tcCambioEscribirMeta(other,{cambioId:id,tipoCambio:'intercambio_fechas',estadoCambio:'resuelto',
+    cambioPendiente:false,turnoOriginal:oOrig,turnoFinal:nlc,turnoRecibido:nlc,fechaVinculada:worked,
+    turnoPendiente:false,modoTurno:'automatico_hoja',companero:comp,notas:notas});
+  tcCambioPersistir();
+  tcCgVista('cg-menu');
+  tcToast('⚠️ Cambio guardado · turno de '+tcFmtF(worked)+' pendiente de hoja');
+}
+
+/* Abre el selector de turno para asignar manualmente el día trabajado, tanto
+   al registrar el cambio (modo 'registro') como al resolver un pendiente
+   desde la lista (modo 'lista'). */
+function tcCambioAbrirTurnoManual(ctx){
+  tcCgTurCtx=ctx;
+  var sel=document.getElementById('cg-tur-turno'); if(sel) sel.value='';
+  document.getElementById('cg-tur-head').innerHTML=
+    'ℹ️ Día trabajado: <strong>'+tcFmtF(ctx.worked)+'</strong>.'+
+    (ctx.mode==='registro'
+      ? ' El día <strong>'+tcFmtF(ctx.other)+'</strong> pasará a '+tcEsc(tcCambioTurnoLabel(ctx.nonLaborCode))+'.'
+      : '');
+  document.getElementById('cg-tur-info').textContent='Selecciona el turno realizado (debe ser laborable).';
+  tcCgVista('cg-tur');
+}
+
+/* Registra el cambio mixto en modo manual: abre el selector para el día
+   trabajado. El otro día pasa a Descanso/Vacaciones al aplicar. */
+function tcCambioMixtoManual(roles,comp,notas){
+  tcCambioAbrirTurnoManual({mode:'registro',id:tcCambioNuevoId(),worked:roles.worked,
+    other:roles.other,nonLaborCode:roles.nonLaborCode,comp:comp,notas:notas});
+}
+
+/* Pregunta cómo asignar el turno del día trabajado en un cambio mixto. */
+function tcCambioMixtoPreguntar(roles,comp,notas){
+  var msg='Día trabajado: '+tcFmtF(roles.worked)+' (era '+tcCambioTurnoLabel(roles.nonLaborCode)+').\n'+
+          'El día '+tcFmtF(roles.other)+' pasará a '+tcCambioTurnoLabel(roles.nonLaborCode)+'.\n\n'+
+          'El día trabajado recibirá el turno real del compañero. ¿Cómo quieres asignarlo?';
+  tcModalPrompt('Cambio entre día laborable y no laborable',msg,[
+    {label:'Detectar turno al cargar la hoja',className:'btn-primary',onClick:function(){ tcCambioMixtoAuto(roles,comp,notas); }},
+    {label:'Asignar turno manualmente',className:'btn-secondary',onClick:function(){ tcCambioMixtoManual(roles,comp,notas); }},
+    {label:'Cancelar',className:'btn-secondary',onClick:function(){}}
+  ]);
+}
+
+/* Aplica el turno elegido a mano al día trabajado (validado como laborable). */
+window.tcCambioTurnoManualAplicar=function(){
+  var ctx=tcCgTurCtx;
+  if(!ctx){ tcCgVista('cg-lista'); return; }
+  var code=document.getElementById('cg-tur-turno').value;
+  if(!code){ tcModalPrompt('Turno no válido','Selecciona el turno realizado para poder resolver el cambio.',[{label:'Entendido',className:'btn-secondary',onClick:function(){}}]); return; }
+  if(tcCambioEsNoLaborable(code)){ tcModalPrompt('Turno no válido','El día trabajado debe recibir un turno laborable (no Descanso ni Vacaciones).',[{label:'Entendido',className:'btn-secondary',onClick:function(){}}]); return; }
+  if(ctx.mode==='registro'){
+    var wOrig=(dias[ctx.worked]&&dias[ctx.worked].turno)||'';
+    var oOrig=(dias[ctx.other]&&dias[ctx.other].turno)||'';
+    tcCambioEscribirMeta(ctx.worked,{cambioId:ctx.id,tipoCambio:'intercambio_fechas',estadoCambio:'resuelto',
+      cambioPendiente:false,turnoOriginal:wOrig,turnoFinal:code,turnoRecibido:code,fechaVinculada:ctx.other,
+      turnoPendiente:false,modoTurno:'manual',companero:ctx.comp,notas:ctx.notas});
+    tcCambioEscribirMeta(ctx.other,{cambioId:ctx.id,tipoCambio:'intercambio_fechas',estadoCambio:'resuelto',
+      cambioPendiente:false,turnoOriginal:oOrig,turnoFinal:ctx.nonLaborCode,turnoRecibido:ctx.nonLaborCode,fechaVinculada:ctx.worked,
+      turnoPendiente:false,modoTurno:'manual',companero:ctx.comp,notas:ctx.notas});
+    tcCgTurCtx=null;
+    tcCambioPersistir();
+    tcCgVista('cg-menu');
+    tcToast('🔄 Cambio guardado · '+tcFmtF(ctx.worked)+' → '+code);
+  } else {
+    /* modo lista: resolver un pendiente ya registrado */
+    var r=dias[ctx.worked]||{};
+    r.turno=code; r.cambioTurnoFinal=code; r.cambioTurnoRecibido=code;
+    r.cambioTurnoPendiente=false; r.estadoCambio='resuelto'; r.cambioPendiente=false; r.autoTurno=false;
+    r.cambioModoTurno='manual';
+    dias[ctx.worked]=r;
+    tcCgTurCtx=null;
+    tcCambioPersistir();
+    tcCgVista('cg-lista');
+    tcToast('🔄 Turno asignado · '+tcFmtF(ctx.worked)+' → '+code);
+  }
+};
+
+/* Desde la lista: asigna a mano el turno del día trabajado de un cambio con
+   turno pendiente de hoja. */
+window.tcCambioAsignarTurnoManual=function(id){
+  var fechas=tcCambioFechasDeGrupo(id);
+  var worked=null;
+  for(var i=0;i<fechas.length;i++){ if(dias[fechas[i]]&&dias[fechas[i]].cambioTurnoPendiente){ worked=fechas[i]; break; } }
+  if(!worked){ tcToast('⚠️ Este cambio no tiene turno pendiente'); tcCgRenderLista(); return; }
+  var vinc=dias[worked].cambioFechaVinculada||dias[worked].cambioFechaDestino||null;
+  tcCambioAbrirTurnoManual({mode:'lista',id:id,worked:worked,other:vinc,
+    nonLaborCode:(dias[worked].cambioTurnoOriginal||''),
+    comp:(dias[worked].cambioCompanero||''),notas:(dias[worked].cambioNotas||'')});
+};
+
 /* ---------------- 2. Cambio entre días diferentes ---------------- */
 window.tcCambioGuardarFechas=function(){
   var f1=document.getElementById('cg-fx-f1').value;
@@ -5702,29 +5919,36 @@ window.tcCambioGuardarFechas=function(){
   if(err){ tcModalPrompt('Cambio no permitido',err,[{label:'Entendido',className:'btn-secondary',onClick:function(){}}]); return; }
   var comp=document.getElementById('cg-fx-comp').value.trim();
   var notas=document.getElementById('cg-fx-notas').value.trim();
-  var id=tcCambioNuevoId();
   var r1=dias[f1]||{}, r2=dias[f2]||{};
 
-  var confirmar=function(){
-    tcModalPrompt('Confirmar intercambio',
-      tcFmtF(f1)+': '+tcCambioTurnoLabel(r1.turno)+' → '+tcCambioTurnoLabel(r2.turno)+'\n'+
-      tcFmtF(f2)+': '+tcCambioTurnoLabel(r2.turno)+' → '+tcCambioTurnoLabel(r1.turno)+'\n\nSolo se intercambian los códigos de turno.',
-      [{label:'Intercambiar turnos',className:'btn-primary',onClick:function(){
-          tcCambioIntercambiarTurnos(f1,f2,id,comp,notas,'intercambio_fechas');
-          tcCgVista('cg-menu');
-          tcToast('🔄 Turnos intercambiados · '+tcFmtF(f1)+' ↔ '+tcFmtF(f2));
-        }},
-       {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
+  /* DEV-006R4 — Decide entre intercambio normal (dos laborables) y cambio
+     mixto (uno laborable + uno no laborable). */
+  var proceder=function(){
+    var roles=tcCambioMixtoRoles(f1,f2);
+    if(!roles){
+      var id=tcCambioNuevoId();
+      tcModalPrompt('Confirmar intercambio',
+        tcFmtF(f1)+': '+tcCambioTurnoLabel(r1.turno)+' → '+tcCambioTurnoLabel(r2.turno)+'\n'+
+        tcFmtF(f2)+': '+tcCambioTurnoLabel(r2.turno)+' → '+tcCambioTurnoLabel(r1.turno)+'\n\nSolo se intercambian los códigos de turno.',
+        [{label:'Intercambiar turnos',className:'btn-primary',onClick:function(){
+            tcCambioIntercambiarTurnos(f1,f2,id,comp,notas,'intercambio_fechas');
+            tcCgVista('cg-menu');
+            tcToast('🔄 Turnos intercambiados · '+tcFmtF(f1)+' ↔ '+tcFmtF(f2));
+          }},
+         {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
+      return;
+    }
+    tcCambioMixtoPreguntar(roles,comp,notas);
   };
 
   if(r1.imgData||r2.imgData){
     tcModalPrompt('Hojas de ruta existentes',
       'Las hojas de ruta no se intercambiarán. Deberás actualizarlas manualmente si fuese necesario.',
-      [{label:'Continuar',className:'btn-primary',onClick:confirmar},
+      [{label:'Continuar',className:'btn-primary',onClick:proceder},
        {label:'Cancelar',className:'btn-secondary',onClick:function(){}}]);
     return;
   }
-  confirmar();
+  proceder();
 };
 
 /* ---------------- 3. Cambio por día a convenir ---------------- */
@@ -6007,7 +6231,7 @@ function tcCambioAgrupar(){
     var r=dias[k];
     if(!r||!r.cambio) return;
     var id=r.cambioId||('legacy_'+k);
-    if(porId[id]){ porId[id].fechas.push(k); return; }
+    if(porId[id]){ porId[id].fechas.push(k); if(r.cambioPendiente) porId[id].pendiente=true; return; }
     var g={id:id,fechas:[k],reg:r,pendiente:!!r.cambioPendiente,
            tipo:r.tipoCambio||'intercambio_fechas',legacy:!r.cambioId};
     porId[id]=g; grupos.push(g);
@@ -6035,9 +6259,13 @@ window.tcCgRenderLista=function(){
       html+='Semana <strong>'+tcEsc(String(r.cambioSemanaNum!=null?r.cambioSemanaNum:'?'))+'</strong> de <strong>'+tcEsc(String(r.cambioSemanaAnio||''))+'</strong> · '+tcFmtF(g.fechas[0])+' → '+tcFmtF(g.fechas[g.fechas.length-1])+'<br>';
       html+='Estado: <strong>Registrado</strong><br>';
     }else{
+    /* DEV-006R4 — Un cambio mixto puede quedar con el turno del día trabajado
+       pendiente de hoja de ruta. */
+    var turnoPend=g.fechas.some(function(f){ return dias[f]&&dias[f].cambioTurnoPendiente; });
     html+='<strong>'+(g.pendiente?'⚠️ ':'🔄 ')+tcEsc(tcCambioTipoLabel(g.tipo))+'</strong><br>';
     html+='Fechas: <strong>'+g.fechas.map(tcFmtF).join(' ↔ ')+'</strong><br>';
-    if(g.pendiente) html+='Estado: <strong>Pendiente · Día por convenir</strong><br>';
+    if(turnoPend) html+='Estado: <strong>Pendiente · Turno pendiente de hoja</strong><br>';
+    else if(g.pendiente) html+='Estado: <strong>Pendiente · Día por convenir</strong><br>';
     else if(g.legacy) html+='Estado: <strong>Registrado (formato anterior)</strong><br>';
     else html+='Estado: <strong>'+(g.tipo==='servicio_mismo_dia'?'Registrado':'Resuelto')+'</strong><br>';
     }
@@ -6050,7 +6278,11 @@ window.tcCgRenderLista=function(){
     if(r.cambioCompanero) html+='Compañero: <strong>'+tcEsc(r.cambioCompanero)+'</strong><br>';
     if(r.cambioNotas) html+='<span style="font-size:12px;color:var(--text3)">'+tcEsc(r.cambioNotas)+'</span><br>';
     html+='<div class="tc-cg-acts">';
-    if(g.pendiente) html+='<button class="tc-btn tc-btn-primary" onclick="tcCambioAbrirAsignar(\''+g.id+'\')">📅 Asignar día</button>';
+    /* DEV-006R4 — El pendiente de turno se resuelve asignando el turno del día
+       trabajado (o cargando su hoja de ruta); el de día por convenir, con la fecha. */
+    if(g.fechas.some(function(f){ return dias[f]&&dias[f].cambioTurnoPendiente; }))
+      html+='<button class="tc-btn tc-btn-primary" onclick="tcCambioAsignarTurnoManual(\''+g.id+'\')">🎯 Asignar turno</button>';
+    else if(g.pendiente) html+='<button class="tc-btn tc-btn-primary" onclick="tcCambioAbrirAsignar(\''+g.id+'\')">📅 Asignar día</button>';
     html+='<button class="tc-btn tc-btn-danger" onclick="tcCambioDeshacer(\''+g.id+'\')">↩️ Deshacer</button>';
     html+='</div></div>';
   });
@@ -6343,7 +6575,7 @@ window.tcImpConfirm=function(){
   var validas=pdfPages.filter(function(p){return p.fechaOk&&p.key;});
   var skip=pdfPages.length-validas.length;
   if(!validas.length){tcToast('No hay páginas válidas para guardar');return;}
-  var pendientes=validas.length,ok=0,revisar=0;
+  var pendientes=validas.length,ok=0,revisar=0,resueltosCambio=0; /* DEV-006R4 */
   function generarThumb(p,callback){
     var img=new Image();
     img.onload=function(){
@@ -6377,6 +6609,7 @@ window.tcImpConfirm=function(){
          campo ya existente (se muta el registro previo en vez de sustituirlo). */
       tcJornadaFusionarExtraccion(ex,p.key,p.jornadaExtraida);
       if(tcJornadaRevisionPendiente(ex.jornada)&&!revisionPrevia) revisar++;
+      if(tcCambioResolverPendiente(ex,p.key)) resueltosCambio++; /* DEV-006R4 */
       dias[p.key]=ex;
       ok++;
       pendientes--;
@@ -6384,7 +6617,7 @@ window.tcImpConfirm=function(){
         /* Si ya hay 3 semanas con hojas cargadas, borrar la más antigua antes de guardar */
         tcBorrarSemanaAntigua();
         saveDias(); tcRenderCal(); tcImpReset();
-        tcToast('✔ '+ok+' días guardados'+(skip?' · '+skip+' omitidos':'')+(revisar?' · ⚠️ '+revisar+' día(s) requieren revisión':''));
+        tcToast('✔ '+ok+' días guardados'+(skip?' · '+skip+' omitidos':'')+(revisar?' · ⚠️ '+revisar+' día(s) requieren revisión':'')+(resueltosCambio?' · 🔄 '+resueltosCambio+' turno(s) de cambio resueltos':''));
       }
     });
   });
