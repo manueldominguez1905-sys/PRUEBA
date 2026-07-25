@@ -480,7 +480,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-vt-btn{flex:1;padding:8px 0;font-size:13px;font-weight:700;border-radius:var(--r-s);border:1.5px solid var(--border);color:var(--text2);background:var(--surface);transition:all .15s;-webkit-tap-highlight-color:transparent;}
 #tc .tc-vt-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
 #tc .tc-anual{padding:0 6px 12px;}
-#tc .tc-anual-mes{margin-bottom:14px;}
+#tc .tc-anual-mes{margin-bottom:14px;scroll-margin-top:110px;} /* DEV-006R8 — margen para que el título no quede bajo la cabecera al posicionar */
 #tc .tc-anual-mes-title{font-size:12px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:0 2px;margin-bottom:5px;}
 #tc .tc-anual-dow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin-bottom:3px;}
 #tc .tc-anual-dow span{text-align:center;font-size:9px;font-weight:700;color:var(--text3);padding:2px 0;text-transform:uppercase;}
@@ -514,8 +514,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-006</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-006R6</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> OCR de hojas de ruta con imagen exclusiva de alta resolución, validación de fecha previa a sinClave/error y control de fallos de OCR en la importación semanal.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-006R8</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> La vista anual se abre posicionada en el mes actual.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -1093,12 +1093,12 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
                 <option value="partido">Partido (descanso intermedio)</option>
               </select>
             </div>
-            <div class="tc-fg"><label class="tc-lbl">Inicio te&#243;rico (jornada completa)</label><input class="tc-inp" id="jr-inicio" type="time"></div>
-            <div class="tc-fg"><label class="tc-lbl">Fin te&#243;rico (jornada completa)</label><input class="tc-inp" id="jr-fin" type="time"></div>
+            <div class="tc-fg"><label class="tc-lbl">Inicio te&#243;rico (jornada completa)</label><input class="tc-inp" id="jr-inicio" type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM (admite 24:xx)"></div>
+            <div class="tc-fg"><label class="tc-lbl">Fin te&#243;rico (jornada completa)</label><input class="tc-inp" id="jr-fin" type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM (admite 24:xx)"></div>
             <div class="tc-fg"><label class="tc-lbl">C&#243;mputo oficial (minutos, si la hoja lo indica)</label><input class="tc-inp" id="jr-computo" type="number" min="0" step="1" placeholder="Ej. 480"></div>
             <div style="font-weight:700;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 2px;">Primera parte</div>
-            <div class="tc-fg"><label class="tc-lbl">Inicio te&#243;rico</label><input class="tc-inp" id="jr-p1-inicio" type="time"></div>
-            <div class="tc-fg"><label class="tc-lbl">Fin te&#243;rico</label><input class="tc-inp" id="jr-p1-fin" type="time"></div>
+            <div class="tc-fg"><label class="tc-lbl">Inicio te&#243;rico</label><input class="tc-inp" id="jr-p1-inicio" type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM (admite 24:xx)"></div>
+            <div class="tc-fg"><label class="tc-lbl">Fin te&#243;rico</label><input class="tc-inp" id="jr-p1-fin" type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM (admite 24:xx)"></div>
             <div style="font-weight:700;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 2px;">Descanso</div>
             <div class="tc-fg"><label class="tc-lbl">Tipo de descanso</label>
               <select class="tc-sel" id="jr-desc-tipo">
@@ -1109,8 +1109,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
             </div>
             <div class="tc-fg"><label class="tc-lbl">Duraci&#243;n (minutos)</label><input class="tc-inp" id="jr-desc-min" type="number" min="0" step="1" placeholder="Ej. 30"></div>
             <div style="font-weight:700;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 2px;">Segunda parte</div>
-            <div class="tc-fg"><label class="tc-lbl">Inicio te&#243;rico</label><input class="tc-inp" id="jr-p2-inicio" type="time"></div>
-            <div class="tc-fg"><label class="tc-lbl">Fin te&#243;rico</label><input class="tc-inp" id="jr-p2-fin" type="time"></div>
+            <div class="tc-fg"><label class="tc-lbl">Inicio te&#243;rico</label><input class="tc-inp" id="jr-p2-inicio" type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM (admite 24:xx)"></div>
+            <div class="tc-fg"><label class="tc-lbl">Fin te&#243;rico</label><input class="tc-inp" id="jr-p2-fin" type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM (admite 24:xx)"></div>
             <button class="tc-save-btn" onclick="tcSaveJornada()">Guardar datos de jornada</button>
           </div>
         </div>
@@ -3579,11 +3579,11 @@ window.tcSetVista=function(v){
   } else {
     btnAnual.classList.add('active'); btnMes.classList.remove('active');
     cal.style.display='none'; anual.style.display=''; mnav.style.display='none';
-    tcRenderAnual();
+    tcRenderAnual(true); /* DEV-006R8 — solo al ENTRAR expresamente se posiciona en el mes actual */
   }
 };
 
-function tcRenderAnual(){
+function tcRenderAnual(scrollToActual){
   var contenedor=document.getElementById('tc-anual');
   contenedor.innerHTML='';
   var hoy=new Date();
@@ -3591,6 +3591,7 @@ function tcRenderAnual(){
   var dowLabels=['L','M','X','J','V','S','D'];
   for(var m=0;m<12;m++){
     var mesDiv=document.createElement('div'); mesDiv.className='tc-anual-mes';
+    mesDiv.setAttribute('data-mes',m); mesDiv.id='tc-anual-mes-'+m; /* DEV-006R8 — identificador de mes para posicionar */
     /* Título del mes */
     var titulo=document.createElement('div'); titulo.className='tc-anual-mes-title';
     titulo.textContent=MESES[m]+' '+anio; mesDiv.appendChild(titulo);
@@ -3673,6 +3674,24 @@ function tcRenderAnual(){
     }
     mesDiv.appendChild(grid);
     contenedor.appendChild(mesDiv);
+  }
+
+  /* DEV-006R8 — Al ENTRAR expresamente en la vista anual, posicionar la pantalla
+     en el mes actual. NO se ejecuta en los re-renderizados posteriores (p. ej. los
+     que dispara tcRenderCal al cambiar datos), porque solo tcSetVista('anual')
+     pasa scrollToActual=true. No se toca vY, ni el año ni el mes de la vista mensual. */
+  if(scrollToActual){
+    var mesActual=new Date().getMonth();
+    requestAnimationFrame(function(){
+      var destino=document.getElementById('tc-anual-mes-'+mesActual)
+                ||contenedor.querySelector('.tc-anual-mes[data-mes="'+mesActual+'"]');
+      if(!destino) return;
+      try{
+        destino.scrollIntoView({block:'start',behavior:'auto'});
+      }catch(e){
+        destino.scrollIntoView(); /* Fallback Safari/iPhone (sin objeto de opciones) */
+      }
+    });
   }
 }
 
@@ -3973,10 +3992,36 @@ function tcTextoPorLineas(items){
 /* Normaliza una hora capturada por regex ('HH:MM', 'HH.MM' o 'HH,MM') a 'HH:MM'. */
 function tcNormHora(s){
   if(!s) return null;
-  var m=String(s).match(/([0-2]?\d)[:.,]([0-5]\d)/);
+  /* DEV-006R7 — Horas teóricas extendidas: se aceptan y CONSERVAN valores
+     posteriores a 23:59 (24:00 … 47:59). Nunca se convierte 24:xx a 00:xx.
+     Se validan minutos 00–59 y horas 00–47. */
+  var m=String(s).match(/([0-4]?\d)[:.,]([0-5]\d)/);
   if(!m) return null;
   var h=parseInt(m[1],10),mi=parseInt(m[2],10);
-  if(isNaN(h)||isNaN(mi)||h>23) return null;
+  if(isNaN(h)||isNaN(mi)||h>47||mi>59) return null;
+  return tcPad(h)+':'+tcPad(mi);
+}
+
+/* DEV-006R7 — Convierte "HH:MM" (admite extendidas 24:xx/25:xx) a minutos
+   totales. Devuelve null si no es una hora válida. */
+function tcHoraAMin(h){
+  if(!h) return null;
+  var p=String(h).split(':');
+  if(p.length<2) return null;
+  var v=parseInt(p[0],10)*60+parseInt(p[1],10);
+  return isNaN(v)?null:v;
+}
+
+/* DEV-006R7 — Validador de los campos teóricos manuales del panel Jornada.
+   Devuelve: null (vacío, permitido), false (formato inválido) o "HH:MM"
+   normalizado. Acepta separador opcional: 24:35 / 24.35 / 2435. */
+function tcNormHoraTeorica(v){
+  v=(v==null?'':String(v)).trim();
+  if(v==='') return null;
+  var m=v.match(/^(\d{1,2})[:.,]?(\d{2})$/);
+  if(!m) return false;
+  var h=parseInt(m[1],10),mi=parseInt(m[2],10);
+  if(isNaN(h)||isNaN(mi)||h>47||mi>59) return false;
   return tcPad(h)+':'+tcPad(mi);
 }
 
@@ -4000,13 +4045,15 @@ function tcExtraerJornadaHojaRuta(texto,registroDia){
   var codigoTurno=registroDia&&registroDia.turno;
   jr.tipoTurno=tcJornadaTipoTurno(codigoTurno);
 
-  var mIni=full.match(/Toma\s+servicio[\s\S]{0,40}?Hora[:\s]*([0-2]?\d[:.,][0-5]\d)/i);
+  /* DEV-006R7 — [0-4]?\d admite horas teóricas extendidas (hasta 47:xx); la
+     validación real de rango la hace tcNormHora. */
+  var mIni=full.match(/Toma\s+servicio[\s\S]{0,40}?Hora[:\s]*([0-4]?\d[:.,][0-5]\d)/i);
   if(mIni) jr.inicioTeorico=tcNormHora(mIni[1]);
 
-  var mFin=full.match(/Fin\s+de\s+servicio[\s\S]{0,40}?Hora[:\s]*([0-2]?\d[:.,][0-5]\d)/i);
+  var mFin=full.match(/Fin\s+de\s+servicio[\s\S]{0,40}?Hora[:\s]*([0-4]?\d[:.,][0-5]\d)/i);
   if(mFin) jr.finTeorico=tcNormHora(mFin[1]);
 
-  var mComp=full.match(/Horas?\s+c[oó]mputo[:\s]*([0-2]?\d[:.,][0-5]\d)/i);
+  var mComp=full.match(/Horas?\s+c[oó]mputo[:\s]*([0-4]?\d[:.,][0-5]\d)/i);
   if(mComp){
     var hc=tcNormHora(mComp[1]);
     if(hc){
@@ -4034,9 +4081,9 @@ function tcExtraerJornadaHojaRuta(texto,registroDia){
     }
     return false;
   }
-  var reVUE=/\bVUE\D{0,4}([0-2]?\d[:.,][0-5]\d)/i;
-  var reDES=/\bDES\D{0,4}([0-2]?\d[:.,][0-5]\d)/i;
-  var reINT=/\bINT\D{0,4}([0-2]?\d[:.,][0-5]\d)/i;
+  var reVUE=/\bVUE\D{0,4}([0-4]?\d[:.,][0-5]\d)/i; /* DEV-006R7 — horas extendidas */
+  var reDES=/\bDES\D{0,4}([0-4]?\d[:.,][0-5]\d)/i;
+  var reINT=/\bINT\D{0,4}([0-4]?\d[:.,][0-5]\d)/i;
   var detectado=false;
   if(jr.tipoTurno==='partido'){
     detectado=buscarPar(reDES,reINT,'descanso_intermedio');
@@ -4047,6 +4094,15 @@ function tcExtraerJornadaHojaRuta(texto,registroDia){
   } else {
     detectado=buscarPar(reVUE,reDES,'vuelta_descanso');
     if(!detectado) detectado=buscarPar(reDES,reINT,'descanso_intermedio');
+  }
+
+  /* DEV-006R7 — Turno pendiente/vacío: se determina el tipo mediante la hoja a
+     partir del par de descanso detectado y se guarda en jornada.tipoTurno.
+       · VUE–DES (vuelta_descanso)     → corrido (C)
+       · DES–INT (descanso_intermedio) → partido (P) */
+  if(!jr.tipoTurno&&jr.descanso&&jr.descanso.tipo){
+    if(jr.descanso.tipo==='vuelta_descanso') jr.tipoTurno='corrido';
+    else if(jr.descanso.tipo==='descanso_intermedio') jr.tipoTurno='partido';
   }
 
   /* DEV-006 — T.D. y deje: se leen literalmente de la hoja de ruta y se
@@ -4177,13 +4233,17 @@ function tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto,opcionDatos){
   var revisionPrevia=tcJornadaRevisionPendiente(reg.jornada);
   var jornadaExtraida=tcExtraerJornadaHojaRuta(texto,reg);
   tcJornadaFusionarExtraccion(reg,fecha,jornadaExtraida,opcionDatos);
+  /* DEV-006R7 — Se ejecuta la resolución pendiente ya existente tras fusionar la
+     hoja; si el turno seguía pendiente y no pudo determinarse, se avisa. */
+  var cambioPendientePrevio=tcCambioTurnoPendienteAuto(reg);
   var cambioResuelto=tcCambioResolverPendiente(reg,fecha); /* DEV-006R4 */
+  var cambioNoDetectado=cambioPendientePrevio&&!cambioResuelto;
   dias[fecha]=reg;
   saveDias(); tcRenderCal();
   if(activeDate===fecha) tcRenderView(fecha,reg);
   document.getElementById('dia-hoja-file').value='';
   var avisoRevision=tcJornadaRevisionPendiente(reg.jornada)&&!revisionPrevia;
-  tcToast((habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida')+(avisoRevision?' · ⚠️ Revisa la jornada: hay datos manuales distintos de los detectados':'')+(cambioResuelto?' · 🔄 Turno del cambio resuelto: '+reg.turno:''));
+  tcToast((habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida')+(avisoRevision?' · ⚠️ Revisa la jornada: hay datos manuales distintos de los detectados':'')+(cambioResuelto?' · 🔄 Turno del cambio resuelto: '+reg.turno:'')+(cambioNoDetectado?' · ⚠️ No se pudo detectar el turno. Asígnalo manualmente.':''));
 }
 
 /* Descarta la hoja individual pendiente de confirmación (DEV-004R9), si la
@@ -4797,13 +4857,26 @@ function tcJornadaResolverParte(registro){
   var reg=dias[registro.fecha];
   if(!reg||!reg.jornada||!registro.hora) return null;
   var jr=reg.jornada;
-  var f1=jr.parte1&&jr.parte1.finTeorico;
-  var i2=jr.parte2&&jr.parte2.inicioTeorico;
-  var f2=jr.parte2&&jr.parte2.finTeorico;
-  if(f1&&registro.hora<=f1) return 'parte1';
-  if(i2&&f2&&registro.hora>=i2&&registro.hora<=f2) return 'parte2';
-  if(f1&&i2&&registro.hora>f1&&registro.hora<i2) return null; /* dentro del descanso: ambiguo */
-  if(f2&&registro.hora>f2) return 'parte2'; /* posterior al fin teórico de la 2ª parte: sigue siendo la 2ª parte */
+  /* DEV-006R7 — Comparación en minutos (no textual) para poder cotejar horas
+     teóricas extendidas (24:xx/25:xx) con horas reales posteriores a medianoche
+     (00:xx). Para horas diurnas normales el resultado es idéntico al anterior. */
+  var f1=tcHoraAMin(jr.parte1&&jr.parte1.finTeorico);
+  var i2=tcHoraAMin(jr.parte2&&jr.parte2.inicioTeorico);
+  var f2=tcHoraAMin(jr.parte2&&jr.parte2.finTeorico);
+  var iniMin=tcHoraAMin(jr.inicioTeorico);
+  if(iniMin==null) iniMin=tcHoraAMin(jr.parte1&&jr.parte1.inicioTeorico);
+  /* La jornada usa tramo extendido si algún teórico llega a 24:00 o más. */
+  var extendida=[jr.finTeorico,(jr.parte1&&jr.parte1.finTeorico),(jr.parte2&&jr.parte2.inicioTeorico),(jr.parte2&&jr.parte2.finTeorico)]
+    .some(function(x){var m=tcHoraAMin(x);return m!=null&&m>=24*60;});
+  var h=tcHoraAMin(registro.hora);
+  if(h==null) return null;
+  /* Hora real de reloj (00:xx) posterior a medianoche → se traslada al tramo
+     extendido sumando 24 h para compararla con los teóricos 24:xx/25:xx. */
+  if(extendida&&iniMin!=null&&h<iniMin) h+=24*60;
+  if(f1!=null&&h<=f1) return 'parte1';
+  if(i2!=null&&f2!=null&&h>=i2&&h<=f2) return 'parte2';
+  if(f1!=null&&i2!=null&&h>f1&&h<i2) return null; /* dentro del descanso: ambiguo */
+  if(f2!=null&&h>f2) return 'parte2'; /* posterior al fin teórico de la 2ª parte: sigue siendo la 2ª parte */
   return null;
 }
 
@@ -5121,15 +5194,26 @@ window.tcSaveJornada=function(){
   if(!activeDate) return;
   var reg=dias[activeDate]||{};
   var jr=tcJornadaEnsure(reg,activeDate);
+  /* DEV-006R7 — Campos teóricos manuales: texto validado que admite horas
+     extendidas (24:xx/25:xx). Si alguno es inválido, se aborta sin guardar. */
+  var mapa={inicio:'jr-inicio',fin:'jr-fin',p1i:'jr-p1-inicio',p1f:'jr-p1-fin',p2i:'jr-p2-inicio',p2f:'jr-p2-fin'};
+  var val={},invalido=false;
+  Object.keys(mapa).forEach(function(k){
+    if(invalido) return;
+    var nv=tcNormHoraTeorica(document.getElementById(mapa[k]).value);
+    if(nv===false){ invalido=true; return; }
+    val[k]=nv; /* null (vacío) o "HH:MM" */
+  });
+  if(invalido){ tcToast('⚠️ Hora teórica no válida. Usa HH:MM (00:00–47:59).'); return; }
   jr.servicio=reg.servicio||'';
   jr.tipoTurno=document.getElementById('jr-tipo').value||null;
-  jr.inicioTeorico=document.getElementById('jr-inicio').value||null;
-  jr.finTeorico=document.getElementById('jr-fin').value||null;
+  jr.inicioTeorico=val.inicio;
+  jr.finTeorico=val.fin;
   var computo=document.getElementById('jr-computo').value;
   jr.computoOficialMinutos=(computo!=='')?parseInt(computo,10):null;
   jr.parte1={
-    inicioTeorico:document.getElementById('jr-p1-inicio').value||null,
-    finTeorico:document.getElementById('jr-p1-fin').value||null
+    inicioTeorico:val.p1i,
+    finTeorico:val.p1f
   };
   var descMin=document.getElementById('jr-desc-min').value;
   jr.descanso={
@@ -5137,8 +5221,8 @@ window.tcSaveJornada=function(){
     duracionMinutos:(descMin!=='')?parseInt(descMin,10):null
   };
   jr.parte2={
-    inicioTeorico:document.getElementById('jr-p2-inicio').value||null,
-    finTeorico:document.getElementById('jr-p2-fin').value||null
+    inicioTeorico:val.p2i,
+    finTeorico:val.p2f
   };
   jr.origen=(jr.origen==='hoja_ruta'||jr.origen==='mixto')?'mixto':'manual';
   jr.extraccionEstado=(jr.origen==='mixto')?'mixta':'manual';
@@ -5873,12 +5957,22 @@ function tcCambioResolverTurnoDesdeJornada(jr){
   if(isNaN(hIni)||isNaN(mIni)||isNaN(hFin)||isNaN(mFin)) return null;
   var totIni=hIni*60+mIni, totFin=hFin*60+mFin;
   var letra;
-  if(totFin<totIni) letra='N';        /* cruza medianoche → noche */
+  if(totFin>=24*60) letra='N';        /* DEV-006R7 — final teórico extendido (24:xx/25:xx) → noche */
+  else if(totFin<totIni) letra='N';   /* final normal anterior al inicio → cruza medianoche → noche */
   else if(hIni<12) letra='M';         /* no cruza y empieza antes de 12:00 → mañana */
   else letra='T';                     /* no cruza y empieza desde 12:00 → tarde */
   var code=prefijo+letra;
   if(!TURNO[code]) return null;
   return code;
+}
+
+/* DEV-006R7 — ¿El día tiene un turno de cambio pendiente de detectar por hoja?
+   Es el mismo requisito previo que comprueba tcCambioResolverPendiente antes de
+   intentar resolver. Se usa para avisar cuando, tras cargar la hoja, el turno
+   no ha podido determinarse con seguridad. Nunca es cierto para turnos manuales. */
+function tcCambioTurnoPendienteAuto(reg){
+  return !!(reg&&reg.cambio&&reg.cambioModoTurno==='automatico_hoja'&&
+            reg.cambioTurnoPendiente&&reg.estadoCambio==='pendiente_turno');
 }
 
 /* Intenta resolver un turno pendiente de hoja al cargar la hoja de ruta del
@@ -6710,7 +6804,7 @@ window.tcImpConfirm=function(){
   var validas=pdfPages.filter(function(p){return p.fechaOk&&p.key;});
   var skip=pdfPages.length-validas.length;
   if(!validas.length){tcToast('No hay páginas válidas para guardar');return;}
-  var pendientes=validas.length,ok=0,revisar=0,resueltosCambio=0; /* DEV-006R4 */
+  var pendientes=validas.length,ok=0,revisar=0,resueltosCambio=0,cambioSinDetectar=0; /* DEV-006R4 · DEV-006R7 */
   function generarThumb(p,callback){
     var img=new Image();
     img.onload=function(){
@@ -6745,7 +6839,11 @@ window.tcImpConfirm=function(){
          campo ya existente (se muta el registro previo en vez de sustituirlo). */
       tcJornadaFusionarExtraccion(ex,p.key,p.jornadaExtraida);
       if(tcJornadaRevisionPendiente(ex.jornada)&&!revisionPrevia) revisar++;
+      /* DEV-006R7 — Resolución pendiente tras fusionar; se cuentan los que
+         quedan sin detectar para avisar de asignación manual. */
+      var cambioPendientePrevio=tcCambioTurnoPendienteAuto(ex);
       if(tcCambioResolverPendiente(ex,p.key)) resueltosCambio++; /* DEV-006R4 */
+      else if(cambioPendientePrevio) cambioSinDetectar++;
       dias[p.key]=ex;
       ok++;
       pendientes--;
@@ -6753,7 +6851,7 @@ window.tcImpConfirm=function(){
         /* Si ya hay 3 semanas con hojas cargadas, borrar la más antigua antes de guardar */
         tcBorrarSemanaAntigua();
         saveDias(); tcRenderCal(); tcImpReset();
-        tcToast('✔ '+ok+' días guardados'+(skip?' · '+skip+' omitidos':'')+(revisar?' · ⚠️ '+revisar+' día(s) requieren revisión':'')+(resueltosCambio?' · 🔄 '+resueltosCambio+' turno(s) de cambio resueltos':''));
+        tcToast('✔ '+ok+' días guardados'+(skip?' · '+skip+' omitidos':'')+(revisar?' · ⚠️ '+revisar+' día(s) requieren revisión':'')+(resueltosCambio?' · 🔄 '+resueltosCambio+' turno(s) de cambio resueltos':'')+(cambioSinDetectar?' · ⚠️ No se pudo detectar el turno. Asígnalo manualmente.':''));
       }
     });
   });
