@@ -262,6 +262,17 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-mnav button:active{color:#fff;}
 #tc .tc-mlbl{font-size:15px;font-weight:700;min-width:150px;text-align:center;}
 
+/* DEV-006R9 — Cabecera azul (.tc-hdr) fija SOLO en la vista anual: permanece
+   visible al desplazar, colocada justo debajo de .app-header. Su altura real se
+   calcula en JS y se expone como --tc-anual-hdr-top para no solaparlas. El
+   z-index queda por debajo de .app-header (100); el desplegable Acciones abre
+   hacia abajo sobre el contenido y sigue operativo. No afecta a la vista mensual. */
+#tc.tc-anual-activa .tc-hdr{
+  position:-webkit-sticky;position:sticky;
+  top:var(--tc-anual-hdr-top,0px);
+  z-index:90;
+}
+
 /* MENÚ DESPLEGABLE TC */
 #tc .tc-menu-wrap{position:relative;display:flex;justify-content:flex-end;padding:0;}
 #tc .tc-menu-btn{background:rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:7px 14px;font-size:14px;font-weight:700;letter-spacing:.2px;border:1.5px solid rgba(255,255,255,.3);-webkit-tap-highlight-color:transparent;line-height:1.3;}
@@ -514,8 +525,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-006</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-006R8</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> La vista anual se abre posicionada en el mes actual.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-006R9</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Cabecera anual fija, posicionamiento en el día actual y corrección de la detección automática del turno.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -3572,14 +3583,21 @@ window.tcSetVista=function(v){
   var cal=document.querySelector('#tc .tc-cal');
   var anual=document.getElementById('tc-anual');
   var mnav=document.querySelector('#tc .tc-mnav');
+  var tcEl=document.getElementById('tc');
   if(v==='mes'){
     btnMes.classList.add('active'); btnAnual.classList.remove('active');
     cal.style.display=''; anual.style.display='none'; mnav.style.display='';
+    tcEl.classList.remove('tc-anual-activa'); /* DEV-006R9 — cabecera fija solo en la vista anual */
     tcRenderCal();
   } else {
     btnAnual.classList.add('active'); btnMes.classList.remove('active');
     cal.style.display='none'; anual.style.display=''; mnav.style.display='none';
-    tcRenderAnual(true); /* DEV-006R8 — solo al ENTRAR expresamente se posiciona en el mes actual */
+    /* DEV-006R9 — Cabecera azul fija bajo .app-header: se calcula su altura real
+       y se activa la clase que aplica position:sticky solo en la vista anual. */
+    var ahR9=document.querySelector('.app-header');
+    tcEl.style.setProperty('--tc-anual-hdr-top',(ahR9?ahR9.offsetHeight:0)+'px');
+    tcEl.classList.add('tc-anual-activa');
+    tcRenderAnual(true); /* DEV-006R8/R9 — solo al ENTRAR expresamente se posiciona en el día actual */
   }
 };
 
@@ -3676,16 +3694,24 @@ function tcRenderAnual(scrollToActual){
     contenedor.appendChild(mesDiv);
   }
 
-  /* DEV-006R8 — Al ENTRAR expresamente en la vista anual, posicionar la pantalla
-     en el mes actual. NO se ejecuta en los re-renderizados posteriores (p. ej. los
-     que dispara tcRenderCal al cambiar datos), porque solo tcSetVista('anual')
-     pasa scrollToActual=true. No se toca vY, ni el año ni el mes de la vista mensual. */
-  if(scrollToActual){
-    var mesActual=new Date().getMonth();
+  /* DEV-006R9 — Al ENTRAR expresamente en la vista anual, posicionar la pantalla
+     en el DÍA ACTUAL (celda .tc-d.today), considerando la altura de las DOS
+     cabeceras fijas (.app-header + cabecera azul .tc-hdr) para que no lo tapen.
+     Solo si se visualiza el AÑO ACTUAL; si es otro año no se cambia el año ni se
+     busca falsamente el día de hoy. NO se ejecuta en los re-renderizados
+     posteriores (p. ej. los que dispara tcRenderCal al cambiar datos), porque solo
+     tcSetVista('anual') pasa scrollToActual=true. No se toca vY. */
+  if(scrollToActual && anio===new Date().getFullYear()){
     requestAnimationFrame(function(){
-      var destino=document.getElementById('tc-anual-mes-'+mesActual)
-                ||contenedor.querySelector('.tc-anual-mes[data-mes="'+mesActual+'"]');
+      var destino=contenedor.querySelector('.tc-d.today');
+      if(!destino){ /* Salvaguarda: si no hubiera celda de hoy, al menos el mes actual. */
+        destino=document.getElementById('tc-anual-mes-'+new Date().getMonth());
+      }
       if(!destino) return;
+      var ahR9=document.querySelector('.app-header');
+      var thR9=document.querySelector('#tc .tc-hdr');
+      var offR9=(ahR9?ahR9.offsetHeight:0)+(thR9?thR9.offsetHeight:0)+8;
+      destino.style.scrollMarginTop=offR9+'px'; /* considera las dos cabeceras fijas */
       try{
         destino.scrollIntoView({block:'start',behavior:'auto'});
       }catch(e){
@@ -5956,11 +5982,15 @@ function tcCambioResolverTurnoDesdeJornada(jr){
   var hFin=parseInt(pf[0],10), mFin=parseInt(pf[1],10);
   if(isNaN(hIni)||isNaN(mIni)||isNaN(hFin)||isNaN(mFin)) return null;
   var totIni=hIni*60+mIni, totFin=hFin*60+mFin;
+  /* DEV-006R9 — La clasificación del tipo operativo depende de la HORA TEÓRICA DE
+     INICIO, no de que el servicio termine después de medianoche. La franja
+     22:00–06:00 se usará más adelante para calcular minutos con nocturnidad, pero
+     no convierte por sí sola todo el turno en nocturno. */
   var letra;
-  if(totFin>=24*60) letra='N';        /* DEV-006R7 — final teórico extendido (24:xx/25:xx) → noche */
-  else if(totFin<totIni) letra='N';   /* final normal anterior al inicio → cruza medianoche → noche */
-  else if(hIni<12) letra='M';         /* no cruza y empieza antes de 12:00 → mañana */
-  else letra='T';                     /* no cruza y empieza desde 12:00 → tarde */
+  if(hIni>=6&&hIni<12) letra='M';        /* Inicio 06:00–11:59 → mañana */
+  else if(hIni>=12&&hIni<22) letra='T';  /* Inicio 12:00–21:59 → tarde */
+  else if(hIni>=22) letra='N';           /* Inicio 22:00–23:59 → noche */
+  else return null;                      /* Inicio 00:00–05:59 → detección pendiente/manual: la nocturnidad no prueba el tipo operativo */
   var code=prefijo+letra;
   if(!TURNO[code]) return null;
   return code;
