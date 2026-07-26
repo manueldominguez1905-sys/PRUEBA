@@ -68,6 +68,57 @@ html, body {
 }
 .icon-btn:hover { background: rgba(255,255,255,.3); }
 
+/* ===== DEV-007R6 — Centro de mensajes (aditivo) ===== */
+#msgBadge {
+  display: none; position: absolute; top: -2px; right: -2px;
+  min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box;
+  background: #C0392B; color: #fff; border-radius: 9px;
+  font-size: 0.68rem; font-weight: 700; line-height: 17px;
+  text-align: center; align-items: center; justify-content: center;
+  border: 1.5px solid var(--color-primary); pointer-events: none;
+}
+#msgPanel {
+  display: none; position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,0,0.5); align-items: flex-start; justify-content: center;
+  padding: 16px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+#msgPanel .msg-box {
+  background: var(--color-surface); color: var(--color-text);
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  box-shadow: var(--shadow); max-width: 460px; width: 100%;
+  margin: 24px 0; display: flex; flex-direction: column; max-height: 85vh;
+}
+#msgPanel .msg-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px; border-bottom: 1px solid var(--color-border);
+}
+#msgPanel .msg-head h2 { margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
+#msgCerrar {
+  background: var(--color-border); color: var(--color-text); border: none;
+  width: 30px; height: 30px; border-radius: 50%; font-size: 1rem;
+  cursor: pointer; line-height: 30px; text-align: center; flex: 0 0 auto;
+}
+#msgLista { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px; }
+.msg-item {
+  display: flex; align-items: flex-start; gap: 10px; width: 100%;
+  text-align: left; background: var(--color-bg); color: var(--color-text);
+  border: 1px solid var(--color-border); border-radius: 10px;
+  padding: 12px 14px; margin: 6px 0; cursor: pointer; font: inherit;
+}
+.msg-item:hover { border-color: var(--color-primary); }
+.msg-item.leido { opacity: 0.6; }
+.msg-dot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; }
+.msg-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.msg-titulo { font-weight: 600; font-size: 0.95rem; }
+.msg-fecha { font-size: 0.78rem; color: var(--color-text-secondary); }
+.msg-desc { font-size: 0.85rem; color: var(--color-text-secondary); }
+.msg-vacio { padding: 32px 18px; text-align: center; color: var(--color-text-secondary); }
+#msgPanel .msg-foot { padding: 12px 16px; border-top: 1px solid var(--color-border); }
+#msgMarcarTodos {
+  width: 100%; background: var(--color-primary); color: #fff; border: none;
+  border-radius: 8px; padding: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+}
+
 .tabs {
   display: flex; overflow-x: auto;
   background-color: var(--color-surface);
@@ -271,6 +322,24 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
   position:-webkit-sticky;position:sticky;
   top:var(--tc-anual-hdr-top,0px);
   z-index:90;
+}
+
+/* DEV-006R10 — Pestañas Mensual/Anual (.tc-view-toggle) fijas SOLO en la vista
+   anual: se sitúan justo debajo de la cabecera azul (.tc-hdr) para permanecer
+   siempre visibles al desplazar por los doce meses. Su desplazamiento superior
+   (--tc-anual-toggle-top) se calcula en JS = altura .app-header + altura .tc-hdr,
+   de modo que se apilan sin solaparse. Fondo sólido a todo el ancho para que el
+   calendario no asome por debajo (ni por el hueco entre botones). z-index por
+   debajo de .tc-hdr (90) para que el desplegable Acciones abra por encima y siga
+   operativo. No afecta a la vista mensual: al quitar la clase se recupera el
+   diseño anterior exacto. */
+#tc.tc-anual-activa .tc-view-toggle{
+  position:-webkit-sticky;position:sticky;
+  top:var(--tc-anual-toggle-top,0px);
+  z-index:80;
+  margin:0;
+  padding:8px 6px;
+  background:var(--surface);
 }
 
 /* MENÚ DESPLEGABLE TC */
@@ -514,6 +583,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h1 id="headerTitle">Registro del Conductor</h1>
     </div>
     <div class="header-right">
+      <button id="btnMensajes" class="icon-btn" title="Centro de mensajes" aria-label="Centro de mensajes" style="position:relative;">🔔<span id="msgBadge" aria-hidden="true">0</span></button>
       <button id="btnSettings" class="icon-btn" title="Ajustes" aria-label="Ajustes">⚙️</button>
       <button id="btnTheme" class="icon-btn" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
     </div>
@@ -524,13 +594,27 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
     <div style="background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
-        <div><strong>Aplicación:</strong> DEV-006</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-006R9</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Cabecera anual fija, posicionamiento en el día actual y corrección de la detección automática del turno.</div>
+        <div><strong>Aplicación:</strong> DEV-007</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-007R6</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Centro de mensajes con avisos de ampliaciones, cambios y jornadas pendientes.</div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
       <button id="btnCerrarSettings" class="btn btn-secondary" style="width:100%; margin-top:10px;">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- ===================== CENTRO DE MENSAJES (DEV-007R6) ===================== -->
+  <div id="msgPanel" data-abierto="0" role="dialog" aria-modal="true" aria-label="Centro de mensajes">
+    <div class="msg-box">
+      <div class="msg-head">
+        <h2>🔔 Centro de mensajes</h2>
+        <button id="msgCerrar" type="button" title="Cerrar" aria-label="Cerrar">✕</button>
+      </div>
+      <div id="msgLista"></div>
+      <div class="msg-foot">
+        <button id="msgMarcarTodos" type="button">Marcar todos como leídos</button>
+      </div>
     </div>
   </div>
 
@@ -585,6 +669,9 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       </button>
       <button class="menu-btn" data-tab="calendario">
         <span class="menu-icon">📅</span><span class="menu-label">Calendario Conductor</span>
+      </button>
+      <button class="menu-btn" data-tab="nomina">
+        <span class="menu-icon">💶</span><span class="menu-label">Nómina</span>
       </button>
     </div>
   </div>
@@ -1122,6 +1209,19 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
             <div style="font-weight:700;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 2px;">Segunda parte</div>
             <div class="tc-fg"><label class="tc-lbl">Inicio te&#243;rico</label><input class="tc-inp" id="jr-p2-inicio" type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM (admite 24:xx)"></div>
             <div class="tc-fg"><label class="tc-lbl">Fin te&#243;rico</label><input class="tc-inp" id="jr-p2-fin" type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM (admite 24:xx)"></div>
+            <div style="font-weight:700;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 2px;">INC (tiempo programado + margen)</div>
+            <div class="tc-cambio-info" style="margin-bottom:8px;">&#8505;&#65039; La INC es tiempo programado de jornada y margen de la empresa, <strong>no una ampliaci&#243;n</strong>. Queda incluida en el fin te&#243;rico oficial de la primera parte y <strong>nunca se suma otra vez al c&#243;mputo</strong>. Si conoces dos de los tres datos, el tercero se completa solo.</div>
+            <div class="tc-fg"><label class="tc-lbl">Inicio de la INC</label><input class="tc-inp" id="jr-inc-inicio" type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM (admite 24:xx)"></div>
+            <div class="tc-fg"><label class="tc-lbl">Fin de la INC</label><input class="tc-inp" id="jr-inc-fin" type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM (admite 24:xx)"></div>
+            <div class="tc-fg"><label class="tc-lbl">INC programada (minutos)</label><input class="tc-inp" id="jr-inc-min" type="number" min="0" max="1440" step="1" inputmode="numeric" placeholder="Ej. 15"></div>
+            <div style="font-weight:700;font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:14px 0 2px;">Gesti&#243;n del descanso (tras ampliar la 1&#170; parte)</div>
+            <div class="tc-fg"><label class="tc-lbl">&#191;C&#243;mo se gestion&#243; el descanso?</label>
+              <select class="tc-sel" id="jr-desc-gestion">
+                <option value="">&#8212; Sin definir &#8212;</option>
+                <option value="mantener_inicio">Mantener inicio te&#243;rico de la 2&#170; parte</option>
+                <option value="descanso_completo">Disfrutar descanso completo tras el final real</option>
+              </select>
+            </div>
             <button class="tc-save-btn" onclick="tcSaveJornada()">Guardar datos de jornada</button>
           </div>
         </div>
@@ -1306,6 +1406,50 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <!-- Banner de avisos de liquidación bajo el calendario -->
       <div id="bannerAvisoCalendario" class="banner-aviso" style="display:none; margin:10px 6px 4px;"></div>
 
+    </section>
+
+    <!-- ===================== PESTAÑA NÓMINA (DEV-007R5) ===================== -->
+    <style>
+      #tab-nomina .nom-sel{ width:100%; padding:9px 10px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface); color:var(--color-text); font-size:0.9rem; margin-top:4px; -webkit-appearance:none; appearance:none; }
+      #tab-nomina label.nom-lbl{ display:block; font-size:0.82rem; font-weight:600; color:var(--color-text-secondary); }
+      #tab-nomina .nom-tabbtn{ border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text-secondary); border-radius:8px; padding:8px 14px; font-size:0.88rem; font-weight:600; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+      #tab-nomina .nom-tabbtn.active{ background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
+      #tab-nomina .nom-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+      #tab-nomina table.nom-tabla{ border-collapse:collapse; width:100%; font-size:0.85rem; }
+      #tab-nomina table.nom-tabla th, #tab-nomina table.nom-tabla td{ border:1px solid var(--color-border); padding:7px 9px; text-align:left; white-space:nowrap; }
+      #tab-nomina table.nom-tabla th{ background:var(--color-primary); color:#fff; font-weight:600; position:sticky; top:0; }
+      #tab-nomina table.nom-tabla td.num{ text-align:right; font-variant-numeric:tabular-nums; }
+      #tab-nomina .nom-est{ display:inline-block; font-size:0.72rem; font-weight:700; padding:2px 7px; border-radius:20px; }
+      #tab-nomina .nom-est.c{ background:var(--color-success-bg,#1b3320); color:var(--color-success,#66bb6a); }
+      #tab-nomina .nom-est.p{ background:rgba(192,86,33,.15); color:#C05621; }
+      #tab-nomina .nom-est.v{ background:rgba(177,65,79,.14); color:var(--color-primary); }
+      #tab-nomina .nom-nota{ font-size:0.82rem; color:var(--color-text-secondary); margin-top:6px; line-height:1.5; }
+      #tab-nomina .nom-proximamente{ text-align:center; padding:40px 16px; color:var(--color-text-secondary); }
+      #tab-nomina .nom-proximamente .big{ font-size:2rem; display:block; margin-bottom:8px; }
+    </style>
+    <section id="tab-nomina" class="tab-content">
+      <h2>💶 Nómina</h2>
+      <div class="info-box" style="margin-bottom:14px;">
+        ℹ️ Cálculo <strong>provisional</strong>, recalculado desde las jornadas registradas. Aún no se calculan euros, salario base, IRPF ni Seguridad Social: los importes quedan pendientes de las tablas salariales.
+      </div>
+      <div class="form-card" style="margin-bottom:14px;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:130px;">
+            <label class="nom-lbl" for="nomAnio">Año</label>
+            <select id="nomAnio" class="nom-sel"></select>
+          </div>
+          <div style="flex:1; min-width:130px;">
+            <label class="nom-lbl" for="nomMes">Mes</label>
+            <select id="nomMes" class="nom-sel"></select>
+          </div>
+        </div>
+      </div>
+      <div id="nomTabs" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+        <button type="button" class="nom-tabbtn active" data-nomtab="resumen">Resumen</button>
+        <button type="button" class="nom-tabbtn" data-nomtab="provisional">Nómina provisional</button>
+        <button type="button" class="nom-tabbtn" data-nomtab="comparacion">Comparación</button>
+      </div>
+      <div id="nomContenido"></div>
     </section>
 
   </main>
@@ -1530,7 +1674,7 @@ function abrirSeccion(tabId) {
     recaudaciones: "💰 Recaudaciones", liquidaciones: "🧾 Liquidaciones",
     importar: "📥 Importar Correo", estadillo: "🪙 Estadillo",
     historial: "📜 Historial", backup: "💾 Copias de Seguridad",
-    calendario: "📅 Diario del Conductor"
+    calendario: "📅 Diario del Conductor", nomina: "💶 Nómina"
   };
   document.getElementById("headerTitle").textContent = titulos[tabId] || "Registro del Conductor";
   document.getElementById("headerIcon").style.display = "none";
@@ -1538,6 +1682,7 @@ function abrirSeccion(tabId) {
   if (tabId === "estadillo") renderizarEstadillo();
   if (tabId === "historial") renderizarHistorial();
   if (tabId === "calendario") cargarPDFjsSiNecesario();
+  if (tabId === "nomina" && typeof window.tcRenderNomina === "function") window.tcRenderNomina();
 }
 
 function cargarPDFjsSiNecesario() {
@@ -2484,6 +2629,7 @@ function importarDatos(archivo) {
           listaRecaudaciones = datos.recaudaciones; listaLiquidaciones = datos.liquidaciones;
           actualizarResumen();
           renderizarRecaudaciones(); renderizarLiquidaciones();
+          try { if (typeof window.tcMsgRefrescar === "function") window.tcMsgRefrescar(); } catch (e) {} /* DEV-007R6 */
           if (avisoBackupVacio) {
             mostrarToast("Datos importados correctamente. Este backup no incluye datos verificables del Calendario Conductor.", "success");
           } else {
@@ -3064,7 +3210,11 @@ function saveTurnos(){
 }
 function loadDias(){try{dias=JSON.parse(localStorage.getItem(STORE)||'{}');}catch(e){dias={};}}
 function saveDias(){
-  try{ localStorage.setItem(STORE,JSON.stringify(dias)); return true; }
+  try{
+    localStorage.setItem(STORE,JSON.stringify(dias));
+    try{ if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }catch(e){} /* DEV-007R6 */
+    return true;
+  }
   catch(e){ tcToast('⚠️ Almacenamiento lleno. Borra días antiguos para liberar espacio.'); return false; }
 }
 
@@ -3593,10 +3743,22 @@ window.tcSetVista=function(v){
     btnAnual.classList.add('active'); btnMes.classList.remove('active');
     cal.style.display='none'; anual.style.display=''; mnav.style.display='none';
     /* DEV-006R9 — Cabecera azul fija bajo .app-header: se calcula su altura real
-       y se activa la clase que aplica position:sticky solo en la vista anual. */
-    var ahR9=document.querySelector('.app-header');
-    tcEl.style.setProperty('--tc-anual-hdr-top',(ahR9?ahR9.offsetHeight:0)+'px');
+       y se activa la clase que aplica position:sticky solo en la vista anual.
+       DEV-006R10 — Además se fijan las pestañas Mensual/Anual (.tc-view-toggle)
+       justo debajo de la cabecera azul. Se activa PRIMERO la clase para que el
+       selector adopte ya su formato fijo (fondo/relleno) y medir su altura real
+       en modo anual; luego se exponen como variables CSS los desplazamientos
+       necesarios para apilar los tres elementos sin solaparse. */
     tcEl.classList.add('tc-anual-activa');
+    var ahR10=document.querySelector('.app-header');
+    var thR10=document.querySelector('#tc .tc-hdr');
+    var vtR10=document.querySelector('#tc .tc-view-toggle');
+    var ahH=ahR10?ahR10.offsetHeight:0;   /* altura real .app-header  */
+    var thH=thR10?thR10.offsetHeight:0;   /* altura real .tc-hdr      */
+    var vtH=vtR10?vtR10.offsetHeight:0;   /* altura real .tc-view-toggle */
+    tcEl.style.setProperty('--tc-anual-hdr-top',ahH+'px');            /* .tc-hdr bajo .app-header */
+    tcEl.style.setProperty('--tc-anual-toggle-top',(ahH+thH)+'px');   /* pestañas bajo .tc-hdr    */
+    tcEl.style.setProperty('--tc-anual-toggle-h',vtH+'px');           /* altura de las pestañas   */
     tcRenderAnual(true); /* DEV-006R8/R9 — solo al ENTRAR expresamente se posiciona en el día actual */
   }
 };
@@ -3694,24 +3856,28 @@ function tcRenderAnual(scrollToActual){
     contenedor.appendChild(mesDiv);
   }
 
-  /* DEV-006R9 — Al ENTRAR expresamente en la vista anual, posicionar la pantalla
-     en el DÍA ACTUAL (celda .tc-d.today), considerando la altura de las DOS
-     cabeceras fijas (.app-header + cabecera azul .tc-hdr) para que no lo tapen.
-     Solo si se visualiza el AÑO ACTUAL; si es otro año no se cambia el año ni se
-     busca falsamente el día de hoy. NO se ejecuta en los re-renderizados
-     posteriores (p. ej. los que dispara tcRenderCal al cambiar datos), porque solo
-     tcSetVista('anual') pasa scrollToActual=true. No se toca vY. */
+  /* DEV-007R4 — Al ENTRAR expresamente en la vista anual, y solo si se visualiza el
+     AÑO ACTUAL, posicionar la pantalla al PRINCIPIO DEL MES ACTUAL para ver el mes
+     completo desde su título y, debajo, los meses siguientes. El destino es SIEMPRE
+     el contenedor del mes actual (#tc-anual-mes-<mes actual>); ya NO se usa la celda
+     del día de hoy (.tc-d.today).
+     Se mantiene el margen (scrollMarginTop) que reserva la altura de los TRES
+     elementos fijos (.app-header + cabecera azul .tc-hdr + pestañas Mensual/Anual
+     .tc-view-toggle) + 8px, para que el TÍTULO del mes quede visible debajo de ellos.
+     Si es otro año no se cambia el año ni se fuerza el mes actual. NO se ejecuta en
+     los re-renderizados posteriores (p. ej. cambios de datos, abrir/cerrar un día),
+     porque solo tcSetVista('anual') pasa scrollToActual=true. No se toca vY. */
   if(scrollToActual && anio===new Date().getFullYear()){
     requestAnimationFrame(function(){
-      var destino=contenedor.querySelector('.tc-d.today');
-      if(!destino){ /* Salvaguarda: si no hubiera celda de hoy, al menos el mes actual. */
-        destino=document.getElementById('tc-anual-mes-'+new Date().getMonth());
-      }
+      var destino=document.getElementById('tc-anual-mes-'+new Date().getMonth());
       if(!destino) return;
       var ahR9=document.querySelector('.app-header');
       var thR9=document.querySelector('#tc .tc-hdr');
-      var offR9=(ahR9?ahR9.offsetHeight:0)+(thR9?thR9.offsetHeight:0)+8;
-      destino.style.scrollMarginTop=offR9+'px'; /* considera las dos cabeceras fijas */
+      var vtR9=document.querySelector('#tc .tc-view-toggle'); /* pestañas fijas */
+      /* El título del mes debe quedar bajo los TRES elementos fijos:
+         .app-header + .tc-hdr + .tc-view-toggle + 8px. */
+      var offR9=(ahR9?ahR9.offsetHeight:0)+(thR9?thR9.offsetHeight:0)+(vtR9?vtR9.offsetHeight:0)+8;
+      destino.style.scrollMarginTop=offR9+'px'; /* considera las cabeceras y las pestañas fijas */
       try{
         destino.scrollIntoView({block:'start',behavior:'auto'});
       }catch(e){
@@ -3740,19 +3906,23 @@ function tcShowPanel(id){window.showPanel(id);}
 /* DEV-004R8: vuelve siempre a la ficha del día (pnl-view) y desplaza el panel
    (contenedor compartido .tc-sh) al inicio, para que la cabecera y el botón X
    queden visibles aunque se venga de un panel largo (Jornada, Ampliaciones). */
-function tcVolverVistaDia(){
+/* DEV-007R2 — Se expone en window: los onclick de las X (Editar, Jornada,
+   Ampliaciones y T.D./deje) se ejecutan en el ámbito global y la función vive
+   dentro de la IIFE del Diario; sin exponerla la X no hacía nada. */
+window.tcVolverVistaDia=function(){
   tcShowPanel('pnl-view');
   var sh=document.querySelector('#tc-ov .tc-sh');
   if(sh) sh.scrollTop=0;
-}
+};
 
 /* DEV-004R9: al cerrar el editor de turno/servicio sin pulsar "Guardar
    cambios" (botón X), se descarta la hoja pendiente si la había: no se
-   modifica imagen, servicio, turno ni jornada. */
-function tcCancelarEdit(){
+   modifica imagen, servicio, turno ni jornada.
+   DEV-007R2 — Expuesta en window por el mismo motivo que tcVolverVistaDia. */
+window.tcCancelarEdit=function(){
   tcDescartarHojaPendiente();
   tcVolverVistaDia();
-}
+};
 
 function tcOpenDay(key,reg){
   activeDate=key; tcRenderView(key,reg||{}); tcShowPanel('pnl-view'); tcOpenOv();
@@ -3856,7 +4026,7 @@ function tcJornadaCardHtml(reg){
   if(jr.requiereRevision) html+='<br><span style="color:#C05621;">⚠️ Revisión necesaria: hay datos manuales distintos de los detectados en la hoja.</span>';
   if(jr.recaudacionesRequierenRevision) html+='<br><span style="color:#C05621;">⚠️ Hay recaudaciones del día con un servicio distinto. Revísalas antes de calcular ampliaciones.</span>';
   if(jr.horasHistoricasSinAsignar) html+='<br><span style="color:var(--text2);">ℹ️ Hay horas históricas sin parte asignada. Edítalas desde Recaudaciones para indicar si corresponden a primera o segunda parte.</span>';
-  html+='</div>'+ceHtml+'</div>';
+  html+='</div>'+ceHtml+tcNocturnidadCardHtml(reg)+tcExcesoConduccionCardHtml(reg)+'</div>';
   return html;
 }
 
@@ -3894,6 +4064,1199 @@ function tcComputosEspecificosCardHtml(jr){
   html+='</div>';
   return html;
 }
+
+/* ==================== DEV-007: Nocturnidad y solape de fiestas ====================
+   Cálculo por día de minutos nocturnos (franja 22:00–06:00), separando la
+   nocturnidad programada de la procedente de ampliaciones confirmadas, y
+   detección del solape de Semana Santa / Feria con el descanso del día
+   siguiente. NO se calcula ningún importe económico: todo queda pendiente de
+   las tablas salariales. Estas funciones son puras y reutilizables; leen
+   siempre desde dias/jornadas/ampliaciones/EVENTOS y no guardan ningún saldo
+   duplicado que pueda quedar desactualizado. No modifican datos existentes. */
+
+/* ==================== DEV-007R1: INC, descanso efectivo y fin oficial ========
+   La INC es tiempo programado de jornada y margen de la empresa; NO es una
+   ampliación. Se guarda aparte (incInicio/incFin/incProgramadaMinutos/origen) y
+   NUNCA se suma otra vez al cómputo oficial. La ampliación empieza SIEMPRE
+   después del final teórico oficial de la parte (INC incluida). El final teórico
+   de la segunda parte permanece siempre en la hora teórica de la hoja; solo su
+   INICIO real se desplaza según cómo se gestionó el descanso tras ampliar la
+   primera parte. Ninguna de estas funciones calcula importes económicos. */
+
+/* Etiquetas del descanso posterior a la ampliación de la primera parte, según
+   el tipo de turno: corrido → "Vuelta de descanso"; partido → "Descanso
+   intermedio". */
+function tcDescansoNombre(tipoTurno,tipoDescanso){
+  if(tipoDescanso==='vuelta_descanso') return 'Vuelta de descanso';
+  if(tipoDescanso==='descanso_intermedio') return 'Descanso intermedio';
+  return (tipoTurno==='partido')?'Descanso intermedio':'Vuelta de descanso';
+}
+var TC_DESC_GESTION_LABEL={
+  mantener_inicio:'Mantener inicio teórico de la segunda parte',
+  descanso_completo:'Disfrutar el descanso completo tras el final real'
+};
+
+/* Convierte minutos (admite extendidos 0–2879) a "HH:MM". Devuelve null fuera
+   de rango o si el dato no es un número. */
+function tcMinAHHMMExt(min){
+  if(min==null||isNaN(min)||min<0||min>2879) return null;
+  var h=Math.floor(min/60),m=min%60;
+  return tcPad(h)+':'+tcPad(m);
+}
+
+/* DEV-007R5 (cruce de medianoche) — FUNCIÓN PURA. Sitúa una hora "HH:MM" en la
+   línea temporal de la jornada. Si la jornada empieza, p.ej., a las 20:00 y una
+   hora posterior aparece como 00:30, se devuelve 24:30 (1470 min). Acepta
+   indistintamente 00 y 24 (24:30 ya llega como 1470 y se respeta). No suma 24 h
+   en jornadas diurnas normales (cuando la hora ya es ≥ el inicio de la jornada,
+   o cuando no hay inicio de referencia). Devuelve minutos extendidos o null. */
+function tcMinEnJornada(hora,iniJornadaMin){
+  var m=tcHoraAMin(tcNormHora(hora));
+  if(m==null) return null;
+  if(iniJornadaMin==null) return m;   /* sin referencia: no se desplaza */
+  if(m>=iniJornadaMin) return m;      /* ya extendida o ≥ inicio: se respeta */
+  return m+1440;                      /* hora de reloj tras medianoche → +24 h */
+}
+
+/* Inicio teórico de la jornada en minutos (global o, en su defecto, el de la
+   1ª parte). Sirve de referencia a tcMinEnJornada. Devuelve minutos o null. */
+function tcJornadaInicioMin(jr){
+  if(!jr) return null;
+  return tcHoraAMin(jr.inicioTeorico!=null?jr.inicioTeorico:(jr.parte1&&jr.parte1.inicioTeorico));
+}
+
+/* DEV-007R5 (INC que cruza medianoche) — FUNCIÓN PURA. ¿El fin de la INC
+   pertenece al día siguiente? Solo cuando el inicio es de tarde/noche (≥18:00) y
+   el fin es de madrugada (<06:00): entonces 23:50→00:10 es 23:50→24:10 (20 min).
+   Una incoherencia diurna real (p.ej. 10:00→09:00, inicio de mañana) NO cruza y
+   se sigue detectando como contradictoria. Recibe minutos, devuelve bool. */
+function tcIncCruzaMedianoche(iMin,fMin){
+  return (iMin!=null&&fMin!=null&&fMin<iMin&&iMin>=18*60&&fMin<6*60);
+}
+
+/* Normaliza (y completa de forma determinista, sin inventar) la INC. Si se
+   conocen dos de los tres valores tiempo (inicio, fin, duración) se deriva el
+   tercero; nunca se rellenan datos a partir de suposiciones. */
+function tcIncNormalizar(inc){
+  var base={incInicio:null,incFin:null,incProgramadaMinutos:null,origen:null,requiereRevision:false};
+  if(!inc||typeof inc!=='object') return base;
+  base.requiereRevision=(inc.requiereRevision===true); /* DEV-007R2 — se conserva */
+  base.incInicio=tcNormHora(inc.incInicio)||null;
+  base.incFin=tcNormHora(inc.incFin)||null;
+  base.incProgramadaMinutos=(inc.incProgramadaMinutos!=null&&!isNaN(inc.incProgramadaMinutos))?parseInt(inc.incProgramadaMinutos,10):null;
+  if(base.incProgramadaMinutos!=null&&base.incProgramadaMinutos<0) base.incProgramadaMinutos=null;
+  base.origen=(inc.origen==='hoja_ruta'||inc.origen==='manual')?inc.origen:null;
+  var iMin=tcHoraAMin(base.incInicio),fMin=tcHoraAMin(base.incFin);
+  /* INC que cruza medianoche: el fin de madrugada se sitúa en el día siguiente
+     (23:50→00:10 = 23:50→24:10) y se reescribe en forma extendida. La duración
+     pasa a ser positiva (20 min) y no se marca revisión. */
+  if(tcIncCruzaMedianoche(iMin,fMin)){ fMin+=1440; base.incFin=tcMinAHHMMExt(fMin); }
+  if(base.incProgramadaMinutos==null&&iMin!=null&&fMin!=null&&fMin>=iMin) base.incProgramadaMinutos=fMin-iMin;
+  if(base.incFin==null&&iMin!=null&&base.incProgramadaMinutos!=null) base.incFin=tcMinAHHMMExt(iMin+base.incProgramadaMinutos);
+  if(base.incInicio==null&&fMin!=null&&base.incProgramadaMinutos!=null){
+    var sM=fMin-base.incProgramadaMinutos; if(sM>=0) base.incInicio=tcMinAHHMMExt(sM);
+  }
+  return base;
+}
+
+/* ¿Tiene la INC algún dato registrado? */
+function tcIncTieneDatos(inc){
+  return !!(inc&&(inc.incInicio||inc.incFin||inc.incProgramadaMinutos!=null));
+}
+
+/* DEV-007R2 — ¿Es la INC contradictoria? Lo es cuando el fin queda antes del
+   inicio, o cuando inicio, fin y minutos están todos presentes pero no cuadran
+   (fin − inicio ≠ minutos). No inventa nada: solo detecta incoherencias. */
+function tcIncContradictoria(incInicio,incFin,incMin){
+  var iMin=tcHoraAMin(tcNormHora(incInicio));
+  var fMin=tcHoraAMin(tcNormHora(incFin));
+  /* INC que cruza medianoche: el fin de madrugada se traslada al día siguiente
+     antes de comparar, de modo que 23:50→00:10 (=24:10) NO es contradictoria.
+     Una incoherencia diurna real (10:00→09:00) no cruza y sigue detectándose. */
+  if(tcIncCruzaMedianoche(iMin,fMin)) fMin+=1440;
+  if(iMin!=null&&fMin!=null&&fMin<iMin) return true;
+  if(iMin!=null&&fMin!=null&&incMin!=null&&(fMin-iMin)!==incMin) return true;
+  return false;
+}
+
+/* DEV-007R2 — INC con solo duración y sin posición (ni inicio ni fin): no puede
+   ubicarse en el tiempo, así que NO modifica el final oficial hasta conocer su
+   posición. Se muestra como "INC pendiente de ubicar". */
+function tcIncPendienteUbicar(inc){
+  if(!inc) return false;
+  return (inc.incProgramadaMinutos!=null&&!inc.incInicio&&!inc.incFin);
+}
+
+/* FUNCIÓN PURA — Final teórico OFICIAL de una parte, con la INC aplicada UNA
+   sola vez. La INC pertenece a la primera parte (el final teórico de la segunda
+   nunca se modifica). Si se conoce incFin se toma el mayor entre el fin teórico
+   de la parte y incFin: así, si el fin teórico ya incluía la INC no se cuenta
+   dos veces, y si solo era un fin de conducción anterior a la INC el oficial
+   pasa a ser incFin. Devuelve "HH:MM" o null. */
+function tcJornadaFinTeoricoOficialParte(jr,parte){
+  var base=(jr&&jr[parte]&&jr[parte].finTeorico)||null;
+  /* El final teórico se sitúa SIEMPRE en la línea temporal de la jornada, tanto
+     si es la 2ª parte como si la 1ª no tiene INC: así un fin posterior a
+     medianoche queda extendido (03:30 en un turno de 20:00 → 27:30; 00:30 en uno
+     de 22:00 → 24:30) y las ampliaciones tras medianoche cuentan para el solape. */
+  var iniJor=tcJornadaInicioMin(jr);
+  var baseMin=tcMinEnJornada(base,iniJor);
+  var baseNorm=(baseMin==null)?base:tcMinAHHMMExt(baseMin);
+  if(parte!=='parte1') return baseNorm; /* la INC solo afecta a la primera parte */
+  var inc=jr&&jr.inc; if(!inc||inc.incFin==null) return baseNorm; /* 1ª parte sin INC: fin normalizado */
+  /* Solo la 1ª parte con INC: se comparan base e incFin YA normalizados y se
+     toma el mayor (la INC se cuenta una sola vez). */
+  var incFinMin=tcMinEnJornada(inc.incFin,iniJor);
+  if(incFinMin==null) return baseNorm;
+  if(baseMin==null) return tcMinAHHMMExt(incFinMin);
+  return (incFinMin>baseMin)?tcMinAHHMMExt(incFinMin):tcMinAHHMMExt(baseMin);
+}
+
+/* FUNCIÓN PURA — Inicio REAL de la segunda parte, según cómo se gestionó el
+   descanso tras una ampliación real de la primera parte:
+     · "mantener_inicio"  → máximo(inicioTeoricoParte2, finRealParte1)
+     · "descanso_completo"→ finRealParte1 + duración completa del descanso
+   Si no hubo ampliación real en la primera parte (o falta el fin real), el
+   inicio real coincide con el teórico. Devuelve "HH:MM" o null. */
+function tcJornadaInicioRealParte2(jr){
+  var teo=(jr&&jr.parte2&&jr.parte2.inicioTeorico)||null;
+  if(!jr) return teo;
+  /* El inicio teórico de la 2ª parte se sitúa SIEMPRE en la línea temporal de
+     la jornada: si aparece como 00:30 en un turno que empezó a las 20:00, es
+     24:30. Así la 2ª parte queda en la misma línea que la primera. */
+  var iniJor=tcJornadaInicioMin(jr);
+  var teoEnJor=tcMinEnJornada(teo,iniJor);
+  var teoOut=(teoEnJor==null)?teo:tcMinAHHMMExt(teoEnJor);
+  var finRealP1=jr.horaFinRealParte1;
+  var ampP1=jr.ampliaciones&&jr.ampliaciones.parte1;
+  var hayAmpP1=!!(ampP1&&ampP1.minutosAmpliacion>0&&ampP1.estado!=='descartada'&&ampP1.estado!=='anulada');
+  var finRealMin=tcMinEnJornada(finRealP1,iniJor);
+  if(!hayAmpP1||finRealMin==null) return teoOut;
+  if(jr.descansoGestion==='descanso_completo'){
+    var dur=(jr.descanso&&jr.descanso.duracionMinutos!=null)?jr.descanso.duracionMinutos:null;
+    if(dur==null) return teoOut; /* sin duración conocida no se puede desplazar */
+    return tcMinAHHMMExt(finRealMin+dur);
+  }
+  /* Por defecto (o "mantener_inicio"): máximo(inicioTeoricoParte2, finRealP1),
+     ambos en la línea temporal de la jornada. */
+  if(teoEnJor==null) return tcMinAHHMMExt(finRealMin);
+  return (finRealMin>teoEnJor)?tcMinAHHMMExt(finRealMin):tcMinAHHMMExt(teoEnJor);
+}
+
+/* Franja nocturna dentro de un ciclo de 1440 min: 00:00–06:00 y 22:00–24:00. */
+function tcNocSolapeNum(a,b,c,d){ var lo=Math.max(a,c),hi=Math.min(b,d); return hi>lo?hi-lo:0; }
+
+/* Normaliza un intervalo [inicio,fin] a minutos extendidos coherentes. Admite
+   horas extendidas 24:00–47:59 (p.ej. "24:35") y también el caso en que el fin
+   está expresado como hora de reloj posterior a medianoche ("05:00"): si el fin
+   resulta anterior o igual al inicio, se traslada +24h. Devuelve {ini,fin} en
+   minutos, o null si algún dato falta o el intervalo no es válido (>24h). */
+function tcIntervaloMin(inicio,fin){
+  var ini=tcHoraAMin(tcNormHora(inicio));
+  var f=tcHoraAMin(tcNormHora(fin));
+  if(ini==null||f==null) return null;
+  if(f<ini) f+=1440;
+  if(f<ini) return null;
+  if(f-ini>1440) return null;   /* más de 24h: intervalo no fiable */
+  return {ini:ini,fin:f};
+}
+
+/* Minutos nocturnos (22:00–06:00) contenidos en un intervalo ya normalizado a
+   minutos extendidos. Suma las franjas nocturnas de varios ciclos de 24h. */
+function tcNocturnoMinNum(ini,f){
+  var total=0;
+  for(var k=0;k<=3;k++){
+    var base=k*1440;
+    total+=tcNocSolapeNum(ini,f,base,base+360);        /* 00:00–06:00 */
+    total+=tcNocSolapeNum(ini,f,base+1320,base+1440);  /* 22:00–24:00 */
+  }
+  return total;
+}
+
+/* FUNCIÓN PURA — Minutos nocturnos de un intervalo horario [inicio,fin].
+   Acepta horas normales y extendidas. Devuelve un entero de minutos, o null si
+   el intervalo no puede interpretarse. Ejemplos comprobados:
+     15:00–24:35 → 155 · 23:00–05:00 → 360 · 05:48–14:28 → 12 */
+function tcMinutosNocturnosIntervalo(inicio,fin){
+  var iv=tcIntervaloMin(inicio,fin);
+  if(!iv) return null;
+  return tcNocturnoMinNum(iv.ini,iv.fin);
+}
+
+/* Intervalos REALES de trabajo programado del día, listos para calcular
+   nocturnidad (DEV-007R1). Nunca incluye el descanso intermedio: si hay
+   descanso conocido se usan las dos partes por separado y jamás el horario
+   global (que englobaría el descanso). Respeta la INC y el descanso elegido:
+     · el final de la primera parte es su final teórico OFICIAL (INC incluida);
+     · el inicio de la segunda parte es su inicio REAL, según cómo se gestionó
+       el descanso tras una ampliación de la primera parte;
+     · el final de la segunda parte permanece SIEMPRE en la hora teórica.
+   El tramo de ampliación (fin oficial → fin real) NO se incluye aquí: lo
+   añade tcNocturnidadAmpliaciones por separado (sin doble conteo). Si falta el
+   horario de alguna parte, se calculan solo los intervalos completos y se marca
+   parcial. Devuelve {intervalos:[{ini,fin}], parcial:bool}. */
+function tcNocturnidadIntervalosProgramados(jr){
+  var out={intervalos:[],parcial:false,pendienteDescanso:false,revisionParte2:false,mensajeParte2:null};
+  if(!jr) return out;
+
+  function meterParte(ini,fin){
+    /* Una parte presente e incompleta (falta un horario) NO se calcula: se
+       marca parcial. Una parte totalmente ausente (ambos vacíos) se ignora. */
+    if(ini&&fin){ var iv=tcIntervaloMin(ini,fin); if(iv&&iv.fin>iv.ini) out.intervalos.push(iv); else out.parcial=true; }
+    else if(ini||fin){ out.parcial=true; }
+  }
+
+  /* Primera parte: inicio teórico → fin teórico OFICIAL (INC aplicada una sola
+     vez). Nunca se usa el intervalo global inicio–final: englobaría el descanso. */
+  var p1i=jr.parte1&&jr.parte1.inicioTeorico;
+  var p1f=tcJornadaFinTeoricoOficialParte(jr,'parte1');
+  meterParte(p1i,p1f);
+
+  /* Segunda parte: solo se calcula si está presente. */
+  var p2iTeo=jr.parte2&&jr.parte2.inicioTeorico;
+  var p2f=jr.parte2&&jr.parte2.finTeorico;
+  var hayParte2=!!(p2iTeo||p2f);
+  if(hayParte2){
+    if(tcDescansoDecisionPendiente(jr)){
+      /* DEV-007R2 (fallo 3) — Ampliación real en la 1ª parte, hay 2ª parte y el
+         descanso no se ha decidido: no se asume "mantener_inicio" ni se calcula
+         la 2ª parte. Cálculo parcial, pendiente de elección. Se recalcula al
+         seleccionar una opción (tcSetDescansoGestion re-renderiza). */
+      out.pendienteDescanso=true; out.parcial=true;
+    } else {
+      var p2iReal=tcJornadaInicioRealParte2(jr);
+      var p2iMin=tcHoraAMin(tcNormHora(p2iReal));
+      var p2fExt=tcParte2FinTeoricoExtendido(jr); /* fin en su propio marco, nunca respecto al inicio real */
+      if(p2iMin==null||p2fExt==null){
+        out.parcial=true; /* 2ª parte incompleta */
+      } else if(p2iMin>=p2fExt){
+        /* DEV-007R2 (fallo 4) — El inicio real (desplazado por el descanso)
+           alcanza o supera el fin teórico: NO se interpreta el fin como el día
+           siguiente ni se genera un intervalo de casi 24 h. Revisión + parcial. */
+        out.revisionParte2=true; out.parcial=true;
+        out.mensajeParte2='El descanso desplaza el inicio más allá del final teórico';
+      } else {
+        out.intervalos.push({ini:p2iMin,fin:p2fExt});
+      }
+    }
+  }
+  return out;
+}
+
+/* DEV-007R2 — Fin teórico de la 2ª parte en minutos extendidos, situado en su
+   PROPIO marco: si el fin de reloj es anterior a su inicio teórico, pertenece al
+   día siguiente (+24 h). Nunca se traslada respecto al inicio REAL (eso es lo
+   que provocaba el intervalo falso de casi 24 h). Devuelve minutos o null. */
+function tcParte2FinTeoricoExtendido(jr){
+  /* Inicio y fin de la 2ª parte situados en la línea temporal de la jornada
+     (una 2ª parte 00:30–03:30 de un turno que empezó a las 20:00 va a
+     24:30–27:30), y no respecto al inicio REAL desplazado por el descanso. */
+  var iniJor=tcJornadaInicioMin(jr);
+  var iMin=tcMinEnJornada(jr&&jr.parte2&&jr.parte2.inicioTeorico,iniJor);
+  var fMin=tcMinEnJornada(jr&&jr.parte2&&jr.parte2.finTeorico,iniJor);
+  if(fMin==null) return null;
+  if(iMin!=null&&fMin<iMin) fMin+=1440; /* el fin va tras su propio inicio */
+  return fMin;
+}
+
+/* DEV-007R2 — ¿Está pendiente de decidir la gestión del descanso? Lo está
+   cuando hay una ampliación real en la 1ª parte, existe 2ª parte y
+   descansoGestion sigue vacío. Mientras esté pendiente no se asume ninguna
+   opción y la 2ª parte no se calcula. */
+function tcDescansoDecisionPendiente(jr){
+  if(!jr) return false;
+  if(jr.descansoGestion==='mantener_inicio'||jr.descansoGestion==='descanso_completo') return false;
+  var hayParte2=!!(jr.parte2&&(jr.parte2.inicioTeorico||jr.parte2.finTeorico));
+  if(!hayParte2) return false;
+  var ampP1=jr.ampliaciones&&jr.ampliaciones.parte1;
+  return !!(ampP1&&ampP1.minutosAmpliacion>0&&ampP1.estado!=='descartada'&&ampP1.estado!=='anulada');
+}
+
+/* Minutos nocturnos procedentes de ampliaciones. Cada ampliación cubre el
+   intervalo [finTeórico de la parte, hora real de recaudación de esa parte], que
+   por construcción es posterior al tramo programado (sin doble conteo). Solo se
+   suman a "confirmadas" las ampliaciones con estado documento_presentado y
+   computableParaNomina=true; el resto se muestran como pendientes.
+   Devuelve {confirmadas, pendientes, detalle:[{parte,min,estado}]}. */
+function tcNocturnidadAmpliaciones(jr){
+  var res={confirmadas:0,pendientes:0,detalle:[]};
+  if(!jr||!jr.ampliaciones) return res;
+  ['parte1','parte2'].forEach(function(p){
+    var a=jr.ampliaciones[p];
+    if(!a) return;
+    if(a.estado==='descartada'||a.estado==='anulada') return;
+    /* El intervalo de ampliación arranca en el final teórico OFICIAL de la
+       parte (INC incluida), no en el fin de conducción: así la INC nunca se
+       cuenta como ampliación y la nocturnidad de ambas no se solapa. */
+    var finT=tcJornadaFinTeoricoOficialParte(jr,p);
+    var real=(p==='parte1')?jr.horaFinRealParte1:jr.horaFinRealParte2;
+    if(!finT||!real) return;
+    var noct=tcMinutosNocturnosIntervalo(finT,real);
+    if(noct==null) noct=0;
+    var confirmada=(a.estado==='documento_presentado'&&a.computableParaNomina===true);
+    if(confirmada){ res.confirmadas+=noct; res.detalle.push({parte:p,min:noct,estado:'confirmada'}); }
+    else { res.pendientes+=noct; res.detalle.push({parte:p,min:noct,estado:a.estado||'pendiente'}); }
+  });
+  return res;
+}
+
+/* FUNCIÓN PURA — Nocturnidad de un día. Clasifica el tipo (general /
+   semana_santa / feria) según el evento laboral del día y, durante SS/Feria,
+   conserva la referencia 4B25 sin decidir todavía si sustituye o se acumula. */
+function tcCalcularNocturnidadDia(fecha){
+  var reg=dias[fecha];
+  var res={
+    fecha:fecha, minutosProgramados:0,
+    minutosAmpliacionesConfirmadas:0, minutosAmpliacionesPendientes:0,
+    totalNocturnoComputable:0, minutosPendientes:0,
+    /* DEV-007R1 — nombres explícitos del cálculo nocturno (rule 4). Son alias
+       de los anteriores; se calcula por separado jornada, ampliación y total,
+       sin contar ningún minuto dos veces dentro del total. */
+    minutosNocturnosJornada:0, minutosNocturnosAmpliacion:0, minutosNocturnosTotales:0,
+    incProgramadaMinutos:null,
+    parcial:false, pendienteDescanso:false, revisionParte2:false, mensajeParte2:null,
+    tipo:'general', referencia:null, detalleAmpliaciones:[]
+  };
+  var ev=(typeof tcEventoDia==='function')?tcEventoDia(fecha):null;
+  if(ev){
+    if(ev.tipo==='Semana Santa'){ res.tipo='semana_santa'; res.referencia='4B25'; }
+    else if(ev.tipo==='Feria'){ res.tipo='feria'; res.referencia='4B27'; }
+  }
+  var jr=reg&&reg.jornada;
+  if(!jr) return res;
+  if(jr.inc) res.incProgramadaMinutos=(jr.inc.incProgramadaMinutos!=null)?jr.inc.incProgramadaMinutos:null;
+  var prog=tcNocturnidadIntervalosProgramados(jr);
+  res.parcial=prog.parcial;
+  res.pendienteDescanso=prog.pendienteDescanso;
+  res.revisionParte2=prog.revisionParte2;
+  res.mensajeParte2=prog.mensajeParte2;
+  prog.intervalos.forEach(function(iv){ res.minutosProgramados+=tcNocturnoMinNum(iv.ini,iv.fin); });
+  var amp=tcNocturnidadAmpliaciones(jr);
+  res.minutosAmpliacionesConfirmadas=amp.confirmadas;
+  res.minutosAmpliacionesPendientes=amp.pendientes;
+  res.detalleAmpliaciones=amp.detalle;
+  res.totalNocturnoComputable=res.minutosProgramados+res.minutosAmpliacionesConfirmadas;
+  res.minutosPendientes=amp.pendientes;
+  /* Alias nombrados (rule 4). La nocturnidad de jornada ya incluye la INC
+     programada (va dentro del final teórico oficial de la parte). */
+  res.minutosNocturnosJornada=res.minutosProgramados;
+  res.minutosNocturnosAmpliacion=res.minutosAmpliacionesConfirmadas;
+  res.minutosNocturnosTotales=res.totalNocturnoComputable;
+  return res;
+}
+
+/* Suma "YYYY-MM-DD" + n días → "YYYY-MM-DD" (o null si la fecha no es válida). */
+function tcFechaMasDias(fecha,n){
+  var p=String(fecha||'').split('-');
+  if(p.length<3) return null;
+  var d=new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10));
+  if(isNaN(d.getTime())) return null;
+  d.setDate(d.getDate()+n);
+  return d.getFullYear()+'-'+tcPad(d.getMonth()+1)+'-'+tcPad(d.getDate());
+}
+
+/* Minutos de trabajo posteriores a las 24:00 (tramos programados + ampliaciones
+   confirmadas), sin contar nunca el descanso. Base del solape de fiestas. */
+function tcMinutosDespuesMedianoche(jr){
+  if(!jr) return 0;
+  var total=0;
+  var prog=tcNocturnidadIntervalosProgramados(jr);
+  prog.intervalos.forEach(function(iv){ total+=Math.max(0,iv.fin-Math.max(iv.ini,1440)); });
+  if(jr.ampliaciones){
+    ['parte1','parte2'].forEach(function(p){
+      var a=jr.ampliaciones[p];
+      if(!a||!(a.estado==='documento_presentado'&&a.computableParaNomina===true)) return;
+      var finT=tcJornadaFinTeoricoOficialParte(jr,p), real=(p==='parte1')?jr.horaFinRealParte1:jr.horaFinRealParte2;
+      if(!finT||!real) return;
+      var iv=tcIntervaloMin(finT,real);
+      if(iv) total+=Math.max(0,iv.fin-Math.max(iv.ini,1440));
+    });
+  }
+  return total;
+}
+
+/* FUNCIÓN PURA — Solape de Semana Santa / Feria de un día. Solo se detecta
+   automáticamente cuando: el evento del día es SS o Feria, el servicio continúa
+   tras las 24:00, existen minutos trabajados después de las 24:00 y el día
+   siguiente es no laborable (tcCambioEsNoLaborable). El solape puede coincidir
+   con la nocturnidad y NUNCA se resta de ella. Fuera de SS/Feria no aplica. Si
+   falta el turno del día siguiente, queda "pendiente_revision" y no computable.
+   Referencias: Semana Santa 4A58 · Feria 4A59. reglaEconomicaPendiente=true.
+
+   DEV-007R3 — Validación del solape con jornadas parciales. Antes de computar
+   nada se consulta el estado de tcNocturnidadIntervalosProgramados(): si la
+   jornada está incompleta (parcial) o falta decidir el descanso
+   (pendienteDescanso) o la 2ª parte necesita revisión (revisionParte2), el
+   solape NO puede darse por definitivo. En ese caso: estado="pendiente_revision",
+   aplica=false, minutosSolape=0 (no computable) y los minutos conocidos se
+   conservan solo como referencia en minutosSolapeProvisional. Solo se llega a
+   estado="computable" cuando todos los intervalos necesarios están completos.
+   Al elegir la gestión del descanso, tcSetDescansoGestion re-renderiza y esta
+   función pura se recalcula automáticamente con el nuevo estado. */
+function tcCalcularSolapeDia(fecha){
+  var reg=dias[fecha];
+  var res={
+    fecha:fecha, aplica:false, estado:'no_aplica', tipo:null,
+    minutosSolape:0, minutosSolapeProvisional:0, fechaDescanso:null, codigo:null,
+    reglaEconomicaPendiente:true, motivo:''
+  };
+  var ev=(typeof tcEventoDia==='function')?tcEventoDia(fecha):null;
+  var tipo=null;
+  if(ev){ if(ev.tipo==='Semana Santa') tipo='semana_santa'; else if(ev.tipo==='Feria') tipo='feria'; }
+  if(!tipo){ res.motivo='El día no es Semana Santa ni Feria.'; return res; }
+  res.tipo=tipo;
+  res.codigo=(tipo==='semana_santa')?'4A58':'4A59';
+  var jr=reg&&reg.jornada;
+  if(!jr){ res.motivo='Sin datos de jornada.'; return res; }
+  var post=tcMinutosDespuesMedianoche(jr);
+  /* DEV-007R3 — Jornada incompleta / descanso sin decidir / 2ª parte en
+     revisión: el solape queda pendiente y nunca computable. Los minutos que
+     ya se conocen se guardan como provisionales, no como computables. */
+  var prog=tcNocturnidadIntervalosProgramados(jr);
+  if(prog.parcial||prog.pendienteDescanso||prog.revisionParte2){
+    res.aplica=false;
+    res.estado='pendiente_revision';
+    res.minutosSolape=0;
+    res.minutosSolapeProvisional=(post>0)?post:0;
+    res.fechaDescanso=tcFechaMasDias(fecha,1);
+    res.motivo='Solape pendiente: falta completar la jornada o decidir el descanso.';
+    return res;
+  }
+  if(post<=0){ res.motivo='El servicio no continúa después de las 24:00.'; return res; }
+  res.minutosSolape=post;
+  res.minutosSolapeProvisional=post;
+  var sig=tcFechaMasDias(fecha,1);
+  res.fechaDescanso=sig;
+  var regSig=sig?dias[sig]:null;
+  var turnoSig=regSig&&regSig.turno;
+  if(!turnoSig){
+    res.estado='pendiente_revision';
+    res.motivo='Posible solape pendiente de revisión (falta el turno del día siguiente).';
+    return res;
+  }
+  if(tcCambioEsNoLaborable(turnoSig)){
+    res.aplica=true; res.estado='computable';
+    res.motivo='Solape detectado: trabajo tras 24:00 y descanso al día siguiente.';
+    return res;
+  }
+  res.motivo='El día siguiente es laborable; no hay solape.';
+  return res;
+}
+
+/* FUNCIÓN PURA — Resumen mensual (mes: 1–12). Se recalcula siempre desde días,
+   jornadas, ampliaciones y eventos; no se mantiene ningún saldo duplicado. */
+function tcResumenNocturnidadMes(anio,mes){
+  var res={
+    minutosProgramados:0, minutosAmpliacionesConfirmadas:0,
+    totalNocturnoComputable:0, minutosPendientes:0,
+    solapeSemanaSanta:0, solapeFeria:0,
+    /* DEV-007R3 — Un resumen que contiene días incompletos no es definitivo.
+       diasParciales cuenta los días con jornada nocturna incompleta o con solape
+       pendiente de revisión; requiereRevision avisa de que el total podría
+       cambiar al completar esos días. */
+    diasParciales:0, requiereRevision:false
+  };
+  var a=parseInt(anio,10), m=parseInt(mes,10);
+  if(isNaN(a)||isNaN(m)||m<1||m>12) return res;
+  var ndias=new Date(a,m,0).getDate();
+  for(var d=1;d<=ndias;d++){
+    var key=a+'-'+tcPad(m)+'-'+tcPad(d);
+    if(!dias[key]) continue;
+    var n=tcCalcularNocturnidadDia(key);
+    res.minutosProgramados+=n.minutosProgramados;
+    res.minutosAmpliacionesConfirmadas+=n.minutosAmpliacionesConfirmadas;
+    res.minutosPendientes+=n.minutosPendientes;
+    var s=tcCalcularSolapeDia(key);
+    if(s.estado==='computable'){
+      if(s.tipo==='semana_santa') res.solapeSemanaSanta+=s.minutosSolape;
+      else if(s.tipo==='feria') res.solapeFeria+=s.minutosSolape;
+    }
+    /* DEV-007R3 — Día parcial: nocturnidad incompleta (parcial / descanso sin
+       decidir / 2ª parte en revisión) o solape que quedó pendiente de revisar. */
+    if(n.parcial||n.pendienteDescanso||n.revisionParte2||s.estado==='pendiente_revision'){
+      res.diasParciales++;
+    }
+  }
+  res.totalNocturnoComputable=res.minutosProgramados+res.minutosAmpliacionesConfirmadas;
+  res.requiereRevision=(res.diasParciales>0);
+  return res;
+}
+
+/* Línea de "gestión del descanso" para la tarjeta: solo se muestra cuando hay
+   una ampliación real de la primera parte y existe una segunda parte (DEV-007R1).
+   Refleja la opción elegida y el inicio real resultante de la segunda parte. */
+function tcNocturnidadGestionDescansoHtml(jr){
+  if(!jr) return '';
+  var ampP1=jr.ampliaciones&&jr.ampliaciones.parte1;
+  var hayAmpP1=!!(ampP1&&ampP1.minutosAmpliacion>0&&ampP1.estado!=='descartada'&&ampP1.estado!=='anulada');
+  var hayParte2=!!(jr.parte2&&(jr.parte2.inicioTeorico||jr.parte2.finTeorico));
+  if(!hayAmpP1||!hayParte2) return '';
+  var nombre=tcDescansoNombre(jr.tipoTurno,jr.descanso&&jr.descanso.tipo);
+  var inicioReal=tcJornadaInicioRealParte2(jr);
+  var h='';
+  if(!jr.descansoGestion){
+    h+='<span style="color:#C05621;">⚠️ '+tcEsc(nombre)+' sin definir tras ampliar la 1ª parte. Ábrelo en «⏱️ Ampliaciones».</span><br>';
+  } else {
+    h+=tcEsc(nombre)+': <strong>'+tcEsc(TC_DESC_GESTION_LABEL[jr.descansoGestion]||'—')+'</strong><br>';
+    if(inicioReal) h+='<span style="font-size:12px;">Inicio real de la 2ª parte: '+tcEsc(inicioReal)+'.</span><br>';
+  }
+  return h;
+}
+
+/* Bloque "Cómputos nocturnos" dentro de la tarjeta "Datos de jornada" (DEV-007).
+   Aditivo: no crea pantallas ni botones nuevos. Se muestra solo si hay algo que
+   enseñar. Ningún importe económico: "Importe pendiente de tablas salariales". */
+function tcNocturnidadCardHtml(reg){
+  var jr=reg&&reg.jornada;
+  if(!jr) return '';
+  var fecha=(jr.fecha)||activeDate||(reg&&reg.fecha)||null;
+  if(!fecha) return '';
+  var n=tcCalcularNocturnidadDia(fecha);
+  var s=tcCalcularSolapeDia(fecha);
+  var incMin=(jr.inc&&jr.inc.incProgramadaMinutos!=null)?jr.inc.incProgramadaMinutos:null;
+  var hayIncData=tcIncTieneDatos(jr.inc);
+  var gestion=tcNocturnidadGestionDescansoHtml(jr);
+  var haySolape=(s.estado==='computable'||s.estado==='pendiente_revision');
+  var hayNoct=(n.totalNocturnoComputable>0||n.minutosPendientes>0);
+  if(!hayNoct&&!haySolape&&!hayIncData&&!gestion) return '';
+  var tipoLabel={general:'General',semana_santa:'Semana Santa',feria:'Feria'}[n.tipo]||'General';
+  var html='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border,#E5E7EB);font-size:13px;line-height:1.7;color:var(--text2);">';
+  html+='<div style="font-weight:700;color:var(--text,#1a1a1a);margin-bottom:2px;">Cómputos nocturnos</div>';
+  if(hayIncData){
+    if(tcIncPendienteUbicar(jr.inc)){
+      /* DEV-007R2 — Solo duración, sin posición: no modifica el fin oficial. */
+      html+='<span style="color:#C05621;">⚠️ INC pendiente de ubicar: <strong>'+tcMinAHorasMin(incMin)+'</strong> (sin inicio/fin; no modifica el fin oficial).</span><br>';
+    } else {
+      html+='INC programada: <strong>'+(incMin!=null?tcMinAHorasMin(incMin):'—')+'</strong>';
+      if(jr.inc.incInicio||jr.inc.incFin) html+=' <span style="font-size:12px;">('+tcEsc(jr.inc.incInicio||'—')+' – '+tcEsc(jr.inc.incFin||'—')+')</span>';
+      html+=' <span style="font-size:12px;">· incluida en el fin teórico, no se suma al cómputo</span><br>';
+    }
+    if(jr.inc.requiereRevision) html+='<span style="color:#C05621;">⚠️ INC pendiente de revisión: los datos extraídos no cuadran.</span><br>';
+  }
+  html+='Nocturnidad de jornada: <strong>'+tcMinAHorasMin(n.minutosNocturnosJornada)+'</strong>'+(n.parcial?' <span style="color:#C05621;">(Cálculo parcial)</span>':'')+'<br>';
+  if(n.pendienteDescanso) html+='<span style="color:#C05621;">⚠️ 2ª parte sin calcular: falta elegir cómo se gestionó el descanso.</span><br>';
+  if(n.revisionParte2) html+='<span style="color:#C05621;">⚠️ '+tcEsc(n.mensajeParte2||'El descanso desplaza el inicio más allá del final teórico')+'.</span><br>';
+  if(n.minutosNocturnosAmpliacion>0) html+='Nocturnidad de ampliación (confirmada): <strong>'+tcMinAHorasMin(n.minutosNocturnosAmpliacion)+'</strong><br>';
+  html+='Nocturnidad total: <strong>'+tcMinAHorasMin(n.minutosNocturnosTotales)+'</strong><br>';
+  if(n.minutosPendientes>0) html+='<span style="color:#C05621;">Minutos pendientes (ampliación sin confirmar): <strong>'+tcMinAHorasMin(n.minutosPendientes)+'</strong></span><br>';
+  if(gestion) html+=gestion;
+  html+='Tipo: <strong>'+tipoLabel+'</strong>'+(n.referencia?' · Ref. '+n.referencia:'')+'<br>';
+  if(s.estado==='computable'){
+    html+='Solape '+(s.tipo==='semana_santa'?'Semana Santa':'Feria')+': <strong>'+tcMinAHorasMin(s.minutosSolape)+'</strong> · Ref. '+s.codigo+'<br>';
+    html+='<span style="font-size:12px;">Descanso siguiente: '+tcEsc(s.fechaDescanso||'—')+'.</span><br>';
+  } else if(s.estado==='pendiente_revision'){
+    /* DEV-007R3 — El motivo distingue si falta el turno del día siguiente o si
+       falta completar la jornada / decidir el descanso. Los minutos conocidos se
+       muestran como provisionales, nunca como computables. */
+    html+='<span style="color:#C05621;">⚠️ Solape '+(s.tipo==='semana_santa'?'Semana Santa':'Feria')+' pendiente de revisión. '+tcEsc(s.motivo||'')+'</span><br>';
+    if(s.minutosSolapeProvisional>0) html+='<span style="font-size:12px;color:#C05621;">Minutos provisionales (no computables): <strong>'+tcMinAHorasMin(s.minutosSolapeProvisional)+'</strong>.</span><br>';
+  }
+  html+='<span style="font-size:12px;">Importe pendiente de tablas salariales.</span>';
+  html+='</div>';
+  return html;
+}
+
+/* ==================== DEV-007R5: Exceso de conducción continua ===============
+   Artículo 20.4 del Convenio TUSSAM 2024–2027. El período de conducción
+   continua está limitado a 270 minutos (4 h 30 min). El exceso se abona como
+   hora extraordinaria por el DOBLE del tiempo excedido. Reglas:
+     · La INC y los descansos NO son conducción.
+     · No se suman las dos partes si hay un descanso REAL entre ellas.
+     · Si el descanso no se disfruta y los intervalos de conducción enlazan, se
+       tratan como un ÚNICO período.
+     · Nunca se usa la duración total de la jornada, solo la conducción por
+       período.
+   Todas estas funciones son PURAS: leen la jornada (horarios, INC, descanso,
+   ampliaciones y las correcciones manuales del usuario) y devuelven el cálculo
+   fresco, sin guardar ningún saldo duplicado y sin calcular importes en euros
+   (queda pendiente de tablas salariales). No modifican nocturnidad, solapes,
+   T.D., deje, cambios, recaudaciones ni liquidaciones. */
+
+/* Normaliza la corrección manual de la conducción por parte (minutos 0–1440 o
+   null). Se usa cuando la hoja no permite identificar la duración con
+   seguridad. */
+function tcExcesoConduccionManualNormalizar(m){
+  var base={parte1:null,parte2:null};
+  if(!m||typeof m!=='object') return base;
+  ['parte1','parte2'].forEach(function(p){
+    var v=m[p];
+    if(v!=null&&!isNaN(v)){ var n=parseInt(v,10); if(n>=0&&n<=1440) base[p]=n; }
+  });
+  return base;
+}
+
+/* Clasifica una ampliación respecto a la conducción continua. Una ampliación
+   solo AUMENTA la conducción cuando está documentada (documento_presentado),
+   es computable para nómina y el usuario confirma que fue tiempo de conducción.
+   Devuelve:
+     'no_amp'        → no hay ampliación en esa parte.
+     'no_computable' → existe pero aún no es documento_presentado + computable
+                       (una ampliación pendiente no computa).
+     'pendiente'     → documentada y computable pero SIN confirmar la conducción
+                       (falta esa confirmación → el día queda pendiente_revision).
+     'conduccion'    → confirmada como tiempo de conducción (suma sus minutos).
+     'no_conduccion' → confirmada como NO conducción (no suma, y no queda
+                       pendiente). */
+function tcExcesoAmpEstadoConduccion(a){
+  if(!a) return 'no_amp';
+  if(!(a.estado==='documento_presentado'&&a.computableParaNomina===true)) return 'no_computable';
+  if(a.conduccionConfirmada===true) return 'conduccion';
+  if(a.conduccionConfirmada===false) return 'no_conduccion';
+  return 'pendiente';
+}
+
+/* Relación del descanso entre la 1ª y la 2ª parte a efectos del Art. 20.4:
+     'absorbido'   → consta EXPRESAMENTE que el descanso se absorbió (la 1ª parte
+                     se amplió manteniendo el inicio teórico de la 2ª y lo
+                     alcanzó): los intervalos enlazan en un ÚNICO período.
+     'real'        → hay un descanso conocido y disfrutado: las dos partes son
+                     períodos de conducción SEPARADOS.
+     'desconocido' → no consta el descanso entre las dos partes: NO se unen y el
+                     día queda pendiente_revision con cero definitivo.
+   Solo se enlazan las partes cuando consta expresamente la absorción. */
+function tcExcesoDescansoRelacion(jr){
+  if(jr&&jr.descansoGestion==='mantener_inicio'){
+    /* Ambos extremos en la línea temporal de la jornada: un inicio teórico de la
+       2ª parte que aparece como 00:30 en un turno de las 20:00 es 24:30, así que
+       un fin real de la 1ª parte a las 23:45 NO lo alcanza (no hay absorción). */
+    var iniJor=tcJornadaInicioMin(jr);
+    var finRealP1=tcMinEnJornada(jr.horaFinRealParte1,iniJor);
+    var iniTeoP2=tcMinEnJornada(jr.parte2&&jr.parte2.inicioTeorico,iniJor);
+    if(finRealP1!=null&&iniTeoP2!=null){
+      if(finRealP1>=iniTeoP2) return 'absorbido'; /* descanso absorbido (expreso) → enlazan */
+    }
+  }
+  var dur=jr&&jr.descanso&&jr.descanso.duracionMinutos;
+  if(dur!=null&&dur>0) return 'real'; /* descanso disfrutado → períodos separados */
+  return 'desconocido'; /* sin constancia → pendiente, cero definitivo */
+}
+
+/* FUNCIÓN PURA — Exceso de conducción continua de una jornada (Art. 20.4).
+   Por cada período continuo:
+     excesoFisico          = max(0, minutosConduccion - 270)
+     equivalenteHoraExtra  = excesoFisico * 2
+   Guarda por separado los minutos normales, el exceso físico y su equivalente
+   al doble. La ampliación conserva SIEMPRE sus minutos físicos originales
+   (jamás se modifican): aquí solo se leen. Devuelve el objeto excesoConduccion
+   descrito en el enunciado. */
+function tcCalcularExcesoConduccion(jr){
+  var LIM=270;
+  var res={
+    limiteMinutos:LIM, periodos:[],
+    minutosExcesoFisico:0, minutosEquivalentesHoraExtra:0, minutosNormales:0,
+    estado:'no_aplica', parcial:false, pendienteConduccion:false,
+    descansoDesconocido:false,
+    referencia:'Artículo 20.4',
+    /* Concepto para Nómina (Art. 20 d): se abona el DOBLE del exceso físico.
+       Se conservan también los minutos físicos y la referencia legal. */
+    codigoNomina:'4A82', conceptoNomina:'Aplicación Artículo 20 d)',
+    referenciaLegal:'Artículo 20.4',
+    minutosFisicos:0, minutosNomina:0
+  };
+  if(!jr) return res;
+  var manual=tcExcesoConduccionManualNormalizar(jr.excesoConduccionManual);
+
+  /* Rango de la INC en minutos extendidos (solo si está ubicada con inicio y
+     fin). La INC NO es conducción: si cae dentro de una parte, parte el período
+     en dos tramos de conducción independientes (antes y después de la INC). */
+  function incRango(){
+    var inc=jr.inc; if(!inc) return null;
+    var iIni=tcHoraAMin(tcNormHora(inc.incInicio));
+    var iFin=tcHoraAMin(tcNormHora(inc.incFin));
+    if(iIni==null||iFin==null) return null;
+    if(iFin<iIni) iFin+=1440;
+    if(iFin<=iIni) return null;
+    return {ini:iIni,fin:iFin};
+  }
+
+  /* Alinea el intervalo de la INC con el de una parte probando las posiciones
+     -1440, 0 y +1440, y se queda con la de MAYOR solape real con la parte. Así
+     una INC 00:00–00:30 encaja dentro de una parte 22:00–03:00 (que en la línea
+     temporal es 22:00–27:00) desplazándose a 24:00–24:30. Funciona igual si la
+     INC ya viene como 24:00–24:30. Si ningún desplazamiento solapa, el que menos
+     "daña" se descarta luego en el reparto por tramos (no divide la parte). */
+  function incAlineado(inc,iv){
+    if(!inc||!iv) return inc;
+    var mejor=inc, mejorSolape=-Infinity;
+    [-1440,0,1440].forEach(function(off){
+      var a=inc.ini+off, b=inc.fin+off;
+      var solape=Math.min(b,iv.fin)-Math.max(a,iv.ini);
+      if(solape>mejorSolape){ mejorSolape=solape; mejor={ini:a,fin:b}; }
+    });
+    return mejor;
+  }
+
+  /* Tramos de conducción de una parte (duraciones en minutos). La corrección
+     manual sustituye la duración teórica. El intervalo teórico [inicio,fin] se
+     parte por la INC cuando ésta cae dentro (antes/después). */
+  function segsParte(p){
+    if(manual[p]!=null) return {segs:[manual[p]],origen:'manual',incompleta:false,ausente:false};
+    var iniH=jr[p]&&jr[p].inicioTeorico, finH=jr[p]&&jr[p].finTeorico;
+    if(iniH&&finH){
+      var iv=tcIntervaloMin(iniH,finH);
+      if(!iv) return {segs:[],origen:'hoja',incompleta:true,ausente:false};
+      var inc=incRango(), segs=[];
+      if(inc) inc=incAlineado(inc,iv); /* alinea la INC con esta parte (cruce de medianoche) */
+      if(inc&&inc.ini>iv.ini&&inc.fin<iv.fin){ segs.push(inc.ini-iv.ini); segs.push(iv.fin-inc.fin); }      /* INC dentro → divide */
+      else if(inc&&inc.ini<=iv.ini&&inc.fin>iv.ini&&inc.fin<iv.fin){ segs.push(iv.fin-inc.fin); }            /* INC al inicio → recorta */
+      else if(inc&&inc.fin>=iv.fin&&inc.ini>iv.ini&&inc.ini<iv.fin){ segs.push(inc.ini-iv.ini); }            /* INC al final → recorta */
+      else { segs.push(iv.fin-iv.ini); }
+      return {segs:segs,origen:'hoja',incompleta:false,ausente:false};
+    }
+    if(iniH||finH) return {segs:[],origen:'hoja',incompleta:true,ausente:false}; /* presente pero incompleta */
+    return {segs:[],origen:null,incompleta:false,ausente:true}; /* ausente */
+  }
+  /* Minutos de conducción aportados por la ampliación confirmada de una parte
+     (0 si no está confirmada como conducción). */
+  function ampConduccMin(p){
+    var a=jr.ampliaciones&&jr.ampliaciones[p];
+    return (tcExcesoAmpEstadoConduccion(a)==='conduccion')?(a.minutosAmpliacion||0):0;
+  }
+
+  var d1=segsParte('parte1'), d2=segsParte('parte2');
+  var hayP1=!d1.ausente, hayP2=!d2.ausente;
+
+  /* Una ampliación documentada y computable pero sin confirmar la conducción
+     deja el día pendiente de revisión. */
+  ['parte1','parte2'].forEach(function(p){
+    if(tcExcesoAmpEstadoConduccion(jr.ampliaciones&&jr.ampliaciones[p])==='pendiente') res.pendienteConduccion=true;
+  });
+
+  /* Crea un período (tramo continuo de conducción) con metadatos para la tarjeta. */
+  function mkPeriodo(dur,partes,origen,amp,incompleta){
+    var minCond=dur||0, exceso=Math.max(0,minCond-LIM);
+    return {
+      partes:partes.slice(),
+      minutosBase:minCond-(amp||0),
+      minutosAmpliacionConduccion:amp||0,
+      minutosConduccion:minCond,
+      minutosNormales:Math.min(minCond,LIM),
+      excesoFisico:exceso,
+      equivalenteHoraExtra:exceso*2,
+      incompleta:!!incompleta,
+      origenBase:origen||'hoja'
+    };
+  }
+  /* Convierte los tramos de una parte en períodos. La ampliación confirmada se
+     añade al ÚLTIMO tramo (prolonga el final de la conducción de la parte). */
+  function periodosDeParte(p,d){
+    var out=[], amp=ampConduccMin(p);
+    if(d.incompleta){ out.push(mkPeriodo(0,[p],d.origen,0,true)); return out; }
+    var segs=d.segs.slice();
+    if(!segs.length){ if(amp>0) segs=[0]; else return out; }
+    for(var i=0;i<segs.length;i++){
+      var esUltimo=(i===segs.length-1);
+      out.push(mkPeriodo(segs[i]+(esUltimo?amp:0),[p],d.origen,esUltimo?amp:0,false));
+    }
+    return out;
+  }
+
+  var periodos=[];
+  if(hayP1&&hayP2){
+    var rel=tcExcesoDescansoRelacion(jr);
+    if(rel==='desconocido') res.descansoDesconocido=true;
+    var pp1=periodosDeParte('parte1',d1), pp2=periodosDeParte('parte2',d2);
+    if(rel==='absorbido'&&pp1.length&&pp2.length&&!d1.incompleta&&!d2.incompleta){
+      /* El descanso se absorbió: el último tramo de la 1ª parte y el primero de
+         la 2ª forman un único período continuo (sin descanso entre ellos). */
+      var last=pp1[pp1.length-1], first=pp2[0];
+      var merged=mkPeriodo(last.minutosConduccion+first.minutosConduccion,['parte1','parte2'],
+        (last.origenBase==='manual'||first.origenBase==='manual')?'manual':'hoja',
+        last.minutosAmpliacionConduccion+first.minutosAmpliacionConduccion,false);
+      periodos=pp1.slice(0,pp1.length-1).concat([merged]).concat(pp2.slice(1));
+    } else {
+      /* 'real' → períodos separados; 'desconocido' → tampoco se unen (y el día
+         queda pendiente con cero definitivo, ver estado más abajo). */
+      periodos=pp1.concat(pp2);
+    }
+  } else if(hayP1){
+    periodos=periodosDeParte('parte1',d1);
+  } else if(hayP2){
+    periodos=periodosDeParte('parte2',d2);
+  }
+
+  var parcial=false;
+  periodos.forEach(function(pp){ if(pp.incompleta) parcial=true; });
+  res.periodos=periodos;
+  res.parcial=parcial;
+
+  /* Estado del día. */
+  if(!periodos.length&&!res.pendienteConduccion&&!res.descansoDesconocido){
+    res.estado='no_aplica';
+  } else if(parcial||res.pendienteConduccion||res.descansoDesconocido){
+    res.estado='pendiente_revision';
+  } else {
+    res.estado='computable';
+  }
+
+  /* Totales DEFINITIVOS solo cuando el día es computable: un día pendiente
+     (parcial, ampliación sin confirmar o descanso desconocido) aporta CERO a los
+     totales y nunca entra en los cómputos definitivos. */
+  if(res.estado==='computable'){
+    periodos.forEach(function(pp){
+      res.minutosExcesoFisico+=pp.excesoFisico;
+      res.minutosEquivalentesHoraExtra+=pp.equivalenteHoraExtra;
+      res.minutosNormales+=pp.minutosNormales;
+    });
+  }
+  res.minutosFisicos=res.minutosExcesoFisico;
+  res.minutosNomina=res.minutosEquivalentesHoraExtra;
+  return res;
+}
+
+/* Resumen mensual del exceso de conducción continua. Recalcula siempre desde
+   dias/jornadas (sin saldo duplicado). Deja preparado el concepto para Nómina
+   como «Exceso conducción continua · Art. 20.4», sin calcular euros. */
+function tcResumenExcesoConduccionMes(anio,mes){
+  var res={
+    minutosExcesoConduccionFisicos:0,
+    minutosExcesoConduccionEquivalentes:0,
+    diasPendientesRevision:0,
+    diasConExceso:0,
+    codigoNomina:'4A82',
+    conceptoNomina:'Aplicación Artículo 20 d)',
+    referencia:'Artículo 20.4'
+  };
+  var a=parseInt(anio,10), m=parseInt(mes,10);
+  if(isNaN(a)||isNaN(m)||m<1||m>12) return res;
+  var ndias=new Date(a,m,0).getDate();
+  for(var d=1;d<=ndias;d++){
+    var key=a+'-'+tcPad(m)+'-'+tcPad(d);
+    var reg=dias[key]; if(!reg||!reg.jornada) continue;
+    var ex=tcCalcularExcesoConduccion(reg.jornada);
+    /* Los resultados pendientes NUNCA entran en los totales definitivos. */
+    if(ex.estado==='pendiente_revision'){ res.diasPendientesRevision++; continue; }
+    if(ex.estado==='computable'){
+      res.minutosExcesoConduccionFisicos+=ex.minutosExcesoFisico;
+      res.minutosExcesoConduccionEquivalentes+=ex.minutosEquivalentesHoraExtra;
+      if(ex.minutosExcesoFisico>0) res.diasConExceso++;
+    }
+  }
+  return res;
+}
+
+/* Bloque "Exceso de conducción continua" dentro de la tarjeta "Datos de
+   jornada" (DEV-007R5). Aditivo: sin pantallas ni botones nuevos. Muestra la
+   conducción por período, el exceso físico sobre 4:30, el equivalente al doble,
+   el estado y el aviso de revisión. Ningún importe en euros. */
+function tcExcesoConduccionCardHtml(reg){
+  var jr=reg&&reg.jornada; if(!jr) return '';
+  var ex=tcCalcularExcesoConduccion(jr);
+  if(ex.estado==='no_aplica'&&!ex.periodos.length) return '';
+  var html='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border,#E5E7EB);font-size:13px;line-height:1.7;color:var(--text2);">';
+  html+='<div style="font-weight:700;color:var(--text,#1a1a1a);margin-bottom:2px;">Exceso de conducción continua</div>';
+  html+='<span style="font-size:12px;">Límite por período: <strong>4 h 30 min</strong> · Ref. '+tcEsc(ex.referencia)+'</span><br>';
+  ex.periodos.forEach(function(p){
+    var nombre=(p.partes.length>1)?'Período combinado (1ª+2ª, sin descanso)':((p.partes[0]==='parte1')?'1ª parte':'2ª parte');
+    html+='<div style="margin-top:4px;">'+tcEsc(nombre)+': conducción <strong>'+tcMinAHorasMin(p.minutosConduccion)+'</strong>';
+    if(p.minutosAmpliacionConduccion>0) html+=' <span style="font-size:12px;">(incluye ampliación confirmada '+tcMinAHorasMin(p.minutosAmpliacionConduccion)+')</span>';
+    if(p.origenBase==='manual') html+=' <span style="font-size:12px;">· duración corregida a mano</span>';
+    html+='<br>';
+    if(p.incompleta){
+      html+='<span style="color:#C05621;font-size:12px;">⚠️ Duración incompleta: corrígela en «⏱️ Ampliaciones».</span><br>';
+    } else if(p.excesoFisico>0){
+      html+='Exceso físico sobre 4:30: <strong>'+tcMinAHorasMin(p.excesoFisico)+'</strong> · Equivalente al doble: <strong>'+tcMinAHorasMin(p.equivalenteHoraExtra)+'</strong>'+(ex.estado!=='computable'?' <span style="font-size:12px;color:#C05621;">(provisional)</span>':'')+'<br>';
+    } else {
+      html+='<span style="font-size:12px;">Sin exceso (≤ 4 h 30 min).</span><br>';
+    }
+    html+='</div>';
+  });
+  if(ex.periodos.length>1&&ex.minutosExcesoFisico>0){
+    html+='<div style="margin-top:4px;">Total exceso físico: <strong>'+tcMinAHorasMin(ex.minutosExcesoFisico)+'</strong> · Total equivalente al doble: <strong>'+tcMinAHorasMin(ex.minutosEquivalentesHoraExtra)+'</strong></div>';
+  }
+  if(ex.estado==='pendiente_revision'){
+    var motivoPend=ex.descansoDesconocido
+      ? 'no consta el descanso entre las dos partes; no se unen y no computan hasta revisarlo.'
+      : (ex.pendienteConduccion?'confirma si la ampliación fue tiempo de conducción en «⏱️ Ampliaciones».':'completa la duración de la conducción.');
+    html+='<span style="color:#C05621;">⚠️ Pendiente de revisión: '+motivoPend+'</span><br>';
+  }
+  html+='<span style="font-size:12px;">Concepto para Nómina: '+tcEsc(ex.codigoNomina)+' «'+tcEsc(ex.conceptoNomina)+'» (doble del exceso) · Ref. legal '+tcEsc(ex.referenciaLegal)+'. Importe pendiente de tablas salariales.</span>';
+  html+='</div>';
+  return html;
+}
+
+/* ==================== DEV-007R5: NÓMINA (provisional) =======================
+   Pantalla única con pestañas (Resumen · Nómina provisional · Comparación).
+   Todo se RECALCULA desde dias/jornadas mediante funciones puras; no se guarda
+   ningún saldo duplicado y no se calcula ningún importe en euros (los importes
+   quedan pendientes de las tablas salariales). No modifica calendario, cambios,
+   hojas, recaudaciones, liquidaciones, backups, IndexedDB ni importaciones. */
+
+/* Formato de nómina HH.MM (NO es hora decimal): 512→8.32, 915→15.15, 31→0.31. */
+function tcMinANominaHHMM(min){
+  if(min==null||isNaN(min)) return '—';
+  var neg=min<0, v=Math.abs(Math.round(min));
+  var h=Math.floor(v/60), m=v%60;
+  return (neg?'-':'')+h+'.'+tcPad(m);
+}
+
+/* Ampliaciones de una jornada a efectos de nómina: minutos confirmados
+   (documento_presentado + computable) frente a pendientes. No modifica nada. */
+function tcNominaAmpliacionesDia(jr){
+  var r={confirmadas:0,pendientes:0};
+  if(!jr||!jr.ampliaciones) return r;
+  ['parte1','parte2'].forEach(function(p){
+    var a=jr.ampliaciones[p]; if(!a) return;
+    if(a.estado==='descartada'||a.estado==='anulada') return;
+    var min=a.minutosAmpliacion||0; if(min<=0) return;
+    if(a.estado==='documento_presentado'&&a.computableParaNomina===true) r.confirmadas+=min;
+    else r.pendientes+=min;
+  });
+  return r;
+}
+
+/* Duración del descanso intermedio de un turno partido (minutos) o null. */
+function tcNominaGapPartido(jr){
+  if(jr.descanso&&jr.descanso.duracionMinutos!=null&&jr.descanso.duracionMinutos>0) return jr.descanso.duracionMinutos;
+  var f1=jr.parte1&&jr.parte1.finTeorico, i2=jr.parte2&&jr.parte2.inicioTeorico;
+  if(f1&&i2){ var a=tcHoraAMin(tcNormHora(f1)), b=tcHoraAMin(tcNormHora(i2)); if(a!=null&&b!=null){ if(b<a) b+=1440; return b-a; } }
+  return null;
+}
+
+/* Agregado laboral de un mes concreto (recalculado desde días). Los conceptos
+   solapados se mantienen SEPARADOS; nunca se suman en un total general. */
+function tcResumenLaboralMes(anio,mes){
+  var a=parseInt(anio,10), m=parseInt(mes,10);
+  var R={
+    anio:a, mes:m, nombreMes:(MESES[m-1]||''),
+    computoOficialMinutos:0,
+    ampliacionesConfirmadas:0, ampliacionesPendientes:0,
+    horasExtraordinarias:0,
+    nocturnidadGeneral:0, nocturnidadSemanaSanta:0, nocturnidadFeria:0,
+    solapeFeria:0, solapeSemanaSanta:0,
+    excesoFisico:0, excesoEquivalente:0,
+    td:0, dejeNormal:0, extraCalle7:0,
+    partidoDias:0, tpHasta2h:0, tpMas2h:0, tpPendiente:0,
+    diasPendientesRevision:0, diasConDatos:0
+  };
+  if(isNaN(a)||isNaN(m)||m<1||m>12) return R;
+  var ndias=new Date(a,m,0).getDate();
+  for(var d=1;d<=ndias;d++){
+    var key=a+'-'+tcPad(m)+'-'+tcPad(d);
+    var reg=dias[key]; if(!reg) continue;
+    var jr=reg.jornada; if(!jr) continue;
+    R.diasConDatos++;
+    var pendDia=false;
+    if(jr.computoOficialMinutos!=null) R.computoOficialMinutos+=jr.computoOficialMinutos;
+    var amp=tcNominaAmpliacionesDia(jr);
+    R.ampliacionesConfirmadas+=amp.confirmadas;
+    R.ampliacionesPendientes+=amp.pendientes;
+    R.horasExtraordinarias+=amp.confirmadas; /* horas extra pagables = ampliaciones confirmadas */
+    if(amp.pendientes>0) pendDia=true;
+    if(jr.tipoTurno==='partido'){
+      R.partidoDias++;
+      var gap=tcNominaGapPartido(jr);
+      if(gap==null){ R.tpPendiente++; pendDia=true; }
+      else if(gap<=120) R.tpHasta2h++;
+      else R.tpMas2h++;
+    }
+    var ce=tcComputosEspecificosNormalizar(jr.computosEspecificos); /* reutiliza el saldo existente */
+    if(ce.tiempoDesplazamiento.minutos!=null) R.td+=ce.tiempoDesplazamiento.minutos;
+    if(ce.deje.minutosBase!=null) R.dejeNormal+=ce.deje.minutosBase;
+    R.extraCalle7+=ce.deje.extraCalle7Minutos||0;
+    var n=tcCalcularNocturnidadDia(key);
+    if(n.tipo==='semana_santa') R.nocturnidadSemanaSanta+=n.totalNocturnoComputable;
+    else if(n.tipo==='feria') R.nocturnidadFeria+=n.totalNocturnoComputable;
+    else R.nocturnidadGeneral+=n.totalNocturnoComputable;
+    if(n.parcial||n.pendienteDescanso||n.revisionParte2) pendDia=true;
+    var s=tcCalcularSolapeDia(key);
+    if(s.estado==='computable'){
+      if(s.tipo==='feria') R.solapeFeria+=s.minutosSolape;
+      else if(s.tipo==='semana_santa') R.solapeSemanaSanta+=s.minutosSolape;
+    } else if(s.estado==='pendiente_revision') pendDia=true;
+    var ex=tcCalcularExcesoConduccion(jr);
+    if(ex.estado==='computable'){
+      R.excesoFisico+=ex.minutosExcesoFisico;
+      R.excesoEquivalente+=ex.minutosEquivalentesHoraExtra;
+    } else if(ex.estado==='pendiente_revision') pendDia=true;
+    if(tcComputosRevisionPendiente(jr.computosEspecificos)) pendDia=true;
+    if(jr.requiereRevision) pendDia=true;
+    if(pendDia) R.diasPendientesRevision++;
+  }
+  return R;
+}
+
+/* FUNCIÓN PURA — Resumen laboral. Con mes (1–12) devuelve el mes seleccionado;
+   siempre incluye el desglose de los 12 meses y el total anual. */
+function tcResumenLaboral(anio,mes){
+  var a=parseInt(anio,10);
+  var meses=[]; for(var m=1;m<=12;m++) meses.push(tcResumenLaboralMes(a,m));
+  var claves=['computoOficialMinutos','ampliacionesConfirmadas','ampliacionesPendientes','horasExtraordinarias',
+    'nocturnidadGeneral','nocturnidadSemanaSanta','nocturnidadFeria','solapeFeria','solapeSemanaSanta',
+    'excesoFisico','excesoEquivalente','td','dejeNormal','extraCalle7',
+    'partidoDias','tpHasta2h','tpMas2h','tpPendiente','diasPendientesRevision','diasConDatos'];
+  var anual={anio:a, mes:null, nombreMes:'Año '+a};
+  claves.forEach(function(k){ anual[k]=0; });
+  meses.forEach(function(mm){ claves.forEach(function(k){ anual[k]+=(mm[k]||0); }); });
+  var mm=(mes!=null&&!isNaN(parseInt(mes,10)))?parseInt(mes,10):null;
+  var mesSel=(mm!=null&&mm>=1&&mm<=12)?meses[mm-1]:null;
+  return { anio:a, meses:meses, anual:anual, mesSeleccionado:mesSel };
+}
+
+/* Una fila derivada de nómina provisional. Los tiempos se guardan en minutos y
+   se muestran en formato de nómina HH.MM; las unidades como enteros. */
+function tcNominaFila(codigo,concepto,tipoUnidad,cantidad,estado,origen){
+  var mostrada=(tipoUnidad==='minutos')?tcMinANominaHHMM(cantidad):String(cantidad);
+  return { codigo:codigo, concepto:concepto, tipoUnidad:tipoUnidad, cantidad:cantidad,
+    cantidadMostrada:mostrada, origen:origen, estado:estado, importeEstimado:null };
+}
+/* Filas provisionales derivadas del agregado R (mensual o anual). El deje NO
+   genera fila con código (no se inventa código de nómina); se muestra aparte. */
+function tcNominaProvisionalFilas(R){
+  var pend=function(cond){ return cond?'Pendiente':'Provisional'; };
+  return [
+    tcNominaFila('4A10','Turno partido','unidades',R.partidoDias, R.tpPendiente>0?'Pendiente':(R.partidoDias>0?'Confirmado':'Provisional'),'jornadas'),
+    tcNominaFila('4A4E','TP hasta 2 horas','unidades',R.tpHasta2h, pend(R.tpPendiente>0),'jornadas'),
+    tcNominaFila('4A4F','TP mayor de 2 horas','unidades',R.tpMas2h, pend(R.tpPendiente>0),'jornadas'),
+    tcNominaFila('49A6','Cómputo desplazamiento mensual','minutos',R.td,'Provisional','computosEspecificos'),
+    tcNominaFila('4A31','Horas extraordinarias','minutos',R.horasExtraordinarias, pend(R.ampliacionesPendientes>0),'ampliaciones'),
+    tcNominaFila('4A33','Horas nocturnas','minutos',R.nocturnidadGeneral,'Provisional','jornadas'),
+    tcNominaFila('4A59','Solape Feria','minutos',R.solapeFeria,'Provisional','eventos'),
+    tcNominaFila('4A82','Aplicación Artículo 20 d)','minutos',R.excesoEquivalente,'Provisional','jornadas'),
+    tcNominaFila('4B25','Horas nocturnas Semana Santa','minutos',R.nocturnidadSemanaSanta,'Provisional','eventos'),
+    tcNominaFila('4B27','Horas nocturnas Feria','minutos',R.nocturnidadFeria,'Provisional','eventos')
+  ];
+}
+
+/* ---------------------- Render de la pantalla Nómina ----------------------- */
+var NOM_TAB='resumen', NOM_ANIO=null, NOM_MES=null;
+
+function tcNomEstadoBadge(estado){
+  var cls=(estado==='Confirmado')?'c':(estado==='Pendiente')?'p':'v';
+  return '<span class="nom-est '+cls+'">'+tcEsc(estado)+'</span>';
+}
+function tcNomDur(min){ return tcMinANominaHHMM(min)+' <span style="color:var(--color-text-secondary);font-size:0.8em;">('+tcMinAHorasMin(min)+')</span>'; }
+
+/* Rellena los selectores de año y mes (años presentes en dias + año actual). */
+function tcNomPoblarSelectores(){
+  var selA=document.getElementById('nomAnio'), selM=document.getElementById('nomMes');
+  if(!selA||!selM) return;
+  var hoy=new Date();
+  var anios={}; anios[hoy.getFullYear()]=true;
+  Object.keys(dias).forEach(function(k){ var y=parseInt(String(k).slice(0,4),10); if(!isNaN(y)) anios[y]=true; });
+  var lista=Object.keys(anios).map(function(x){return parseInt(x,10);}).sort(function(a,b){return b-a;});
+  if(NOM_ANIO==null) NOM_ANIO=hoy.getFullYear();
+  if(NOM_MES==null) NOM_MES=hoy.getMonth()+1;
+  selA.innerHTML=lista.map(function(y){return '<option value="'+y+'"'+(y===NOM_ANIO?' selected':'')+'>'+y+'</option>';}).join('');
+  var optMes='';
+  for(var i=1;i<=12;i++) optMes+='<option value="'+i+'"'+(i===NOM_MES?' selected':'')+'>'+tcEsc(MESES[i-1])+'</option>';
+  selM.innerHTML=optMes;
+}
+
+function tcNomRenderResumen(data){
+  var mesR=data.mesSeleccionado||data.anual, anR=data.anual;
+  var filas=[
+    ['Cómputo oficial','dur','computoOficialMinutos'],
+    ['Ampliaciones confirmadas','dur','ampliacionesConfirmadas'],
+    ['Ampliaciones pendientes','dur','ampliacionesPendientes'],
+    ['Horas extraordinarias','dur','horasExtraordinarias'],
+    ['Nocturnidad general','dur','nocturnidadGeneral'],
+    ['Nocturnidad Semana Santa','dur','nocturnidadSemanaSanta'],
+    ['Nocturnidad Feria','dur','nocturnidadFeria'],
+    ['Solape Semana Santa','dur','solapeSemanaSanta'],
+    ['Solape Feria','dur','solapeFeria'],
+    ['Exceso Art. 20.4 (físico)','dur','excesoFisico'],
+    ['Exceso Art. 20.4 (equivalente ×2)','dur','excesoEquivalente'],
+    ['T.D. (tiempo de desplazamiento)','dur','td'],
+    ['Deje normal','dur','dejeNormal'],
+    ['Extra Calle 7','dur','extraCalle7'],
+    ['Días pendientes de revisión','int','diasPendientesRevision']
+  ];
+  var h='<div class="form-card">';
+  h+='<h3 style="margin-top:0;">Resumen · '+tcEsc(mesR.nombreMes)+' '+data.anio+'</h3>';
+  h+='<div class="nom-scroll"><table class="nom-tabla"><thead><tr><th>Concepto</th><th>'+(data.mesSeleccionado?tcEsc(mesR.nombreMes):'Mes')+'</th><th>Año '+data.anio+'</th></tr></thead><tbody>';
+  filas.forEach(function(f){
+    var vm=(f[1]==='dur')?tcNomDur(mesR[f[2]]||0):String(mesR[f[2]]||0);
+    var va=(f[1]==='dur')?tcNomDur(anR[f[2]]||0):String(anR[f[2]]||0);
+    h+='<tr><td>'+tcEsc(f[0])+'</td><td class="num">'+vm+'</td><td class="num">'+va+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div class="nom-nota">Los conceptos solapados (p.ej. horas extraordinarias y exceso Art. 20.4, que derivan del mismo tiempo) se muestran por separado y <strong>no se suman</strong> en un total general.</div>';
+  h+='</div>';
+
+  /* Desglose de los 12 meses */
+  h+='<div class="form-card"><h3 style="margin-top:0;">Desglose de los 12 meses ('+data.anio+')</h3><div class="nom-scroll"><table class="nom-tabla"><thead><tr>'
+    +'<th>Mes</th><th>Cómp. of.</th><th>Noct. gen.</th><th>Noct. SS</th><th>Noct. Feria</th><th>Solape SS</th><th>Solape Feria</th><th>Exc. ×2</th><th>T.D.</th><th>Deje</th><th>C7</th><th>Pend.</th></tr></thead><tbody>';
+  data.meses.forEach(function(mm){
+    h+='<tr><td>'+tcEsc(mm.nombreMes)+'</td>'
+      +'<td class="num">'+tcMinANominaHHMM(mm.computoOficialMinutos)+'</td>'
+      +'<td class="num">'+tcMinANominaHHMM(mm.nocturnidadGeneral)+'</td>'
+      +'<td class="num">'+tcMinANominaHHMM(mm.nocturnidadSemanaSanta)+'</td>'
+      +'<td class="num">'+tcMinANominaHHMM(mm.nocturnidadFeria)+'</td>'
+      +'<td class="num">'+tcMinANominaHHMM(mm.solapeSemanaSanta)+'</td>'
+      +'<td class="num">'+tcMinANominaHHMM(mm.solapeFeria)+'</td>'
+      +'<td class="num">'+tcMinANominaHHMM(mm.excesoEquivalente)+'</td>'
+      +'<td class="num">'+tcMinANominaHHMM(mm.td)+'</td>'
+      +'<td class="num">'+tcMinANominaHHMM(mm.dejeNormal)+'</td>'
+      +'<td class="num">'+tcMinANominaHHMM(mm.extraCalle7)+'</td>'
+      +'<td class="num">'+(mm.diasPendientesRevision||0)+'</td></tr>';
+  });
+  h+='</tbody></table></div><div class="nom-nota">Tiempos en formato de nómina HH.MM (no es hora decimal).</div></div>';
+  return h;
+}
+
+function tcNomRenderProvisional(data){
+  var R=data.mesSeleccionado||data.anual;
+  var ambito=data.mesSeleccionado?(R.nombreMes+' '+data.anio):('Año '+data.anio);
+  var filas=tcNominaProvisionalFilas(R);
+  var h='<div class="form-card"><h3 style="margin-top:0;">Nómina provisional · '+tcEsc(ambito)+'</h3>';
+  h+='<div class="nom-scroll"><table class="nom-tabla"><thead><tr><th>Código</th><th>Concepto</th><th>Cantidad</th><th>Unidad</th><th>Origen</th><th>Estado</th><th>Importe</th></tr></thead><tbody>';
+  filas.forEach(function(f){
+    h+='<tr><td>'+tcEsc(f.codigo)+'</td><td>'+tcEsc(f.concepto)+'</td>'
+      +'<td class="num">'+tcEsc(f.cantidadMostrada)+'</td>'
+      +'<td>'+tcEsc(f.tipoUnidad)+'</td><td>'+tcEsc(f.origen)+'</td>'
+      +'<td>'+tcNomEstadoBadge(f.estado)+'</td>'
+      +'<td class="num">'+(f.importeEstimado==null?'—':f.importeEstimado)+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div class="nom-nota">Los tiempos se guardan en minutos y se muestran en formato de nómina HH.MM (p.ej. 512→8.32, 915→15.15, 31→0.31). No se calculan euros, salario base, IRPF ni Seguridad Social todavía.</div>';
+  h+='</div>';
+
+  /* Deje: sin código de nómina (no se inventa ninguno). */
+  var dejeTotal=(R.dejeNormal||0)+(R.extraCalle7||0);
+  h+='<div class="form-card"><h3 style="margin-top:0;">Deje</h3>'
+    +'<div class="nom-scroll"><table class="nom-tabla"><thead><tr><th>Concepto</th><th>Minutos</th></tr></thead><tbody>'
+    +'<tr><td>Deje normal (6 min por servicio finalizado en depósito)</td><td class="num">'+(R.dejeNormal||0)+'</td></tr>'
+    +'<tr><td>Extra Calle 7 (+5 min)</td><td class="num">'+(R.extraCalle7||0)+'</td></tr>'
+    +'<tr><td><strong>Total deje</strong></td><td class="num"><strong>'+dejeTotal+'</strong></td></tr>'
+    +'</tbody></table></div>'
+    +'<div class="nom-nota">El deje no se suma al cómputo diario ni se trata como ampliación u hora extraordinaria; se acumula aparte. '
+    +'<strong>Importe y forma de compensación pendientes de identificar.</strong></div></div>';
+  return h;
+}
+
+function tcNomRenderComparacion(){
+  return '<div class="form-card"><div class="nom-proximamente"><span class="big">🕓</span>Próximamente</div></div>';
+}
+
+window.tcRenderNomina=function(){
+  var cont=document.getElementById('nomContenido'); if(!cont) return;
+  tcNomPoblarSelectores();
+  var selA=document.getElementById('nomAnio'), selM=document.getElementById('nomMes');
+  if(selA) NOM_ANIO=parseInt(selA.value,10)||NOM_ANIO;
+  if(selM) NOM_MES=parseInt(selM.value,10)||NOM_MES;
+  /* Resalta la pestaña activa */
+  document.querySelectorAll('#tab-nomina .nom-tabbtn').forEach(function(b){
+    if(b.getAttribute('data-nomtab')===NOM_TAB) b.classList.add('active'); else b.classList.remove('active');
+  });
+  if(NOM_TAB==='comparacion'){ cont.innerHTML=tcNomRenderComparacion(); return; }
+  var data=tcResumenLaboral(NOM_ANIO,NOM_MES);
+  cont.innerHTML=(NOM_TAB==='provisional')?tcNomRenderProvisional(data):tcNomRenderResumen(data);
+};
+
+/* Delegación de eventos de la pantalla Nómina (aditivo, sin tocar otras). */
+document.addEventListener('click',function(e){
+  var b=e.target&&e.target.closest?e.target.closest('#tab-nomina .nom-tabbtn'):null;
+  if(!b) return;
+  NOM_TAB=b.getAttribute('data-nomtab')||'resumen';
+  if(typeof window.tcRenderNomina==='function') window.tcRenderNomina();
+});
+document.addEventListener('change',function(e){
+  var t=e.target; if(!t||(t.id!=='nomAnio'&&t.id!=='nomMes')) return;
+  if(t.id==='nomAnio') NOM_ANIO=parseInt(t.value,10)||NOM_ANIO;
+  if(t.id==='nomMes') NOM_MES=parseInt(t.value,10)||NOM_MES;
+  if(typeof window.tcRenderNomina==='function') window.tcRenderNomina();
+});
 
 /* servicioOverride (opcional, DEV-004R8): precarga el campo Servicio con un
    valor propuesto (p.ej. detectado en una hoja de ruta) en vez del ya
@@ -4065,6 +5428,7 @@ function tcExtraerJornadaHojaRuta(texto,registroDia){
     parte1:{inicioTeorico:null,finTeorico:null},
     descanso:{tipo:null,duracionMinutos:null},
     parte2:{inicioTeorico:null,finTeorico:null},
+    inc:{incInicio:null,incFin:null,incProgramadaMinutos:null,origen:null}, /* DEV-007R1 */
     tipoTurno:null, origen:'hoja_ruta', extraccionEstado:'manual',
     computosEspecificos:tcComputosEspecificosVacio()
   };
@@ -4162,6 +5526,31 @@ function tcExtraerJornadaHojaRuta(texto,registroDia){
       jr.computosEspecificos.deje.origen='hoja_ruta';
     }
   }
+
+  /* DEV-007R1 — INC: tiempo programado de jornada + margen de la empresa. Se
+     extrae SOLO cuando la etiqueta "INC" aparece de forma explícita en la hoja,
+     nunca se deriva de otros conceptos ni se inventa. Se admiten dos formatos:
+       · par de horas:  INC 21:50 22:05   → incInicio / incFin
+       · duración:      INC 15 MIN        → incProgramadaMinutos
+     Si no puede extraerse con seguridad, la INC queda vacía y se podrá editar
+     a mano desde el panel Jornada. tcIncNormalizar completa el tercer dato. */
+  var mIncPar=full.match(/\bINC\b\D{0,10}([0-4]?\d[:.,][0-5]\d)\D{1,10}([0-4]?\d[:.,][0-5]\d)/i);
+  if(mIncPar){
+    var iA=tcNormHora(mIncPar[1]),iB=tcNormHora(mIncPar[2]);
+    if(iA&&iB){ jr.inc.incInicio=iA; jr.inc.incFin=iB; jr.inc.origen='hoja_ruta'; }
+  }
+  if(jr.inc.incProgramadaMinutos==null){
+    var mIncMin=full.match(/\bINC\b\D{0,10}(\d{1,3})\s*M\s*[I1L]\s*N?/i);
+    if(mIncMin){
+      var vI=parseInt(mIncMin[1],10);
+      if(!isNaN(vI)&&vI>=0&&vI<=1440){ jr.inc.incProgramadaMinutos=vI; if(!jr.inc.origen) jr.inc.origen='hoja_ruta'; }
+    }
+  }
+  /* DEV-007R2 (fallo 5) — Si la extracción automática es contradictoria (par de
+     horas y minutos que no cuadran, o fin antes que inicio), no se descarta pero
+     se marca para revisión: nunca se aplica un dato incoherente sin avisar. */
+  if(tcIncContradictoria(jr.inc.incInicio,jr.inc.incFin,jr.inc.incProgramadaMinutos)) jr.inc.requiereRevision=true;
+  jr.inc=tcIncNormalizar(jr.inc);
 
   var basicOk=!!(jr.inicioTeorico&&jr.finTeorico);
   var partesOk=!!(jr.parte1.finTeorico&&jr.parte2.inicioTeorico);
@@ -4553,20 +5942,46 @@ function tcJornadaEnsure(reg,key){
       origen:null,
       horaFinRealParte1:null, horaFinRealParte2:null,
       ampliaciones:{parte1:null,parte2:null},
+      /* DEV-007R1 — INC (tiempo programado de jornada + margen de la empresa) y
+         gestión del descanso tras ampliar la primera parte. */
+      inc:{incInicio:null,incFin:null,incProgramadaMinutos:null,origen:null},
+      descansoGestion:null,
       computosEspecificos:tcComputosEspecificosVacio(),
-      computosRequierenRevision:false
+      computosRequierenRevision:false,
+      /* DEV-007R5 — Exceso de conducción continua (Art. 20.4). */
+      excesoConduccionManual:{parte1:null,parte2:null},
+      excesoConduccion:null
     };
   }
   if(!reg.jornada.ampliaciones) reg.jornada.ampliaciones={parte1:null,parte2:null};
   if(!reg.jornada.parte1) reg.jornada.parte1={inicioTeorico:null,finTeorico:null};
   if(!reg.jornada.parte2) reg.jornada.parte2={inicioTeorico:null,finTeorico:null};
   if(!reg.jornada.descanso) reg.jornada.descanso={tipo:null,duracionMinutos:null};
+  /* DEV-007R1 — Normaliza la INC (y completa el dato que falte a partir de los
+     otros dos) sin inventar nada; y valida la elección de gestión del descanso. */
+  reg.jornada.inc=tcIncNormalizar(reg.jornada.inc);
+  if(reg.jornada.descansoGestion!=='mantener_inicio'&&reg.jornada.descansoGestion!=='descanso_completo') reg.jornada.descansoGestion=null;
   /* DEV-006: T.D. y deje. No se calcula nada económico. Se normaliza también de
      forma segura en jornadas antiguas ya existentes (deje.minutos → minutosBase). */
   reg.jornada.computosEspecificos=tcComputosEspecificosNormalizar(reg.jornada.computosEspecificos);
   /* DEV-006R1: marca de revisión propia de T.D./deje, siempre derivada de los
      conceptos y separada de reg.jornada.requiereRevision (horarios/cómputo). */
   reg.jornada.computosRequierenRevision=tcComputosRevisionPendiente(reg.jornada.computosEspecificos);
+  /* DEV-007R5 — Exceso de conducción continua (Art. 20.4). Se persisten dentro
+     de la jornada los ÚNICOS datos que introduce el usuario: la corrección
+     manual de la conducción por parte y, en cada ampliación, la confirmación de
+     si fue tiempo de conducción (campo conduccionConfirmada, por defecto null).
+     El resultado calculado se refresca aquí, de modo que queda guardado en el
+     día y entra en el backup existente SIN tocar su esquema. Se recalcula solo
+     al cambiar horarios, INC, descanso, ampliaciones o la corrección manual. */
+  reg.jornada.excesoConduccionManual=tcExcesoConduccionManualNormalizar(reg.jornada.excesoConduccionManual);
+  if(reg.jornada.ampliaciones){
+    ['parte1','parte2'].forEach(function(p){
+      var a=reg.jornada.ampliaciones[p];
+      if(a&&typeof a==='object'&&a.conduccionConfirmada!==true&&a.conduccionConfirmada!==false) a.conduccionConfirmada=null;
+    });
+  }
+  reg.jornada.excesoConduccion=tcCalcularExcesoConduccion(reg.jornada);
   return reg.jornada;
 }
 /* Estructura estable pendiente de condiciones laborales (T.D. y deje no son
@@ -4832,6 +6247,16 @@ function tcJornadaFusionarExtraccion(reg,key,jornadaExtraida,opcionDatos){
      revisión (jornada.computosRequierenRevision, nunca jornada.requiereRevision)
      salvo que el usuario haya elegido explícitamente usar la hoja nueva. */
   tcComputosEspecificosFusionar(jr,jornadaExtraida.computosEspecificos,opcionDatos);
+  /* DEV-007R1 — La INC se fusiona como concepto propio (igual que T.D./deje):
+     una hoja nueva con INC explícita sustituye la anterior; una hoja sin INC no
+     borra una INC introducida a mano, salvo que el usuario elija "usar_nueva".
+     No se tocan la gestión del descanso ni el inicio real de la 2ª parte. */
+  var incNueva=tcIncNormalizar(jornadaExtraida&&jornadaExtraida.inc);
+  if(!origenManualOMixto||opcionDatos==='usar_nueva'){
+    if(tcIncTieneDatos(incNueva)) jr.inc=incNueva;
+    else if(opcionDatos==='usar_nueva') jr.inc={incInicio:null,incFin:null,incProgramadaMinutos:null,origen:null};
+  }
+  jr.inc=tcIncNormalizar(jr.inc);
   reg.jornada=jr;
   /* Recalcula ampliaciones si ya había horas reales, sin reabrir avisos ya resueltos.
      Nunca toca horaFinRealParte1/2, ampliaciones, estados, computableParaNomina
@@ -4966,7 +6391,10 @@ function tcJornadaDetectarAmpliacion(key,parte){
   var reg=dias[key]; if(!reg||!reg.jornada) return;
   var jr=reg.jornada;
   var horaReal=parte==='parte1'?jr.horaFinRealParte1:jr.horaFinRealParte2;
-  var finTeorico=jr[parte]&&jr[parte].finTeorico;
+  /* DEV-007R1 — La ampliación empieza tras el final teórico OFICIAL de la parte
+     (INC incluida), no tras el fin de conducción: así la INC nunca se confunde
+     con ampliación y esta se aplica una sola vez. */
+  var finTeorico=tcJornadaFinTeoricoOficialParte(jr,parte);
   var ampActual=jr.ampliaciones[parte];
   var parteLabel=parte==='parte1'?'primera':'segunda';
 
@@ -5020,6 +6448,7 @@ function tcJornadaDetectarAmpliacion(key,parte){
       minutosAmpliacion:diff, estado:'detectada', computableParaNomina:false,
       reglaConvenioPendiente:true, articuloConvenio:null,
       minutosValorNormal:null, minutosValorDoble:null,
+      conduccionConfirmada:null, /* DEV-007R5 — pendiente de confirmar si fue conducción */
       observaciones:''
     };
     dias[key]=reg; saveDias(); tcRenderCal();
@@ -5172,6 +6601,10 @@ function tcJornadaAvisoAmpliacion(fecha,parte,minutos){
           if(activeDate===fecha) tcRenderView(fecha,reg);
         }
         tcToast('⏱️ Ampliación preparada');
+        /* DEV-007R1 — Tras ampliar la primera parte con segunda parte existente,
+           preguntar cómo se gestionó el descanso (una sola vez, si aún no está
+           definido). */
+        if(parte==='parte1') tcPreguntarGestionDescanso(fecha,true);
       }},
       {label:'No, descartar',className:'btn-secondary',onClick:function(){
         var reg=dias[fecha];
@@ -5184,6 +6617,44 @@ function tcJornadaAvisoAmpliacion(fecha,parte,minutos){
     ]
   );
 }
+
+/* DEV-007R1 — Pregunta cómo se gestionó el descanso tras ampliar la primera
+   parte. Solo tiene sentido si hay ampliación real en la 1ª parte y existe una
+   2ª parte. Con soloSiFalta=true no vuelve a preguntar si ya está definido.
+   Guarda la elección en jr.descansoGestion (modificable) y recalcula. */
+window.tcPreguntarGestionDescanso=function(fecha,soloSiFalta){
+  fecha=fecha||activeDate; if(!fecha) return;
+  var reg=dias[fecha]; if(!reg||!reg.jornada) return;
+  var jr=reg.jornada;
+  var ampP1=jr.ampliaciones&&jr.ampliaciones.parte1;
+  var hayAmpP1=!!(ampP1&&ampP1.minutosAmpliacion>0&&ampP1.estado!=='descartada'&&ampP1.estado!=='anulada');
+  var hayParte2=!!(jr.parte2&&(jr.parte2.inicioTeorico||jr.parte2.finTeorico));
+  if(!hayAmpP1||!hayParte2) return;
+  if(soloSiFalta&&jr.descansoGestion) return;
+  var nombre=tcDescansoNombre(jr.tipoTurno,jr.descanso&&jr.descanso.tipo);
+  tcModalPrompt(
+    '¿Cómo se gestionó el descanso?',
+    'Ampliaste la primera parte. Indica cómo se gestionó el descanso ("'+nombre+'"): mantener el inicio teórico de la segunda parte, o disfrutar el descanso completo después del final real. El final teórico de la segunda parte no cambia.',
+    [
+      {label:'Mantener inicio teórico de la 2ª parte',className:'btn-primary',onClick:function(){ tcSetDescansoGestion(fecha,'mantener_inicio'); }},
+      {label:'Disfrutar descanso completo tras el final real',className:'btn-primary',onClick:function(){ tcSetDescansoGestion(fecha,'descanso_completo'); }},
+      {label:'Decidir más tarde',className:'btn-secondary',onClick:function(){}}
+    ]
+  );
+};
+
+/* Guarda la elección de gestión del descanso y recalcula todo lo dependiente
+   (inicio real de la 2ª parte y nocturnidad). Modificable en cualquier momento. */
+window.tcSetDescansoGestion=function(fecha,valor){
+  fecha=fecha||activeDate; if(!fecha) return;
+  var reg=dias[fecha]; if(!reg||!reg.jornada) return;
+  if(valor!=='mantener_inicio'&&valor!=='descanso_completo') return;
+  reg.jornada.descansoGestion=valor;
+  dias[fecha]=reg; saveDias();
+  tcRenderCal();
+  if(activeDate===fecha){ tcRenderView(fecha,reg); if(document.getElementById('pnl-ampliaciones').style.display!=='none') tcRenderAmpliaciones(); }
+  tcToast('✔ Gestión del descanso guardada');
+};
 
 /* ---- Editor manual de jornada (siempre origen 'manual' o 'mixto': no hay
    extracción automática fiable de horas desde la hoja de ruta todavía) ---- */
@@ -5201,6 +6672,12 @@ window.tcOpenJornada=function(){
   document.getElementById('jr-desc-min').value=(jr.descanso&&jr.descanso.duracionMinutos!=null)?jr.descanso.duracionMinutos:'';
   document.getElementById('jr-p2-inicio').value=(jr.parte2&&jr.parte2.inicioTeorico)||'';
   document.getElementById('jr-p2-fin').value=(jr.parte2&&jr.parte2.finTeorico)||'';
+  /* DEV-007R1 — INC y gestión del descanso. */
+  var inc=jr.inc||{};
+  document.getElementById('jr-inc-inicio').value=inc.incInicio||'';
+  document.getElementById('jr-inc-fin').value=inc.incFin||'';
+  document.getElementById('jr-inc-min').value=(inc.incProgramadaMinutos!=null)?inc.incProgramadaMinutos:'';
+  document.getElementById('jr-desc-gestion').value=jr.descansoGestion||'';
   tcShowPanel('pnl-jornada');
 };
 
@@ -5250,6 +6727,29 @@ window.tcSaveJornada=function(){
     inicioTeorico:val.p2i,
     finTeorico:val.p2f
   };
+  /* DEV-007R1 — INC: horas validadas (admiten 24:xx) y minutos 0–1440. Si se
+     rellena algo se marca origen manual/mixto. tcIncNormalizar completa el dato
+     que falte a partir de los otros dos, sin inventar. */
+  var incIni=tcNormHoraTeorica(document.getElementById('jr-inc-inicio').value);
+  var incFin=tcNormHoraTeorica(document.getElementById('jr-inc-fin').value);
+  if(incIni===false||incFin===false){ tcToast('⚠️ Hora de INC no válida. Usa HH:MM (00:00–47:59).'); return; }
+  var incMinTxt=(document.getElementById('jr-inc-min').value||'').trim();
+  var incMin=null;
+  if(incMinTxt!==''){
+    if(!/^\d{1,4}$/.test(incMinTxt)||parseInt(incMinTxt,10)>1440){ tcToast('⚠️ INC: introduce minutos entre 0 y 1440.'); return; }
+    incMin=parseInt(incMinTxt,10);
+  }
+  /* DEV-007R2 (fallo 5) — Inicio, fin y minutos incompatibles: no se guarda. */
+  if(tcIncContradictoria(incIni,incFin,incMin)){ tcToast('⚠️ INC incoherente: el inicio, el fin y los minutos no cuadran.'); return; }
+  var incAntes=jr.inc?(jr.inc.origen==='hoja_ruta'?'hoja_ruta':(tcIncTieneDatos(jr.inc)?'manual':null)):null;
+  var incNueva={incInicio:incIni,incFin:incFin,incProgramadaMinutos:incMin,origen:null};
+  var incNormPrev=tcIncNormalizar(jr.inc);
+  var cambiada=(incNueva.incInicio!==incNormPrev.incInicio||incNueva.incFin!==incNormPrev.incFin||incNueva.incProgramadaMinutos!==incNormPrev.incProgramadaMinutos);
+  if(tcIncTieneDatos(incNueva)) incNueva.origen=(cambiada?'manual':(incAntes||'manual'));
+  jr.inc=tcIncNormalizar(incNueva);
+  /* Gestión del descanso (modificable en cualquier momento). */
+  var gestSel=document.getElementById('jr-desc-gestion').value;
+  jr.descansoGestion=(gestSel==='mantener_inicio'||gestSel==='descanso_completo')?gestSel:null;
   jr.origen=(jr.origen==='hoja_ruta'||jr.origen==='mixto')?'mixto':'manual';
   jr.extraccionEstado=(jr.origen==='mixto')?'mixta':'manual';
   /* Guardado manual explícito: se considera validación del usuario. */
@@ -5444,6 +6944,25 @@ function tcRenderAmpliaciones(){
   var jr=reg.jornada||{ampliaciones:{}};
   var amps=jr.ampliaciones||{};
   var html='';
+  /* DEV-007R1 — Gestión del descanso tras ampliar la primera parte. Solo se
+     muestra cuando hay ampliación real en la 1ª parte y existe una 2ª parte. */
+  var ampP1=amps.parte1;
+  var hayAmpP1=!!(ampP1&&ampP1.minutosAmpliacion>0&&ampP1.estado!=='descartada'&&ampP1.estado!=='anulada');
+  var hayParte2=!!(jr.parte2&&(jr.parte2.inicioTeorico||jr.parte2.finTeorico));
+  if(hayAmpP1&&hayParte2){
+    var nombreDesc=tcDescansoNombre(jr.tipoTurno,jr.descanso&&jr.descanso.tipo);
+    var inicioReal=tcJornadaInicioRealParte2(jr);
+    html+='<div style="border:1px solid var(--border,#E5E7EB);border-radius:12px;padding:14px;margin-bottom:14px;background:var(--bg2,#F8FAFC);">'
+      +'<div style="font-weight:700;margin-bottom:6px;">'+tcEsc(nombreDesc)+' (tras ampliar la 1ª parte)</div>'
+      +'<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">El final teórico de la segunda parte no cambia; solo se ajusta su inicio real.</div>'
+      +(jr.descansoGestion
+        ? '<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Elegido: <strong>'+tcEsc(TC_DESC_GESTION_LABEL[jr.descansoGestion]||'—')+'</strong>'+(inicioReal?' · Inicio real 2ª parte: <strong>'+tcEsc(inicioReal)+'</strong>':'')+'</div>'
+        : '<div style="font-size:13px;color:#C05621;margin-bottom:8px;">⚠️ Sin definir. Elige cómo se gestionó el descanso.</div>')
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+      +'<button class="tc-mini-btn"'+(jr.descansoGestion==='mantener_inicio'?' style="border-color:var(--color-primary);font-weight:700;"':'')+' onclick="tcSetDescansoGestion(activeDate,\'mantener_inicio\')">Mantener inicio teórico 2ª parte</button>'
+      +'<button class="tc-mini-btn"'+(jr.descansoGestion==='descanso_completo'?' style="border-color:var(--color-primary);font-weight:700;"':'')+' onclick="tcSetDescansoGestion(activeDate,\'descanso_completo\')">Descanso completo tras final real</button>'
+      +'</div></div>';
+  }
   ['parte1','parte2'].forEach(function(parte){
     var a=amps[parte]; if(!a) return;
     var label=parte==='parte1'?'Primera parte':'Segunda parte';
@@ -5486,8 +7005,44 @@ function tcRenderAmpliaciones(){
         +(a.estado!=='descartada'&&a.estado!=='anulada'?'<button class="tc-mini-btn" onclick="tcAmpDescartar(\''+parte+'\')">🚫 Descartar</button>':'')
         +(a.estado!=='anulada'?'<button class="tc-mini-btn" onclick="tcAmpAnular(\''+parte+'\')">⛔ Anular</button>':'');
     }
-    html+='</div></div>';
+    html+='</div>';
+    /* DEV-007R5 — Confirmación de conducción (Art. 20.4). Solo tiene sentido
+       cuando la ampliación es documento_presentado y computable: hasta entonces
+       una ampliación pendiente no computa como exceso de conducción. */
+    if(a.estado==='documento_presentado'&&a.computableParaNomina===true){
+      var estadoCond=a.conduccionConfirmada===true?'✅ Confirmada como tiempo de conducción'
+        :(a.conduccionConfirmada===false?'ℹ️ Marcada como NO conducción (no suma al exceso)'
+        :'⚠️ Sin confirmar: indica si fue tiempo de conducción');
+      var colorCond=a.conduccionConfirmada===true?'var(--text2)':(a.conduccionConfirmada===false?'var(--text2)':'#C05621');
+      html+='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border,#E5E7EB);">'
+        +'<div style="font-size:13px;font-weight:700;margin-bottom:4px;">Exceso de conducción continua (Art. 20.4)</div>'
+        +'<div style="font-size:13px;color:'+colorCond+';margin-bottom:6px;">'+estadoCond+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+        +'<button class="tc-mini-btn"'+(a.conduccionConfirmada===true?' style="border-color:var(--color-primary);font-weight:700;"':'')+' onclick="tcAmpSetConduccion(\''+parte+'\',true)">🚌 Sí, fue conducción</button>'
+        +'<button class="tc-mini-btn"'+(a.conduccionConfirmada===false?' style="border-color:var(--color-primary);font-weight:700;"':'')+' onclick="tcAmpSetConduccion(\''+parte+'\',false)">🚫 No fue conducción</button>'
+        +(a.conduccionConfirmada!==null?'<button class="tc-mini-btn" onclick="tcAmpSetConduccion(\''+parte+'\',null)">↺ Restablecer</button>':'')
+        +'</div></div>';
+    }
+    html+='</div>';
   });
+  /* DEV-007R5 — Corrección manual de la conducción por parte, para cuando la
+     hoja no permite identificar la duración con seguridad. Anula la duración
+     teórica de esa parte en el cálculo del exceso (Art. 20.4). */
+  var em=(jr.excesoConduccionManual)||{parte1:null,parte2:null};
+  var hayJornadaData=!!(jr.parte1&&(jr.parte1.inicioTeorico||jr.parte1.finTeorico)||jr.parte2&&(jr.parte2.inicioTeorico||jr.parte2.finTeorico)||jr.inicioTeorico||jr.finTeorico||em.parte1!=null||em.parte2!=null);
+  if(hayJornadaData){
+    html+='<div style="border:1px solid var(--border,#E5E7EB);border-radius:12px;padding:14px;margin-bottom:14px;background:var(--bg2,#F8FAFC);">'
+      +'<div style="font-weight:700;margin-bottom:4px;">Corrección manual de conducción (Art. 20.4)</div>'
+      +'<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Usa esto solo si la hoja no permite identificar con seguridad la conducción continua. Deja el campo vacío para usar la duración teórica de la parte.</div>'
+      +'<div class="tc-fg" style="margin-bottom:8px;"><label class="tc-lbl">Minutos de conducción · 1ª parte</label>'
+      +'<input class="tc-inp" type="number" min="0" max="1440" step="1" id="exc-man-parte1" placeholder="Teórico" value="'+(em.parte1!=null?em.parte1:'')+'"></div>'
+      +'<div class="tc-fg" style="margin-bottom:8px;"><label class="tc-lbl">Minutos de conducción · 2ª parte</label>'
+      +'<input class="tc-inp" type="number" min="0" max="1440" step="1" id="exc-man-parte2" placeholder="Teórico" value="'+(em.parte2!=null?em.parte2:'')+'"></div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+      +'<button class="tc-mini-btn" onclick="tcExcesoGuardarManual()">💾 Guardar corrección</button>'
+      +((em.parte1!=null||em.parte2!=null)?'<button class="tc-mini-btn" onclick="tcExcesoLimpiarManual()">↺ Quitar corrección</button>':'')
+      +'</div></div>';
+  }
   document.getElementById('amp-list').innerHTML=html||'<div class="tc-ruta-empty"><span>⏱️</span><p>Sin ampliaciones</p></div>';
 }
 
@@ -5515,7 +7070,10 @@ window.tcAmpGuardarCambios=function(parte){
   tcToast('✔ Ampliación actualizada');
 };
 window.tcAmpDocumentoPresentado=function(parte){
-  tcAmpMutar(parte,function(a){ a.estado='documento_presentado'; a.computableParaNomina=true; });
+  /* DEV-007R5 — Al presentar el documento la ampliación es computable, pero la
+     conducción vuelve a estar SIN confirmar: hasta que el usuario indique si fue
+     tiempo de conducción, el exceso del día queda pendiente_revision. */
+  tcAmpMutar(parte,function(a){ a.estado='documento_presentado'; a.computableParaNomina=true; a.conduccionConfirmada=null; });
   tcToast('✅ Documento presentado registrado');
 };
 window.tcAmpDescartar=function(parte){
@@ -5530,12 +7088,50 @@ window.tcAmpConfirmarNuevos=function(parte){
   tcAmpMutar(parte,function(a){
     a.estado='documento_presentado'; a.computableParaNomina=true;
     a.minutosPresentadosAnteriores=null;
+    a.conduccionConfirmada=null; /* DEV-007R5 — reconfirmar la conducción tras cambiar los minutos */
   });
   tcToast('✅ Nuevos minutos confirmados como presentados');
 };
 window.tcAmpDejarPendienteDocumento=function(parte){
   tcAmpMutar(parte,function(a){ a.estado='pendiente_documento'; a.computableParaNomina=false; });
   tcToast('📄 Ampliación dejada pendiente de documento');
+};
+/* DEV-007R5 — Confirma (o no) si la ampliación fue tiempo de conducción, a
+   efectos del exceso de conducción continua (Art. 20.4). No toca los minutos
+   físicos de la ampliación ni su estado documental; solo la clasificación de
+   conducción. tcAmpMutar re-renderiza el día, la tarjeta y el panel, y
+   tcJornadaEnsure recalcula el exceso automáticamente. */
+window.tcAmpSetConduccion=function(parte,val){
+  var v=(val===true)?true:(val===false?false:null);
+  tcAmpMutar(parte,function(a){ a.conduccionConfirmada=v; });
+  tcToast(v===true?'🚌 Ampliación contada como conducción':(v===false?'🚫 Ampliación no contada como conducción':'↺ Confirmación de conducción restablecida'));
+};
+/* DEV-007R5 — Corrección manual de la duración de conducción por parte (Art.
+   20.4). Sustituye la duración teórica en el cálculo del exceso. Se guarda
+   dentro de la jornada (entra en el backup existente). */
+window.tcExcesoGuardarManual=function(){
+  var reg=dias[activeDate]; if(!reg) return;
+  var jr=tcJornadaEnsure(reg,activeDate);
+  function leer(id){
+    var el=document.getElementById(id); if(!el) return null;
+    var v=String(el.value||'').trim(); if(v==='') return null;
+    var n=parseInt(v,10); if(isNaN(n)||n<0||n>1440) return NaN;
+    return n;
+  }
+  var v1=leer('exc-man-parte1'), v2=leer('exc-man-parte2');
+  if(isNaN(v1)||isNaN(v2)){ tcToast('⚠️ Minutos no válidos (0–1440)'); return; }
+  jr.excesoConduccionManual={parte1:v1,parte2:v2};
+  jr.excesoConduccion=tcCalcularExcesoConduccion(jr);
+  dias[activeDate]=reg; saveDias(); tcRenderCal(); tcRenderView(activeDate,reg); tcRenderAmpliaciones();
+  tcToast('✔ Conducción corregida manualmente');
+};
+window.tcExcesoLimpiarManual=function(){
+  var reg=dias[activeDate]; if(!reg) return;
+  var jr=tcJornadaEnsure(reg,activeDate);
+  jr.excesoConduccionManual={parte1:null,parte2:null};
+  jr.excesoConduccion=tcCalcularExcesoConduccion(jr);
+  dias[activeDate]=reg; saveDias(); tcRenderCal(); tcRenderView(activeDate,reg); tcRenderAmpliaciones();
+  tcToast('↺ Corrección manual eliminada');
 };
 
 /* ==================================================================
@@ -7712,6 +9308,163 @@ window.tcEventosInvalidarCache=function(){
   if(typeof tcRenderCal==='function') tcRenderCal();
 };
 
+/* ==================== DEV-007R6 — Centro de mensajes ====================
+   Función pura y extensible. Recorre "dias" y genera avisos a partir de los
+   datos reales de cada día (ampliaciones, cambios, jornadas y cálculos
+   pendientes). NO guarda nada, NO muta "dias" ni el backup, NO duplica avisos
+   (id estable por concepto y fecha). Cada bloque va protegido con try/catch:
+   un fallo al calcular un aviso concreto se omite y no bloquea el resto ni la
+   aplicación. Se expone en window para el controlador de la cabecera. */
+function tcObtenerMensajes(){
+  var lista=[], vistos={};
+  function push(m){
+    if(!m||!m.id||vistos[m.id]) return;   /* nunca dos mensajes idénticos */
+    vistos[m.id]=true; lista.push(m);
+  }
+  var claves; try{ claves=Object.keys(dias||{}); }catch(e){ claves=[]; }
+  claves.forEach(function(fecha){
+    var reg=dias[fecha]; if(!reg) return;
+    var jr=reg.jornada||null;
+
+    /* 1) Ampliaciones: detectada / pendiente_documento / revision_pendiente.
+       NO avisa de presentadas (documento_presentado), descartadas ni anuladas. */
+    try{
+      if(jr&&jr.ampliaciones){
+        ['parte1','parte2'].forEach(function(p){
+          var a=jr.ampliaciones[p]; if(!a||typeof a!=='object') return;
+          var e=a.estado;
+          if(e==='detectada'||e==='pendiente_documento'||e==='revision_pendiente'){
+            var lblP=(p==='parte1')?'1ª parte':'2ª parte';
+            var min=(a.minutosAmpliacion!=null&&!isNaN(a.minutosAmpliacion))?a.minutosAmpliacion:null;
+            var txt=(e==='pendiente_documento')?'Falta presentar el documento':
+                    (e==='revision_pendiente')?'Requiere revisión':'Ampliación detectada';
+            push({id:'amp:'+fecha+':'+p, tipo:'ampliacion', fecha:fecha,
+              titulo:'Ampliación · '+lblP,
+              descripcion:txt+(min!=null?(' ('+min+' min)'):'')+'.',
+              prioridad:(e==='detectada')?'media':'alta'});
+          }
+        });
+      }
+    }catch(e){}
+
+    /* 2) Cambios pendientes: turno pendiente de hoja / día por convenir. */
+    try{
+      if(reg.cambioTurnoPendiente){
+        push({id:'cambio:'+fecha, tipo:'cambio', fecha:fecha,
+          titulo:'Cambio pendiente',
+          descripcion:'Turno pendiente de la hoja de ruta.', prioridad:'alta'});
+      } else if(reg.cambioPendiente){
+        push({id:'cambio:'+fecha, tipo:'cambio', fecha:fecha,
+          titulo:'Cambio pendiente',
+          descripcion:'Día por convenir sin resolver.', prioridad:'alta'});
+      }
+    }catch(e){}
+
+    /* 3) Jornadas. */
+    try{
+      if(jr){
+        if(jr.requiereRevision||jr.extraccionPendiente){
+          push({id:'jornada-rev:'+fecha, tipo:'jornada', fecha:fecha,
+            titulo:'Jornada pendiente de revisión',
+            descripcion:'Hay datos manuales distintos de los detectados en la hoja.', prioridad:'media'});
+        } else if(jr.extraccionEstado==='parcial'){
+          /* Extracción parcial: se avisa solo si no lo cubre ya requiereRevision
+             ni extraccionPendiente (mismo id 'jornada-rev:'+fecha → sin duplicado). */
+          push({id:'jornada-rev:'+fecha, tipo:'jornada', fecha:fecha,
+            titulo:'Jornada pendiente de revisión',
+            descripcion:'Los datos extraídos de la hoja de ruta están incompletos.', prioridad:'media'});
+        }
+        if(jr.recaudacionesRequierenRevision){
+          push({id:'jornada-recaud:'+fecha, tipo:'jornada', fecha:fecha,
+            titulo:'Recaudaciones por revisar',
+            descripcion:'Hay recaudaciones del día con un servicio distinto.', prioridad:'media'});
+        }
+        if(jr.horasHistoricasSinAsignar){
+          push({id:'jornada-hist:'+fecha, tipo:'jornada', fecha:fecha,
+            titulo:'Horas sin parte asignada',
+            descripcion:'Hay horas históricas sin indicar si son de 1ª o 2ª parte.', prioridad:'baja'});
+        }
+        var incPendUbicar=(jr.inc&&typeof tcIncPendienteUbicar==='function'&&tcIncPendienteUbicar(jr.inc)===true);
+        if(jr.inc&&(jr.inc.requiereRevision===true||incPendUbicar)){
+          /* Un único aviso de INC por día (mismo id 'jornada-inc:'+fecha). Si está
+             pendiente de ubicar (duración sin inicio/fin), texto específico. */
+          push({id:'jornada-inc:'+fecha, tipo:'jornada', fecha:fecha,
+            titulo:'INC pendiente de revisión',
+            descripcion:incPendUbicar?'Existe una duración de INC, pero faltan sus horas de inicio y final.':'Los datos de la INC no cuadran o falta ubicarla.', prioridad:'alta'});
+        }
+      }
+    }catch(e){}
+
+    /* 4) T.D. y deje. */
+    try{
+      if(jr&&jr.computosEspecificos){
+        var ce=(typeof tcComputosEspecificosNormalizar==='function')
+          ? tcComputosEspecificosNormalizar(jr.computosEspecificos) : jr.computosEspecificos;
+        if(ce&&ce.tiempoDesplazamiento&&ce.tiempoDesplazamiento.requiereRevision){
+          push({id:'td:'+fecha, tipo:'computos', fecha:fecha,
+            titulo:'T.D. pendiente de revisión',
+            descripcion:'El T.D. detectado no coincide con el guardado.', prioridad:'media'});
+        }
+        if(ce&&ce.deje&&ce.deje.requiereRevision){
+          push({id:'deje:'+fecha, tipo:'computos', fecha:fecha,
+            titulo:'Deje pendiente de revisión',
+            descripcion:'El deje detectado no coincide con el guardado.', prioridad:'media'});
+        }
+      }
+    }catch(e){}
+
+    /* 5) Cálculos pendientes: exceso de conducción, nocturnidad y solape. */
+    try{
+      if(jr&&typeof tcCalcularExcesoConduccion==='function'){
+        var ec=tcCalcularExcesoConduccion(jr);
+        if(ec&&ec.estado==='pendiente_revision'){
+          push({id:'exceso:'+fecha, tipo:'calculo', fecha:fecha,
+            titulo:'Exceso de conducción por revisar',
+            descripcion:'Falta confirmar la conducción o completar la jornada (Art. 20.4).', prioridad:'alta'});
+        }
+      }
+    }catch(e){}
+    try{
+      if(jr&&typeof tcCalcularNocturnidadDia==='function'){
+        var n=tcCalcularNocturnidadDia(fecha);
+        if(n&&(n.parcial||n.pendienteDescanso||n.revisionParte2)){
+          push({id:'nocturnidad:'+fecha, tipo:'calculo', fecha:fecha,
+            titulo:'Nocturnidad incompleta',
+            descripcion:'Faltan horarios o falta decidir la gestión del descanso.', prioridad:'media'});
+        }
+      }
+    }catch(e){}
+    try{
+      if(jr&&typeof tcCalcularSolapeDia==='function'){
+        var s=tcCalcularSolapeDia(fecha);
+        if(s&&s.estado==='pendiente_revision'){
+          push({id:'solape:'+fecha, tipo:'calculo', fecha:fecha,
+            titulo:'Solape pendiente de revisión',
+            descripcion:'Posible solape de fiestas sin confirmar.', prioridad:'media'});
+        }
+      }
+    }catch(e){}
+  });
+  return lista;
+}
+window.tcMsgObtener=tcObtenerMensajes;
+
+/* Puente público ÚNICO para abrir un día por fecha desde el Centro de mensajes.
+   Reutiliza la navegación existente (abrirSeccion + tcSetVista + tcOpenDay); no
+   duplica tcOpenDay(). */
+window.tcMsgAbrirDia=function(fecha){
+  if(!fecha||!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return false;
+  var p=fecha.split('-'); var y=parseInt(p[0],10), mi=parseInt(p[1],10)-1;
+  if(isNaN(y)||isNaN(mi)) return false;
+  try{ if(typeof abrirSeccion==='function') abrirSeccion('calendario'); }catch(e){}
+  vY=y; vM=mi;
+  try{ tcRenderHdr(); }catch(e){}
+  try{ if(typeof window.tcSetVista==='function') window.tcSetVista('mes'); else tcRenderCal(); }
+  catch(e){ try{ tcRenderCal(); }catch(_e){} }
+  try{ tcOpenDay(fecha, dias[fecha]||{}); }catch(e){ return false; }
+  return true;
+};
+
 })();
   </script>
 
@@ -8231,6 +9984,121 @@ window.tcEventosInvalidarCache=function(){
       document.getElementById('adminBtnCerrar').addEventListener('click',window.adminBtnCerrarClick);
       document.getElementById('adminOverlay').addEventListener('click',function(e){ if(e.target.id==='adminOverlay') window.adminCerrarTodo(); });
     });
+  })();
+  </script>
+
+  <!-- ===================== CONTROLADOR DEL CENTRO DE MENSAJES (DEV-007R6) =====================
+       Módulo 100% aditivo. Gestiona la campana, el panel y el estado de lectura.
+       El estado de lectura vive SOLO en localStorage (tc_v1_mensajes_leidos) como
+       lista de identificadores; nunca guarda copias de los mensajes y NO entra en
+       los backups (es una preferencia visual). Los avisos los genera la función
+       pura window.tcMsgObtener() del Diario; la navegación al día usa el puente
+       window.tcMsgAbrirDia(). No usa temporizadores ni sondeos: se actualiza por
+       eventos (arranque, apertura del panel, saveDias, restauración y lectura). -->
+  <script>
+  (function(){
+    var LEIDOS_KEY='tc_v1_mensajes_leidos';
+    function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function cargarLeidos(){ try{ var a=JSON.parse(localStorage.getItem(LEIDOS_KEY)||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+    function guardarLeidos(a){ try{ localStorage.setItem(LEIDOS_KEY, JSON.stringify(a||[])); }catch(e){} }
+    function obtener(){ try{ return (typeof window.tcMsgObtener==='function')?(window.tcMsgObtener()||[]):[]; }catch(e){ return []; } }
+    function fechaTxt(f){ var p=String(f||'').split('-'); return p.length===3?(parseInt(p[2],10)+'/'+parseInt(p[1],10)+'/'+p[0]):f; }
+
+    /* Poda los ids de "leídos" que ya no existen entre los avisos actuales: si
+       una incidencia desaparece, su id se elimina; si vuelve a aparecer, cuenta
+       como nueva (no leída). Marca cada mensaje con .leido. */
+    function estado(){
+      var mensajes=obtener();
+      var idsActuales={}; mensajes.forEach(function(m){ idsActuales[m.id]=true; });
+      var leidos=cargarLeidos();
+      var podados=leidos.filter(function(id){ return idsActuales[id]; });
+      if(podados.length!==leidos.length) guardarLeidos(podados);
+      var set={}; podados.forEach(function(id){ set[id]=true; });
+      mensajes.forEach(function(m){ m.leido=!!set[m.id]; });
+      return {mensajes:mensajes, set:set};
+    }
+
+    var PRIOR_ORD={alta:0, media:1, baja:2};
+    function ordenar(a,b){
+      if(!!a.leido!==!!b.leido) return a.leido?1:-1;             /* no leídos primero */
+      var pa=PRIOR_ORD[a.prioridad]==null?1:PRIOR_ORD[a.prioridad];
+      var pb=PRIOR_ORD[b.prioridad]==null?1:PRIOR_ORD[b.prioridad];
+      if(pa!==pb) return pa-pb;                                  /* prioridad */
+      if(a.fecha!==b.fecha) return a.fecha<b.fecha?1:-1;         /* fecha desc */
+      return a.id<b.id?-1:1;
+    }
+
+    function marcarLeido(id){ if(!id) return; var l=cargarLeidos(); if(l.indexOf(id)===-1){ l.push(id); guardarLeidos(l); } }
+    function marcarTodos(){
+      var st=estado(); var l=cargarLeidos();
+      st.mensajes.forEach(function(m){ if(l.indexOf(m.id)===-1) l.push(m.id); });
+      guardarLeidos(l); window.tcMsgRefrescar();
+    }
+
+    function pintar(st){
+      st=st||estado();
+      var cont=document.getElementById('msgLista'); if(!cont) return;
+      var bT=document.getElementById('msgMarcarTodos');
+      var ms=st.mensajes.slice().sort(ordenar);
+      if(!ms.length){
+        cont.innerHTML='<div class="msg-vacio">No tienes avisos pendientes</div>';
+        if(bT) bT.style.display='none';
+        return;
+      }
+      var hayNoLeidos=ms.some(function(m){ return !m.leido; });
+      if(bT) bT.style.display=hayNoLeidos?'':'none';
+      var html='';
+      ms.forEach(function(m){
+        var col=(m.prioridad==='alta')?'#C0392B':(m.prioridad==='baja')?'#7f8c8d':'#E6A817';
+        html+='<button type="button" class="msg-item'+(m.leido?' leido':'')+'" data-id="'+esc(m.id)+'" data-fecha="'+esc(m.fecha)+'">'
+          +'<span class="msg-dot" style="background:'+col+'"></span>'
+          +'<span class="msg-body">'
+          +'<span class="msg-titulo">'+esc(m.titulo)+'</span>'
+          +'<span class="msg-fecha">'+esc(fechaTxt(m.fecha))+'</span>'
+          +'<span class="msg-desc">'+esc(m.descripcion)+'</span>'
+          +'</span></button>';
+      });
+      cont.innerHTML=html;
+      Array.prototype.forEach.call(cont.querySelectorAll('.msg-item'),function(el){
+        el.addEventListener('click',function(){
+          var id=el.getAttribute('data-id'), fecha=el.getAttribute('data-fecha');
+          marcarLeido(id);
+          cerrar();
+          if(typeof window.tcMsgAbrirDia==='function') window.tcMsgAbrirDia(fecha);
+          window.tcMsgRefrescar();
+        });
+      });
+    }
+
+    function abrir(){ var p=document.getElementById('msgPanel'); if(!p) return; p.setAttribute('data-abierto','1'); p.style.display='flex'; pintar(); window.tcMsgRefrescar(); }
+    function cerrar(){ var p=document.getElementById('msgPanel'); if(!p) return; p.setAttribute('data-abierto','0'); p.style.display='none'; }
+    window.tcMsgAbrirPanel=abrir; window.tcMsgCerrarPanel=cerrar;
+
+    window.tcMsgRefrescar=function(){
+      var st=estado();
+      var noLeidos=0; st.mensajes.forEach(function(m){ if(!m.leido) noLeidos++; });
+      var badge=document.getElementById('msgBadge');
+      if(badge){
+        if(noLeidos>0){ badge.textContent=(noLeidos>99?'99+':String(noLeidos)); badge.style.display='flex'; }
+        else { badge.style.display='none'; badge.textContent=''; }
+      }
+      var panel=document.getElementById('msgPanel');
+      if(panel&&panel.getAttribute('data-abierto')==='1') pintar(st);
+      return noLeidos;
+    };
+
+    function wire(){
+      var bell=document.getElementById('btnMensajes');
+      if(bell&&!bell._msgWired){ bell._msgWired=true; bell.addEventListener('click',abrir); }
+      var x=document.getElementById('msgCerrar');
+      if(x&&!x._msgWired){ x._msgWired=true; x.addEventListener('click',cerrar); }
+      var bg=document.getElementById('msgPanel');
+      if(bg&&!bg._msgWired){ bg._msgWired=true; bg.addEventListener('click',function(e){ if(e.target===bg) cerrar(); }); }
+      var bt=document.getElementById('msgMarcarTodos');
+      if(bt&&!bt._msgWired){ bt._msgWired=true; bt.addEventListener('click',marcarTodos); }
+    }
+    function init(){ wire(); if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   })();
   </script>
 
