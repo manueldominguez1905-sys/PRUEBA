@@ -417,6 +417,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-d.has-cambio-pend{box-shadow:0 0 0 2px #B45309;overflow:visible;}
 #tc .tc-dpend{position:absolute;top:2px;right:3px;font-size:9px;line-height:1;z-index:2;}
 #tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:6px;pointer-events:none;z-index:0;}
+#tc .tc-d-arch{position:absolute;top:2px;right:3px;font-size:9px;line-height:1;z-index:2;opacity:.7;pointer-events:none;} /* DEV-007R7 — marca de hoja archivada */
 
 /* Modificador --mini: mismo componente .tc-d, reducido para la vista Anual (12 meses).
    Solo cambia tamaño/tipografía; toda la lógica de color, estado y estructura es la de .tc-d. */
@@ -562,6 +563,10 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-anual{padding:0 6px 12px;}
 #tc .tc-anual-mes{margin-bottom:14px;scroll-margin-top:110px;} /* DEV-006R8 — margen para que el título no quede bajo la cabecera al posicionar */
 #tc .tc-anual-mes-title{font-size:12px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:0 2px;margin-bottom:5px;}
+/* DEV-007R7 — Mes actual destacado en la vista anual (sin color-mix, compatible iOS) */
+#tc .tc-anual-mes.tc-anual-mes-actual{border:1.5px solid var(--color-primary);border-radius:10px;padding:8px 8px 4px;margin-left:-2px;margin-right:-2px;box-shadow:0 0 0 3px rgba(122,31,43,.10);}
+body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65,79,.16);}
+#tc .tc-anual-mes.tc-anual-mes-actual .tc-anual-mes-title{color:var(--color-primary);}
 #tc .tc-anual-dow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin-bottom:3px;}
 #tc .tc-anual-dow span{text-align:center;font-size:9px;font-weight:700;color:var(--text3);padding:2px 0;text-transform:uppercase;}
 #tc .tc-anual-dow span:nth-child(6),#tc .tc-anual-dow span:nth-child(7){color:var(--danger);}
@@ -595,8 +600,9 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-007</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-007R6</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Centro de mensajes con avisos de ampliaciones, cambios y jornadas pendientes.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-007R11</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Persistencia reforzada con migración verificada y recuperación explícita, guardados con reversión comprobada, importación recursivamente validada, protección frente a inyección y claves peligrosas, y actualización atómica de calendario y tipos de turno.</div>
+        <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
@@ -737,6 +743,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
         <div id="areaCamara" style="display:none;">
           <div id="bloqueApiKey" style="display:none;">
             <p class="help-text">Introduce tu clave gratuita de OCR.space. Consíguela en <strong>ocr.space/ocrapi</strong>.</p>
+            <p class="help-text" style="color:var(--color-danger,#c0392b);">⚠️ Aviso de privacidad: al escanear un ticket, la imagen se envía a un servicio externo (OCR.space) para su lectura. No escanees documentos con datos que no quieras compartir con terceros.</p>
             <div class="form-row">
               <label>Clave API OCR.space <input type="password" id="inputApiKeyGoogle" placeholder="K8579..." autocomplete="off" /></label>
             </div>
@@ -996,7 +1003,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
             <div class="tc-view-extra" id="vw-extra"></div>
             <div class="tc-day-actions">
               <button class="tc-btn tc-btn-ghost" onclick="tcToEdit()">&#9999;&#65039; Editar</button>
-              <button class="tc-btn tc-btn-danger" id="tc-btn-borrar-dia" onclick="tcDeleteDay()">&#128465;&#65039; Borrar</button>
+              <button class="tc-btn tc-btn-danger" id="tc-btn-borrar-dia" onclick="tcDeleteDay()">&#128465;&#65039; Eliminar día completo</button>
             </div>
             <div class="tc-day-actions" id="vw-jornada-actions"></div>
           </div>
@@ -1426,6 +1433,38 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
       #tab-nomina .nom-nota{ font-size:0.82rem; color:var(--color-text-secondary); margin-top:6px; line-height:1.5; }
       #tab-nomina .nom-proximamente{ text-align:center; padding:40px 16px; color:var(--color-text-secondary); }
       #tab-nomina .nom-proximamente .big{ font-size:2rem; display:block; margin-bottom:8px; }
+      /* ===== DEV-007R8 — Nómina provisional con aspecto de recibo real ===== */
+      /* Hoja BLANCA, texto AZUL monoespaciado y LÍNEAS NEGRAS estructurales.
+         Columnas alineadas con CSS Grid. Sin bordes horizontales por concepto y
+         sin fondos grises. Colores fijos (independientes del tema) para conservar
+         el aspecto de papel. */
+      #tab-nomina .nom-recibo{ background:#ffffff; color:#123a8c; border:1.5px solid #111; border-radius:3px; font-family:"Courier New",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace; font-size:12px; line-height:1.4; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.12); }
+      #tab-nomina .nom-recibo *{ box-sizing:border-box; }
+      #tab-nomina .nom-recibo-head{ padding:9px 11px; border-bottom:1.5px solid #111; }
+      #tab-nomina .nom-recibo-title{ font-weight:700; letter-spacing:.6px; font-size:12px; text-transform:uppercase; margin-bottom:5px; }
+      #tab-nomina .nom-recibo-kv{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-top:2px; }
+      #tab-nomina .nom-recibo-kv .k{ opacity:.7; text-transform:uppercase; font-size:10px; letter-spacing:.3px; white-space:nowrap; }
+      #tab-nomina .nom-recibo-kv .v{ text-align:right; }
+      #tab-nomina .nom-recibo-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+      /* Rejilla de 4 columnas: Descripción · D/HR/% · Importe devengo · Importe descuento. */
+      #tab-nomina .nom-recibo-grid{ display:grid; grid-template-columns:minmax(0,1fr) 4.8em 4.9em 4.9em; min-width:300px; }
+      #tab-nomina .nom-recibo-grid > div{ padding:3px 7px; color:#123a8c; font-size:11.5px; vertical-align:top; }
+      /* Celdas numéricas: alineadas a la derecha, sin envolver, con separador vertical
+         negro estructural (nunca un borde horizontal por concepto). */
+      #tab-nomina .nom-recibo-grid > div.n{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; border-left:1px solid #111; }
+      #tab-nomina .nom-recibo-grid > div.desc{ white-space:normal; word-break:break-word; }
+      /* Cabecera de columnas: negrita, mayúsculas y una única línea negra inferior. */
+      #tab-nomina .nom-recibo-grid > div.nom-r-h{ font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:.3px; border-bottom:1.5px solid #111; line-height:1.2; }
+      /* Banda de sección (I · Devengos): a todo lo ancho, negrita, SIN fondo gris,
+         con una línea negra inferior estructural. */
+      #tab-nomina .nom-recibo-grid > div.nom-r-sec{ grid-column:1/-1; font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:.4px; border-bottom:1px solid #111; padding-top:6px; }
+      #tab-nomina .nom-recibo-cod{ opacity:.55; font-size:10px; margin-right:3px; }
+      #tab-nomina .nom-recibo-pend{ opacity:.7; font-style:italic; }
+      #tab-nomina .nom-recibo-tot{ padding:9px 11px; border-top:1.5px solid #111; }
+      #tab-nomina .nom-recibo-tot .r{ display:flex; justify-content:space-between; gap:10px; padding:2px 0; }
+      #tab-nomina .nom-recibo-tot .r.big{ font-weight:700; font-size:12.5px; border-top:1px solid #111; margin-top:5px; padding-top:6px; }
+      #tab-nomina .nom-recibo-foot{ padding:8px 11px; border-top:1px dashed #111; font-size:10px; line-height:1.45; opacity:.85; white-space:normal; }
+      #tab-nomina .nom-recibo-aviso{ padding:8px 11px; border-top:1.5px solid #111; font-size:11px; font-weight:700; line-height:1.45; white-space:normal; }
     </style>
     <section id="tab-nomina" class="tab-content">
       <h2>💶 Nómina</h2>
@@ -1459,13 +1498,19 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
   <!-- ===================== JS CONTROL LIQUIDACIÓN ===================== -->
   <script>
 var DB_NAME = "tussam_db";
-var DB_VERSION = 1;
+var DB_VERSION = 2;
 var STORE_RECAUDACIONES = "recaudaciones";
 var STORE_LIQUIDACIONES = "liquidaciones";
+var STORE_META = "meta";
 var db = null;
+var MIGRACION_IDB_FLAG = "tussam_idb_migrado_v1";
+var META_MIGRACION_KEY = "migracion_local_v1";
+var _modoPersistencia = "pendiente";
+var _cachePersistencia = Object.create(null);
+var _tussamAvisoPersistencia = Object.create(null);
 
 function abrirBaseDatos() {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function (resolve) {
     if (!window.indexedDB) { resolve(null); return; }
     var request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = function (event) {
@@ -1480,123 +1525,442 @@ function abrirBaseDatos() {
         storeLiq.createIndex("fecha", "fecha", { unique: false });
         storeLiq.createIndex("recibo", "recibo", { unique: false });
       }
+      if (!database.objectStoreNames.contains(STORE_META)) {
+        database.createObjectStore(STORE_META, { keyPath: "key" });
+      }
     };
-    request.onsuccess = function (event) { db = event.target.result; resolve(db); };
-    request.onerror = function () { resolve(null); };
+    request.onsuccess = function (event) {
+      db = event.target.result;
+      _modoPersistencia = "idb";
+      db.onversionchange = function () {
+        try { db.close(); } catch (e) {}
+        db = null;
+        _modoPersistencia = "error";
+        _avisarPersistencia("version", "La base de datos se ha cerrado porque otra ventana la ha actualizado. Recarga la aplicación antes de seguir.");
+      };
+      resolve(db);
+    };
+    request.onerror = function () {
+      db = null;
+      _modoPersistencia = "local";
+      resolve(null);
+    };
   });
 }
 
-function obtenerTodos(storeName) {
+function _idPeligroso(id) {
+  var clave = String(id);
+  return clave === "__proto__" || clave === "prototype" || clave === "constructor";
+}
+
+function _storePersistenciaValido(storeName) {
+  return storeName === STORE_RECAUDACIONES || storeName === STORE_LIQUIDACIONES;
+}
+
+function _registroPersistenciaValido(registro) {
+  if (!registro || typeof registro !== "object" || Array.isArray(registro) || registro.id == null) return false;
+  var id = String(registro.id);
+  return id.length > 0 && !_idPeligroso(id);
+}
+
+function _sanearRegistrosPersistencia(registros) {
+  var salida = [];
+  var ids = new Set();
+  if (!Array.isArray(registros)) return { ok: false, items: [], descartados: 0 };
+  for (var i = 0; i < registros.length; i++) {
+    var r = registros[i];
+    if (!_registroPersistenciaValido(r)) return { ok: false, items: [], descartados: 1 };
+    var id = String(r.id);
+    if (ids.has(id)) return { ok: false, items: [], descartados: 1 };
+    ids.add(id);
+    salida.push(r);
+  }
+  return { ok: true, items: salida, descartados: 0 };
+}
+
+function _avisarPersistencia(clave, mensaje) {
+  if (_tussamAvisoPersistencia[clave]) return;
+  _tussamAvisoPersistencia[clave] = true;
+  try {
+    if (typeof mostrarToast === "function") mostrarToast("⚠️ " + mensaje, "error");
+  } catch (e) {}
+}
+
+function _leerTodoIndexedDB(storeName) {
   return new Promise(function (resolve) {
-    if (db) {
-      try {
-        var tx = db.transaction(storeName, "readonly");
-        var store = tx.objectStore(storeName);
-        var items = [];
-        var cursorRequest = store.openCursor();
-        cursorRequest.onsuccess = function (event) {
-          var cursor = event.target.result;
-          if (cursor) { items.push(cursor.value); cursor.continue(); }
-          else { if (items.length === 0) resolve(leerLocalStorage(storeName)); else resolve(items); }
-        };
-        cursorRequest.onerror = function () { resolve(leerLocalStorage(storeName)); };
-      } catch (err) { resolve(leerLocalStorage(storeName)); }
-    } else { resolve(leerLocalStorage(storeName)); }
+    if (!db || !_storePersistenciaValido(storeName)) {
+      resolve({ ok: false, items: [], descartados: 0 });
+      return;
+    }
+    var tx;
+    try { tx = db.transaction(storeName, "readonly"); }
+    catch (e) { resolve({ ok: false, items: [], descartados: 0 }); return; }
+    var items = [];
+    var descartados = 0;
+    var terminado = false;
+    function finalizar(ok) {
+      if (terminado) return;
+      terminado = true;
+      resolve({ ok: ok, items: ok ? items : [], descartados: descartados });
+    }
+    var req;
+    try { req = tx.objectStore(storeName).openCursor(); }
+    catch (e) { finalizar(false); return; }
+    req.onsuccess = function (ev) {
+      var cur = ev.target.result;
+      if (cur) {
+        if (_registroPersistenciaValido(cur.value)) items.push(cur.value);
+        else descartados++;
+        cur.continue();
+      } else {
+        finalizar(true);
+      }
+    };
+    req.onerror = function () { finalizar(false); };
+    tx.onerror = function () { finalizar(false); };
+    tx.onabort = function () { finalizar(false); };
+  });
+}
+
+function _escribirListaIndexedDB(storeName, registros) {
+  return new Promise(function (resolve) {
+    if (!db || !_storePersistenciaValido(storeName)) { resolve(false); return; }
+    var saneado = _sanearRegistrosPersistencia(registros);
+    if (!saneado.ok) { resolve(false); return; }
+    var tx;
+    var terminado = false;
+    function finalizar(ok) {
+      if (terminado) return;
+      terminado = true;
+      resolve(ok);
+    }
+    try { tx = db.transaction(storeName, "readwrite"); }
+    catch (e) { finalizar(false); return; }
+    try {
+      var store = tx.objectStore(storeName);
+      store.clear();
+      saneado.items.forEach(function (r) { store.put(r); });
+    } catch (e) {
+      try { tx.abort(); } catch (e2) {}
+      finalizar(false);
+      return;
+    }
+    tx.oncomplete = function () { finalizar(true); };
+    tx.onerror = function () { finalizar(false); };
+    tx.onabort = function () { finalizar(false); };
+  });
+}
+
+function _leerMetaMigracion() {
+  return new Promise(function (resolve) {
+    if (!db) { resolve(null); return; }
+    var tx;
+    try { tx = db.transaction(STORE_META, "readonly"); }
+    catch (e) { resolve(null); return; }
+    var req;
+    try { req = tx.objectStore(STORE_META).get(META_MIGRACION_KEY); }
+    catch (e) { resolve(null); return; }
+    req.onsuccess = function () { resolve(req.result || null); };
+    req.onerror = function () { resolve(null); };
+  });
+}
+
+function _escribirMetaMigracion(decision) {
+  return new Promise(function (resolve) {
+    if (!db) { resolve(false); return; }
+    var tx;
+    var terminado = false;
+    function finalizar(ok) {
+      if (terminado) return;
+      terminado = true;
+      resolve(ok);
+    }
+    try { tx = db.transaction(STORE_META, "readwrite"); }
+    catch (e) { finalizar(false); return; }
+    try {
+      tx.objectStore(STORE_META).put({
+        key: META_MIGRACION_KEY,
+        completa: true,
+        decision: decision || "migrada",
+        fecha: new Date().toISOString()
+      });
+    } catch (e) {
+      try { tx.abort(); } catch (e2) {}
+      finalizar(false);
+      return;
+    }
+    tx.oncomplete = function () { finalizar(true); };
+    tx.onerror = function () { finalizar(false); };
+    tx.onabort = function () { finalizar(false); };
+  });
+}
+
+function _listasIgualesPorId(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+  var mapa = new Map();
+  for (var i = 0; i < a.length; i++) mapa.set(String(a[i].id), JSON.stringify(a[i]));
+  for (var j = 0; j < b.length; j++) {
+    var id = String(b[j].id);
+    if (!mapa.has(id) || mapa.get(id) !== JSON.stringify(b[j])) return false;
+  }
+  return true;
+}
+
+function _escribirListaLocalStorage(storeName, registros) {
+  try {
+    localStorage.setItem("tussam_" + storeName, JSON.stringify(registros));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function _migrarUnAlmacen(storeName, idbItems, locales, usarLocales) {
+  var fusion = new Map();
+  function anadir(r) {
+    if (!_registroPersistenciaValido(r)) return;
+    fusion.set(String(r.id), r);
+  }
+  (idbItems || []).forEach(anadir);
+  if (usarLocales) (locales || []).forEach(anadir);
+  var lista = Array.from(fusion.values());
+  return _escribirListaIndexedDB(storeName, lista).then(function (ok) {
+    if (!ok) return false;
+    return _leerTodoIndexedDB(storeName).then(function (comprobacion) {
+      return comprobacion.ok && comprobacion.descartados === 0 &&
+        _listasIgualesPorId(lista, comprobacion.items);
+    });
+  });
+}
+
+function _finalizarMigracion(decision) {
+  return _escribirMetaMigracion(decision).then(function (ok) {
+    if (!ok) return false;
+    try { localStorage.setItem(MIGRACION_IDB_FLAG, "1"); } catch (e) {}
+    return true;
+  });
+}
+
+function _depurarIndexedDB() {
+  return Promise.all([
+    _leerTodoIndexedDB(STORE_RECAUDACIONES),
+    _leerTodoIndexedDB(STORE_LIQUIDACIONES)
+  ]).then(function (lecturas) {
+    if (!lecturas[0].ok || !lecturas[1].ok) return false;
+    var tareas = [];
+    if (lecturas[0].descartados) tareas.push(_escribirListaIndexedDB(STORE_RECAUDACIONES, lecturas[0].items));
+    if (lecturas[1].descartados) tareas.push(_escribirListaIndexedDB(STORE_LIQUIDACIONES, lecturas[1].items));
+    return Promise.all(tareas).then(function (resultados) {
+      return resultados.every(function (ok) { return ok; });
+    });
+  });
+}
+
+/* DEV-007R11: la migración solo queda marcada dentro de IndexedDB después de
+   escribir y verificar ambos almacenes. El indicador antiguo de localStorage no
+   se considera prueba suficiente. Si ese indicador existe pero un almacén
+   principal está vacío y conserva datos locales, la recuperación requiere una
+   decisión explícita: nunca se fusiona automáticamente una copia obsoleta. */
+function migrarLocalStorageAIndexedDB() {
+  if (!db) {
+    _modoPersistencia = "local";
+    return Promise.resolve(true);
+  }
+  _modoPersistencia = "idb";
+  return _leerMetaMigracion().then(function (meta) {
+    if (meta && meta.completa === true) return _depurarIndexedDB();
+    return Promise.all([
+      _leerTodoIndexedDB(STORE_RECAUDACIONES),
+      _leerTodoIndexedDB(STORE_LIQUIDACIONES)
+    ]).then(function (lecturas) {
+      var recIDB = lecturas[0];
+      var liqIDB = lecturas[1];
+      if (!recIDB.ok || !liqIDB.ok) return false;
+
+      var recLocal = leerLocalStorage(STORE_RECAUDACIONES);
+      var liqLocal = leerLocalStorage(STORE_LIQUIDACIONES);
+      var flagAntiguo = false;
+      try { flagAntiguo = localStorage.getItem(MIGRACION_IDB_FLAG) === "1"; } catch (e) {}
+
+      if (flagAntiguo) {
+        var recAmbiguo = recIDB.items.length === 0 && recLocal.length > 0;
+        var liqAmbiguo = liqIDB.items.length === 0 && liqLocal.length > 0;
+        var recuperar = false;
+        if (recAmbiguo || liqAmbiguo) {
+          var total = (recAmbiguo ? recLocal.length : 0) + (liqAmbiguo ? liqLocal.length : 0);
+          try {
+            recuperar = window.confirm(
+              "Se ha encontrado una copia local anterior con " + total +
+              " registro(s), pero la base principal está vacía. Esto puede indicar " +
+              "que el navegador borró la base principal o que una migración anterior falló.\n\n" +
+              "Aceptar: recuperar esa copia local.\nCancelar: conservar la base principal vacía."
+            );
+          } catch (e) { recuperar = false; }
+        }
+        return Promise.all([
+          _migrarUnAlmacen(STORE_RECAUDACIONES, recIDB.items, recLocal, recAmbiguo && recuperar),
+          _migrarUnAlmacen(STORE_LIQUIDACIONES, liqIDB.items, liqLocal, liqAmbiguo && recuperar)
+        ]).then(function (ok) {
+          if (!ok[0] || !ok[1]) return false;
+          /* Si el usuario decide no recuperar una copia ambigua, se conserva
+             intacta: no se usa automáticamente, pero tampoco se destruye. */
+          var espejoRec = recAmbiguo && !recuperar ? true :
+            _escribirListaLocalStorage(STORE_RECAUDACIONES,
+              recAmbiguo && recuperar ? recLocal : recIDB.items);
+          var espejoLiq = liqAmbiguo && !recuperar ? true :
+            _escribirListaLocalStorage(STORE_LIQUIDACIONES,
+              liqAmbiguo && recuperar ? liqLocal : liqIDB.items);
+          if (!espejoRec || !espejoLiq) {
+            _avisarPersistencia("espejo-migracion", "La base principal está correcta, pero no se pudo actualizar su copia local de respaldo.");
+          }
+          return _finalizarMigracion(recuperar ? "recuperacion_confirmada" : "idb_conservada");
+        });
+      }
+
+      return Promise.all([
+        _migrarUnAlmacen(STORE_RECAUDACIONES, recIDB.items, recLocal, true),
+        _migrarUnAlmacen(STORE_LIQUIDACIONES, liqIDB.items, liqLocal, true)
+      ]).then(function (ok) {
+        if (!ok[0] || !ok[1]) return false;
+        return _finalizarMigracion("migrada");
+      });
+    });
+  }).then(function (ok) {
+    if (!ok) _avisarPersistencia("migracion", "No se pudo verificar la migración de datos. No se ha marcado como completada.");
+    return ok;
+  });
+}
+
+/* Con IndexedDB activa, las lecturas nunca recurren al espejo local ante un
+   fallo: hacerlo podría resucitar registros ya eliminados. Se conserva la última
+   lectura verificada en memoria y se muestra un aviso controlado. */
+function obtenerTodos(storeName) {
+  if (!_storePersistenciaValido(storeName)) return Promise.resolve([]);
+  if (!db) {
+    var locales = leerLocalStorage(storeName);
+    _cachePersistencia[storeName] = locales;
+    return Promise.resolve(locales);
+  }
+  return _leerTodoIndexedDB(storeName).then(function (resultado) {
+    if (!resultado.ok) {
+      _avisarPersistencia("lectura-" + storeName, "No se pudo leer " + storeName + " de la base principal. No se ha usado una copia local obsoleta.");
+      return _cachePersistencia[storeName] || [];
+    }
+    if (resultado.descartados) {
+      _avisarPersistencia("id-" + storeName, "Se han ignorado registros con identificadores no seguros en " + storeName + ".");
+    }
+    _cachePersistencia[storeName] = resultado.items;
+    return resultado.items;
+  });
+}
+
+function _guardarConRollback(storeName, listaNueva, anteriorConocida) {
+  var lecturaAnterior = Array.isArray(anteriorConocida)
+    ? Promise.resolve({ ok: true, items: anteriorConocida })
+    : _leerTodoIndexedDB(storeName);
+  return lecturaAnterior.then(function (anterior) {
+    if (!anterior.ok) return false;
+    return _escribirListaIndexedDB(storeName, listaNueva).then(function (okIDB) {
+      if (!okIDB) return false;
+      if (_escribirListaLocalStorage(storeName, listaNueva)) {
+        _cachePersistencia[storeName] = listaNueva;
+        return true;
+      }
+      return _escribirListaIndexedDB(storeName, anterior.items).then(function (rollbackOk) {
+        if (!rollbackOk) {
+          _modoPersistencia = "error";
+          _avisarPersistencia("rollback-" + storeName, "Falló la copia local y no se pudo verificar la reversión en la base principal. No continúes editando hasta recargar.");
+        }
+        return false;
+      });
+    });
   });
 }
 
 function guardarRegistro(storeName, registro) {
-  guardarEnLocalStorage(storeName, registro);
-  return new Promise(function (resolve) {
-    if (db) {
-      try {
-        var tx = db.transaction(storeName, "readwrite");
-        var store = tx.objectStore(storeName);
-        store.put(registro);
-        tx.oncomplete = function () { resolve(true); };
-        tx.onerror = function () { resolve(true); };
-      } catch (err) { resolve(true); }
-    } else { resolve(true); }
+  if (!_storePersistenciaValido(storeName) || !_registroPersistenciaValido(registro)) return Promise.resolve(false);
+  try { JSON.stringify(registro); } catch (e) { return Promise.resolve(false); }
+  if (!db) {
+    try { guardarEnLocalStorage(storeName, registro); return Promise.resolve(true); }
+    catch (e) { return Promise.resolve(false); }
+  }
+  return _leerTodoIndexedDB(storeName).then(function (actual) {
+    if (!actual.ok) return false;
+    var id = String(registro.id);
+    var nueva = actual.items.slice();
+    var indice = nueva.findIndex(function (r) { return String(r.id) === id; });
+    if (indice >= 0) nueva[indice] = registro;
+    else nueva.push(registro);
+    return _guardarConRollback(storeName, nueva, actual.items);
   });
 }
 
 function eliminarRegistro(storeName, id) {
-  eliminarDeLocalStorage(storeName, id);
-  return new Promise(function (resolve) {
-    if (db) {
-      try {
-        var tx = db.transaction(storeName, "readwrite");
-        var store = tx.objectStore(storeName);
-        store.delete(id);
-        tx.oncomplete = function () { resolve(true); };
-        tx.onerror = function () { resolve(true); };
-      } catch (err) { resolve(true); }
-    } else { resolve(true); }
+  if (!_storePersistenciaValido(storeName) || id == null || _idPeligroso(id)) return Promise.resolve(false);
+  if (!db) {
+    try { eliminarDeLocalStorage(storeName, id); return Promise.resolve(true); }
+    catch (e) { return Promise.resolve(false); }
+  }
+  return _leerTodoIndexedDB(storeName).then(function (actual) {
+    if (!actual.ok) return false;
+    var clave = String(id);
+    var nueva = actual.items.filter(function (r) { return String(r.id) !== clave; });
+    return _guardarConRollback(storeName, nueva, actual.items);
   });
 }
 
 function reemplazarTodos(storeName, registros) {
-  return new Promise(function (resolve) {
-    // DEV-004R13: solo se aceptan arrays reales. Un valor que no sea array
-    // (null, undefined, objeto, número...) NO se convierte en [] a la ligera:
-    // se rechaza, para que quien llama no crea que ha guardado algo.
-    if (!Array.isArray(registros)) { resolve(false); return; }
-    var lista = registros;
-    function sincronizarLocalStorage() {
-      // DEV-004R11: se escribe siempre, incluso con lista vacía, para que
-      // un import con 0 registros no deje resucitar los antiguos desde el
-      // espejo de localStorage tras reiniciar la app.
-      try {
-        localStorage.setItem("tussam_" + storeName, JSON.stringify(lista));
-        return true;
-      } catch (e) { return false; }
-    }
-    if (db) {
-      var tx;
-      try {
-        tx = db.transaction(storeName, "readwrite");
-      } catch (err) {
-        // Fallo al crear la transacción (p.ej. base de datos cerrándose):
-        // la promesa nunca debe quedar rechazada sin control.
-        resolve(false);
-        return;
-      }
-      try {
-        var store = tx.objectStore(storeName);
-        store.clear();
-        lista.forEach(function (item) { store.put(item); });
-      } catch (err) {
-        // DEV-004R13: si clear() o put() lanzan, se aborta la transacción para
-        // no dejar el almacén a medias, y NO se toca el espejo de localStorage
-        // (ambos quedan como estaban, sincronizados).
-        try { tx.abort(); } catch (e2) {}
-        resolve(false);
-        return;
-      }
-      tx.oncomplete = function () {
-        // No se declara éxito hasta completar también el espejo en localStorage.
-        resolve(sincronizarLocalStorage());
-      };
-      tx.onerror = function () { resolve(false); };
-      tx.onabort = function () { resolve(false); };
-    } else {
-      resolve(sincronizarLocalStorage());
-    }
-  });
+  if (!_storePersistenciaValido(storeName)) return Promise.resolve(false);
+  var saneado = _sanearRegistrosPersistencia(registros);
+  if (!saneado.ok) return Promise.resolve(false);
+  try { JSON.stringify(saneado.items); } catch (e) { return Promise.resolve(false); }
+  if (!db) return Promise.resolve(_escribirListaLocalStorage(storeName, saneado.items));
+  return _guardarConRollback(storeName, saneado.items);
 }
 
+/* Lectura local tolerante: conserva el dato corrupto sin borrarlo y solo entrega
+   arrays con ids seguros y únicos. */
+var _tussamAvisoCorrupto = Object.create(null);
+function _avisarAlmacenCorrupto(storeName) {
+  if (_tussamAvisoCorrupto[storeName]) return;
+  _tussamAvisoCorrupto[storeName] = true;
+  try {
+    if (typeof mostrarToast === "function") {
+      mostrarToast("⚠️ Datos locales de " + storeName + " ilegibles. No se ha borrado nada.", "error");
+    }
+  } catch (e) {}
+}
 function leerLocalStorage(storeName) {
-  var raw = localStorage.getItem("tussam_" + storeName);
-  return raw ? JSON.parse(raw) : [];
+  if (!_storePersistenciaValido(storeName)) return [];
+  var raw;
+  try { raw = localStorage.getItem("tussam_" + storeName); }
+  catch (e) { return []; }
+  if (raw == null) return [];
+  var parsed;
+  try { parsed = JSON.parse(raw); }
+  catch (e) { _avisarAlmacenCorrupto(storeName); return []; }
+  if (!Array.isArray(parsed)) { _avisarAlmacenCorrupto(storeName); return []; }
+  var ids = new Set();
+  var limpio = parsed.filter(function (r) {
+    if (!_registroPersistenciaValido(r)) return false;
+    var id = String(r.id);
+    if (ids.has(id)) return false;
+    ids.add(id);
+    return true;
+  });
+  if (limpio.length !== parsed.length) _avisarAlmacenCorrupto(storeName);
+  return limpio;
 }
 function guardarEnLocalStorage(storeName, registro) {
+  if (!_storePersistenciaValido(storeName) || !_registroPersistenciaValido(registro)) throw new Error("Registro no válido");
   var items = leerLocalStorage(storeName);
-  var index = items.findIndex(function (i) { return i.id === registro.id; });
+  var index = items.findIndex(function (i) { return String(i.id) === String(registro.id); });
   if (index >= 0) items[index] = registro; else items.push(registro);
   localStorage.setItem("tussam_" + storeName, JSON.stringify(items));
 }
 function eliminarDeLocalStorage(storeName, id) {
-  var items = leerLocalStorage(storeName).filter(function (i) { return i.id !== id; });
+  if (!_storePersistenciaValido(storeName) || id == null || _idPeligroso(id)) throw new Error("Identificador no válido");
+  var items = leerLocalStorage(storeName).filter(function (i) { return String(i.id) !== String(id); });
   localStorage.setItem("tussam_" + storeName, JSON.stringify(items));
 }
 
@@ -1681,12 +2045,19 @@ function abrirSeccion(tabId) {
   document.getElementById("btnVolver").style.display = "inline-flex";
   if (tabId === "estadillo") renderizarEstadillo();
   if (tabId === "historial") renderizarHistorial();
-  if (tabId === "calendario") cargarPDFjsSiNecesario();
+  if (tabId === "calendario") { cargarPDFjsSiNecesario(); if (typeof window.tcCalReabrir === "function") window.tcCalReabrir(); }
   if (tabId === "nomina" && typeof window.tcRenderNomina === "function") window.tcRenderNomina();
 }
 
+/* DEV-007R9 (tarea 10) — Estado de carga de PDF.js para garantizar UNA sola
+   carga (el guard por typeof no bastaba: dos llamadas seguidas antes de que
+   pdf.min.js terminara inyectaban el script dos veces) y para poder avisar con
+   un mensaje claro si no hay conexión. */
+var _pdfjsEstado = "no"; /* "no" | "cargando" | "ok" | "error" */
 function cargarPDFjsSiNecesario() {
-  if (typeof pdfjsLib !== "undefined") return; // ya cargado
+  if (typeof pdfjsLib !== "undefined") { _pdfjsEstado = "ok"; return; } // ya cargado
+  if (_pdfjsEstado === "cargando") return; // ya se está cargando: una sola vez
+  _pdfjsEstado = "cargando";
   /* IMPORTANTE — Safari iOS:
      workerSrc debe apuntar a la URL real del worker ANTES de que pdf.min.js
      lo use. Si se deja vacío ("") PDF.js intenta crear un Worker inline con
@@ -1699,7 +2070,18 @@ function cargarPDFjsSiNecesario() {
   s1.onload = function () {
     /* Apuntar al worker real — PDF.js lo cargará cuando haga falta,
        creando un Worker limpio sin contaminar el hilo principal */
-    pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_CDN + "pdf.worker.min.js";
+    try {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_CDN + "pdf.worker.min.js";
+      _pdfjsEstado = "ok";
+    } catch (e) { _pdfjsEstado = "error"; }
+  };
+  s1.onerror = function () {
+    /* Sin conexión o CDN inaccesible: se permite reintentar en la próxima
+       llamada y se avisa con un mensaje claro (no falla en silencio). */
+    _pdfjsEstado = "error";
+    if (typeof mostrarToast === "function") {
+      mostrarToast("⚠️ No se pudo cargar el lector de PDF. Comprueba tu conexión a Internet e inténtalo de nuevo.", "error");
+    }
   };
   document.head.appendChild(s1);
 }
@@ -1809,7 +2191,8 @@ function eliminarRecaudacion(id) {
   var item = listaRecaudaciones.find(function (i) { return i.id === id; });
   var fechaAnterior = item ? item.fecha : null;
   var servicioAnterior = item ? item.servicio : null;
-  eliminarRegistro(STORE_RECAUDACIONES, id).then(function () {
+  eliminarRegistro(STORE_RECAUDACIONES, id).then(function (ok) {
+    if (!ok) { mostrarToast("⚠️ No se pudo eliminar la recaudación. No se ha borrado nada.", "error"); return; }
     listaRecaudaciones = listaRecaudaciones.filter(function (i) { return i.id !== id; });
     actualizarResumen(); renderizarRecaudaciones(); mostrarToast("Recaudación eliminada", "success");
     if (typeof tcJornadaSincronizarDesdeRecaudaciones === "function" && fechaAnterior) {
@@ -1870,7 +2253,8 @@ function inicializarRecaudaciones() {
     var horaParte2 = recEditHoraParte2 || null;
     var horaCompat = horaParteSel === "2" ? (horaParte2 || "") : (horaParte1 || "");
     var registro = { id: editandoRecaudacionId || generarId(), fecha: fecha, hora: horaCompat, servicio: servicio, parte1: parte1, parte2: parte2, total: parte1 + parte2, horaParte1: horaParte1, horaParte2: horaParte2, parteJornada: horaParteSel === "2" ? "parte2" : "parte1", actualizadoEn: new Date().toISOString() };
-    guardarRegistro(STORE_RECAUDACIONES, registro).then(function () {
+    guardarRegistro(STORE_RECAUDACIONES, registro).then(function (ok) {
+      if (!ok) { mostrarToast("⚠️ No se pudo guardar la recaudación. Inténtalo de nuevo.", "error"); return; }
       if (editandoRecaudacionId) { listaRecaudaciones[listaRecaudaciones.findIndex(function (i) { return i.id === registro.id; })] = registro; mostrarToast("Recaudación actualizada", "success"); }
       else { listaRecaudaciones.push(registro); mostrarToast("Recaudación añadida", "success"); }
       resetearFormRecaudacion(); actualizarResumen(); renderizarRecaudaciones();
@@ -1950,7 +2334,8 @@ function editarLiquidacion(id) {
   document.getElementById("formLiquidacion").scrollIntoView({ behavior: "smooth" });
 }
 function eliminarLiquidacion(id) {
-  eliminarRegistro(STORE_LIQUIDACIONES, id).then(function () {
+  eliminarRegistro(STORE_LIQUIDACIONES, id).then(function (ok) {
+    if (!ok) { mostrarToast("⚠️ No se pudo eliminar la liquidación. No se ha borrado nada.", "error"); return; }
     listaLiquidaciones = listaLiquidaciones.filter(function (i) { return i.id !== id; });
     actualizarResumen(); renderizarLiquidaciones(); mostrarToast("Liquidación eliminada", "success");
   });
@@ -1978,7 +2363,8 @@ function inicializarLiquidaciones() {
     var importe = parseFloat(document.getElementById("liqImporte").value) || 0;
     if (!fecha || !recibo || !maquina) { mostrarToast("Completa todos los campos obligatorios.", "error"); return; }
     var registro = { id: editandoLiquidacionId || generarId(), fecha: fecha, hora: hora, recibo: recibo, maquina: maquina, importe: importe };
-    guardarRegistro(STORE_LIQUIDACIONES, registro).then(function () {
+    guardarRegistro(STORE_LIQUIDACIONES, registro).then(function (ok) {
+      if (!ok) { mostrarToast("⚠️ No se pudo guardar la liquidación. Inténtalo de nuevo.", "error"); return; }
       if (editandoLiquidacionId) { listaLiquidaciones[listaLiquidaciones.findIndex(function (i) { return i.id === registro.id; })] = registro; mostrarToast("Liquidación actualizada", "success"); }
       else { listaLiquidaciones.push(registro); mostrarToast("Liquidación añadida", "success"); }
       resetearFormLiquidacion(); actualizarResumen(); renderizarLiquidaciones();
@@ -2238,7 +2624,8 @@ function inicializarImportarCorreo() {
         horaParte1: parte === "1" ? hora : null, horaParte2: parte === "2" ? hora : null,
         parteJornada: parte === "2" ? "parte2" : "parte1", actualizadoEn: new Date().toISOString() };
     }
-    guardarRegistro(STORE_RECAUDACIONES, registro).then(function () {
+    guardarRegistro(STORE_RECAUDACIONES, registro).then(function (ok) {
+      if (!ok) { mostrarToast("⚠️ No se pudo guardar la recaudación importada. Inténtalo de nuevo.", "error"); return; }
       if (impRecExistente) {
         var idx = listaRecaudaciones.findIndex(function (r) { return r.id === registro.id; });
         if (idx !== -1) listaRecaudaciones[idx] = registro;
@@ -2352,7 +2739,7 @@ function tcContarCalendarioConductor(mapaDias) {
     Object.keys(mapaDias).forEach(function (k) {
       var d = mapaDias[k]; if (!d) return;
       total++;
-      if (d.imgData) hojas++;
+      if (d.imgData || d.hojaArchivada) hojas++; /* DEV-007R7 — archivadas también tuvieron hoja */
       if (d.jornada) jornadas++;
     });
   }
@@ -2534,8 +2921,59 @@ function importarDatos(archivo) {
       }
       // Aseguramos que cada registro tenga un id válido antes de guardar en IndexedDB
       // (un registro sin id provoca un fallo silencioso al escribir en la base de datos).
-      datos.recaudaciones.forEach(function (r) { if (!r.id) r.id = generarId(); });
-      datos.liquidaciones.forEach(function (l) { if (!l.id) l.id = generarId(); });
+      datos.recaudaciones.forEach(function (r) { if (r && !r.id) r.id = generarId(); });
+      datos.liquidaciones.forEach(function (l) { if (l && !l.id) l.id = generarId(); });
+
+      // ============================================================
+      // 1b) DEV-007R9 (tarea 6) — VALIDACIÓN POR REGISTRO (ATÓMICA): esquema,
+      //     tipos, fechas reales, campos obligatorios e IDs duplicados. Si
+      //     CUALQUIER registro es inválido se rechaza TODO el backup sin tocar
+      //     ningún dato. Los campos numéricos solo se validan si están presentes
+      //     (compatibilidad con copias antiguas válidas); fecha y los campos
+      //     identificativos obligatorios sí se exigen siempre.
+      // ============================================================
+      var _fechaRealValida = function (iso) {
+        if (typeof iso !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+        var pp = iso.split("-"), yy = +pp[0], mm = +pp[1], dd = +pp[2];
+        if (mm < 1 || mm > 12 || dd < 1) return false;
+        var dt = new Date(yy, mm - 1, dd);
+        return dt.getFullYear() === yy && dt.getMonth() === mm - 1 && dt.getDate() === dd;
+      };
+      var _falloImport = null, _idsVistos = {};
+      function _valReg(r, tipo, campos) {
+        if (_falloImport) return;
+        if (!r || typeof r !== "object" || Array.isArray(r)) { _falloImport = "registro de " + tipo + " no válido"; return; }
+        if (typeof r.id !== "string" && typeof r.id !== "number") { _falloImport = "id de " + tipo + " no válido"; return; }
+        /* DEV-007R9 (tarea 6) — El id se inserta en atributos data-id='...' del
+           listado; se exige un juego de caracteres seguro para neutralizar
+           cualquier inyección de atributos/HTML desde una copia manipulada.
+           Todos los ids que genera la app (generarId) cumplen este patrón. */
+        if (typeof r.id === "string" && !/^[A-Za-z0-9_-]+$/.test(r.id)) { _falloImport = "id con caracteres no permitidos en " + tipo; return; }
+        var k = tipo + ":" + r.id;
+        if (_idsVistos[k]) { _falloImport = "ID duplicado en " + tipo; return; }
+        _idsVistos[k] = true;
+        if (!_fechaRealValida(r.fecha)) { _falloImport = "fecha inválida en " + tipo; return; }
+        for (var i = 0; i < campos.length; i++) {
+          var c = campos[i], v = r[c.n];
+          if (c.tipo === "str") {
+            if (typeof v !== "string" || (c.req && !v.trim())) { _falloImport = "campo " + c.n + " inválido en " + tipo; return; }
+          } else if (c.tipo === "num") {
+            if (v != null && (typeof v !== "number" || !isFinite(v))) { _falloImport = "campo " + c.n + " inválido en " + tipo; return; }
+          }
+        }
+      }
+      datos.recaudaciones.forEach(function (r) { _valReg(r, "recaudación", [
+        { n: "servicio", tipo: "str", req: true },
+        { n: "parte1", tipo: "num" }, { n: "parte2", tipo: "num" }, { n: "total", tipo: "num" }
+      ]); });
+      datos.liquidaciones.forEach(function (l) { _valReg(l, "liquidación", [
+        { n: "recibo", tipo: "str", req: true }, { n: "maquina", tipo: "str", req: true },
+        { n: "importe", tipo: "num" }
+      ]); });
+      if (_falloImport) {
+        mostrarToast("Copia no válida (" + _falloImport + "). No se ha importado nada.", "error");
+        return;
+      }
 
       // ============================================================
       // 2) COPIAS PROFUNDAS DEL ESTADO ACTUAL (seguro de vuelta atrás)
@@ -2774,7 +3212,8 @@ function leerTicketConOCRSpace(imagenBase64, apiKey) {
   console.log("[OCR] Paso 4 — Preparando FormData");
   console.log("[OCR] URL:", URL_OCR);
   console.log("[OCR] Método: POST");
-  console.log("[OCR] API Key:", apiKey ? "presente (" + apiKey.length + " chars)" : "AUSENTE");
+  /* DEV-007R9 (tarea 10) — Nunca se expone la clave OCR ni su longitud. */
+  console.log("[OCR] API Key:", apiKey ? "configurada" : "AUSENTE");
   console.log("[OCR] Tamaño imagen (chars base64):", base64final.length);
   console.log("[OCR] Tamaño imagen (~KB):", Math.round(base64final.length * 0.75 / 1024));
 
@@ -2947,6 +3386,12 @@ function tcImagenOcrSiEscaneada(page,textoPdf,imgFallback){
    separador). Valida día, mes, año reales. Devuelve 'YYYY-MM-DD' o null. */
 function tcFechaDesdeNombre(nombre){
   if(!nombre) return null;
+  /* DEV-007R9 (tarea 1) — Autosuficiente: esta función vive en el primer bloque
+     <script> (ámbito global) mientras que tcPad se declara dentro de la IIFE del
+     Diario y NO es visible aquí; usar tcPad provocaba ReferenceError al validar
+     una fecha real. Se define un pad local para no depender de ningún ámbito
+     externo. */
+  var pad=function(n){return n<10?'0'+n:''+n;};
   var base=String(nombre).replace(/^.*[\\\/]/,'').replace(/\.[^.]*$/,'').trim();
   function valida(y,mo,d){
     if(isNaN(y)||isNaN(mo)||isNaN(d)) return null;
@@ -2955,7 +3400,7 @@ function tcFechaDesdeNombre(nombre){
     if(d<1||d>31) return null;
     var dt=new Date(y,mo-1,d);
     if(dt.getFullYear()!==y||dt.getMonth()!==(mo-1)||dt.getDate()!==d) return null;
-    return y+'-'+tcPad(mo)+'-'+tcPad(d);
+    return y+'-'+pad(mo)+'-'+pad(d);
   }
   var m;
   /* DD-MM-YYYY / DD_MM_YYYY */
@@ -3135,6 +3580,10 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
   abrirBaseDatos().then(function () {
+    /* DEV-007R10 (tarea 1) — Migración ÚNICA a IndexedDB ANTES de cargar datos.
+       Se espera a que termine para que las lecturas usen ya la fuente principal. */
+    return migrarLocalStorageAIndexedDB();
+  }).then(function () {
     inicializarRecaudaciones(); inicializarLiquidaciones(); inicializarImportarCorreo();
     inicializarBackup(); inicializarEstadillo(); inicializarHistorial(); inicializarCamaraOCR();
     return Promise.all([cargarRecaudaciones(), cargarLiquidaciones()]);
@@ -3156,8 +3605,11 @@ document.addEventListener("DOMContentLoaded", function () {
     _w.apply(console,arguments);
   };
 })();
-// Worker deshabilitado: en Safari el worker de PDF.js interfiere con fetch+FormData
-// causando "The object can not be cloned". Correr en hilo principal evita el error.
+// PDF Worker (corrige comentario obsoleto, DEV-007R10 tarea 6): el worker NO está
+// deshabilitado. cargarPDFjsSiNecesario() asigna GlobalWorkerOptions.workerSrc a la
+// URL real del worker (pdf.worker.min.js) del CDN. Fue justamente dejar workerSrc
+// VACÍO lo que provocaba en Safari un worker inline roto y el "DataCloneError"
+// ("The object can not be cloned"); apuntar al worker real es lo que lo evita.
 
 
 var STORE='tc_v4_dias';
@@ -3189,13 +3641,25 @@ var calDataStore=null;
    se cierra o cancela, esta variable se descarta y nada se guarda. */
 var tcHojaPendiente=null;
 var bDesde=null,bHasta=null,bChk1=false,bChk2=false;
+var _turnosUltimoOkStr=null;
 
 function loadTurnos(){
+  var parsed=null;
   try{
     var raw=localStorage.getItem(STORE_TURNOS);
-    if(raw) TURNO=JSON.parse(raw);
-    else TURNO=JSON.parse(JSON.stringify(TURNOS_DEFAULT));
-  }catch(e){TURNO=JSON.parse(JSON.stringify(TURNOS_DEFAULT));}
+    if(raw) parsed=JSON.parse(raw);
+  }catch(e){ parsed=null; }
+  if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)){
+    TURNO=JSON.parse(JSON.stringify(TURNOS_DEFAULT));
+  } else {
+    /* Un mapa sin prototipo impide que una clave manipulada altere el objeto. */
+    TURNO=Object.create(null);
+    Object.keys(parsed).forEach(function(k){
+      var t=parsed[k];
+      if(tcCodigoTurnoSeguro(k)&&tcValidarTurnoImportado(t)) TURNO[k]=t;
+    });
+    if(Object.keys(TURNO).length===0) TURNO=JSON.parse(JSON.stringify(TURNOS_DEFAULT));
+  }
   Object.keys(TURNO).forEach(function(k){
     var t=TURNO[k];
     if(!t.bg&&t.color) t.bg=t.color;
@@ -3203,19 +3667,150 @@ function loadTurnos(){
     if(!t.textColor) t.textColor='#111827';
     if(!t.tagColor) t.tagColor=t.bg;
   });
+  try{ _turnosUltimoOkStr=JSON.stringify(TURNO); }
+  catch(e){ TURNO=JSON.parse(JSON.stringify(TURNOS_DEFAULT)); _turnosUltimoOkStr=JSON.stringify(TURNO); }
 }
 function saveTurnos(){
-  try{localStorage.setItem(STORE_TURNOS,JSON.stringify(TURNO)); return true;}
-  catch(e){tcToast('⚠️ Error guardando configuración'); return false;}
-}
-function loadDias(){try{dias=JSON.parse(localStorage.getItem(STORE)||'{}');}catch(e){dias={};}}
-function saveDias(){
+  var serial;
   try{
-    localStorage.setItem(STORE,JSON.stringify(dias));
+    if(!tcValidarMapaTurnos(TURNO)) throw new Error('Configuración no válida');
+    serial=JSON.stringify(TURNO);
+    localStorage.setItem(STORE_TURNOS,serial);
+    _turnosUltimoOkStr=serial;
+    return true;
+  } catch(e){
+    if(_turnosUltimoOkStr!=null){
+      try{ TURNO=JSON.parse(_turnosUltimoOkStr); }catch(e2){}
+    }
+    tcToast('⚠️ Error guardando configuración. Se revirtió el último cambio.');
+    return false;
+  }
+}
+
+/* DEV-007R10 (tareas 3 y 4) — Validadores compartidos por la importación de
+   copias del calendario (que rechaza el bloque entero si algo es inválido) y por
+   el renderizado seguro sin innerHTML. */
+var TC_IMG_TIPOS_PERMITIDOS=['image/png','image/jpeg','image/jpg','image/webp','image/gif'];
+var TC_IMG_MAX_BYTES=5*1024*1024; /* 5 MB por imagen */
+function tcImagenDataUrlValida(s){
+  if(typeof s!=='string') return false;
+  var m=/^data:(image\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/i.exec(s);
+  if(!m) return false;
+  if(TC_IMG_TIPOS_PERMITIDOS.indexOf(m[1].toLowerCase())===-1) return false;
+  var b64=m[2];
+  /* Base64 canónico: longitud múltiplo de cuatro y relleno solo al final. */
+  if(b64.length%4!==0||
+     !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(b64)) return false;
+  var pad=(b64.charAt(b64.length-1)==='=')?((b64.charAt(b64.length-2)==='=')?2:1):0;
+  var bytes=Math.floor(b64.length*3/4)-pad;
+  if(bytes<=0||bytes>TC_IMG_MAX_BYTES) return false;
+  try{
+    var decodificar=(typeof atob==='function')?atob:
+      ((typeof window!=='undefined')?window.atob:null);
+    if(typeof decodificar!=='function'||decodificar(b64).length!==bytes) return false;
+  }catch(e){ return false; }
+  return true;
+}
+function tcColorSeguro(c){
+  if(typeof c!=='string') return false;
+  var v=c.trim();
+  if(!v||v.length>32) return false;
+  if(/^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(v)) return true; /* hex */
+  if(/^rgba?\(\s*[0-9.,\s%]+\)$/.test(v)) return true;                          /* rgb()/rgba() */
+  if(/^[a-zA-Z]{1,20}$/.test(v)) return true;                                   /* nombre CSS simple */
+  return false;
+}
+function tcFechaClaveValida(k){
+  if(typeof k!=='string') return false;
+  var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(k);
+  if(!m) return false;
+  var y=+m[1],mo=+m[2],d=+m[3];
+  if(y<1900||y>2200||mo<1||mo>12||d<1||d>31) return false;
+  var dt=new Date(y,mo-1,d);
+  return dt.getFullYear()===y&&dt.getMonth()===mo-1&&dt.getDate()===d;
+}
+/* DEV-007R9 (tarea 4) — Guardado del calendario CENTRALIZADO y transaccional.
+   saveDias() ya serializaba dias en cada llamada; ahora RETIENE la última copia
+   persistida correctamente (_diasUltimoOkStr, sin coste extra: es la misma
+   cadena que se escribe). Ante cualquier fallo de serialización o escritura se
+   REVIERTE dias en memoria a ese último estado bueno y se devuelve false, sin
+   declarar éxito. Así todas las mutaciones del calendario (edición, borrados,
+   importaciones, cambios, ampliaciones y operaciones masivas) obtienen, desde un
+   único punto, "conservar estado anterior, guardar y restaurar si falla". */
+var _diasUltimoOkStr=null;
+function loadDias(){
+  try{ dias=JSON.parse(localStorage.getItem(STORE)||'{}'); }catch(e){ dias={}; }
+  if(!dias||typeof dias!=='object'||Array.isArray(dias)) dias={};
+  try{ _diasUltimoOkStr=JSON.stringify(dias); }catch(e){ _diasUltimoOkStr='{}'; }
+}
+function saveDias(){
+  var serial;
+  try{ serial=JSON.stringify(dias); }
+  catch(e){
+    if(_diasUltimoOkStr!=null){ try{ dias=JSON.parse(_diasUltimoOkStr); }catch(e2){} }
+    tcToast('⚠️ No se pudo guardar el calendario. Se revirtió el último cambio.');
+    return false;
+  }
+  try{
+    localStorage.setItem(STORE,serial);
+    _diasUltimoOkStr=serial; /* último estado persistido correctamente */
     try{ if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }catch(e){} /* DEV-007R6 */
     return true;
   }
-  catch(e){ tcToast('⚠️ Almacenamiento lleno. Borra días antiguos para liberar espacio.'); return false; }
+  catch(e){
+    /* Escritura fallida (p. ej. almacenamiento lleno): se revierte el estado en
+       memoria al último guardado correcto para no dejar memoria y almacenamiento
+       divergentes, y NUNCA se declara éxito. */
+    if(_diasUltimoOkStr!=null){ try{ dias=JSON.parse(_diasUltimoOkStr); }catch(e2){} }
+    tcToast('⚠️ Almacenamiento lleno. Borra días antiguos para liberar espacio. No se guardó el último cambio.');
+    return false;
+  }
+}
+
+/* Guarda calendario y tipos de turno como una sola operación lógica. Los
+   valores en memoria solo cambian cuando ambas escrituras terminan; si la
+   segunda falla se restaura la primera y se informa si esa reversión falla. */
+function tcGuardarDiasYTurnosAtomico(diasNuevos,turnosNuevos){
+  if(!tcEsObjPlano(diasNuevos)||!tcValidarMapaTurnos(turnosNuevos)) return false;
+  var diasSerial,turnosSerial,diasAnterior,turnosAnterior;
+  try{
+    diasSerial=JSON.stringify(diasNuevos);
+    turnosSerial=JSON.stringify(turnosNuevos);
+    diasAnterior=localStorage.getItem(STORE);
+    turnosAnterior=localStorage.getItem(STORE_TURNOS);
+  }catch(e){
+    tcToast('⚠️ No se pudo preparar el guardado. No se cambió ningún dato.');
+    return false;
+  }
+  var cambioTurnos=turnosAnterior!==turnosSerial;
+  var cambioDias=diasAnterior!==diasSerial;
+  var turnosEscritos=false,diasEscritos=false;
+  try{
+    if(cambioTurnos){ localStorage.setItem(STORE_TURNOS,turnosSerial); turnosEscritos=true; }
+    if(cambioDias){ localStorage.setItem(STORE,diasSerial); diasEscritos=true; }
+  }catch(e){
+    var rollbackOk=true;
+    try{
+      if(turnosEscritos){
+        if(turnosAnterior==null) localStorage.removeItem(STORE_TURNOS);
+        else localStorage.setItem(STORE_TURNOS,turnosAnterior);
+      }
+      if(diasEscritos){
+        if(diasAnterior==null) localStorage.removeItem(STORE);
+        else localStorage.setItem(STORE,diasAnterior);
+      }
+    }catch(e2){ rollbackOk=false; }
+    tcToast(rollbackOk
+      ?'⚠️ No se pudo guardar. Se conservaron los datos anteriores.'
+      :'⚠️ Falló el guardado y no se pudo verificar la reversión. Recarga la aplicación antes de continuar.');
+    return false;
+  }
+  TURNO=turnosNuevos;
+  dias=diasNuevos;
+  _turnosUltimoOkStr=turnosSerial;
+  _diasUltimoOkStr=diasSerial;
+  try{ if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }catch(e){}
+  return true;
 }
 
 /* Puentes públicos y controlados para las copias de seguridad generales.
@@ -3299,8 +3894,214 @@ window.tcExportarDatosCalendarioConductor=function(){
    {} SÍ debe limpiar los datos actuales (se aplica igual que cualquier otro
    valor real); si esos campos no aparecen en absoluto (backups anteriores a
    R12), se conservan tal cual por compatibilidad. */
+/* DEV-007R11: validación recursiva y defensa contra claves capaces de alterar
+   prototipos. Se admiten campos antiguos desconocidos solo si son JSON seguro;
+   los campos que intervienen en cálculos o HTML se validan además por esquema. */
+function tcEsObjPlano(v){
+  if(!v||typeof v!=='object'||Array.isArray(v)) return false;
+  var p;
+  try{ p=Object.getPrototypeOf(v); }catch(e){ return false; }
+  return p===Object.prototype||p===null;
+}
+function tcClaveObjetoSegura(k){
+  return typeof k==='string'&&k.length>0&&k.length<=100&&
+    k!=='__proto__'&&k!=='prototype'&&k!=='constructor'&&!/[\u0000-\u001F\u007F]/.test(k);
+}
+function tcCodigoTurnoSeguro(k){
+  return typeof k==='string'&&/^[A-Z0-9][A-Z0-9_.-]{0,15}$/i.test(k)&&tcClaveObjetoSegura(k);
+}
+function tcTextoImportadoValido(v,max){
+  return typeof v==='string'&&v.length<=(max||10000)&&!/[\u0000\u0008\u000B\u000C]/.test(v);
+}
+function tcNumeroImportadoValido(v,min,max){
+  return typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
+}
+function tcHoraImportadaValida(v){
+  if(v==null) return true;
+  if(typeof v!=='string') return false;
+  var m=/^(\d{1,2}):(\d{2})$/.exec(v);
+  return !!m&&+m[1]<=47&&+m[2]<=59;
+}
+function tcValidarJSONSeguro(v,nivel,estado,vistos){
+  nivel=nivel||0;
+  estado=estado||{n:0};
+  vistos=vistos||new WeakSet();
+  if(++estado.n>25000||nivel>12) return false;
+  if(v==null||typeof v==='boolean') return true;
+  if(typeof v==='number') return Number.isFinite(v)&&Math.abs(v)<=1000000000;
+  if(typeof v==='string'){
+    if(/^data:image\//i.test(v)) return tcImagenDataUrlValida(v);
+    return tcTextoImportadoValido(v,20000);
+  }
+  if(typeof v!=='object') return false;
+  if(vistos.has(v)) return false;
+  vistos.add(v);
+  if(Array.isArray(v)){
+    if(v.length>5000) return false;
+    for(var a=0;a<v.length;a++) if(!tcValidarJSONSeguro(v[a],nivel+1,estado,vistos)) return false;
+    return true;
+  }
+  if(!tcEsObjPlano(v)) return false;
+  var claves=Object.keys(v);
+  if(claves.length>5000) return false;
+  for(var i=0;i<claves.length;i++){
+    if(!tcClaveObjetoSegura(claves[i])||
+       !tcValidarJSONSeguro(v[claves[i]],nivel+1,estado,vistos)) return false;
+  }
+  return true;
+}
+function tcValidarAmpliacionImportada(a){
+  if(a==null) return true;
+  if(!tcEsObjPlano(a)||!tcValidarJSONSeguro(a)) return false;
+  var estados=['detectada','pendiente_documento','documento_presentado','descartada','anulada','revision_pendiente'];
+  if(typeof a.estado!=='string'||estados.indexOf(a.estado)===-1) return false;
+  var nums=['minutosAmpliacion','minutosPresentadosAnteriores','minutosPendientesAnteriores'];
+  for(var i=0;i<nums.length;i++){
+    var n=nums[i];
+    if(n in a&&a[n]!=null&&!tcNumeroImportadoValido(a[n],0,1440)) return false;
+  }
+  var bools=['computableParaNomina'];
+  for(var j=0;j<bools.length;j++) if(bools[j] in a&&typeof a[bools[j]]!=='boolean') return false;
+  if('conduccionConfirmada' in a&&a.conduccionConfirmada!==null&&
+     typeof a.conduccionConfirmada!=='boolean') return false;
+  if('observaciones' in a&&a.observaciones!=null&&!tcTextoImportadoValido(a.observaciones,10000)) return false;
+  return true;
+}
+function tcValidarJornadaImportada(jr){
+  if(jr==null) return true;
+  if(!tcEsObjPlano(jr)||!tcValidarJSONSeguro(jr)) return false;
+  if('fecha' in jr&&jr.fecha!=null&&!tcFechaClaveValida(jr.fecha)) return false;
+  if('servicio' in jr&&jr.servicio!=null&&!tcTextoImportadoValido(jr.servicio,300)) return false;
+  if('tipoTurno' in jr&&jr.tipoTurno!=null&&['corrido','partido'].indexOf(jr.tipoTurno)===-1) return false;
+  var horas=['inicioTeorico','finTeorico','horaFinRealParte1','horaFinRealParte2'];
+  for(var h=0;h<horas.length;h++) if(horas[h] in jr&&!tcHoraImportadaValida(jr[horas[h]])) return false;
+  var partes=['parte1','parte2'];
+  for(var p=0;p<partes.length;p++){
+    var parte=jr[partes[p]];
+    if(parte!=null){
+      if(!tcEsObjPlano(parte)) return false;
+      if(!tcHoraImportadaValida(parte.inicioTeorico)||!tcHoraImportadaValida(parte.finTeorico)) return false;
+    }
+  }
+  if(jr.descanso!=null){
+    if(!tcEsObjPlano(jr.descanso)) return false;
+    if('duracionMinutos' in jr.descanso&&jr.descanso.duracionMinutos!=null&&
+       !tcNumeroImportadoValido(jr.descanso.duracionMinutos,0,1440)) return false;
+    if('tipo' in jr.descanso&&jr.descanso.tipo!=null&&!tcTextoImportadoValido(jr.descanso.tipo,80)) return false;
+  }
+  if(jr.inc!=null){
+    if(!tcEsObjPlano(jr.inc)||!tcHoraImportadaValida(jr.inc.incInicio)||
+       !tcHoraImportadaValida(jr.inc.incFin)) return false;
+    if('incProgramadaMinutos' in jr.inc&&jr.inc.incProgramadaMinutos!=null&&
+       !tcNumeroImportadoValido(jr.inc.incProgramadaMinutos,0,2880)) return false;
+  }
+  if('computoOficialMinutos' in jr&&jr.computoOficialMinutos!=null&&
+     !tcNumeroImportadoValido(jr.computoOficialMinutos,0,2880)) return false;
+  if('descansoGestion' in jr&&jr.descansoGestion!=null&&
+     ['mantener_inicio','descanso_completo'].indexOf(jr.descansoGestion)===-1) return false;
+  if(jr.ampliaciones!=null){
+    if(!tcEsObjPlano(jr.ampliaciones)) return false;
+    var ak=Object.keys(jr.ampliaciones);
+    for(var x=0;x<ak.length;x++) if(['parte1','parte2'].indexOf(ak[x])===-1) return false;
+    if(!tcValidarAmpliacionImportada(jr.ampliaciones.parte1)||
+       !tcValidarAmpliacionImportada(jr.ampliaciones.parte2)) return false;
+  }
+  if(jr.excesoConduccionManual!=null){
+    if(!tcEsObjPlano(jr.excesoConduccionManual)) return false;
+    var em=['parte1','parte2'];
+    for(var e=0;e<em.length;e++){
+      var valor=jr.excesoConduccionManual[em[e]];
+      if(valor!=null&&!tcNumeroImportadoValido(valor,0,1440)) return false;
+    }
+  }
+  var booleanos=['requiereRevision','computosRequierenRevision','recaudacionesRequierenRevision','horasHistoricasSinAsignar'];
+  for(var b=0;b<booleanos.length;b++){
+    var campo=booleanos[b];
+    if(campo in jr&&typeof jr[campo]!=='boolean') return false;
+  }
+  return true;
+}
+function tcValidarDiaImportado(reg){
+  if(!tcEsObjPlano(reg)||!tcValidarJSONSeguro(reg)) return false;
+  if('turno' in reg&&reg.turno!=null&&!tcCodigoTurnoSeguro(reg.turno)) return false;
+  var textos=['servicio','incidencia','notas','cambioCompanero','cambioNotas','tipoCambio','estadoCambio',
+    'cambioTurnoOriginal','cambioTurnoFinal','cambioTurnoRecibido','cambioTurnoRealizado','cambioModoTurno'];
+  for(var i=0;i<textos.length;i++){
+    var s=textos[i];
+    if(s in reg&&reg[s]!=null&&!tcTextoImportadoValido(reg[s],s==='notas'||s==='cambioNotas'?10000:500)) return false;
+  }
+  var fechas=['cambioFechaVinculada','cambioFechaDestino'];
+  for(var f=0;f<fechas.length;f++) if(fechas[f] in reg&&reg[fechas[f]]!=null&&!tcFechaClaveValida(reg[fechas[f]])) return false;
+  var bools=['hojaArchivada','autoTurno','cambio','cambioPendiente','cambioTurnoPendiente','cambioHojaAnadidaDuranteCambio'];
+  for(var b=0;b<bools.length;b++) if(bools[b] in reg&&typeof reg[bools[b]]!=='boolean') return false;
+  if('imgData' in reg && reg.imgData!=null && !tcImagenDataUrlValida(reg.imgData)) return false;
+  if('thumbData' in reg && reg.thumbData!=null && !tcImagenDataUrlValida(reg.thumbData)) return false;
+  return tcValidarJornadaImportada(reg.jornada);
+}
+function tcValidarTurnoImportado(t){
+  if(!tcEsObjPlano(t)||!tcValidarJSONSeguro(t)) return false;
+  var strs=['label','tag','icon'];
+  for(var i=0;i<strs.length;i++){ var s=strs[i]; if(s in t&&t[s]!=null&&!tcTextoImportadoValido(t[s],300)) return false; }
+  var cols=['bg','textColor','tagColor','color'];
+  for(var j=0;j<cols.length;j++){ var c=cols[j]; if(c in t && t[c]!=null && !tcColorSeguro(t[c])) return false; }
+  if('partido' in t&&typeof t.partido!=='boolean') return false;
+  return true;
+}
+function tcValidarMapaTurnos(mapa){
+  if(!tcEsObjPlano(mapa)) return false;
+  var tk=Object.keys(mapa);
+  for(var i=0;i<tk.length;i++){
+    if(!tcCodigoTurnoSeguro(tk[i])||!tcValidarTurnoImportado(mapa[tk[i]])) return false;
+  }
+  return true;
+}
+function tcValidarEventosImportados(ev){
+  if(!tcEsObjPlano(ev)||!tcValidarJSONSeguro(ev)) return false;
+  var anios=Object.keys(ev);
+  for(var a=0;a<anios.length;a++){
+    if(!/^\d{4}$/.test(anios[a])||+anios[a]<1900||+anios[a]>2200) return false;
+    var mapa=ev[anios[a]];
+    if(!tcEsObjPlano(mapa)) return false;
+    var claves=Object.keys(mapa);
+    for(var c=0;c<claves.length;c++){
+      if(!tcFechaClaveValida(claves[c])) return false;
+      var e=mapa[claves[c]];
+      if(!tcEsObjPlano(e)) return false;
+      if('tipo' in e&&e.tipo!=null&&!tcTextoImportadoValido(e.tipo,100)) return false;
+      if('nombre' in e&&e.nombre!=null&&!tcTextoImportadoValido(e.nombre,500)) return false;
+    }
+  }
+  return true;
+}
+window.tcValidarCalendarioImportado=function(bloque){
+  if(!tcEsObjPlano(bloque)||!tcValidarJSONSeguro(bloque)) return false;
+  var declaraEsquema=Object.prototype.hasOwnProperty.call(bloque,'schema');
+  var mapaDias;
+  if(declaraEsquema){
+    if(bloque.schema!==1) return false;
+    if(!tcEsObjPlano(bloque.dias)) return false;
+    mapaDias=bloque.dias;
+    if(bloque.turnos!==undefined){
+      if(!tcValidarMapaTurnos(bloque.turnos)) return false;
+    }
+    if(bloque.datosCalendarioTurnos!==undefined && !tcValidarEventosImportados(bloque.datosCalendarioTurnos)) return false;
+    if(bloque.datosCalendarioTurnosMeta!==undefined &&
+       (!tcEsObjPlano(bloque.datosCalendarioTurnosMeta)||!tcValidarJSONSeguro(bloque.datosCalendarioTurnosMeta))) return false;
+  } else {
+    mapaDias=bloque; /* formato antiguo: el bloque ES el mapa de días */
+  }
+  var claves=Object.keys(mapaDias);
+  for(var d=0;d<claves.length;d++){
+    if(!tcFechaClaveValida(claves[d])) return false;              /* fecha real */
+    if(!tcValidarDiaImportado(mapaDias[claves[d]])) return false; /* estructura/imágenes */
+  }
+  return true;
+};
+
 window.tcImportarDatosCalendarioConductor=function(bloque){
   if(!bloque||typeof bloque!=='object'||Array.isArray(bloque)) return false;
+  /* DEV-007R10 (tarea 3) — Puerta de validación total antes de mutar nada. */
+  if(!window.tcValidarCalendarioImportado(bloque)) return false;
 
   var declaraEsquemaNuevo=Object.prototype.hasOwnProperty.call(bloque,'schema');
   if(declaraEsquemaNuevo){
@@ -3421,12 +4222,13 @@ window.tcImportarDatosCalendarioConductor=function(bloque){
    oficial correcto (CM = Corrido Mañana), sin perder el día ni su información. */
 function tcLimpiarTurnoFicticioM(){
   if(TURNO['M'] && !TURNOS_DEFAULT['M']){
-    Object.keys(dias).forEach(function(k){
-      if(dias[k] && dias[k].turno==='M'){ dias[k].turno='CM'; }
+    var diasNuevos=JSON.parse(JSON.stringify(dias));
+    var turnosNuevos=JSON.parse(JSON.stringify(TURNO));
+    Object.keys(diasNuevos).forEach(function(k){
+      if(diasNuevos[k] && diasNuevos[k].turno==='M'){ diasNuevos[k].turno='CM'; }
     });
-    delete TURNO['M'];
-    saveTurnos();
-    saveDias();
+    delete turnosNuevos['M'];
+    tcGuardarDiasYTurnosAtomico(diasNuevos,turnosNuevos);
   }
 }
 
@@ -3436,6 +4238,15 @@ function tcInit(){
   var h=new Date(); vY=h.getFullYear(); vM=h.getMonth();
   tcRenderHdr(); tcRenderLeyenda(); tcRenderCal();
   tcBuildTurnoSelects();
+  /* DEV-007R7 — Restaura la vista guardada. Si es anual, se prepara el layout
+     anual (sin medir alturas ni desplazar: la pestaña aún está oculta al
+     arrancar). La medición real y el posicionamiento en el mes actual se hacen
+     al abrir la pestaña del calendario (abrirSeccion → tcAnualActivarLayout). */
+  var vg=tcLeerVistaGuardada();
+  if(vg==='anual'){
+    tcVista='anual';
+    tcAnualActivarLayout(false,false);
+  }
 }
 
 function tcRenderHdr(){document.getElementById('tc-mlbl').textContent=MESES[vM]+' '+vY;}
@@ -3529,10 +4340,12 @@ function tcRenderAjustesBody(){
 }
 
 window.tcDeleteTurno=function(code){
+  if(!tcCodigoTurnoSeguro(code)||!Object.prototype.hasOwnProperty.call(TURNO,code)) return;
   var enUso=Object.keys(dias).some(function(k){return dias[k]&&dias[k].turno===code;});
   if(enUso){tcToast('No se puede eliminar: el turno está siendo utilizado');return;}
   delete TURNO[code];
-  saveTurnos(); tcRenderAjustesBody(); tcRenderLeyenda(); tcBuildTurnoSelects(); tcRenderCal();
+  if(!saveTurnos()) return;
+  tcRenderAjustesBody(); tcRenderLeyenda(); tcBuildTurnoSelects(); tcRenderCal();
   tcToast('Turno '+code+' eliminado');
 };
 
@@ -3588,20 +4401,24 @@ window.tcSaveTurnoEdit=function(){
   var bg=document.getElementById('et-bg').value;
   var tc2=document.getElementById('et-text').value;
   var tg=document.getElementById('et-tag').value;
-  if(!code||code.length<1){tcToast('El código no puede estar vacío');return;}
-  if(!name){tcToast('Indica un nombre');return;}
+  if(!tcCodigoTurnoSeguro(code)){tcToast('El código solo puede tener letras, números, punto, guion o guion bajo (máx. 16)');return;}
+  if(!name||name.length>300){tcToast('Indica un nombre de hasta 300 caracteres');return;}
+  if(!tcColorSeguro(bg)||!tcColorSeguro(tc2)||!tcColorSeguro(tg)){tcToast('Los colores no son válidos');return;}
   if(!editingCode&&TURNO[code]){tcToast('Ya existe un turno con código '+code);return;}
   var finalCode=editingCode||code;
+  if(!tcCodigoTurnoSeguro(finalCode)){tcToast('El código del turno no es válido');return;}
   var existing=TURNO[finalCode]||{};
   TURNO[finalCode]={label:name,tag:finalCode,icon:existing.icon||'🔷',bg:bg,textColor:tc2,tagColor:tg,partido:existing.partido||false};
-  saveTurnos(); tcRenderAjustesBody(); tcRenderLeyenda(); tcBuildTurnoSelects(); tcRenderCal();
+  if(!saveTurnos()) return;
+  tcRenderAjustesBody(); tcRenderLeyenda(); tcBuildTurnoSelects(); tcRenderCal();
   tcShowPanel('pnl-ajustes');
   tcToast('✔ Turno '+finalCode+' guardado');
 };
 
 window.tcResetColores=function(){
   TURNO=JSON.parse(JSON.stringify(TURNOS_DEFAULT));
-  saveTurnos(); tcRenderLeyenda(); tcBuildTurnoSelects(); tcRenderCal();
+  if(!saveTurnos()) return;
+  tcRenderLeyenda(); tcBuildTurnoSelects(); tcRenderCal();
   tcToast('✔ Colores restaurados');
 };
 
@@ -3677,9 +4494,14 @@ function tcRenderCal(){
           cell.style.background=t.bg;
         }
       }
-      if(reg&&(reg.thumbData||reg.imgData)){
+      var _thumb=reg?(reg.thumbData||reg.imgData):null; /* DEV-007R10 (tarea 4) — src validado */
+      if(_thumb&&tcImagenDataUrlValida(_thumb)){
         var th=document.createElement('div'); th.className='tc-d-thumb';
-        th.style.backgroundImage='url('+(reg.thumbData||reg.imgData)+')'; cell.appendChild(th);
+        th.style.backgroundImage='url("'+_thumb+'")'; cell.appendChild(th);
+      } else if(reg&&reg.hojaArchivada){
+        /* DEV-007R7 — imagen liberada pero la hoja existió: marca de origen */
+        var arch=document.createElement('div'); arch.className='tc-d-arch'; arch.textContent='🗂️';
+        arch.title='Hoja archivada · datos conservados'; cell.appendChild(arch);
       }
       var numEl=document.createElement('div'); numEl.className='tc-dnum'; numEl.textContent=c.d;
       if(reg&&reg.turno&&TURNO[reg.turno]) numEl.style.color=TURNO[reg.turno].textColor;
@@ -3726,8 +4548,48 @@ function tcRenderCal(){
 
 var tcVista='mes'; /* 'mes' | 'anual' */
 
+/* DEV-007R7 — Persiste la vista elegida (mes|anual) para conservarla al reabrir
+   la app o al volver a la pestaña del calendario. */
+function tcGuardarVista(v){ try{ localStorage.setItem('tussam_tc_vista',v); }catch(e){} }
+function tcLeerVistaGuardada(){ try{ var v=localStorage.getItem('tussam_tc_vista'); return (v==='anual'||v==='mes')?v:null; }catch(e){ return null; } }
+
+/* DEV-007R7 — Activa el layout de la vista anual (conmutación de paneles,
+   cabeceras fijas y medidas). measurar=true recalcula alturas reales (solo
+   funciona con el calendario visible). scroll=true posiciona en el mes actual
+   una vez renderizado. Se reutiliza desde el toggle, la restauración inicial y
+   la reapertura de la pestaña, para no depender solo de tcSetVista. */
+function tcAnualActivarLayout(measurar,scroll){
+  var btnMes=document.getElementById('tc-btn-mes');
+  var btnAnual=document.getElementById('tc-btn-anual');
+  var cal=document.querySelector('#tc .tc-cal');
+  var anual=document.getElementById('tc-anual');
+  var mnav=document.querySelector('#tc .tc-mnav');
+  var tcEl=document.getElementById('tc');
+  if(!tcEl||!anual) return;
+  if(btnAnual) btnAnual.classList.add('active');
+  if(btnMes) btnMes.classList.remove('active');
+  if(cal) cal.style.display='none';
+  anual.style.display='';
+  if(mnav) mnav.style.display='none';
+  /* DEV-006R9/R10 — Cabecera azul + pestañas fijas (sticky) solo en anual. */
+  tcEl.classList.add('tc-anual-activa');
+  if(measurar){
+    var ahR10=document.querySelector('.app-header');
+    var thR10=document.querySelector('#tc .tc-hdr');
+    var vtR10=document.querySelector('#tc .tc-view-toggle');
+    var ahH=ahR10?ahR10.offsetHeight:0;
+    var thH=thR10?thR10.offsetHeight:0;
+    var vtH=vtR10?vtR10.offsetHeight:0;
+    tcEl.style.setProperty('--tc-anual-hdr-top',ahH+'px');
+    tcEl.style.setProperty('--tc-anual-toggle-top',(ahH+thH)+'px');
+    tcEl.style.setProperty('--tc-anual-toggle-h',vtH+'px');
+  }
+  tcRenderAnual(!!scroll); /* el mes actual siempre se destaca; solo se desplaza si scroll=true */
+}
+
 window.tcSetVista=function(v){
   tcVista=v;
+  tcGuardarVista(v); /* DEV-007R7 — conservar la vista seleccionada */
   var btnMes=document.getElementById('tc-btn-mes');
   var btnAnual=document.getElementById('tc-btn-anual');
   var cal=document.querySelector('#tc .tc-cal');
@@ -3740,37 +4602,35 @@ window.tcSetVista=function(v){
     tcEl.classList.remove('tc-anual-activa'); /* DEV-006R9 — cabecera fija solo en la vista anual */
     tcRenderCal();
   } else {
-    btnAnual.classList.add('active'); btnMes.classList.remove('active');
-    cal.style.display='none'; anual.style.display=''; mnav.style.display='none';
-    /* DEV-006R9 — Cabecera azul fija bajo .app-header: se calcula su altura real
-       y se activa la clase que aplica position:sticky solo en la vista anual.
-       DEV-006R10 — Además se fijan las pestañas Mensual/Anual (.tc-view-toggle)
-       justo debajo de la cabecera azul. Se activa PRIMERO la clase para que el
-       selector adopte ya su formato fijo (fondo/relleno) y medir su altura real
-       en modo anual; luego se exponen como variables CSS los desplazamientos
-       necesarios para apilar los tres elementos sin solaparse. */
-    tcEl.classList.add('tc-anual-activa');
-    var ahR10=document.querySelector('.app-header');
-    var thR10=document.querySelector('#tc .tc-hdr');
-    var vtR10=document.querySelector('#tc .tc-view-toggle');
-    var ahH=ahR10?ahR10.offsetHeight:0;   /* altura real .app-header  */
-    var thH=thR10?thR10.offsetHeight:0;   /* altura real .tc-hdr      */
-    var vtH=vtR10?vtR10.offsetHeight:0;   /* altura real .tc-view-toggle */
-    tcEl.style.setProperty('--tc-anual-hdr-top',ahH+'px');            /* .tc-hdr bajo .app-header */
-    tcEl.style.setProperty('--tc-anual-toggle-top',(ahH+thH)+'px');   /* pestañas bajo .tc-hdr    */
-    tcEl.style.setProperty('--tc-anual-toggle-h',vtH+'px');           /* altura de las pestañas   */
-    tcRenderAnual(true); /* DEV-006R8/R9 — solo al ENTRAR expresamente se posiciona en el día actual */
+    /* DEV-006R8/R9 — al ENTRAR expresamente se mide y se posiciona en el mes actual */
+    tcAnualActivarLayout(true,true);
   }
+};
+
+/* DEV-007R7 — Al VOLVER a la pestaña del calendario: si la vista guardada es la
+   anual, re-mide las cabeceras fijas (ya visibles) y reposiciona en el mes
+   actual, evitando que el listado anual reaparezca en enero. Expuesta en window
+   porque abrirSeccion() vive en otro ámbito. */
+window.tcCalReabrir=function(){
+  if(tcVista==='anual') tcAnualActivarLayout(true,true);
 };
 
 function tcRenderAnual(scrollToActual){
   var contenedor=document.getElementById('tc-anual');
+  /* DEV-007R7 — En re-renderizados incidentales (cambios de datos, abrir/cerrar
+     un día) se conserva la posición de scroll: vaciar el contenedor colapsa su
+     altura y el navegador fijaría el scroll arriba (enero). Solo los puntos de
+     entrada expresos (scrollToActual=true) reposicionan en el mes actual. */
+  var scEl=document.scrollingElement||document.documentElement;
+  var scrollPrev=(!scrollToActual&&scEl)?scEl.scrollTop:null;
   contenedor.innerHTML='';
   var hoy=new Date();
   var anio=vY;
   var dowLabels=['L','M','X','J','V','S','D'];
   for(var m=0;m<12;m++){
     var mesDiv=document.createElement('div'); mesDiv.className='tc-anual-mes';
+    /* DEV-007R7 — Destaca el mes actual cuando se visualiza el año en curso. */
+    if(anio===hoy.getFullYear() && m===hoy.getMonth()) mesDiv.className+=' tc-anual-mes-actual';
     mesDiv.setAttribute('data-mes',m); mesDiv.id='tc-anual-mes-'+m; /* DEV-006R8 — identificador de mes para posicionar */
     /* Título del mes */
     var titulo=document.createElement('div'); titulo.className='tc-anual-mes-title';
@@ -3856,17 +4716,17 @@ function tcRenderAnual(scrollToActual){
     contenedor.appendChild(mesDiv);
   }
 
-  /* DEV-007R4 — Al ENTRAR expresamente en la vista anual, y solo si se visualiza el
-     AÑO ACTUAL, posicionar la pantalla al PRINCIPIO DEL MES ACTUAL para ver el mes
-     completo desde su título y, debajo, los meses siguientes. El destino es SIEMPRE
-     el contenedor del mes actual (#tc-anual-mes-<mes actual>); ya NO se usa la celda
-     del día de hoy (.tc-d.today).
-     Se mantiene el margen (scrollMarginTop) que reserva la altura de los TRES
-     elementos fijos (.app-header + cabecera azul .tc-hdr + pestañas Mensual/Anual
-     .tc-view-toggle) + 8px, para que el TÍTULO del mes quede visible debajo de ellos.
-     Si es otro año no se cambia el año ni se fuerza el mes actual. NO se ejecuta en
-     los re-renderizados posteriores (p. ej. cambios de datos, abrir/cerrar un día),
-     porque solo tcSetVista('anual') pasa scrollToActual=true. No se toca vY. */
+  /* DEV-007R4/R7 — Al ENTRAR en la vista anual (toggle, restauración al abrir la
+     app o reapertura de la pestaña), y solo si se visualiza el AÑO ACTUAL, se
+     posiciona en el PRINCIPIO DEL MES ACTUAL. El mes actual ya queda DESTACADO en
+     el propio render (clase tc-anual-mes-actual), con independencia del scroll.
+     Los re-renderizados incidentales (cambios de datos, abrir/cerrar un día) NO
+     desplazan: solo llegan aquí con scrollToActual=true los puntos de entrada
+     expresos. No se toca vY. */
+  if(scrollPrev!=null){
+    /* DEV-007R7 — restaurar posición tras reconstruir el listado */
+    requestAnimationFrame(function(){ if(scEl) scEl.scrollTop=scrollPrev; });
+  }
   if(scrollToActual && anio===new Date().getFullYear()){
     requestAnimationFrame(function(){
       var destino=document.getElementById('tc-anual-mes-'+new Date().getMonth());
@@ -3902,6 +4762,7 @@ window.showPanel=function(id){
   panels.forEach(function(x){document.getElementById(x).style.display=(x===id)?'':'none';});
 };
 function tcShowPanel(id){window.showPanel(id);}
+window.tcShowPanel=tcShowPanel;
 
 /* DEV-004R8: vuelve siempre a la ficha del día (pnl-view) y desplaza el panel
    (contenedor compartido .tc-sh) al inicio, para que la cabecera y el botón X
@@ -3936,16 +4797,48 @@ function tcRenderView(key,reg){
   document.getElementById('vw-date').textContent=kd+' de '+MESES[km]+' de '+ky;
   var tc2=reg.turno&&TURNO[reg.turno]?TURNO[reg.turno]:null;
   var tw=document.getElementById('vw-turno');
+  tw.innerHTML='';
   if(tc2){
-    tw.innerHTML='<div class="tc-turno-banner" style="background:'+tc2.tagColor+'">'
-      +'<span class="tc-turno-icon">'+(tc2.icon||'')+'</span>'
-      +'<div><div class="tc-turno-label">'+tcEsc(tc2.label)+'</div>'
-      +(reg.autoTurno?'<div class="tc-turno-auto">★ Detectado automáticamente</div>':'')
-      +'</div></div>';
-  } else { tw.innerHTML=''; }
+    /* DEV-007R10 (tarea 4) — Construcción por DOM (textContent + atributos
+       validados). Nunca se inyecta tc2.icon ni tc2.tagColor con innerHTML. */
+    var banner=document.createElement('div');
+    banner.className='tc-turno-banner';
+    if(tcColorSeguro(tc2.tagColor)) banner.style.background=tc2.tagColor; /* color validado o ninguno */
+    var icon=document.createElement('span');
+    icon.className='tc-turno-icon';
+    icon.textContent=(typeof tc2.icon==='string')?tc2.icon:''; /* texto, no HTML */
+    banner.appendChild(icon);
+    var lblWrap=document.createElement('div');
+    var lbl=document.createElement('div');
+    lbl.className='tc-turno-label';
+    lbl.textContent=(typeof tc2.label==='string')?tc2.label:'';
+    lblWrap.appendChild(lbl);
+    if(reg.autoTurno){
+      var au=document.createElement('div');
+      au.className='tc-turno-auto';
+      au.textContent='★ Detectado automáticamente';
+      lblWrap.appendChild(au);
+    }
+    banner.appendChild(lblWrap);
+    tw.appendChild(banner);
+  }
   var rw=document.getElementById('vw-ruta');
-  if(reg.imgData){
-    rw.innerHTML='<img class="tc-ruta-img" src="'+reg.imgData+'" alt="Hoja de ruta">';
+  if(reg.imgData&&tcImagenDataUrlValida(reg.imgData)){
+    /* DEV-007R10 (tarea 4) — Imagen por DOM con src validado (Data URL de imagen
+       permitida y limitada de tamaño). Nunca se inyecta imgData con innerHTML. */
+    rw.innerHTML='';
+    var img=document.createElement('img');
+    img.className='tc-ruta-img';
+    img.alt='Hoja de ruta';
+    img.src=reg.imgData;
+    rw.appendChild(img);
+  } else if(reg.hojaArchivada){
+    /* DEV-007R7/R8 — Origen conservado: el día tuvo hoja pero su imagen ya no se
+       guarda (retención automática o "Eliminar hoja"). Los datos de jornada
+       siguen intactos y visibles. */
+    rw.innerHTML='<div class="tc-ruta-empty" style="border-style:solid;">'
+      +'<span>🗂️</span><p style="margin:0;">Imagen de la hoja no guardada · datos conservados</p>'
+      +'<p style="margin:6px 0 0;font-size:12px;color:var(--color-text-secondary);line-height:1.4;">Se conservaron jornada, servicio, incidencias y acumulados. Vuelve a importar el PDF para recuperar la imagen.</p></div>';
   } else {
     rw.innerHTML='<div class="tc-ruta-empty"><span>📋</span><p>Sin hoja de ruta</p></div>';
   }
@@ -3953,6 +4846,8 @@ function tcRenderView(key,reg){
   if(reg.imgData){
     raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)">🔁 Reemplazar hoja</button>'
       +'<button class="tc-btn tc-btn-danger" onclick="tcDiaHojaDelete()">🗑️ Eliminar hoja</button>';
+  } else if(reg.hojaArchivada){
+    raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)">➕ Volver a añadir hoja de ruta</button>';
   } else {
     raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)">➕ Añadir hoja de ruta</button>';
   }
@@ -4543,44 +5438,6 @@ function tcCalcularSolapeDia(fecha){
   return res;
 }
 
-/* FUNCIÓN PURA — Resumen mensual (mes: 1–12). Se recalcula siempre desde días,
-   jornadas, ampliaciones y eventos; no se mantiene ningún saldo duplicado. */
-function tcResumenNocturnidadMes(anio,mes){
-  var res={
-    minutosProgramados:0, minutosAmpliacionesConfirmadas:0,
-    totalNocturnoComputable:0, minutosPendientes:0,
-    solapeSemanaSanta:0, solapeFeria:0,
-    /* DEV-007R3 — Un resumen que contiene días incompletos no es definitivo.
-       diasParciales cuenta los días con jornada nocturna incompleta o con solape
-       pendiente de revisión; requiereRevision avisa de que el total podría
-       cambiar al completar esos días. */
-    diasParciales:0, requiereRevision:false
-  };
-  var a=parseInt(anio,10), m=parseInt(mes,10);
-  if(isNaN(a)||isNaN(m)||m<1||m>12) return res;
-  var ndias=new Date(a,m,0).getDate();
-  for(var d=1;d<=ndias;d++){
-    var key=a+'-'+tcPad(m)+'-'+tcPad(d);
-    if(!dias[key]) continue;
-    var n=tcCalcularNocturnidadDia(key);
-    res.minutosProgramados+=n.minutosProgramados;
-    res.minutosAmpliacionesConfirmadas+=n.minutosAmpliacionesConfirmadas;
-    res.minutosPendientes+=n.minutosPendientes;
-    var s=tcCalcularSolapeDia(key);
-    if(s.estado==='computable'){
-      if(s.tipo==='semana_santa') res.solapeSemanaSanta+=s.minutosSolape;
-      else if(s.tipo==='feria') res.solapeFeria+=s.minutosSolape;
-    }
-    /* DEV-007R3 — Día parcial: nocturnidad incompleta (parcial / descanso sin
-       decidir / 2ª parte en revisión) o solape que quedó pendiente de revisar. */
-    if(n.parcial||n.pendienteDescanso||n.revisionParte2||s.estado==='pendiente_revision'){
-      res.diasParciales++;
-    }
-  }
-  res.totalNocturnoComputable=res.minutosProgramados+res.minutosAmpliacionesConfirmadas;
-  res.requiereRevision=(res.diasParciales>0);
-  return res;
-}
 
 /* Línea de "gestión del descanso" para la tarjeta: solo se muestra cuando hay
    una ampliación real de la primera parte y existe una segunda parte (DEV-007R1).
@@ -4904,37 +5761,6 @@ function tcCalcularExcesoConduccion(jr){
   return res;
 }
 
-/* Resumen mensual del exceso de conducción continua. Recalcula siempre desde
-   dias/jornadas (sin saldo duplicado). Deja preparado el concepto para Nómina
-   como «Exceso conducción continua · Art. 20.4», sin calcular euros. */
-function tcResumenExcesoConduccionMes(anio,mes){
-  var res={
-    minutosExcesoConduccionFisicos:0,
-    minutosExcesoConduccionEquivalentes:0,
-    diasPendientesRevision:0,
-    diasConExceso:0,
-    codigoNomina:'4A82',
-    conceptoNomina:'Aplicación Artículo 20 d)',
-    referencia:'Artículo 20.4'
-  };
-  var a=parseInt(anio,10), m=parseInt(mes,10);
-  if(isNaN(a)||isNaN(m)||m<1||m>12) return res;
-  var ndias=new Date(a,m,0).getDate();
-  for(var d=1;d<=ndias;d++){
-    var key=a+'-'+tcPad(m)+'-'+tcPad(d);
-    var reg=dias[key]; if(!reg||!reg.jornada) continue;
-    var ex=tcCalcularExcesoConduccion(reg.jornada);
-    /* Los resultados pendientes NUNCA entran en los totales definitivos. */
-    if(ex.estado==='pendiente_revision'){ res.diasPendientesRevision++; continue; }
-    if(ex.estado==='computable'){
-      res.minutosExcesoConduccionFisicos+=ex.minutosExcesoFisico;
-      res.minutosExcesoConduccionEquivalentes+=ex.minutosEquivalentesHoraExtra;
-      if(ex.minutosExcesoFisico>0) res.diasConExceso++;
-    }
-  }
-  return res;
-}
-
 /* Bloque "Exceso de conducción continua" dentro de la tarjeta "Datos de
    jornada" (DEV-007R5). Aditivo: sin pantallas ni botones nuevos. Muestra la
    conducción por período, el exceso físico sobre 4:30, el equivalente al doble,
@@ -5093,38 +5919,14 @@ function tcResumenLaboral(anio,mes){
   return { anio:a, meses:meses, anual:anual, mesSeleccionado:mesSel };
 }
 
-/* Una fila derivada de nómina provisional. Los tiempos se guardan en minutos y
-   se muestran en formato de nómina HH.MM; las unidades como enteros. */
-function tcNominaFila(codigo,concepto,tipoUnidad,cantidad,estado,origen){
-  var mostrada=(tipoUnidad==='minutos')?tcMinANominaHHMM(cantidad):String(cantidad);
-  return { codigo:codigo, concepto:concepto, tipoUnidad:tipoUnidad, cantidad:cantidad,
-    cantidadMostrada:mostrada, origen:origen, estado:estado, importeEstimado:null };
-}
-/* Filas provisionales derivadas del agregado R (mensual o anual). El deje NO
-   genera fila con código (no se inventa código de nómina); se muestra aparte. */
-function tcNominaProvisionalFilas(R){
-  var pend=function(cond){ return cond?'Pendiente':'Provisional'; };
-  return [
-    tcNominaFila('4A10','Turno partido','unidades',R.partidoDias, R.tpPendiente>0?'Pendiente':(R.partidoDias>0?'Confirmado':'Provisional'),'jornadas'),
-    tcNominaFila('4A4E','TP hasta 2 horas','unidades',R.tpHasta2h, pend(R.tpPendiente>0),'jornadas'),
-    tcNominaFila('4A4F','TP mayor de 2 horas','unidades',R.tpMas2h, pend(R.tpPendiente>0),'jornadas'),
-    tcNominaFila('49A6','Cómputo desplazamiento mensual','minutos',R.td,'Provisional','computosEspecificos'),
-    tcNominaFila('4A31','Horas extraordinarias','minutos',R.horasExtraordinarias, pend(R.ampliacionesPendientes>0),'ampliaciones'),
-    tcNominaFila('4A33','Horas nocturnas','minutos',R.nocturnidadGeneral,'Provisional','jornadas'),
-    tcNominaFila('4A59','Solape Feria','minutos',R.solapeFeria,'Provisional','eventos'),
-    tcNominaFila('4A82','Aplicación Artículo 20 d)','minutos',R.excesoEquivalente,'Provisional','jornadas'),
-    tcNominaFila('4B25','Horas nocturnas Semana Santa','minutos',R.nocturnidadSemanaSanta,'Provisional','eventos'),
-    tcNominaFila('4B27','Horas nocturnas Feria','minutos',R.nocturnidadFeria,'Provisional','eventos')
-  ];
-}
+/* DEV-007R9 (tarea 8) — Eliminadas tcNominaFila() y tcNominaProvisionalFilas():
+   eran una SEGUNDA lista de conceptos de nómina sin uso (no había llamadas
+   estáticas ni dinámicas). La única lista viva de conceptos es la de
+   tcNomRenderProvisional(); mantener dos era código duplicado. */
 
 /* ---------------------- Render de la pantalla Nómina ----------------------- */
 var NOM_TAB='resumen', NOM_ANIO=null, NOM_MES=null;
 
-function tcNomEstadoBadge(estado){
-  var cls=(estado==='Confirmado')?'c':(estado==='Pendiente')?'p':'v';
-  return '<span class="nom-est '+cls+'">'+tcEsc(estado)+'</span>';
-}
 function tcNomDur(min){ return tcMinANominaHHMM(min)+' <span style="color:var(--color-text-secondary);font-size:0.8em;">('+tcMinAHorasMin(min)+')</span>'; }
 
 /* Rellena los selectores de año y mes (años presentes en dias + año actual). */
@@ -5195,33 +5997,106 @@ function tcNomRenderResumen(data){
   return h;
 }
 
+/* DEV-007R7 — Nómina provisional con ASPECTO DE RECIBO REAL (sin membrete ni
+   datos de empresa). Solo se muestran conceptos con cantidad distinta de cero
+   (más el salario base, siempre). Las CANTIDADES son fiables (se recalculan de
+   las jornadas: tiempos en HH.MM, unidades como enteros); los IMPORTES en € y
+   los totales quedan "Pendiente de configuración" mientras no haya tablas
+   salariales. No se copian importes de ninguna nómina real ni se inventan
+   códigos, salarios ni reglas: los códigos mostrados son los ya registrados en
+   la app y las filas y apartados sin datos se ocultan. */
 function tcNomRenderProvisional(data){
   var R=data.mesSeleccionado||data.anual;
-  var ambito=data.mesSeleccionado?(R.nombreMes+' '+data.anio):('Año '+data.anio);
-  var filas=tcNominaProvisionalFilas(R);
-  var h='<div class="form-card"><h3 style="margin-top:0;">Nómina provisional · '+tcEsc(ambito)+'</h3>';
-  h+='<div class="nom-scroll"><table class="nom-tabla"><thead><tr><th>Código</th><th>Concepto</th><th>Cantidad</th><th>Unidad</th><th>Origen</th><th>Estado</th><th>Importe</th></tr></thead><tbody>';
-  filas.forEach(function(f){
-    h+='<tr><td>'+tcEsc(f.codigo)+'</td><td>'+tcEsc(f.concepto)+'</td>'
-      +'<td class="num">'+tcEsc(f.cantidadMostrada)+'</td>'
-      +'<td>'+tcEsc(f.tipoUnidad)+'</td><td>'+tcEsc(f.origen)+'</td>'
-      +'<td>'+tcNomEstadoBadge(f.estado)+'</td>'
-      +'<td class="num">'+(f.importeEstimado==null?'—':f.importeEstimado)+'</td></tr>';
-  });
-  h+='</tbody></table></div>';
-  h+='<div class="nom-nota">Los tiempos se guardan en minutos y se muestran en formato de nómina HH.MM (p.ej. 512→8.32, 915→15.15, 31→0.31). No se calculan euros, salario base, IRPF ni Seguridad Social todavía.</div>';
+  var esMes=!!data.mesSeleccionado;
+  var PEND='Pendiente de configuración';
+  var celdaPend='<span class="nom-recibo-pend">Pdte.</span>'; /* importe € aún sin tablas */
+
+  /* Periodo de liquidación (dato fiable a partir del mes/año seleccionado).
+     DEV-007R8 — El nº de días naturales del mes NO se usa como cantidad del
+     salario base; solo se emplea para el rango de fechas del periodo. */
+  var periodo;
+  if(esMes){
+    var ndias=new Date(R.anio, R.mes, 0).getDate();
+    periodo='01/'+tcPad(R.mes)+'/'+R.anio+' — '+tcPad(ndias)+'/'+tcPad(R.mes)+'/'+R.anio;
+  } else {
+    periodo='01/01/'+R.anio+' — 31/12/'+R.anio;
+  }
+
+  /* Conceptos devengados con CANTIDAD ≠ 0. Solo se listan los que se han
+     generado; el salario base se muestra aparte (siempre). */
+  var filas=[];
+  function add(cod,desc,tipo,val,unidad){
+    if(!val) return; /* 0, null o undefined: no se muestra */
+    var cant = (tipo==='minutos') ? tcMinANominaHHMM(val)
+             : (String(val)+(unidad?(' '+unidad):''));
+    filas.push({ cod:cod, desc:desc, cant:cant });
+  }
+  add('4A10','Turno partido','unid',R.partidoDias,'días');
+  add('4A4E','TP hasta 2 horas','unid',R.tpHasta2h,'ud.');
+  add('4A4F','TP mayor de 2 horas','unid',R.tpMas2h,'ud.');
+  add('4A31','Horas extraordinarias','minutos',R.horasExtraordinarias);
+  add('4A33','Horas nocturnas','minutos',R.nocturnidadGeneral);
+  add('4B25','Horas nocturnas Semana Santa','minutos',R.nocturnidadSemanaSanta);
+  add('4B27','Horas nocturnas Feria','minutos',R.nocturnidadFeria);
+  add('4A58','Solape Semana Santa','minutos',R.solapeSemanaSanta); /* DEV-007R8 */
+  add('4A59','Solape Feria','minutos',R.solapeFeria);
+  add('4A82','Aplicación Artículo 20 d)','minutos',R.excesoEquivalente);
+  add('49A6','Cómputo desplazamiento mensual (T.D.)','minutos',R.td);
+  add(null,'Deje normal','minutos',R.dejeNormal);
+  add(null,'Deje · Extra Calle 7','minutos',R.extraCalle7);
+
+  /* Celda de descripción con su código (si lo tiene). */
+  function descCelda(cod,desc){
+    return '<div class="desc">'+(cod?'<span class="nom-recibo-cod">'+tcEsc(cod)+'</span>':'')+tcEsc(desc)+'</div>';
+  }
+
+  var h='<div class="nom-recibo">';
+
+  /* --- Cabecera: periodo + datos laborales disponibles --- */
+  h+='<div class="nom-recibo-head">';
+  h+='<div class="nom-recibo-title">Recibo de salarios · Provisional</div>';
+  h+='<div class="nom-recibo-kv"><span class="k">Periodo de liquidación</span><span class="v">'+tcEsc(periodo)+'</span></div>';
+  h+='<div class="nom-recibo-kv"><span class="k">Datos del trabajador</span><span class="v nom-recibo-pend">'+PEND+'</span></div>';
   h+='</div>';
 
-  /* Deje: sin código de nómina (no se inventa ninguno). */
-  var dejeTotal=(R.dejeNormal||0)+(R.extraCalle7||0);
-  h+='<div class="form-card"><h3 style="margin-top:0;">Deje</h3>'
-    +'<div class="nom-scroll"><table class="nom-tabla"><thead><tr><th>Concepto</th><th>Minutos</th></tr></thead><tbody>'
-    +'<tr><td>Deje normal (6 min por servicio finalizado en depósito)</td><td class="num">'+(R.dejeNormal||0)+'</td></tr>'
-    +'<tr><td>Extra Calle 7 (+5 min)</td><td class="num">'+(R.extraCalle7||0)+'</td></tr>'
-    +'<tr><td><strong>Total deje</strong></td><td class="num"><strong>'+dejeTotal+'</strong></td></tr>'
-    +'</tbody></table></div>'
-    +'<div class="nom-nota">El deje no se suma al cómputo diario ni se trata como ampliación u hora extraordinaria; se acumula aparte. '
-    +'<strong>Importe y forma de compensación pendientes de identificar.</strong></div></div>';
+  /* --- Rejilla: Descripción · D/HR/% · Importe devengo · Importe descuento --- */
+  h+='<div class="nom-recibo-scroll"><div class="nom-recibo-grid">';
+  h+='<div class="nom-r-h">Descripción</div>'
+    +'<div class="nom-r-h n">D/HR/%</div>'
+    +'<div class="nom-r-h n">Importe devengo</div>'
+    +'<div class="nom-r-h n">Importe descuento</div>';
+  h+='<div class="nom-r-sec">I · Devengos</div>';
+
+  /* Salario base: SIEMPRE presente. Sin días naturales; mientras no haya días de
+     alta, salario ni importe fiables, tanto la cantidad como el importe quedan
+     "Pendiente de configuración". */
+  h+=descCelda(null,'Sueldo - Salario base')
+    +'<div class="n nom-recibo-pend">Pdte.</div>'
+    +'<div class="n nom-recibo-pend">Pdte.</div>'
+    +'<div class="n"></div>';
+
+  /* Resto de conceptos (solo los de cantidad ≠ 0). Importe € pendiente de tablas. */
+  filas.forEach(function(f){
+    h+=descCelda(f.cod,f.desc)
+      +'<div class="n">'+tcEsc(f.cant)+'</div>'
+      +'<div class="n">'+celdaPend+'</div>'
+      +'<div class="n"></div>';
+  });
+  h+='</div></div>';
+  /* Deducciones (II) y bases de cotización se OCULTAN: aún no hay datos fiables. */
+
+  /* --- Totales (se muestran como pendientes hasta que existan importes) --- */
+  h+='<div class="nom-recibo-tot">';
+  h+='<div class="r"><span>Total devengado</span><span class="nom-recibo-pend">'+PEND+'</span></div>';
+  h+='<div class="r"><span>Total a deducir</span><span class="nom-recibo-pend">'+PEND+'</span></div>';
+  h+='<div class="r big"><span>Líquido a percibir (provisional)</span><span class="nom-recibo-pend">'+PEND+'</span></div>';
+  h+='</div>';
+
+  /* --- Leyenda + aviso obligatorio --- */
+  h+='<div class="nom-recibo-foot">Sueldo - Salario base: Pendiente de configuración (faltan días de alta, salario e importe fiables). Pdte. = pendiente de configuración. La columna D/HR/% recoge días, horas (formato HH.MM) o porcentajes recalculados desde las jornadas registradas; los importes en € se completarán al cargar las tablas salariales. Los conceptos aparecen conforme se generan y solo si su cantidad es distinta de cero.</div>';
+  h+='<div class="nom-recibo-aviso">Documento provisional. Los datos se actualizarán durante el mes y no sustituyen a la nómina oficial.</div>';
+
+  h+='</div>';
   return h;
 }
 
@@ -5307,7 +6182,10 @@ window.tcSaveEdit=function(){
   reg.notas=document.getElementById('ed-notas').value.trim();
   reg.autoTurno=false;
   if(reg.jornada) reg.jornada.servicio=reg.servicio||'';
-  dias[activeDate]=reg; saveDias();
+  dias[activeDate]=reg;
+  /* DEV-007R10 (tarea 2) — Si el guardado falla, saveDias() ya revirtió dias y
+     avisó: no se guarda la hoja pendiente, no se cierra ni se declara éxito. */
+  if(!saveDias()) return;
   /* DEV-004R9: si había una hoja individual pendiente de "Revisar/cambiar
      turno", este es el único momento en que se guarda de verdad: turno y
      servicio ya han quedado guardados arriba; ahora se guarda la hoja nueva
@@ -5331,28 +6209,50 @@ window.tcDeleteDay=function(){
      y dejaría el otro lado huérfano. Hay que deshacer el cambio primero. */
   var regDel=dias[activeDate]||{};
   if(regDel.cambio){
-    btn.removeAttribute('data-confirmando'); btn.textContent='🗑️ Borrar';
-    tcModalPrompt('No se puede borrar el día',
+    tcModalPrompt('No se puede eliminar el día',
       'El día '+tcFmtF(activeDate)+' forma parte de un cambio de turno. Deshaz primero el cambio desde «Gestionar cambios» y vuelve a intentarlo.',
       [{label:'Entendido',className:'btn-secondary',onClick:function(){}}]);
     return;
   }
-  if(btn.getAttribute('data-confirmando')==='true'){
-    btn.removeAttribute('data-confirmando'); btn.textContent='🗑️ Borrar';
-  } else {
-    btn.setAttribute('data-confirmando','true'); btn.textContent='✅ ¿Seguro?';
-    setTimeout(function(){
-      if(btn.getAttribute('data-confirmando')==='true'){
-        btn.removeAttribute('data-confirmando'); btn.textContent='🗑️ Borrar';
-      }
-    },3000);
+  /* DEV-007R9 (tarea 7) — Modal que ENUMERA todo lo que se perderá al eliminar
+     el día completo (antes era un simple toggle "¿Seguro?" en el botón). */
+  var partes=[];
+  if(regDel.turno){ var t=TURNO[regDel.turno]; partes.push('turno '+(t&&t.tag?t.tag:regDel.turno)); }
+  if(regDel.servicio) partes.push('servicio '+regDel.servicio);
+  if(regDel.imgData) partes.push('hoja de ruta (imagen)');
+  else if(regDel.hojaArchivada) partes.push('hoja de ruta (archivada)');
+  var jr=regDel.jornada;
+  if(jr&&typeof jr==='object'){
+    partes.push('datos de jornada');
+    var namp=0;
+    if(jr.ampliaciones){ ['parte1','parte2'].forEach(function(p){ if(jr.ampliaciones[p]) namp++; }); }
+    if(namp) partes.push(namp+' ampliación'+(namp>1?'es':''));
+    var ce=jr.computosEspecificos;
+    if(ce&&typeof ce==='object'&&((ce.td&&ce.td.minutos)||(ce.deje&&ce.deje.minutos))) partes.push('T.D./deje');
+  }
+  if(regDel.incidencia) partes.push('incidencia');
+  if(regDel.notas) partes.push('notas');
+  var detalle=partes.length?(': '+partes.join(', ')):'';
+  tcModalPrompt('Eliminar día completo',
+    'Se eliminará TODO el día '+tcFmtF(activeDate)+detalle+'. Las recaudaciones y liquidaciones NO se borran (viven aparte). Esta acción no se puede deshacer.',
+    [
+      {label:'Eliminar día completo',className:'btn-danger',onClick:function(){ tcDeleteDayConfirmado(activeDate); }},
+      {label:'Cancelar',className:'btn-secondary',onClick:function(){}}
+    ]);
+};
+/* DEV-007R9 (tarea 7 y 4) — Borrado transaccional: se conserva el estado previo,
+   se muta, se guarda y se RESTAURA si el guardado falla, sin declarar éxito. */
+function tcDeleteDayConfirmado(fecha){
+  if(!fecha||!dias[fecha]) return;
+  var previo=dias[fecha];
+  delete dias[fecha];
+  if(!saveDias()){
+    dias[fecha]=previo; /* restaura el día: saveDias ya avisó del fallo */
     return;
   }
-  /* DEV-005R1 — Llegados aquí el día no pertenece a ningún cambio, así que
-     no hay ningún vínculo que romper. */
-  delete dias[activeDate]; saveDias(); tcClose(); tcRenderCal();
+  tcClose(); tcRenderCal();
   tcToast('🗑️ Día eliminado');
-};
+}
 
 /* Procesa la primera página de un PDF y devuelve (vía callback) imgData + thumbData,
    reutilizando el mismo procedimiento/calidad que ya usa la app (escala 1.0, jpeg 0.60;
@@ -5644,6 +6544,8 @@ function tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto,opcionDatos){
   var habiaHoja=!!(dias[fecha]&&dias[fecha].imgData);
   var reg=dias[fecha]||{};
   reg.imgData=imgData; reg.thumbData=thumbData;
+  /* DEV-007R7 — La imagen vuelve a estar presente: el día deja de estar archivado. */
+  if(reg.hojaArchivada){ delete reg.hojaArchivada; delete reg.hojaArchivadaFecha; }
   tcCambioMarcarHojaAnadida(reg); /* DEV-006R6 */
   var revisionPrevia=tcJornadaRevisionPendiente(reg.jornada);
   var jornadaExtraida=tcExtraerJornadaHojaRuta(texto,reg);
@@ -5654,11 +6556,18 @@ function tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto,opcionDatos){
   var cambioResuelto=tcCambioResolverPendiente(reg,fecha); /* DEV-006R4 */
   var cambioNoDetectado=cambioPendientePrevio&&!cambioResuelto;
   dias[fecha]=reg;
-  saveDias(); tcRenderCal();
-  if(activeDate===fecha) tcRenderView(fecha,reg);
+  /* DEV-007R8 — Misma política de retención centralizada que en la importación
+     múltiple: tras añadir/reemplazar la hoja individual se deja como máximo tres
+     semanas con imagen, archivando repetidamente las más antiguas si hay más. */
+  tcAplicarRetencionHojas();
+  var guardado=saveDias(); tcRenderCal();
+  if(guardado&&activeDate===fecha) tcRenderView(fecha,reg); /* DEV-007R10 (tarea 2) — no pintar como guardado si falló */
   document.getElementById('dia-hoja-file').value='';
-  var avisoRevision=tcJornadaRevisionPendiente(reg.jornada)&&!revisionPrevia;
-  tcToast((habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida')+(avisoRevision?' · ⚠️ Revisa la jornada: hay datos manuales distintos de los detectados':'')+(cambioResuelto?' · 🔄 Turno del cambio resuelto: '+reg.turno:'')+(cambioNoDetectado?' · ⚠️ No se pudo detectar el turno. Asígnalo manualmente.':''));
+  /* DEV-007R8 — No se declara éxito si el guardado falló (saveDias ya avisó). */
+  if(guardado){
+    var avisoRevision=tcJornadaRevisionPendiente(reg.jornada)&&!revisionPrevia;
+    tcToast((habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida')+(avisoRevision?' · ⚠️ Revisa la jornada: hay datos manuales distintos de los detectados':'')+(cambioResuelto?' · 🔄 Turno del cambio resuelto: '+reg.turno:'')+(cambioNoDetectado?' · ⚠️ No se pudo detectar el turno. Asígnalo manualmente.':''));
+  }
 }
 
 /* Descarta la hoja individual pendiente de confirmación (DEV-004R9), si la
@@ -5818,56 +6727,18 @@ function tcDiaHojaConfirmarServicio(fecha,imgData,thumbData,texto,servicioActual
   );
 }
 
-/* Limpia los datos teóricos extraídos de una hoja de ruta (inicio/fin, cómputo,
-   partes, descanso, estado de extracción, computos específicos) y ajusta las
-   ampliaciones ya abiertas. Conserva siempre turno, servicio, incidencia, notas,
-   cambios, recaudaciones y horas reales, que viven fuera de jornada. Deja el
-   origen a null: así una hoja nueva podrá fusionarse con normalidad y, si el
-   usuario rellena la jornada a mano después, quedará como "manual" y no "mixto". */
-function tcDiaHojaLimpiarDatosJornada(reg){
-  var jr=reg.jornada;
-  if(!jr) return;
-  jr.inicioTeorico=null;
-  jr.finTeorico=null;
-  jr.computoOficialMinutos=null;
-  jr.tipoTurno=null;
-  jr.parte1={inicioTeorico:null,finTeorico:null};
-  jr.parte2={inicioTeorico:null,finTeorico:null};
-  jr.descanso={tipo:null,duracionMinutos:null};
-  jr.extraccionEstado=null;
-  jr.extraccionPendiente=null;
-  jr.requiereRevision=false;
-  jr.origen=null;
-  /* No se muestra ni calcula nada económico: solo se restablece la estructura vacía. */
-  jr.computosEspecificos=tcComputosEspecificosVacio();
-  jr.computosRequierenRevision=false;
-  ['parte1','parte2'].forEach(function(p){
-    var a=jr.ampliaciones&&jr.ampliaciones[p];
-    if(!a) return;
-    if(a.estado==='detectada'){
-      jr.ampliaciones[p]=null;
-    } else if(a.estado==='documento_presentado'){
-      a.minutosPresentadosAnteriores=a.minutosAmpliacion;
-      a.estado='revision_pendiente';
-      a.computableParaNomina=false;
-      a.minutosAmpliacion=0;
-      a.observaciones=(a.observaciones?a.observaciones+' · ':'')+'Hoja de ruta eliminada: revisar ampliación.';
-    } else if(a.estado==='pendiente_documento'){
-      a.minutosPendientesAnteriores=a.minutosAmpliacion;
-      a.estado='revision_pendiente';
-      a.computableParaNomina=false;
-      a.minutosAmpliacion=0;
-      a.observaciones=(a.observaciones?a.observaciones+' · ':'')+'Hoja de ruta eliminada: revisar ampliación.';
-    }
-    /* descartada/anulada: se conservan tal cual, ya no computables. */
-  });
-}
+/* DEV-007R9 (tarea 8) — Eliminada tcDiaHojaLimpiarDatosJornada(): función sin
+   uso (ninguna llamada estática ni dinámica). "Eliminar hoja" ya conserva
+   siempre los datos de jornada; ver tcDiaHojaDelete más abajo. */
 
-/* Elimina imgData/thumbData del día abierto. Si el origen de la jornada es
-   "hoja_ruta" o null (hojas antiguas sin origen registrado), limpia también
-   los datos teóricos extraídos. Si el origen es manual o mixto, no se puede
-   distinguir con seguridad qué es manual y qué vino de la hoja, así que se
-   pide una decisión explícita antes de tocar la jornada. */
+/* DEV-007R8 — "Eliminar hoja" retira ÚNICAMENTE el documento (imgData/thumbData)
+   y CONSERVA todos los datos extraídos: jornada, servicio, partidas, nocturnas,
+   incidencias, notas y acumulados quedan intactos. El día pasa al estado
+   "archivada" (hojaArchivada=true), igual que en la retención automática, de modo
+   que puede volver a importarse el PDF sin duplicar ni perder datos.
+   La eliminación COMPLETA (borrar el día entero, incluidos los datos) es una
+   ACCIÓN DISTINTA y explícita: el botón "🗑️ Borrar" del día (tcDeleteDay), con su
+   propia confirmación. Aquí nunca se limpian los datos de jornada. */
 window.tcDiaHojaDelete=function(){
   var btn=document.querySelector('#vw-ruta-actions .tc-btn-danger');
   if(!btn)return;
@@ -5884,37 +6755,25 @@ window.tcDiaHojaDelete=function(){
   }
   if(!activeDate||!dias[activeDate])return;
   var reg=dias[activeDate];
-  var jr=reg.jornada;
-  var origen=jr?jr.origen:null;
-  if(origen==='manual'||origen==='mixto'){
-    tcModalPrompt(
-      'Datos manuales en este día',
-      'Este día contiene datos manuales. No se pueden distinguir con seguridad de los datos extraídos.',
-      [
-        {label:'Cancelar',className:'btn-secondary',onClick:function(){}},
-        {label:'Eliminar solo hoja y conservar jornada',className:'btn-secondary',onClick:function(){
-          delete reg.imgData; delete reg.thumbData;
-          dias[activeDate]=reg;
-          saveDias(); tcRenderCal(); tcRenderView(activeDate,reg);
-          tcToast('🗑️ Hoja de ruta eliminada · Se conservaron los datos manuales');
-        }},
-        {label:'Eliminar hoja y limpiar datos de jornada',className:'btn-danger',onClick:function(){
-          delete reg.imgData; delete reg.thumbData;
-          tcDiaHojaLimpiarDatosJornada(reg);
-          dias[activeDate]=reg;
-          saveDias(); tcRenderCal(); tcRenderView(activeDate,reg);
-          tcToast('🗑️ Hoja de ruta eliminada · Datos extraídos limpiados');
-        }}
-      ]
-    );
+  /* Solo se libera el documento; los datos extraídos se conservan siempre. */
+  /* DEV-007R9 (tarea 4) — Estado previo conservado para restaurar si el guardado
+     falla (no dejar la imagen borrada en memoria mientras localStorage la tiene). */
+  var prevImg=reg.imgData, prevThumb=reg.thumbData, prevArch=reg.hojaArchivada, prevArchF=reg.hojaArchivadaFecha;
+  delete reg.imgData; delete reg.thumbData;
+  reg.hojaArchivada=true;
+  reg.hojaArchivadaFecha=new Date().toISOString();
+  dias[activeDate]=reg;
+  var guardado=saveDias();
+  /* DEV-007R8/R9 — No se declara éxito si el guardado falló (saveDias ya avisó). */
+  if(!guardado){
+    if(prevImg!==undefined) reg.imgData=prevImg;
+    if(prevThumb!==undefined) reg.thumbData=prevThumb;
+    if(prevArch===undefined) delete reg.hojaArchivada; else reg.hojaArchivada=prevArch;
+    if(prevArchF===undefined) delete reg.hojaArchivadaFecha; else reg.hojaArchivadaFecha=prevArchF;
     return;
   }
-  // origen === 'hoja_ruta' o null (hoja antigua sin origen registrado): se limpia directamente.
-  delete reg.imgData; delete reg.thumbData;
-  tcDiaHojaLimpiarDatosJornada(reg);
-  dias[activeDate]=reg;
-  saveDias(); tcRenderCal(); tcRenderView(activeDate,reg);
-  tcToast('🗑️ Hoja de ruta eliminada · Datos extraídos limpiados');
+  tcRenderCal(); tcRenderView(activeDate,reg);
+  tcToast('🗑️ Documento de la hoja eliminado · Se conservaron jornada, servicio y acumulados');
 };
 
 /* ==================== DEV-004: Control de jornada y ampliaciones ====================
@@ -6300,88 +7159,6 @@ function tcModalPrompt(titulo,mensaje,botones){
   modal.style.display='flex';
 }
 
-/* Intenta determinar a qué parte corresponde la hora de una recaudación,
-   comparando con los teóricos de la jornada de ese día (si existen). Devuelve
-   'parte1'/'parte2', o null si no se puede determinar con fiabilidad. */
-function tcJornadaResolverParte(registro){
-  if(registro.parteJornada==='parte1'||registro.parteJornada==='parte2') return registro.parteJornada;
-  var reg=dias[registro.fecha];
-  if(!reg||!reg.jornada||!registro.hora) return null;
-  var jr=reg.jornada;
-  /* DEV-006R7 — Comparación en minutos (no textual) para poder cotejar horas
-     teóricas extendidas (24:xx/25:xx) con horas reales posteriores a medianoche
-     (00:xx). Para horas diurnas normales el resultado es idéntico al anterior. */
-  var f1=tcHoraAMin(jr.parte1&&jr.parte1.finTeorico);
-  var i2=tcHoraAMin(jr.parte2&&jr.parte2.inicioTeorico);
-  var f2=tcHoraAMin(jr.parte2&&jr.parte2.finTeorico);
-  var iniMin=tcHoraAMin(jr.inicioTeorico);
-  if(iniMin==null) iniMin=tcHoraAMin(jr.parte1&&jr.parte1.inicioTeorico);
-  /* La jornada usa tramo extendido si algún teórico llega a 24:00 o más. */
-  var extendida=[jr.finTeorico,(jr.parte1&&jr.parte1.finTeorico),(jr.parte2&&jr.parte2.inicioTeorico),(jr.parte2&&jr.parte2.finTeorico)]
-    .some(function(x){var m=tcHoraAMin(x);return m!=null&&m>=24*60;});
-  var h=tcHoraAMin(registro.hora);
-  if(h==null) return null;
-  /* Hora real de reloj (00:xx) posterior a medianoche → se traslada al tramo
-     extendido sumando 24 h para compararla con los teóricos 24:xx/25:xx. */
-  if(extendida&&iniMin!=null&&h<iniMin) h+=24*60;
-  if(f1!=null&&h<=f1) return 'parte1';
-  if(i2!=null&&f2!=null&&h>=i2&&h<=f2) return 'parte2';
-  if(f1!=null&&i2!=null&&h>f1&&h<i2) return null; /* dentro del descanso: ambiguo */
-  if(f2!=null&&h>f2) return 'parte2'; /* posterior al fin teórico de la 2ª parte: sigue siendo la 2ª parte */
-  return null;
-}
-
-/* Aplica una hora real de fin de parte, pidiendo confirmación explícita antes
-   de sobrescribir una ya existente distinta. Dispara la detección de ampliación. */
-function tcJornadaAplicarHoraReal(fecha,parte,hora,forzar){
-  var reg=dias[fecha]||{};
-  var jr=tcJornadaEnsure(reg,fecha);
-  var campo=parte==='parte1'?'horaFinRealParte1':'horaFinRealParte2';
-  if(jr[campo]&&jr[campo]!==hora&&!forzar){
-    tcJornadaPedirConfirmSobrescribir(fecha,parte,hora,jr[campo]);
-    return;
-  }
-  jr[campo]=hora;
-  dias[fecha]=reg;
-  saveDias();
-  tcJornadaDetectarAmpliacion(fecha,parte);
-  if(activeDate===fecha) tcRenderView(fecha,dias[fecha]);
-  tcRenderCal();
-}
-
-function tcJornadaPedirParteManual(registro){
-  tcModalPrompt(
-    'Asociar recaudación',
-    'No se ha podido determinar automáticamente a qué parte de la jornada del '+registro.fecha+' corresponde la hora '+(registro.hora||'—')+'. Selecciona la parte correspondiente:',
-    [
-      {label:'Primera parte',className:'btn-primary',onClick:function(){tcJornadaAplicarHoraReal(registro.fecha,'parte1',registro.hora);}},
-      {label:'Segunda parte',className:'btn-primary',onClick:function(){tcJornadaAplicarHoraReal(registro.fecha,'parte2',registro.hora);}},
-      {label:'No asociar',className:'btn-secondary',onClick:function(){}}
-    ]
-  );
-}
-
-function tcJornadaPedirConfirmSobrescribir(fecha,parte,horaNueva,horaActual){
-  tcModalPrompt(
-    'Hora real ya registrada',
-    'Ya existe una hora real ('+horaActual+') para la '+(parte==='parte1'?'primera':'segunda')+' parte del '+fecha+'. ¿Sustituirla por '+horaNueva+'?',
-    [
-      {label:'Sí, sustituir',className:'btn-danger',onClick:function(){tcJornadaAplicarHoraReal(fecha,parte,horaNueva,true);}},
-      {label:'Cancelar',className:'btn-secondary',onClick:function(){}}
-    ]
-  );
-}
-
-/* Punto de entrada llamado al guardar/actualizar una recaudación con fecha y hora.
-   registro.parteJornada, si ya viene informado (p.ej. desde la importación por
-   correo, que ya distingue 1ª/2ª parte), se usa directamente sin heurística. */
-function tcJornadaAsociarRecaudacion(registro){
-  if(!registro||!registro.fecha||!registro.hora) return;
-  var parte=tcJornadaResolverParte(registro);
-  if(!parte){ tcJornadaPedirParteManual(registro); return; }
-  tcJornadaAplicarHoraReal(registro.fecha,parte,registro.hora);
-}
-
 /* Compara fin real vs fin teórico de una parte y crea/actualiza su ampliación.
    Nunca borra en silencio una ampliación ya presentada o pendiente de
    documento: cualquier cambio pasa por el estado revision_pendiente para que
@@ -6401,14 +7178,14 @@ function tcJornadaDetectarAmpliacion(key,parte){
   if(!horaReal||!finTeorico){
     if(ampActual){
       if(ampActual.estado==='detectada'){
-        jr.ampliaciones[parte]=null; dias[key]=reg; saveDias(); tcRenderCal();
+        jr.ampliaciones[parte]=null; dias[key]=reg; if(!saveDias())return; tcRenderCal();
       } else if(ampActual.estado==='pendiente_documento'||ampActual.estado==='documento_presentado'){
         ampActual.minutosPresentadosAnteriores=ampActual.minutosAmpliacion;
         ampActual.minutosAmpliacion=0;
         ampActual.estado='revision_pendiente';
         ampActual.computableParaNomina=false;
         ampActual.observaciones=(ampActual.observaciones?ampActual.observaciones+' · ':'')+'⚠️ Ya no hay hora de recaudación para esta parte. Revisa la ampliación.';
-        dias[key]=reg; saveDias(); tcRenderCal();
+        dias[key]=reg; if(!saveDias())return; tcRenderCal();
         if(activeDate===key) tcRenderView(key,reg);
       }
     }
@@ -6423,14 +7200,14 @@ function tcJornadaDetectarAmpliacion(key,parte){
   if(!ampActual||ampActual.estado==='detectada'||ampActual.estado==='pendiente_documento'){
     if(diff<=0){
       if(ampActual&&ampActual.estado==='detectada'){
-        jr.ampliaciones[parte]=null; dias[key]=reg; saveDias(); tcRenderCal();
+        jr.ampliaciones[parte]=null; dias[key]=reg; if(!saveDias())return; tcRenderCal();
       } else if(ampActual&&ampActual.estado==='pendiente_documento'){
         ampActual.minutosPresentadosAnteriores=ampActual.minutosAmpliacion;
         ampActual.minutosAmpliacion=0;
         ampActual.estado='revision_pendiente';
         ampActual.computableParaNomina=false;
         ampActual.observaciones=(ampActual.observaciones?ampActual.observaciones+' · ':'')+'⚠️ La hora de recaudación ya no justifica esta ampliación.';
-        dias[key]=reg; saveDias(); tcRenderCal();
+        dias[key]=reg; if(!saveDias())return; tcRenderCal();
         if(activeDate===key) tcRenderView(key,reg);
       }
       return;
@@ -6438,7 +7215,7 @@ function tcJornadaDetectarAmpliacion(key,parte){
     if(ampActual){
       if(ampActual.minutosAmpliacion!==diff){
         ampActual.minutosAmpliacion=diff;
-        dias[key]=reg; saveDias(); tcRenderCal();
+        dias[key]=reg; if(!saveDias())return; tcRenderCal();
         if(activeDate===key) tcRenderView(key,reg);
         tcToast('ℹ️ Minutos de la ampliación de la '+parteLabel+' parte actualizados a '+diff);
       }
@@ -6451,7 +7228,7 @@ function tcJornadaDetectarAmpliacion(key,parte){
       conduccionConfirmada:null, /* DEV-007R5 — pendiente de confirmar si fue conducción */
       observaciones:''
     };
-    dias[key]=reg; saveDias(); tcRenderCal();
+    dias[key]=reg; if(!saveDias())return; tcRenderCal();
     if(activeDate===key) tcRenderView(key,reg);
     tcJornadaAvisoAmpliacion(key,parte,diff);
     return;
@@ -6466,7 +7243,7 @@ function tcJornadaDetectarAmpliacion(key,parte){
     ampActual.estado='revision_pendiente';
     ampActual.computableParaNomina=false;
     ampActual.observaciones=(ampActual.observaciones?ampActual.observaciones+' · ':'')+'⚠️ La hora de recaudación cambió tras presentar el documento. Minutos detectados ahora: '+(diff>0?diff:0)+'.';
-    dias[key]=reg; saveDias(); tcRenderCal();
+    dias[key]=reg; if(!saveDias())return; tcRenderCal();
     if(activeDate===key) tcRenderView(key,reg);
     tcToast('⚠️ Ampliación de la '+parteLabel+' parte pendiente de revisión');
     return;
@@ -6481,7 +7258,7 @@ function tcJornadaDetectarAmpliacion(key,parte){
       ampActual.estado='revision_pendiente';
       ampActual.computableParaNomina=false;
       ampActual.observaciones=(ampActual.observaciones?ampActual.observaciones+' · ':'')+'⚠️ Nueva diferencia detectada tras descartar/anular. Requiere una nueva decisión.';
-      dias[key]=reg; saveDias(); tcRenderCal();
+      dias[key]=reg; if(!saveDias())return; tcRenderCal();
       if(activeDate===key) tcRenderView(key,reg);
     }
     return;
@@ -6493,7 +7270,7 @@ function tcJornadaDetectarAmpliacion(key,parte){
     var nuevos=diff>0?diff:0;
     if(ampActual.minutosAmpliacion!==nuevos){
       ampActual.minutosAmpliacion=nuevos;
-      dias[key]=reg; saveDias(); tcRenderCal();
+      dias[key]=reg; if(!saveDias())return; tcRenderCal();
       if(activeDate===key) tcRenderView(key,reg);
     }
     return;
@@ -6534,7 +7311,8 @@ window.tcJornadaSincronizarDesdeRecaudaciones=function(fecha,servicio){
       /* Ninguna recaudación de ese día coincide con el servicio de la jornada:
          no se aplica ni borra nada, se marca para revisión manual. */
       jr.recaudacionesRequierenRevision=true;
-      reg.jornada=jr; dias[fecha]=reg; saveDias();
+      reg.jornada=jr; dias[fecha]=reg;
+      if(!saveDias()) return; /* DEV-007R10 (tarea 2) — sin render si falla */
       tcRenderCal(); if(activeDate===fecha) tcRenderView(fecha,dias[fecha]);
       return;
     }
@@ -6547,7 +7325,8 @@ window.tcJornadaSincronizarDesdeRecaudaciones=function(fecha,servicio){
     /* Sin servicio asignado a la jornada y varias candidaturas: no se asocia
        automáticamente para no inventar una relación. */
     jr.recaudacionesRequierenRevision=true;
-    reg.jornada=jr; dias[fecha]=reg; saveDias();
+    reg.jornada=jr; dias[fecha]=reg;
+    if(!saveDias()) return; /* DEV-007R10 (tarea 2) — sin render si falla */
     tcRenderCal(); if(activeDate===fecha) tcRenderView(fecha,dias[fecha]);
     return;
   } else {
@@ -6580,7 +7359,7 @@ window.tcJornadaSincronizarDesdeRecaudaciones=function(fecha,servicio){
   jr.horaFinRealParte2=mejorHora('horaParte2');
   reg.jornada=jr;
   dias[fecha]=reg;
-  saveDias();
+  if(!saveDias()) return; /* DEV-007R10 (tarea 2) — si falla, no se detecta ni renderiza como guardado */
   tcJornadaDetectarAmpliacion(fecha,'parte1');
   tcJornadaDetectarAmpliacion(fecha,'parte2');
   tcRenderCal();
@@ -6597,7 +7376,9 @@ function tcJornadaAvisoAmpliacion(fecha,parte,minutos){
         var reg=dias[fecha];
         if(reg&&reg.jornada&&reg.jornada.ampliaciones[parte]&&reg.jornada.ampliaciones[parte].estado==='detectada'){
           reg.jornada.ampliaciones[parte].estado='pendiente_documento';
-          dias[fecha]=reg; saveDias(); tcRenderCal();
+          dias[fecha]=reg;
+          if(!saveDias()) return; /* DEV-007R10 (tarea 2) — sin éxito ni aviso si falla */
+          tcRenderCal();
           if(activeDate===fecha) tcRenderView(fecha,reg);
         }
         tcToast('⏱️ Ampliación preparada');
@@ -6610,7 +7391,9 @@ function tcJornadaAvisoAmpliacion(fecha,parte,minutos){
         var reg=dias[fecha];
         if(reg&&reg.jornada&&reg.jornada.ampliaciones[parte]&&reg.jornada.ampliaciones[parte].estado==='detectada'){
           reg.jornada.ampliaciones[parte].estado='descartada';
-          dias[fecha]=reg; saveDias(); tcRenderCal();
+          dias[fecha]=reg;
+          if(!saveDias()) return; /* DEV-007R10 (tarea 2) */
+          tcRenderCal();
           if(activeDate===fecha) tcRenderView(fecha,reg);
         }
       }}
@@ -6650,7 +7433,8 @@ window.tcSetDescansoGestion=function(fecha,valor){
   var reg=dias[fecha]; if(!reg||!reg.jornada) return;
   if(valor!=='mantener_inicio'&&valor!=='descanso_completo') return;
   reg.jornada.descansoGestion=valor;
-  dias[fecha]=reg; saveDias();
+  dias[fecha]=reg;
+  if(!saveDias()) return; /* DEV-007R10 (tarea 2) — sin éxito ni render si falla */
   tcRenderCal();
   if(activeDate===fecha){ tcRenderView(fecha,reg); if(document.getElementById('pnl-ampliaciones').style.display!=='none') tcRenderAmpliaciones(); }
   tcToast('✔ Gestión del descanso guardada');
@@ -6756,7 +7540,7 @@ window.tcSaveJornada=function(){
   jr.requiereRevision=false;
   jr.extraccionPendiente=null;
   dias[activeDate]=reg;
-  saveDias();
+  if(!saveDias()) return; /* DEV-007R10 (tarea 2) — sin detección, render ni éxito si falla */
   /* Si ya había horas reales pendientes de comparar (recaudaciones guardadas
      antes de definir la jornada), se recalculan ahora sin perder decisiones ya tomadas. */
   tcJornadaDetectarAmpliacion(activeDate,'parte1');
@@ -6927,7 +7711,7 @@ window.tcSaveComputos=function(){
      tocan aquí bajo ningún concepto. */
   jr.computosRequierenRevision=false;
   dias[activeDate]=reg;
-  saveDias();
+  if(!saveDias()) return; /* DEV-007R10 (tarea 2) — sin éxito, cierre ni render si falla */
   tcRenderCal(); tcRenderView(activeDate,dias[activeDate]); tcVolverVistaDia();
   tcToast('✔ T.D. y deje guardados');
 };
@@ -6965,6 +7749,7 @@ function tcRenderAmpliaciones(){
   }
   ['parte1','parte2'].forEach(function(parte){
     var a=amps[parte]; if(!a) return;
+    var minutosAmp=tcNumeroSeguroPantalla(a.minutosAmpliacion,0,1440,0);
     var label=parte==='parte1'?'Primera parte':'Segunda parte';
     var finTeorico=(jr[parte]&&jr[parte].finTeorico)||'—';
     var horaReal=(parte==='parte1'?jr.horaFinRealParte1:jr.horaFinRealParte2)||'—';
@@ -6973,25 +7758,25 @@ function tcRenderAmpliaciones(){
       +'<div style="font-weight:700;margin-bottom:6px;">'+tcEsc(label)+'</div>'
       +'<div style="font-size:13px;color:var(--text2);margin-bottom:2px;">Servicio: '+tcEsc(jr.servicio||reg.servicio||'—')+'</div>'
       +'<div style="font-size:13px;color:var(--text2);margin-bottom:2px;">Fin teórico: '+tcEsc(finTeorico)+' · Fin real: '+tcEsc(horaReal)+'</div>'
-      +'<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Estado: <strong>'+(AMP_ESTADO_LABEL[a.estado]||a.estado)+'</strong></div>';
+      +'<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Estado: <strong>'+tcEsc(AMP_ESTADO_LABEL[a.estado]||'Estado no válido')+'</strong></div>';
     if(esRevision){
       var lineaAnterior;
       if(a.minutosPresentadosAnteriores!=null){
-        lineaAnterior='Minutos presentados anteriormente: <strong>'+a.minutosPresentadosAnteriores+'</strong><br>';
+        lineaAnterior='Minutos presentados anteriormente: <strong>'+tcEsc(tcNumeroSeguroPantalla(a.minutosPresentadosAnteriores,0,1440,0))+'</strong><br>';
       } else if(a.minutosPendientesAnteriores!=null){
-        lineaAnterior='Minutos detectados antes de eliminar la hoja: <strong>'+a.minutosPendientesAnteriores+'</strong><br>';
+        lineaAnterior='Minutos detectados antes de eliminar la hoja: <strong>'+tcEsc(tcNumeroSeguroPantalla(a.minutosPendientesAnteriores,0,1440,0))+'</strong><br>';
       } else {
         lineaAnterior='';
       }
       html+='<div style="font-size:13px;color:#C05621;background:rgba(192,86,33,0.08);border-radius:8px;padding:8px;margin-bottom:8px;">'
         +'⚠️ Motivo: '+tcEsc(a.observaciones||'Se detectó una diferencia respecto a la ampliación anterior.')+'<br>'
         +lineaAnterior
-        +'Minutos detectados actualmente: <strong>'+a.minutosAmpliacion+'</strong><br>'
+        +'Minutos detectados actualmente: <strong>'+tcEsc(minutosAmp)+'</strong><br>'
         +'Hora teórica: <strong>'+tcEsc(finTeorico)+'</strong> · Hora real actual: <strong>'+tcEsc(horaReal)+'</strong>'
         +'</div>';
     }
     html+='<div class="tc-fg" style="margin-bottom:8px;"><label class="tc-lbl">Minutos detectados</label>'
-      +'<input class="tc-inp" type="number" min="0" step="1" id="amp-min-'+parte+'" value="'+a.minutosAmpliacion+'"></div>'
+      +'<input class="tc-inp" type="number" min="0" max="1440" step="1" id="amp-min-'+parte+'" value="'+tcEsc(minutosAmp)+'"></div>'
       +'<div class="tc-fg" style="margin-bottom:8px;"><label class="tc-lbl">Observaciones</label>'
       +'<textarea class="tc-ta" rows="2" id="amp-obs-'+parte+'" placeholder="Observaciones…">'+tcEsc(a.observaciones||'')+'</textarea></div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'
@@ -7035,9 +7820,9 @@ function tcRenderAmpliaciones(){
       +'<div style="font-weight:700;margin-bottom:4px;">Corrección manual de conducción (Art. 20.4)</div>'
       +'<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Usa esto solo si la hoja no permite identificar con seguridad la conducción continua. Deja el campo vacío para usar la duración teórica de la parte.</div>'
       +'<div class="tc-fg" style="margin-bottom:8px;"><label class="tc-lbl">Minutos de conducción · 1ª parte</label>'
-      +'<input class="tc-inp" type="number" min="0" max="1440" step="1" id="exc-man-parte1" placeholder="Teórico" value="'+(em.parte1!=null?em.parte1:'')+'"></div>'
+      +'<input class="tc-inp" type="number" min="0" max="1440" step="1" id="exc-man-parte1" placeholder="Teórico" value="'+(em.parte1!=null?tcEsc(tcNumeroSeguroPantalla(em.parte1,0,1440,'')):'')+'"></div>'
       +'<div class="tc-fg" style="margin-bottom:8px;"><label class="tc-lbl">Minutos de conducción · 2ª parte</label>'
-      +'<input class="tc-inp" type="number" min="0" max="1440" step="1" id="exc-man-parte2" placeholder="Teórico" value="'+(em.parte2!=null?em.parte2:'')+'"></div>'
+      +'<input class="tc-inp" type="number" min="0" max="1440" step="1" id="exc-man-parte2" placeholder="Teórico" value="'+(em.parte2!=null?tcEsc(tcNumeroSeguroPantalla(em.parte2,0,1440,'')):'')+'"></div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'
       +'<button class="tc-mini-btn" onclick="tcExcesoGuardarManual()">💾 Guardar corrección</button>'
       +((em.parte1!=null||em.parte2!=null)?'<button class="tc-mini-btn" onclick="tcExcesoLimpiarManual()">↺ Quitar corrección</button>':'')
@@ -7049,15 +7834,20 @@ function tcRenderAmpliaciones(){
 window.tcOpenAmpliaciones=function(){ tcRenderAmpliaciones(); tcShowPanel('pnl-ampliaciones'); };
 
 function tcAmpMutar(parte,fn){
-  var reg=dias[activeDate]; if(!reg||!reg.jornada||!reg.jornada.ampliaciones[parte]) return;
+  var reg=dias[activeDate]; if(!reg||!reg.jornada||!reg.jornada.ampliaciones[parte]) return false;
   fn(reg.jornada.ampliaciones[parte]);
-  dias[activeDate]=reg; saveDias(); tcRenderCal(); tcRenderView(activeDate,reg); tcRenderAmpliaciones();
+  dias[activeDate]=reg;
+  /* DEV-007R10 (tarea 2) — Si el guardado falla, saveDias() ya revirtió dias y
+     avisó: no se renderiza como guardado ni se devuelve éxito. */
+  if(!saveDias()) return false;
+  tcRenderCal(); tcRenderView(activeDate,dias[activeDate]); tcRenderAmpliaciones();
+  return true;
 }
 window.tcAmpGuardarCambios=function(parte){
   var minVal=parseInt(document.getElementById('amp-min-'+parte).value,10);
   var obsVal=document.getElementById('amp-obs-'+parte).value.trim();
   if(isNaN(minVal)||minVal<0){ tcToast('⚠️ Minutos no válidos'); return; }
-  tcAmpMutar(parte,function(a){
+  if(tcAmpMutar(parte,function(a){
     /* Si ya estaba documento_presentado y se modifican los minutos a mano,
        deja de ser computable automáticamente y exige nueva confirmación. */
     if(a.estado==='documento_presentado'&&minVal!==a.minutosAmpliacion){
@@ -7066,35 +7856,29 @@ window.tcAmpGuardarCambios=function(parte){
       a.computableParaNomina=false;
     }
     a.minutosAmpliacion=minVal; a.observaciones=obsVal;
-  });
-  tcToast('✔ Ampliación actualizada');
+  })) tcToast('✔ Ampliación actualizada');
 };
 window.tcAmpDocumentoPresentado=function(parte){
   /* DEV-007R5 — Al presentar el documento la ampliación es computable, pero la
      conducción vuelve a estar SIN confirmar: hasta que el usuario indique si fue
      tiempo de conducción, el exceso del día queda pendiente_revision. */
-  tcAmpMutar(parte,function(a){ a.estado='documento_presentado'; a.computableParaNomina=true; a.conduccionConfirmada=null; });
-  tcToast('✅ Documento presentado registrado');
+  if(tcAmpMutar(parte,function(a){ a.estado='documento_presentado'; a.computableParaNomina=true; a.conduccionConfirmada=null; })) tcToast('✅ Documento presentado registrado');
 };
 window.tcAmpDescartar=function(parte){
-  tcAmpMutar(parte,function(a){ a.estado='descartada'; a.computableParaNomina=false; });
-  tcToast('🚫 Ampliación descartada');
+  if(tcAmpMutar(parte,function(a){ a.estado='descartada'; a.computableParaNomina=false; })) tcToast('🚫 Ampliación descartada');
 };
 window.tcAmpAnular=function(parte){
-  tcAmpMutar(parte,function(a){ a.estado='anulada'; a.computableParaNomina=false; });
-  tcToast('⛔ Ampliación anulada');
+  if(tcAmpMutar(parte,function(a){ a.estado='anulada'; a.computableParaNomina=false; })) tcToast('⛔ Ampliación anulada');
 };
 window.tcAmpConfirmarNuevos=function(parte){
-  tcAmpMutar(parte,function(a){
+  if(tcAmpMutar(parte,function(a){
     a.estado='documento_presentado'; a.computableParaNomina=true;
     a.minutosPresentadosAnteriores=null;
     a.conduccionConfirmada=null; /* DEV-007R5 — reconfirmar la conducción tras cambiar los minutos */
-  });
-  tcToast('✅ Nuevos minutos confirmados como presentados');
+  })) tcToast('✅ Nuevos minutos confirmados como presentados');
 };
 window.tcAmpDejarPendienteDocumento=function(parte){
-  tcAmpMutar(parte,function(a){ a.estado='pendiente_documento'; a.computableParaNomina=false; });
-  tcToast('📄 Ampliación dejada pendiente de documento');
+  if(tcAmpMutar(parte,function(a){ a.estado='pendiente_documento'; a.computableParaNomina=false; })) tcToast('📄 Ampliación dejada pendiente de documento');
 };
 /* DEV-007R5 — Confirma (o no) si la ampliación fue tiempo de conducción, a
    efectos del exceso de conducción continua (Art. 20.4). No toca los minutos
@@ -7103,8 +7887,7 @@ window.tcAmpDejarPendienteDocumento=function(parte){
    tcJornadaEnsure recalcula el exceso automáticamente. */
 window.tcAmpSetConduccion=function(parte,val){
   var v=(val===true)?true:(val===false?false:null);
-  tcAmpMutar(parte,function(a){ a.conduccionConfirmada=v; });
-  tcToast(v===true?'🚌 Ampliación contada como conducción':(v===false?'🚫 Ampliación no contada como conducción':'↺ Confirmación de conducción restablecida'));
+  if(tcAmpMutar(parte,function(a){ a.conduccionConfirmada=v; })) tcToast(v===true?'🚌 Ampliación contada como conducción':(v===false?'🚫 Ampliación no contada como conducción':'↺ Confirmación de conducción restablecida'));
 };
 /* DEV-007R5 — Corrección manual de la duración de conducción por parte (Art.
    20.4). Sustituye la duración teórica en el cálculo del exceso. Se guarda
@@ -7122,7 +7905,9 @@ window.tcExcesoGuardarManual=function(){
   if(isNaN(v1)||isNaN(v2)){ tcToast('⚠️ Minutos no válidos (0–1440)'); return; }
   jr.excesoConduccionManual={parte1:v1,parte2:v2};
   jr.excesoConduccion=tcCalcularExcesoConduccion(jr);
-  dias[activeDate]=reg; saveDias(); tcRenderCal(); tcRenderView(activeDate,reg); tcRenderAmpliaciones();
+  dias[activeDate]=reg;
+  if(!saveDias()) return; /* DEV-007R10 (tarea 2) — sin éxito ni render si falla */
+  tcRenderCal(); tcRenderView(activeDate,dias[activeDate]); tcRenderAmpliaciones();
   tcToast('✔ Conducción corregida manualmente');
 };
 window.tcExcesoLimpiarManual=function(){
@@ -7130,7 +7915,9 @@ window.tcExcesoLimpiarManual=function(){
   var jr=tcJornadaEnsure(reg,activeDate);
   jr.excesoConduccionManual={parte1:null,parte2:null};
   jr.excesoConduccion=tcCalcularExcesoConduccion(jr);
-  dias[activeDate]=reg; saveDias(); tcRenderCal(); tcRenderView(activeDate,reg); tcRenderAmpliaciones();
+  dias[activeDate]=reg;
+  if(!saveDias()) return; /* DEV-007R10 (tarea 2) — sin éxito ni render si falla */
+  tcRenderCal(); tcRenderView(activeDate,dias[activeDate]); tcRenderAmpliaciones();
   tcToast('↺ Corrección manual eliminada');
 };
 
@@ -7307,7 +8094,7 @@ function tcCambioCapturarEstadoAnterior(reg){
     turno:reg.turno||'',
     autoTurno:!!reg.autoTurno,
     servicio:reg.servicio||'',
-    teniaHoja:!!reg.imgData,
+    teniaHoja:!!(reg.imgData||reg.hojaArchivada), /* DEV-007R7 — archivada = tenía hoja */
     jornada:reg.jornada?JSON.parse(JSON.stringify(reg.jornada)):null,
     fechaCaptura:new Date().toISOString()
   };
@@ -7384,10 +8171,14 @@ function tcCambioBadgeHtml(reg){
 
 /* ---------------- Persistencia y refresco común ---------------- */
 function tcCambioPersistir(){
-  saveDias();
+  /* DEV-007R10 (tarea 2) — Devuelve el resultado del guardado. Si falla,
+     saveDias() ya revirtió dias y avisó: no se renderiza como guardado y quien
+     llama debe detener el flujo (no cerrar la vista ni declarar éxito). */
+  if(!saveDias()) return false;
   tcRenderCal();
   if(activeDate&&dias[activeDate]) tcRenderView(activeDate,dias[activeDate]);
   if(typeof tcCgRenderLista==='function') tcCgRenderLista();
+  return true;
 }
 
 /* ---------------- Navegación del gestor ---------------- */
@@ -7433,6 +8224,7 @@ function tcCgTextoDia(fecha){
   var clase=tcCambioEsNoLaborable(reg.turno)?'no laborable':'laborable';
   var txt=tcFmtF(fecha)+' → '+tcCambioTurnoLabel(reg.turno)+' ('+clase+')';
   if(reg.imgData) txt+=' · tiene hoja de ruta';
+  else if(reg.hojaArchivada) txt+=' · hoja archivada (datos conservados)'; /* DEV-007R7 */
   if(reg.cambioPendiente) txt+=' · ⚠️ cambio pendiente';
   else if(reg.cambio) txt+=' · 🔒 ya vinculada a un cambio';
   if(!(reg.turno||'')) txt+=' · ⚠️ sin turno asignado';
@@ -7495,7 +8287,7 @@ function tcCambioIntercambiarTurnos(f1,f2,cambioId,companero,notas,tipo){
     turnoOriginal:t2,turnoFinal:t1,turnoRecibido:t1,fechaVinculada:f1,companero:companero,notas:notas});
   if(prev1) dias[f1].cambioEstadoAnterior=prev1; /* DEV-006R6 */
   if(prev2) dias[f2].cambioEstadoAnterior=prev2; /* DEV-006R6 */
-  tcCambioPersistir();
+  return tcCambioPersistir(); /* DEV-007R10 (tarea 2) — propaga éxito/fallo */
 }
 
 /* ---------------- 1. Cambio de servicio en el mismo día ---------------- */
@@ -7522,7 +8314,7 @@ window.tcCambioGuardarMismoDia=function(){
     tcCambioEscribirMeta(f,{cambioId:id,tipoCambio:'servicio_mismo_dia',estadoCambio:'registrado',
       cambioPendiente:false,turnoOriginal:turnoActual,turnoFinal:turnoFinal,fechaVinculada:null,
       companero:comp,notas:notas});
-    tcCambioPersistir();
+    if(!tcCambioPersistir()) return; /* DEV-007R10 (tarea 2) */
     tcCgVista('cg-menu');
     tcToast('🔄 Cambio del mismo día guardado · '+tcFmtF(f));
   };
@@ -7639,7 +8431,7 @@ function tcCambioMixtoAuto(roles,comp,notas){
     turnoPendiente:false,modoTurno:'automatico_hoja',companero:comp,notas:notas});
   dias[worked].cambioEstadoAnterior=prevW; /* DEV-006R6 */
   dias[other].cambioEstadoAnterior=prevO;  /* DEV-006R6 */
-  tcCambioPersistir();
+  if(!tcCambioPersistir()) return; /* DEV-007R10 (tarea 2) */
   tcCgVista('cg-menu');
   tcToast('⚠️ Cambio guardado · turno de '+tcFmtF(worked)+' pendiente de hoja');
 }
@@ -7700,7 +8492,7 @@ window.tcCambioTurnoManualAplicar=function(){
     dias[ctx.worked].cambioEstadoAnterior=prevW; /* DEV-006R6 */
     dias[ctx.other].cambioEstadoAnterior=prevO;  /* DEV-006R6 */
     tcCgTurCtx=null;
-    tcCambioPersistir();
+    if(!tcCambioPersistir()) return; /* DEV-007R10 (tarea 2) */
     tcCgVista('cg-menu');
     tcToast('🔄 Cambio guardado · '+tcFmtF(ctx.worked)+' → '+code);
   } else {
@@ -7711,7 +8503,7 @@ window.tcCambioTurnoManualAplicar=function(){
     r.cambioModoTurno='manual';
     dias[ctx.worked]=r;
     tcCgTurCtx=null;
-    tcCambioPersistir();
+    if(!tcCambioPersistir()) return; /* DEV-007R10 (tarea 2) */
     tcCgVista('cg-lista');
     tcToast('🔄 Turno asignado · '+tcFmtF(ctx.worked)+' → '+code);
   }
@@ -7750,7 +8542,7 @@ window.tcCambioGuardarFechas=function(){
         tcFmtF(f1)+': '+tcCambioTurnoLabel(r1.turno)+' → '+tcCambioTurnoLabel(r2.turno)+'\n'+
         tcFmtF(f2)+': '+tcCambioTurnoLabel(r2.turno)+' → '+tcCambioTurnoLabel(r1.turno)+'\n\nSolo se intercambian los códigos de turno.',
         [{label:'Intercambiar turnos',className:'btn-primary',onClick:function(){
-            tcCambioIntercambiarTurnos(f1,f2,id,comp,notas,'intercambio_fechas');
+            if(!tcCambioIntercambiarTurnos(f1,f2,id,comp,notas,'intercambio_fechas')) return; /* DEV-007R10 (tarea 2) */
             tcCgVista('cg-menu');
             tcToast('🔄 Turnos intercambiados · '+tcFmtF(f1)+' ↔ '+tcFmtF(f2));
           }},
@@ -7798,7 +8590,7 @@ window.tcCambioGuardarConvenir=function(){
   tcCambioEscribirMeta(f,{cambioId:id,tipoCambio:'dia_a_convenir',estadoCambio:'pendiente_fecha',
     cambioPendiente:true,turnoOriginal:turnoActual,turnoFinal:turnoRealizado,turnoRealizado:turnoRealizado,
     fechaVinculada:null,companero:comp,notas:notas});
-  tcCambioPersistir();
+  if(!tcCambioPersistir()) return; /* DEV-007R10 (tarea 2) */
   tcCgVista('cg-menu');
   tcToast('⚠️ Cambio pendiente registrado · Día por convenir');
 };
@@ -8021,7 +8813,7 @@ window.tcCambioGuardarSemana=function(){
             cambioPendiente:false,turnoOriginal:r.turno||'',turnoFinal:turnoRecibido,turnoRecibido:turnoRecibido,
             fechaVinculada:null,companero:comp,notas:notas,semanaAnio:d.anio,semanaNum:d.num});
         });
-        tcCambioPersistir();
+        if(!tcCambioPersistir()) return; /* DEV-007R10 (tarea 2) */
         tcCgVista('cg-menu');
         tcToast('📆 Semana '+d.num+' cambiada · '+diasModificados.length+' día(s)');
       }},
@@ -8152,7 +8944,7 @@ function tcCambioResolverConvenir(f1,f2,cambioId,companero,notas){
   tcCambioEscribirMeta(f2,{cambioId:cambioId,tipoCambio:'dia_a_convenir',estadoCambio:'resuelto',
     cambioPendiente:false,turnoOriginal:originalF2,turnoFinal:originalF1,turnoRecibido:originalF1,
     fechaVinculada:f1,companero:companero,notas:notas});
-  tcCambioPersistir();
+  return tcCambioPersistir(); /* DEV-007R10 (tarea 2) — propaga éxito/fallo */
 }
 
 window.tcCambioConfirmarAsignacion=function(){
@@ -8188,7 +8980,7 @@ window.tcCambioConfirmarAsignacion=function(){
       tcFmtF(f1)+': conserva el turno realizado '+tcCambioTurnoLabel(realizadoF1)+'\n'+
       tcFmtF(f2)+': '+tcCambioTurnoLabel(r2.turno)+' → '+tcCambioTurnoLabel(r1.cambioTurnoOriginal)+'\n\nEl cambio pendiente quedará resuelto. Solo se modifican códigos de turno.',
       [{label:'Asignar y resolver',className:'btn-primary',onClick:function(){
-          tcCambioResolverConvenir(f1,f2,id,comp,notas);
+          if(!tcCambioResolverConvenir(f1,f2,id,comp,notas)) return; /* DEV-007R10 (tarea 2) */
           tcCgAsigId=null;
           tcCgVista('cg-lista');
           tcToast('✔ Cambio resuelto · '+tcFmtF(f1)+' ↔ '+tcFmtF(f2));
@@ -8247,7 +9039,7 @@ window.tcCambioDeshacer=function(id){
       tcCambioLimpiarMeta(r);
       dias[f]=r;
     });
-    tcCambioPersistir();
+    if(!tcCambioPersistir()) return; /* DEV-007R10 (tarea 2) */
     tcCgVista('cg-lista');
     tcToast('↩️ Cambio deshecho'+(esEntreFechas?' · días restaurados':' · turnos restaurados'));
   };
@@ -8404,30 +9196,81 @@ function tcSemanaISO(key){
   return weekYear+'W'+wk;
 }
 
-/* Elimina imgData y thumbData de todos los días de la semana más antigua con hojas */
-function tcBorrarSemanaAntigua(){
-  /* Obtener semanas que tienen al menos un día con hoja de ruta */
-  var semanasConHoja={};
-  Object.keys(dias).forEach(function(k){
-    if(dias[k]&&dias[k].imgData){
-      var sem=tcSemanaISO(k);
-      if(!semanasConHoja[sem]) semanasConHoja[sem]=[];
-      semanasConHoja[sem].push(k);
-    }
-  });
-  var semanas=Object.keys(semanasConHoja).sort(); /* orden cronológico */
-  if(semanas.length<3) return; /* menos de 3 semanas: no borrar */
-  /* Borrar la semana más antigua */
-  var masAntigua=semanas[0];
-  semanasConHoja[masAntigua].forEach(function(k){
-    delete dias[k].imgData;
-    delete dias[k].thumbData;
-  });
-  tcToast('🗑️ Semana antigua eliminada para liberar espacio ('+semanasConHoja[masAntigua].length+' hojas borradas)');
+/* DEV-007R8 — POLÍTICA DE RETENCIÓN DE HOJAS (centralizada, única fuente).
+   Se aplica igual a importaciones múltiples y a importaciones individuales.
+
+   Regla:
+     · Se CONSERVAN COMPLETAS (con imagen) las TRES semanas más recientes.
+     · Solo se ARCHIVA cuando existen MÁS de tres semanas con imagen.
+     · Con cuatro, cinco o más, se archiva REPETIDAMENTE la semana con imagen
+       más antigua hasta dejar EXACTAMENTE tres con imagen.
+
+   Archivar libera SOLO imgData y thumbData (para no agotar el almacenamiento) y
+   marca hojaArchivada=true (origen conservado). NUNCA toca jornada, servicio,
+   partidas (parte1/parte2), nocturnas, incidencias, notas ni acumulados —todo
+   lo que usan el historial, las estadísticas y la nómina permanece intacto—, de
+   modo que reimportar el PDF recupera la imagen sin duplicar ni perder datos.
+
+   Nota de compatibilidad: se conserva el alias tcBorrarSemanaAntigua para no
+   romper llamadas antiguas; ambos nombres ejecutan la misma política. */
+function tcAplicarRetencionHojas(){
+  var archivadas=0, semanasArchivadas=0, guarda=0;
+  /* DEV-007R9 (tarea 2) — Convierte 'YYYY-MM-DD' en un entero YYYYMMDD para
+     ordenar SIEMPRE por fecha numérica. La ordenación anterior usaba la cadena
+     de semana de tcSemanaISO (p. ej. "2026W2"), que ordena lexicográficamente y
+     coloca "2026W10" antes que "2026W2" → archivaba la semana equivocada. */
+  function numFecha(k){
+    var p=String(k).split('-');
+    var y=parseInt(p[0],10), m=parseInt(p[1],10), d=parseInt(p[2],10);
+    if(isNaN(y)||isNaN(m)||isNaN(d)) return 0;
+    return y*10000+m*100+d;
+  }
+  while(guarda++<1000){
+    /* Semanas que aún tienen al menos un día con IMAGEN (las ya archivadas no
+       cuentan: su imagen se liberó). Se agrupa por semana pero se guarda además
+       la fecha numérica MÍNIMA de cada grupo para ordenar cronológicamente. */
+    var semanasConHoja={};
+    Object.keys(dias).forEach(function(k){
+      if(dias[k]&&dias[k].imgData){
+        var sem=tcSemanaISO(k);
+        if(!semanasConHoja[sem]) semanasConHoja[sem]={dias:[],orden:Infinity};
+        semanasConHoja[sem].dias.push(k);
+        var nf=numFecha(k);
+        if(nf>0&&nf<semanasConHoja[sem].orden) semanasConHoja[sem].orden=nf;
+      }
+    });
+    var semanas=Object.keys(semanasConHoja);
+    if(semanas.length<=3) break; /* 0–3 semanas con imagen: nada que archivar */
+    /* Orden cronológico por FECHA NUMÉRICA del día más antiguo de cada semana,
+       nunca por la cadena de semana. */
+    semanas.sort(function(a,b){ return semanasConHoja[a].orden-semanasConHoja[b].orden; });
+    /* Archivar la semana con imagen MÁS ANTIGUA y repetir hasta dejar 3. */
+    var masAntigua=semanas[0];
+    var nowIso=new Date().toISOString();
+    var borradasEsteCiclo=0;
+    semanasConHoja[masAntigua].dias.forEach(function(k){
+      var reg=dias[k]; if(!reg) return;
+      delete reg.imgData;               /* se libera la imagen original… */
+      delete reg.thumbData;             /* …y su miniatura */
+      reg.hojaArchivada=true;           /* origen conservado: este día tuvo hoja */
+      reg.hojaArchivadaFecha=nowIso;    /* cuándo se liberó la imagen */
+      /* No se toca jornada, servicio, turnos, partidas (parte1/parte2),
+         nocturnidad, ampliaciones, incidencias, notas ni ningún acumulado. */
+      archivadas++; borradasEsteCiclo++;
+    });
+    if(borradasEsteCiclo===0) break; /* salvaguarda: nada que archivar en la más antigua */
+    semanasArchivadas++;
+  }
+  if(semanasArchivadas>0){
+    tcToast('🗂️ '+semanasArchivadas+' semana(s) antigua(s) archivada(s) · imagen liberada, datos conservados ('+archivadas+' hoja(s))');
+  }
+  return semanasArchivadas;
 }
+/* Alias de compatibilidad (mismo comportamiento). */
+function tcBorrarSemanaAntigua(){ return tcAplicarRetencionHojas(); }
 
 window.tcImpConfirm=function(){
-  var validas=pdfPages.filter(function(p){return p.fechaOk&&p.key;});
+  var validas=pdfPages.filter(function(p){return p.fechaOk&&p.key&&tcCambioFechaValida(p.key);}); /* DEV-007R9 (tarea 5) — nunca un día con fecha imposible */
   var skip=pdfPages.length-validas.length;
   if(!validas.length){tcToast('No hay páginas válidas para guardar');return;}
   var pendientes=validas.length,ok=0,revisar=0,resueltosCambio=0,cambioSinDetectar=0; /* DEV-006R4 · DEV-006R7 */
@@ -8453,6 +9296,10 @@ window.tcImpConfirm=function(){
       ex.servicio=p.servicio||ex.servicio||'';
       ex.imgData=p.imgData;
       ex.thumbData=thumb;
+      /* DEV-007R7 — La imagen vuelve a estar presente: el día deja de estar
+         archivado. La jornada se fusiona por sustitución (idempotente), así que
+         reimportar la misma hoja no duplica partidas, nocturnidad ni acumulados. */
+      if(ex.hojaArchivada){ delete ex.hojaArchivada; delete ex.hojaArchivadaFecha; }
       tcCambioMarcarHojaAnadida(ex); /* DEV-006R6 */
       ex.incidencia=ex.incidencia||'';
       ex.notas=ex.notas||'';
@@ -8474,10 +9321,16 @@ window.tcImpConfirm=function(){
       ok++;
       pendientes--;
       if(pendientes===0){
-        /* Si ya hay 3 semanas con hojas cargadas, borrar la más antigua antes de guardar */
-        tcBorrarSemanaAntigua();
-        saveDias(); tcRenderCal(); tcImpReset();
-        tcToast('✔ '+ok+' días guardados'+(skip?' · '+skip+' omitidos':'')+(revisar?' · ⚠️ '+revisar+' día(s) requieren revisión':'')+(resueltosCambio?' · 🔄 '+resueltosCambio+' turno(s) de cambio resueltos':'')+(cambioSinDetectar?' · ⚠️ No se pudo detectar el turno. Asígnalo manualmente.':''));
+        /* DEV-007R8 — Política de retención centralizada (deja 3 semanas con
+           imagen, archivando repetidamente si hay más). */
+        tcAplicarRetencionHojas();
+        var guardado=saveDias(); tcRenderCal();
+        if(guardado) tcImpReset(); /* DEV-007R10 (tarea 2) — solo se limpia el panel si se guardó */
+        /* DEV-007R8 — No se declara éxito si el guardado falló (saveDias ya avisó
+           del almacenamiento lleno). */
+        if(guardado){
+          tcToast('✔ '+ok+' días guardados'+(skip?' · '+skip+' omitidos':'')+(revisar?' · ⚠️ '+revisar+' día(s) requieren revisión':'')+(resueltosCambio?' · 🔄 '+resueltosCambio+' turno(s) de cambio resueltos':'')+(cambioSinDetectar?' · ⚠️ No se pudo detectar el turno. Asígnalo manualmente.':''));
+        }
       }
     });
   });
@@ -8488,15 +9341,15 @@ function tcDetectFecha(texto){
   var anio=new Date().getFullYear();
   var m,re;
   re=/\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})\b/g;
-  while((m=re.exec(texto))!==null){var d=parseInt(m[1],10),mo=parseInt(m[2],10),y=parseInt(m[3],10);if(y<100)y+=2000;if(d>=1&&d<=31&&mo>=1&&mo<=12&&y>=2020&&y<=2035)return y+'-'+tcPad(mo)+'-'+tcPad(d);}
+  while((m=re.exec(texto))!==null){var d=parseInt(m[1],10),mo=parseInt(m[2],10),y=parseInt(m[3],10);if(y<100)y+=2000;if(d>=1&&d<=31&&mo>=1&&mo<=12&&y>=2020&&y<=2035&&tcCambioFechaValida(y+'-'+tcPad(mo)+'-'+tcPad(d)))return y+'-'+tcPad(mo)+'-'+tcPad(d);}
   re=/\b(20\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2})\b/g;
-  while((m=re.exec(texto))!==null){var y2=parseInt(m[1],10),mo2=parseInt(m[2],10),d2=parseInt(m[3],10);if(d2>=1&&d2<=31&&mo2>=1&&mo2<=12)return y2+'-'+tcPad(mo2)+'-'+tcPad(d2);}
+  while((m=re.exec(texto))!==null){var y2=parseInt(m[1],10),mo2=parseInt(m[2],10),d2=parseInt(m[3],10);if(d2>=1&&d2<=31&&mo2>=1&&mo2<=12&&tcCambioFechaValida(y2+'-'+tcPad(mo2)+'-'+tcPad(d2)))return y2+'-'+tcPad(mo2)+'-'+tcPad(d2);}
   re=/\b(\d{1,2})\s+(?:de\s+)?([a-záéíóúü]+)\s+(?:de\s+)?(\d{4})\b/gi;
-  while((m=re.exec(texto))!==null){var d3=parseInt(m[1],10),mes=m[2].toLowerCase(),y3=parseInt(m[3],10);var mo3=mNom[mes]||mNom[mes.substring(0,3)];if(mo3&&d3>=1&&d3<=31&&y3>=2020&&y3<=2035)return y3+'-'+tcPad(mo3)+'-'+tcPad(d3);}
+  while((m=re.exec(texto))!==null){var d3=parseInt(m[1],10),mes=m[2].toLowerCase(),y3=parseInt(m[3],10);var mo3=mNom[mes]||mNom[mes.substring(0,3)];if(mo3&&d3>=1&&d3<=31&&y3>=2020&&y3<=2035&&tcCambioFechaValida(y3+'-'+tcPad(mo3)+'-'+tcPad(d3)))return y3+'-'+tcPad(mo3)+'-'+tcPad(d3);}
   re=/(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/gi;
-  while((m=re.exec(texto))!==null){var d4=parseInt(m[1],10),mo4=parseInt(m[2],10),y4=m[3]?parseInt(m[3],10):anio;if(y4<100)y4+=2000;if(d4>=1&&d4<=31&&mo4>=1&&mo4<=12)return y4+'-'+tcPad(mo4)+'-'+tcPad(d4);}
+  while((m=re.exec(texto))!==null){var d4=parseInt(m[1],10),mo4=parseInt(m[2],10),y4=m[3]?parseInt(m[3],10):anio;if(y4<100)y4+=2000;if(d4>=1&&d4<=31&&mo4>=1&&mo4<=12&&tcCambioFechaValida(y4+'-'+tcPad(mo4)+'-'+tcPad(d4)))return y4+'-'+tcPad(mo4)+'-'+tcPad(d4);}
   re=/\b(\d{1,2})\s+(?:de\s+)?([a-záéíóúü]{3,})\b/gi;
-  while((m=re.exec(texto))!==null){var d5=parseInt(m[1],10),mes5=m[2].toLowerCase();var mo5=mNom[mes5]||mNom[mes5.substring(0,3)];if(mo5&&d5>=1&&d5<=31)return anio+'-'+tcPad(mo5)+'-'+tcPad(d5);}
+  while((m=re.exec(texto))!==null){var d5=parseInt(m[1],10),mes5=m[2].toLowerCase();var mo5=mNom[mes5]||mNom[mes5.substring(0,3)];if(mo5&&d5>=1&&d5<=31&&tcCambioFechaValida(anio+'-'+tcPad(mo5)+'-'+tcPad(d5)))return anio+'-'+tcPad(mo5)+'-'+tcPad(d5);}
   return null;
 }
 function tcDetectServicio(texto){
@@ -8606,14 +9459,17 @@ function tcHashCodigo(s){
   return Math.abs(h);
 }
 
-function tcCrearTurnoNuevo(codigo){
+function tcCrearTurnoNuevo(codigo,mapaTurnos){
   /* Normalizar alias conocidos del PDF de TUSSAM */
   var ALIAS={'DESC':'D','VACA':'V','DESC.':'D','VACA.':'V','DI':'D','TP':'PT'};
+  mapaTurnos=mapaTurnos||TURNO;
+  if(typeof codigo!=='string') return null;
+  codigo=codigo.toUpperCase().trim();
   if(ALIAS[codigo]) return ALIAS[codigo];
-  if(TURNO[codigo]) return codigo;
+  if(!tcCodigoTurnoSeguro(codigo)) return null;
+  if(Object.prototype.hasOwnProperty.call(mapaTurnos,codigo)) return codigo;
   var c=TC_COLORES_NUEVOS[tcHashCodigo(codigo)%TC_COLORES_NUEVOS.length];
-  TURNO[codigo]={label:codigo,tag:codigo,icon:'📋',bg:c.bg,textColor:c.textColor,tagColor:c.tagColor};
-  saveTurnos();
+  mapaTurnos[codigo]={label:codigo,tag:codigo,icon:'📋',bg:c.bg,textColor:c.textColor,tagColor:c.tagColor};
   return codigo;
 }
 
@@ -8802,30 +9658,37 @@ function tcParsearCalAnual(texto){
 window.tcCalConfirm=function(){
   if(!calDataStore)return;
   var n=0,nuevosCreados=[],errores=0;
+  var diasNuevos,turnosNuevos,datosNuevos;
+  try{
+    diasNuevos=JSON.parse(JSON.stringify(dias));
+    turnosNuevos=JSON.parse(JSON.stringify(TURNO));
+    datosNuevos=JSON.parse(JSON.stringify(calDataStore));
+  }catch(e){ tcToast('⚠️ No se pudo preparar la importación. No se cambió ningún dato.'); return; }
   /* Primero crear los turnos nuevos que hagan falta */
-  Object.keys(calDataStore).forEach(function(key){
-    var cod=calDataStore[key];
-    if(!TURNO[cod]){
-      var codFinal=tcCrearTurnoNuevo(cod);
+  Object.keys(datosNuevos).forEach(function(key){
+    var cod=datosNuevos[key];
+    if(!tcFechaClaveValida(key)||!tcCodigoTurnoSeguro(cod)){errores++;delete datosNuevos[key];return;}
+    if(!Object.prototype.hasOwnProperty.call(turnosNuevos,cod)){
+      var codFinal=tcCrearTurnoNuevo(cod,turnosNuevos);
       /* Si tcCrearTurnoNuevo devolvió un alias distinto, actualizar el store */
-      if(codFinal!==cod){calDataStore[key]=codFinal;}
-      if(!TURNO[codFinal]){errores++;return;}
+      if(codFinal!==cod){datosNuevos[key]=codFinal;}
+      if(!codFinal||!Object.prototype.hasOwnProperty.call(turnosNuevos,codFinal)){errores++;delete datosNuevos[key];return;}
       if(nuevosCreados.indexOf(codFinal)===-1) nuevosCreados.push(codFinal);
     }
   });
   /* Luego guardar los días */
   var omitidosCambio=0;
-  Object.keys(calDataStore).forEach(function(key){
-    var turno=calDataStore[key];
-    if(!TURNO[turno]){errores++;return;}
-    var ex=dias[key]||{};
+  Object.keys(datosNuevos).forEach(function(key){
+    var turno=datosNuevos[key];
+    if(!Object.prototype.hasOwnProperty.call(turnosNuevos,turno)){errores++;return;}
+    var ex=diasNuevos[key]||{};
     /* DEV-005R1 — Un día que pertenece a un cambio conserva su turno cambiado:
        la reimportación nunca lo sobrescribe en silencio. */
     if(ex.cambio){ omitidosCambio++; return; }
-    ex.turno=turno; ex.autoTurno=true; dias[key]=ex; n++;
+    ex.turno=turno; ex.autoTurno=true; diasNuevos[key]=ex; n++;
   });
-  saveDias();
-  if(nuevosCreados.length>0){saveTurnos();tcRenderLeyenda();tcBuildTurnoSelects();}
+  if(!tcGuardarDiasYTurnosAtomico(diasNuevos,turnosNuevos)) return;
+  if(nuevosCreados.length>0){tcRenderLeyenda();tcBuildTurnoSelects();}
   calDataStore=null; tcCalReset(); tcClose(); tcRenderCal();
   var msg='✔ '+n+' días guardados';
   if(nuevosCreados.length>0) msg+=' · '+nuevosCreados.length+' turno'+(nuevosCreados.length>1?'s':'')+' nuevo'+(nuevosCreados.length>1?'s':'')+': '+nuevosCreados.join(', ');
@@ -8882,7 +9745,8 @@ window.tcBejecutar=function(){
     if(dias[k]&&dias[k].cambio){ omitidos++; return; }
     delete dias[k]; n++;
   });
-  saveDias(); tcClose(); tcRenderCal();
+  if(!saveDias()) return; /* DEV-007R10 (tarea 2) — sin cierre ni éxito si falla el guardado */
+  tcClose(); tcRenderCal();
   var msg='🗑️ '+n+' días eliminados';
   if(omitidos>0) msg+=' · ⚠️ '+omitidos+' omitido'+(omitidos>1?'s':'')+' por pertenecer a un cambio';
   tcToast(msg);
@@ -8943,7 +9807,8 @@ window.tcAsignarEjecutar=function(){
     ex.turno=asgnTurno; ex.autoTurno=false; dias[key]=ex; n++;
     d.setDate(d.getDate()+1);
   }
-  saveDias(); tcClose(); tcRenderCal();
+  if(!saveDias()) return; /* DEV-007R10 (tarea 2) — sin cierre ni éxito si falla el guardado */
+  tcClose(); tcRenderCal();
   var msgA='✔ Turno '+asgnTurno+' asignado a '+n+' días';
   if(omitidos>0) msgA+=' · ⚠️ '+omitidos+' omitido'+(omitidos>1?'s':'')+' por pertenecer a un cambio';
   tcToast(msgA);
@@ -8951,7 +9816,13 @@ window.tcAsignarEjecutar=function(){
 
 function tcFk(y,m,d){return y+'-'+tcPad(m+1)+'-'+tcPad(d);}
 function tcPad(n){return n<10?'0'+n:''+n;}
-function tcEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function tcEsc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function tcNumeroSeguroPantalla(v,min,max,alternativa){
+  return typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max?v:alternativa;
+}
 function tcFmtF(iso){var p=iso.split('-');return parseInt(p[2],10)+'/'+parseInt(p[1],10)+'/'+p[0];}
 function tcToast(msg){
   var t=document.getElementById('tc-toast');
@@ -9569,21 +10440,33 @@ window.tcMsgAbrirDia=function(fecha){
       });
     }
 
+    /* DEV-007R10 (tarea 6) — Estado CONTROLADO de la comprobación de versión: en
+       lugar de tragarse el error en silencio, se refleja en «Información de la
+       app» (id="vc-estado"). No se muestra ningún diálogo intrusivo cuando falta
+       version.json o no hay conexión; solo el estado informativo. */
+    function vcEstado(txt) {
+      var el = document.getElementById('vc-estado');
+      if (el) el.textContent = txt;
+    }
     function vcComprobarVersion() {
+      vcEstado('Comprobando…');
       fetch('version.json', { cache: 'no-store' })
         .then(function (resp) {
-          if (!resp.ok) throw new Error('version.json no disponible');
+          if (!resp.ok) throw new Error('no-disponible');
           return resp.json();
         })
         .then(function (info) {
-          if (!info || !info.version) return;
+          if (!info || !info.version) { vcEstado('No disponible (version.json sin datos)'); return; }
           var vista = null;
           try { vista = localStorage.getItem(VC_KEY); } catch (e) {}
-          if (vista === info.version) return;
+          if (vista === info.version) { vcEstado('Al día (' + info.version + ')'); return; }
+          vcEstado('Nueva versión disponible: ' + info.version);
           vcMostrarDialogo(info);
         })
         .catch(function () {
-          // Silencioso: sin version.json, sin conexión o error de red -> no se hace nada.
+          // Estado controlado (no silencioso): falta version.json, sin conexión o
+          // error de red. No se hace nada disruptivo; solo se informa.
+          vcEstado('No se pudo comprobar (sin conexión o sin version.json)');
         });
     }
 
@@ -9603,6 +10486,7 @@ window.tcMsgAbrirDia=function(fecha){
   <div id="adminPassModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center; padding:16px;">
     <div class="card" style="max-width:320px; width:100%;">
       <h2 id="adminPassTitulo" style="margin:0 0 16px; font-size:1.1rem;">🔒 Acceso administrador</h2>
+      <p class="help-text" style="margin:0 0 12px; font-size:0.8rem;">Bloqueo local para evitar cambios accidentales en este dispositivo. No es una medida de seguridad real: no cifra los datos ni protege frente a quien tenga acceso al dispositivo o al navegador.</p>
       <input type="password" id="adminPassInput" placeholder="Contraseña" autocomplete="off"
         style="width:100%; box-sizing:border-box; padding:10px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text); margin-bottom:16px; font-size:0.95rem;">
       <div style="display:flex; gap:10px;">
