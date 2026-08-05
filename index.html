@@ -599,8 +599,8 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
     <div style="background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
-        <div><strong>Aplicación:</strong> DEV-007</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-007R11</span></div>
+        <div><strong>Aplicación:</strong> DEV-008</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-008R6</span></div>
         <div style="margin-top:8px;"><strong>Descripción:</strong> Persistencia reforzada con migración verificada y recuperación explícita, guardados con reversión comprobada, importación recursivamente validada, protección frente a inyección y claves peligrosas, y actualización atómica de calendario y tipos de turno.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -2462,8 +2462,6 @@ function extraerCamposTUSSAM(texto) {
   var resultado = { fecha: "", hora: "", recibo: "", maquina: "", servicio: "", importe: "" };
   var t = texto.replace(/\r/g, "\n").replace(/[ \t]+/g, " ");
 
-  console.log("[OCR] Texto OCR completo:\n" + t);
-
   // RECIBO: "Recibo: 149726" / "Recibo : 149726"
   var mRecibo = t.match(/[Rr]ecibo\s*[:\s]\s*(\d{4,10})/);
   if (mRecibo) resultado.recibo = mRecibo[1].trim();
@@ -2497,7 +2495,9 @@ function extraerCamposTUSSAM(texto) {
   if (mHora) resultado.hora = mHora[1].padStart(2, "0") + ":" + mHora[2];
 
   // SERVICIO (solo correos): "Servicio: XXXX" (admite letras+números: C218, TB21, TB302, A105, N17)
-  var mServ = t.match(/[Ss]ervicio\s*:\s*([A-Za-z]*\d+)/);
+  // Debe coincidir al inicio del texto o de una línea (con posibles espacios previos),
+  // pero nunca como parte de "Inicio servicio:".
+  var mServ = t.match(/^[ \t]*[Ss]ervicio\s*:\s*([A-Za-z]*\d+)/m);
   if (mServ) resultado.servicio = mServ[1];
 
   // IMPORTE: buscar "Total:" evitando "Total monedas/billetes"
@@ -2520,11 +2520,6 @@ function extraerCamposTUSSAM(texto) {
     while ((mE=reE.exec(t))!==null) todos.push(mE[1]);
     if (todos.length>0) resultado.importe = normalizarImporte(todos[todos.length-1]);
   }
-
-  console.log("[OCR] Fecha encontrada:",   resultado.fecha   || "NO");
-  console.log("[OCR] Recibo encontrado:",  resultado.recibo  || "NO");
-  console.log("[OCR] Máquina encontrada:", resultado.maquina || "NO");
-  console.log("[OCR] Importe encontrado:", resultado.importe || "NO");
 
   return resultado;
 }
@@ -3160,9 +3155,8 @@ function guardarApiKeyOCR(clave) {
  * evento onload (no se pasa el Event a ningún sitio) para blindar Safari.
  */
 function comprimirImagen(dataURL) {
-  /* Reducir a 1000px y calidad 0.6 para que el base64 final quede
+  /* Reducir a 1000px y calidad 0.5 para que el base64 final quede
      bien por debajo del límite de 1MB de OCR.space (~700KB objetivo) */
-  console.log("[OCR] Paso 3 — Comprimiendo imagen");
   return new Promise(function (resolve, reject) {
     var img = new Image();
     img.onerror = function () {
@@ -3184,8 +3178,6 @@ function comprimirImagen(dataURL) {
         img2 = null;
         /* Calidad 0.5: suficiente para OCR de texto impreso */
         var resultado = canvas.toDataURL("image/jpeg", 0.5);
-        var kb = Math.round(resultado.length * 0.75 / 1024);
-        console.log("[OCR] Paso 3 — Imagen comprimida (" + canvas.width + "x" + canvas.height + ", ~" + kb + "KB)");
         resolve(resultado);
       };
       img2.onerror = function () { reject(new Error("Error al redibujar imagen.")); };
@@ -3196,10 +3188,9 @@ function comprimirImagen(dataURL) {
 }
 
 /**
- * Envía la imagen a OCR.space mediante XMLHttpRequest.
- * XHR no usa postMessage internamente en Safari iOS, evitando el DataCloneError
- * que afecta a fetch() con payloads grandes. Se envuelve en Promise para
- * mantener la cadena .then() existente sin cambiar el resto del código.
+ * Envía la imagen a OCR.space mediante fetch.
+ * Se envuelve en Promise para mantener la cadena .then() existente
+ * sin cambiar el resto del código.
  */
 function leerTicketConOCRSpace(imagenBase64, apiKey) {
   var URL_OCR = "https://api.ocr.space/parse/image";
@@ -3209,13 +3200,7 @@ function leerTicketConOCRSpace(imagenBase64, apiKey) {
     ? imagenBase64
     : "data:image/jpeg;base64," + imagenBase64;
 
-  console.log("[OCR] Paso 4 — Preparando FormData");
-  console.log("[OCR] URL:", URL_OCR);
-  console.log("[OCR] Método: POST");
   /* DEV-007R9 (tarea 10) — Nunca se expone la clave OCR ni su longitud. */
-  console.log("[OCR] API Key:", apiKey ? "configurada" : "AUSENTE");
-  console.log("[OCR] Tamaño imagen (chars base64):", base64final.length);
-  console.log("[OCR] Tamaño imagen (~KB):", Math.round(base64final.length * 0.75 / 1024));
 
   /* Sin Content-Type manual: el navegador genera multipart/form-data con boundary */
   var fd = new FormData();
@@ -3226,16 +3211,11 @@ function leerTicketConOCRSpace(imagenBase64, apiKey) {
   fd.append("scale",             "true");
   fd.append("OCREngine",         "2");
   fd.append("base64Image",       base64final);
-  console.log("[OCR] FormData creada con 7 campos");
-  console.log("[OCR] Paso 5 — Iniciando fetch");
 
   return fetch(URL_OCR, { method: "POST", body: fd })
     .then(function (respuesta) {
-      console.log("[OCR] Paso 6 — Código HTTP:", respuesta.status);
-      console.log("[OCR] Status Text:", respuesta.statusText);
-      /* Leer siempre como texto primero para poder loguear la respuesta cruda */
+      /* Leer siempre como texto primero para controlar errores HTTP y validar el JSON */
       return respuesta.text().then(function (raw) {
-        console.log("[OCR] Respuesta RAW completa:", raw);
         /* Errores HTTP específicos */
         if (respuesta.status === 401) throw new Error("API Key inválida o no autorizada (HTTP 401).");
         if (respuesta.status === 403) throw new Error("Acceso denegado. Revisa la API Key (HTTP 403).");
@@ -3251,16 +3231,13 @@ function leerTicketConOCRSpace(imagenBase64, apiKey) {
           console.error("[OCR] Fallo al parsear JSON:", e.message);
           throw new Error("La respuesta no es JSON válido: " + raw.slice(0, 200));
         }
-        console.log("[OCR] Paso 7 — JSON parseado:", JSON.stringify(datos).slice(0, 300));
         if (datos.IsErroredOnProcessing) {
           console.error("[OCR] OCR.space reportó error:", datos.ErrorMessage);
           throw new Error("OCR.space no pudo procesar la imagen: " + JSON.stringify(datos.ErrorMessage));
         }
-        console.log("[OCR] ParsedResults:", JSON.stringify(datos.ParsedResults).slice(0, 200));
         var texto = datos.ParsedResults &&
                     datos.ParsedResults[0] &&
                     datos.ParsedResults[0].ParsedText;
-        console.log("[OCR] Paso 8 — ParsedText:", texto ? texto.slice(0, 100) + "..." : "VACÍO");
         if (!texto || texto.trim() === "") {
           throw new Error("No se detectó texto. Intenta con mejor iluminación o más contraste.");
         }
@@ -3511,7 +3488,6 @@ function inicializarCamaraOCR() {
   btnDescartar.addEventListener("click", resetearCamara);
 
   btnAnalizar.addEventListener("click", function () {
-    console.log("[OCR] Paso 1 — Botón Extraer datos pulsado");
     if (!imagenBase64) { console.warn("[OCR] Sin imagen base64"); return; }
 
     var apiKey = obtenerApiKeyOCR();
@@ -3524,21 +3500,16 @@ function inicializarCamaraOCR() {
     btnAnalizar.disabled = true;
     btnDescartar.disabled = true;
     estado.textContent = "⏳ Preparando imagen...";
-    console.log("[OCR] Paso 2 — Imagen seleccionada (base64 length: " + imagenBase64.length + ")");
 
     comprimirImagen(imagenBase64)
       .then(function (imagenComprimida) {
-        console.log("[OCR] Paso 3 — Imagen comprimida OK, enviando a OCR.space");
         estado.textContent = "⏳ Leyendo el ticket...";
         return leerTicketConOCRSpace(imagenComprimida, apiKey);
       })
       .then(function (textoOCR) {
-        console.log("[OCR] Paso 9 — Texto OCR recibido: " + textoOCR);
         estado.textContent = "✅ Texto leído. Detectando campos...";
         var datos = extraerCamposTUSSAM(textoOCR);
-        console.log("[OCR] Paso 10 — Datos detectados:", JSON.stringify(datos));
         rellenarFormularioConOCR(datos);
-        console.log("[OCR] Paso 11 — Formulario rellenado");
         areaCamara.style.display = "none";
         btnToggle.textContent = "Abrir cámara";
         resetearCamara();
@@ -5853,13 +5824,46 @@ function tcResumenLaboralMes(anio,mes){
     excesoFisico:0, excesoEquivalente:0,
     td:0, dejeNormal:0, extraCalle7:0,
     partidoDias:0, tpHasta2h:0, tpMas2h:0, tpPendiente:0,
+    primaTardeDias:0, plusSabadoDias:0, plusDomingoDias:0, /* DEV-008R2 */
+    tpMensualCompleto:false, tpMensualUnidades:0, tpDiarioUnidades:0, /* DEV-008R3 */
     diasPendientesRevision:0, diasConDatos:0
   };
   if(isNaN(a)||isNaN(m)||m<1||m>12) return R;
   var ndias=new Date(a,m,0).getDate();
+  /* DEV-008R3 — Turno partido 4A10 (mensual) vs 4A41 (diario). Se decide
+     EXCLUSIVAMENTE con reg.turno (mismo origen persistente que primaTardeDias
+     arriba), sin depender de jornada ni de ningún umbral de días: el mes se
+     considera "completo" cuando los 1..ndias días tienen turno asignado en el
+     calendario; si además ninguno de esos días es turno recto (CM/CT/CN) y al
+     menos uno es partido (PM/PT/PN), el mes entero es 4A10. Si el calendario
+     no está relleno para todo el mes, se acumula por días sueltos en 4A41; los
+     dos conceptos son mutuamente excluyentes (nunca ambos > 0 el mismo mes). */
+  var mesTurnoTotalDias=0, mesTurnoPartidoDias=0, mesTurnoRectoPresente=false;
   for(var d=1;d<=ndias;d++){
     var key=a+'-'+tcPad(m)+'-'+tcPad(d);
     var reg=dias[key]; if(!reg) continue;
+    /* DEV-008R2 — Se calculan directamente desde reg.turno (turno final del
+       día), SIN depender de que exista jornada: por eso van antes del
+       "if(!jr) continue;" siguiente. D, V, sin turno y códigos desconocidos
+       no cuentan. */
+    var turnoFinal=reg.turno||'';
+    if(turnoFinal==='CT'||turnoFinal==='PT') R.primaTardeDias++;
+    if(turnoFinal==='CM'||turnoFinal==='CT'||turnoFinal==='CN'||
+       turnoFinal==='PM'||turnoFinal==='PT'||turnoFinal==='PN'){
+      var dowFinal=(new Date(a,m-1,d).getDay()+6)%7; /* 0=lun...5=sáb,6=dom */
+      if(dowFinal===5) R.plusSabadoDias++;
+      else if(dowFinal===6) R.plusDomingoDias++;
+    }
+    /* DEV-008R3 — Estados válidos existentes: D, V (no laborable) y
+       CM/CT/CN/PM/PT/PN (laborable). Solo estos cuentan como "día con
+       estado"; un turnoFinal vacío o desconocido dejan el mes incompleto. */
+    if(turnoFinal==='D'||turnoFinal==='V'||
+       turnoFinal==='CM'||turnoFinal==='CT'||turnoFinal==='CN'||
+       turnoFinal==='PM'||turnoFinal==='PT'||turnoFinal==='PN'){
+      mesTurnoTotalDias++;
+      if(turnoFinal==='PM'||turnoFinal==='PT'||turnoFinal==='PN') mesTurnoPartidoDias++;
+      else if(turnoFinal==='CM'||turnoFinal==='CT'||turnoFinal==='CN') mesTurnoRectoPresente=true;
+    }
     var jr=reg.jornada; if(!jr) continue;
     R.diasConDatos++;
     var pendDia=false;
@@ -5899,6 +5903,16 @@ function tcResumenLaboralMes(anio,mes){
     if(jr.requiereRevision) pendDia=true;
     if(pendDia) R.diasPendientesRevision++;
   }
+  /* DEV-008R3 — Mes completo: los ndias días tienen un estado válido (D/V o
+     turno). Si además no hay ningún turno continuo y hay al menos un turno
+     partido, el mes entero es 4A10 (cantidad fija 30). En cualquier otro caso
+     (mes incompleto o con turno continuo) se acumula por días en 4A41. Son
+     mutuamente excluyentes: se recalcula siempre desde cero, así que al
+     completarse el mes con DEV-008R3 vuelve a evaluarse y 4A41 pasa a 4A10
+     automáticamente en el siguiente cálculo. */
+  R.tpMensualCompleto=(mesTurnoTotalDias===ndias)&&!mesTurnoRectoPresente&&mesTurnoPartidoDias>0;
+  if(R.tpMensualCompleto){ R.tpMensualUnidades=30; R.tpDiarioUnidades=0; }
+  else { R.tpMensualUnidades=0; R.tpDiarioUnidades=mesTurnoPartidoDias; }
   return R;
 }
 
@@ -5910,7 +5924,10 @@ function tcResumenLaboral(anio,mes){
   var claves=['computoOficialMinutos','ampliacionesConfirmadas','ampliacionesPendientes','horasExtraordinarias',
     'nocturnidadGeneral','nocturnidadSemanaSanta','nocturnidadFeria','solapeFeria','solapeSemanaSanta',
     'excesoFisico','excesoEquivalente','td','dejeNormal','extraCalle7',
-    'partidoDias','tpHasta2h','tpMas2h','tpPendiente','diasPendientesRevision','diasConDatos'];
+    'partidoDias','tpHasta2h','tpMas2h','tpPendiente',
+    'primaTardeDias','plusSabadoDias','plusDomingoDias', /* DEV-008R2 */
+    'tpMensualUnidades','tpDiarioUnidades', /* DEV-008R3 */
+    'diasPendientesRevision','diasConDatos'];
   var anual={anio:a, mes:null, nombreMes:'Año '+a};
   claves.forEach(function(k){ anual[k]=0; });
   meses.forEach(function(mm){ claves.forEach(function(k){ anual[k]+=(mm[k]||0); }); });
@@ -6031,7 +6048,12 @@ function tcNomRenderProvisional(data){
              : (String(val)+(unidad?(' '+unidad):''));
     filas.push({ cod:cod, desc:desc, cant:cant });
   }
-  add('4A10','Turno partido','unid',R.partidoDias,'días');
+  /* DEV-008R3 — Mutuamente excluyentes (ver tcResumenLaboralMes): 4A10 cuando
+     el mes está completo y asignado oficialmente a turno partido (cantidad
+     fija 30); 4A41 cuando no (un día PM/PT/PN = una unidad). add() ya oculta
+     la fila cuyo valor sea 0, así que nunca se muestran ambas a la vez. */
+  add('4A10','Turno partido','unid',R.tpMensualUnidades,'días');
+  add('4A41','Turno partido diario','unid',R.tpDiarioUnidades,'días');
   add('4A4E','TP hasta 2 horas','unid',R.tpHasta2h,'ud.');
   add('4A4F','TP mayor de 2 horas','unid',R.tpMas2h,'ud.');
   add('4A31','Horas extraordinarias','minutos',R.horasExtraordinarias);
@@ -6044,6 +6066,10 @@ function tcNomRenderProvisional(data){
   add('49A6','Cómputo desplazamiento mensual (T.D.)','minutos',R.td);
   add(null,'Deje normal','minutos',R.dejeNormal);
   add(null,'Deje · Extra Calle 7','minutos',R.extraCalle7);
+  /* DEV-008R2 — Desde el turno final (reg.turno); ver tcResumenLaboralMes(). */
+  add('4A0I','Prima diaria tarde','unid',R.primaTardeDias,'días');
+  add('4A30','Plus por sábado trabajado','unid',R.plusSabadoDias,'días');
+  add('4A27','Plus por domingo trabajado','unid',R.plusDomingoDias,'días');
 
   /* Celda de descripción con su código (si lo tiene). */
   function descCelda(cod,desc){
@@ -9657,43 +9683,72 @@ function tcParsearCalAnual(texto){
 }
 window.tcCalConfirm=function(){
   if(!calDataStore)return;
-  var n=0,nuevosCreados=[],errores=0;
+  var nuevosCreados=[],errores=0;
   var diasNuevos,turnosNuevos,datosNuevos;
   try{
     diasNuevos=JSON.parse(JSON.stringify(dias));
     turnosNuevos=JSON.parse(JSON.stringify(TURNO));
     datosNuevos=JSON.parse(JSON.stringify(calDataStore));
   }catch(e){ tcToast('⚠️ No se pudo preparar la importación. No se cambió ningún dato.'); return; }
-  /* Primero crear los turnos nuevos que hagan falta */
+  var hoy=(typeof fechaHoyISO==='function')?fechaHoyISO():'';
+  /* Un día está protegido si trae cambio / turno manual / jornada / hoja
+     archivada / servicio / incidencia / notas / miniatura: la reimportación
+     nunca los sobrescribe en silencio. Solo un hueco vacío o un automático
+     futuro pueden llegar a aplicar el turno importado. */
+  function tcCalPuedeAplicar(key){
+    var ex=diasNuevos[key]||{};
+    var tieneOtrosDatos=!!(ex.cambio||ex.jornada||ex.imgData||ex.thumbData||ex.hojaArchivada||ex.servicio||ex.incidencia||ex.notas);
+    var turnoManual=!!(ex.turno&&!ex.autoTurno);
+    if(tieneOtrosDatos||turnoManual) return false;
+    if(!ex.turno) return true;
+    return !!(hoy&&key>hoy);
+  }
+  /* Validar primero claves y códigos */
   Object.keys(datosNuevos).forEach(function(key){
     var cod=datosNuevos[key];
     if(!tcFechaClaveValida(key)||!tcCodigoTurnoSeguro(cod)){errores++;delete datosNuevos[key];return;}
-    if(!Object.prototype.hasOwnProperty.call(turnosNuevos,cod)){
-      var codFinal=tcCrearTurnoNuevo(cod,turnosNuevos);
-      /* Si tcCrearTurnoNuevo devolvió un alias distinto, actualizar el store */
-      if(codFinal!==cod){datosNuevos[key]=codFinal;}
-      if(!codFinal||!Object.prototype.hasOwnProperty.call(turnosNuevos,codFinal)){errores++;delete datosNuevos[key];return;}
-      if(nuevosCreados.indexOf(codFinal)===-1) nuevosCreados.push(codFinal);
-    }
   });
-  /* Luego guardar los días */
-  var omitidosCambio=0;
+  /* Crear los turnos nuevos que hagan falta, solo si al menos una fecha no
+     protegida puede llegar a aplicarlos: un día protegido nunca da de alta
+     un turno desconocido. */
+  Object.keys(datosNuevos).forEach(function(key){
+    if(!tcCalPuedeAplicar(key)) return;
+    var cod=datosNuevos[key];
+    if(Object.prototype.hasOwnProperty.call(turnosNuevos,cod)) return;
+    var codFinal=tcCrearTurnoNuevo(cod,turnosNuevos);
+    /* Si tcCrearTurnoNuevo devolvió un alias distinto, actualizar el store */
+    if(codFinal!==cod){datosNuevos[key]=codFinal;}
+    if(!codFinal||!Object.prototype.hasOwnProperty.call(turnosNuevos,codFinal)){errores++;delete datosNuevos[key];return;}
+    if(nuevosCreados.indexOf(codFinal)===-1) nuevosCreados.push(codFinal);
+  });
+  /* Luego guardar los días.
+     Rellena huecos vacíos, actualiza solo automáticos futuros sin más datos,
+     y protege cambio / turno manual / jornada / hoja / archivo / servicio /
+     incidencia / notas / miniatura: la reimportación nunca los sobrescribe en
+     silencio. Si un automático futuro ya trae el mismo turno, no se reescribe
+     ni cuenta como actualizado: cuenta como "sin cambios". */
+  var anadidos=0,actualizados=0,protegidos=0,sinCambios=0;
   Object.keys(datosNuevos).forEach(function(key){
     var turno=datosNuevos[key];
-    if(!Object.prototype.hasOwnProperty.call(turnosNuevos,turno)){errores++;return;}
     var ex=diasNuevos[key]||{};
-    /* DEV-005R1 — Un día que pertenece a un cambio conserva su turno cambiado:
-       la reimportación nunca lo sobrescribe en silencio. */
-    if(ex.cambio){ omitidosCambio++; return; }
-    ex.turno=turno; ex.autoTurno=true; diasNuevos[key]=ex; n++;
+    var tieneOtrosDatos=!!(ex.cambio||ex.jornada||ex.imgData||ex.thumbData||ex.hojaArchivada||ex.servicio||ex.incidencia||ex.notas);
+    var turnoManual=!!(ex.turno&&!ex.autoTurno);
+    if(tieneOtrosDatos||turnoManual){ protegidos++; return; }
+    if(!Object.prototype.hasOwnProperty.call(turnosNuevos,turno)){errores++;return;}
+    if(!ex.turno){
+      ex.turno=turno; ex.autoTurno=true; diasNuevos[key]=ex; anadidos++; return;
+    }
+    if(hoy&&key>hoy){
+      if(ex.turno===turno){ sinCambios++; return; }
+      ex.turno=turno; ex.autoTurno=true; diasNuevos[key]=ex; actualizados++; return;
+    }
+    protegidos++;
   });
   if(!tcGuardarDiasYTurnosAtomico(diasNuevos,turnosNuevos)) return;
   if(nuevosCreados.length>0){tcRenderLeyenda();tcBuildTurnoSelects();}
   calDataStore=null; tcCalReset(); tcClose(); tcRenderCal();
-  var msg='✔ '+n+' días guardados';
+  var msg='✔ '+anadidos+' añadido'+(anadidos===1?'':'s')+' · '+actualizados+' actualizado'+(actualizados===1?'':'s')+' · '+sinCambios+' sin cambios · '+protegidos+' protegido'+(protegidos===1?'':'s')+' · '+errores+' inválido'+(errores===1?'':'s');
   if(nuevosCreados.length>0) msg+=' · '+nuevosCreados.length+' turno'+(nuevosCreados.length>1?'s':'')+' nuevo'+(nuevosCreados.length>1?'s':'')+': '+nuevosCreados.join(', ');
-  if(omitidosCambio>0) msg+=' · ⚠️ '+omitidosCambio+' día'+(omitidosCambio>1?'s':'')+' omitido'+(omitidosCambio>1?'s':'')+' por pertenecer a un cambio';
-  if(errores>0) msg+=' · ⚠️ '+errores+' sin guardar';
   tcToast(msg);
 };
 
