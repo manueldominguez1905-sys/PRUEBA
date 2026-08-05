@@ -600,8 +600,8 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-008</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-008R6</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Persistencia reforzada con migración verificada y recuperación explícita, guardados con reversión comprobada, importación recursivamente validada, protección frente a inyección y claves peligrosas, y actualización atómica de calendario y tipos de turno.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-008R13</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Calendario de eventos con varias clasificaciones por fecha, tipos de festivo ampliados y guardado de eventos con verificación real de persistencia antes de sustituir los datos.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
@@ -1287,7 +1287,8 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
               <div class="tc-prog-wrap">
                 <div class="tc-prog-title" id="ev-prog-txt">Leyendo archivo&#8230;</div>
                 <div class="tc-prog-bg"><div class="tc-prog-bar" id="ev-bar" style="width:0%"></div></div>
-                <div id="ev-resumen-wrap"></div>
+                <div id="ev-editor-wrap"></div>
+                <div id="ev-error-wrap"></div>
                 <div id="ev-conflicto-wrap"></div>
               </div>
             </div>
@@ -1438,33 +1439,54 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
          Columnas alineadas con CSS Grid. Sin bordes horizontales por concepto y
          sin fondos grises. Colores fijos (independientes del tema) para conservar
          el aspecto de papel. */
-      #tab-nomina .nom-recibo{ background:#ffffff; color:#123a8c; border:1.5px solid #111; border-radius:3px; font-family:"Courier New",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace; font-size:12px; line-height:1.4; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.12); }
+      #tab-nomina .nom-recibo{ background:#ffffff; color:#123a8c; border:1.5px solid #111; border-radius:3px; font-family:"Courier New",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace; font-size:12px; line-height:1.4; box-sizing:border-box; width:100%; max-width:850px; margin:0 auto; height:auto; max-height:none; overflow:visible; box-shadow:0 1px 4px rgba(0,0,0,.12); }
       #tab-nomina .nom-recibo *{ box-sizing:border-box; }
-      #tab-nomina .nom-recibo-head{ padding:9px 11px; border-bottom:1.5px solid #111; }
+      #tab-nomina .nom-recibo-head{ padding:9px 11px; border-bottom:1.5px solid #111; overflow:visible; }
       #tab-nomina .nom-recibo-title{ font-weight:700; letter-spacing:.6px; font-size:12px; text-transform:uppercase; margin-bottom:5px; }
-      #tab-nomina .nom-recibo-kv{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-top:2px; }
+      #tab-nomina .nom-recibo-kv{ display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:2px 10px; margin-top:2px; }
       #tab-nomina .nom-recibo-kv .k{ opacity:.7; text-transform:uppercase; font-size:10px; letter-spacing:.3px; white-space:nowrap; }
-      #tab-nomina .nom-recibo-kv .v{ text-align:right; }
-      #tab-nomina .nom-recibo-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
-      /* Rejilla de 4 columnas: Descripción · D/HR/% · Importe devengo · Importe descuento. */
-      #tab-nomina .nom-recibo-grid{ display:grid; grid-template-columns:minmax(0,1fr) 4.8em 4.9em 4.9em; min-width:300px; }
-      #tab-nomina .nom-recibo-grid > div{ padding:3px 7px; color:#123a8c; font-size:11.5px; vertical-align:top; }
+      #tab-nomina .nom-recibo-kv .v{ text-align:right; overflow-wrap:anywhere; }
+      /* Contenedor de la rejilla: SOLO desplazamiento horizontal; nunca vertical
+         ni altura fija, para que el recibo crezca en alto con su contenido. */
+      #tab-nomina .nom-recibo-scroll{ overflow-x:auto; overflow-y:visible; height:auto; max-height:none; -webkit-overflow-scrolling:touch; }
+      /* Rejilla de 4 columnas: Descripción (amplia) · D/HR/% · Importe devengo ·
+         Importe descuento. Columnas numéricas con mínimo estable que puede crecer
+         (minmax) en vez de recortarse, para impedir solapamientos entre columnas. */
+      #tab-nomina .nom-recibo-grid{ display:grid; grid-template-columns:minmax(280px,1fr) minmax(4.8em,auto) minmax(4.9em,auto) minmax(4.9em,auto); min-width:650px; align-items:start; }
+      #tab-nomina .nom-recibo-grid > div{ padding:3px 7px; color:#123a8c; font-size:11.5px; }
       /* Celdas numéricas: alineadas a la derecha, sin envolver, con separador vertical
          negro estructural (nunca un borde horizontal por concepto). */
       #tab-nomina .nom-recibo-grid > div.n{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; border-left:1px solid #111; }
-      #tab-nomina .nom-recibo-grid > div.desc{ white-space:normal; word-break:break-word; }
+      /* La descripción puede ocupar varias líneas; al ser una celda de grid, la fila
+         completa (D/HR/%, devengo, descuento) crece automáticamente con ella. */
+      #tab-nomina .nom-recibo-grid > div.desc{ white-space:normal; overflow-wrap:anywhere; word-break:normal; }
       /* Cabecera de columnas: negrita, mayúsculas y una única línea negra inferior. */
-      #tab-nomina .nom-recibo-grid > div.nom-r-h{ font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:.3px; border-bottom:1.5px solid #111; line-height:1.2; }
+      #tab-nomina .nom-recibo-grid > div.nom-r-h{ font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:.3px; border-bottom:1.5px solid #111; line-height:1.2; white-space:nowrap; }
       /* Banda de sección (I · Devengos): a todo lo ancho, negrita, SIN fondo gris,
          con una línea negra inferior estructural. */
       #tab-nomina .nom-recibo-grid > div.nom-r-sec{ grid-column:1/-1; font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:.4px; border-bottom:1px solid #111; padding-top:6px; }
-      #tab-nomina .nom-recibo-cod{ opacity:.55; font-size:10px; margin-right:3px; }
-      #tab-nomina .nom-recibo-pend{ opacity:.7; font-style:italic; }
-      #tab-nomina .nom-recibo-tot{ padding:9px 11px; border-top:1.5px solid #111; }
-      #tab-nomina .nom-recibo-tot .r{ display:flex; justify-content:space-between; gap:10px; padding:2px 0; }
+      /* Códigos y cantidades nunca se parten a mitad de palabra. */
+      #tab-nomina .nom-recibo-cod{ opacity:.55; font-size:10px; margin-right:3px; white-space:nowrap; }
+      #tab-nomina .nom-recibo-pend{ opacity:.7; font-style:italic; white-space:nowrap; }
+      #tab-nomina .nom-recibo-tot{ padding:9px 11px; border-top:1.5px solid #111; overflow:visible; }
+      #tab-nomina .nom-recibo-tot .r{ display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:2px 10px; padding:2px 0; }
       #tab-nomina .nom-recibo-tot .r.big{ font-weight:700; font-size:12.5px; border-top:1px solid #111; margin-top:5px; padding-top:6px; }
-      #tab-nomina .nom-recibo-foot{ padding:8px 11px; border-top:1px dashed #111; font-size:10px; line-height:1.45; opacity:.85; white-space:normal; }
-      #tab-nomina .nom-recibo-aviso{ padding:8px 11px; border-top:1.5px solid #111; font-size:11px; font-weight:700; line-height:1.45; white-space:normal; }
+      #tab-nomina .nom-recibo-foot{ padding:8px 11px; border-top:1px dashed #111; font-size:10px; line-height:1.45; opacity:.85; white-space:normal; overflow-wrap:anywhere; }
+      #tab-nomina .nom-recibo-aviso{ padding:8px 11px; border-top:1.5px solid #111; font-size:11px; font-weight:700; line-height:1.45; white-space:normal; overflow-wrap:anywhere; }
+      /* Móvil: se conserva la letra legible; solo la rejilla desplaza en horizontal
+         (dentro de .nom-recibo-scroll). Sin zoom/scale, sin posiciones absolutas
+         y sin ocultar columnas. */
+      @media (max-width:480px){
+        #tab-nomina .nom-recibo{ font-size:11.5px; }
+        #tab-nomina .nom-recibo-title{ font-size:11.5px; }
+        #tab-nomina .nom-recibo-grid > div{ font-size:11px; padding:3px 6px; }
+      }
+      /* Impresión: documento completo visible, sin scroll ni sombra. */
+      @media print{
+        #tab-nomina .nom-recibo{ width:100%; max-width:none; margin:0; box-shadow:none; overflow:visible; }
+        #tab-nomina .nom-recibo-scroll{ overflow:visible; }
+        #tab-nomina .nom-recibo-grid{ min-width:0; }
+      }
     </style>
     <section id="tab-nomina" class="tab-content">
       <h2>💶 Nómina</h2>
@@ -4434,7 +4456,7 @@ function tcRenderCal(){
       if(etiquetaAnual) return;
       var k=tcFk(c.y,c.m,c.d);
       var ev=tcEventoDia(k);
-      if(ev && !tcEventoCategoriaFestivo(ev.tipo)) etiquetaAnual=tcEventoAbrevAnual(ev.tipo);
+      if(ev && !tcEventoCategoriaFestivo(ev)) etiquetaAnual=tcEventoAbrevAnual(ev.tipo);
     });
 
     var row=document.createElement('div');
@@ -4480,7 +4502,7 @@ function tcRenderCal(){
 
       if(c.inMonth){
         var ev=tcEventoDia(key);
-        var cat=ev?tcEventoCategoriaFestivo(ev.tipo):null;
+        var cat=ev?tcEventoCategoriaFestivo(ev):null;
         if(cat==='nacional'){
           numEl.style.color='var(--danger)';
           var subN=document.createElement('div'); subN.className='tc-dsub tc-dsub-nac'; subN.textContent='NAC';
@@ -5285,8 +5307,8 @@ function tcCalcularNocturnidadDia(fecha){
   };
   var ev=(typeof tcEventoDia==='function')?tcEventoDia(fecha):null;
   if(ev){
-    if(ev.tipo==='Semana Santa'){ res.tipo='semana_santa'; res.referencia='4B25'; }
-    else if(ev.tipo==='Feria'){ res.tipo='feria'; res.referencia='4B27'; }
+    if(tcEventoTieneTipo(ev,'Semana Santa')){ res.tipo='semana_santa'; res.referencia='4B25'; }
+    else if(tcEventoTieneTipo(ev,'Feria')){ res.tipo='feria'; res.referencia='4B27'; }
   }
   var jr=reg&&reg.jornada;
   if(!jr) return res;
@@ -5368,7 +5390,7 @@ function tcCalcularSolapeDia(fecha){
   };
   var ev=(typeof tcEventoDia==='function')?tcEventoDia(fecha):null;
   var tipo=null;
-  if(ev){ if(ev.tipo==='Semana Santa') tipo='semana_santa'; else if(ev.tipo==='Feria') tipo='feria'; }
+  if(ev){ if(tcEventoTieneTipo(ev,'Semana Santa')) tipo='semana_santa'; else if(tcEventoTieneTipo(ev,'Feria')) tipo='feria'; }
   if(!tipo){ res.motivo='El día no es Semana Santa ni Feria.'; return res; }
   res.tipo=tipo;
   res.codigo=(tipo==='semana_santa')?'4A58':'4A59';
@@ -5826,6 +5848,7 @@ function tcResumenLaboralMes(anio,mes){
     partidoDias:0, tpHasta2h:0, tpMas2h:0, tpPendiente:0,
     primaTardeDias:0, plusSabadoDias:0, plusDomingoDias:0, /* DEV-008R2 */
     tpMensualCompleto:false, tpMensualUnidades:0, tpDiarioUnidades:0, /* DEV-008R3 */
+    festivoTrabajadoDias:0, festivoEspecialDias:0, domingoRamosDias:0, festivoDesplazadoDias:0, /* DEV-008R10 */
     diasPendientesRevision:0, diasConDatos:0
   };
   if(isNaN(a)||isNaN(m)||m<1||m>12) return R;
@@ -5852,7 +5875,43 @@ function tcResumenLaboralMes(anio,mes){
        turnoFinal==='PM'||turnoFinal==='PT'||turnoFinal==='PN'){
       var dowFinal=(new Date(a,m-1,d).getDay()+6)%7; /* 0=lun...5=sáb,6=dom */
       if(dowFinal===5) R.plusSabadoDias++;
-      else if(dowFinal===6) R.plusDomingoDias++;
+      /* DEV-008R11 — Festivo trabajado desde el evento REAL del día (misma
+         fecha "key", cruza meses/años sin problema porque key ya lleva año y
+         mes reales). Categorías excluyentes con prioridad: desplazado >
+         Domingo de Ramos > especial > normal (Festivo/local/nacional).
+         "Especial" = tipo Festivo especial en cualquier fecha, o evento
+         confirmado como festivo (categoría 'nacional') cuya fecha real es
+         01-01, 01-06 o 12-25, sin depender del nombre del evento. */
+      var evHoy=tcEventoDia(key);
+      var catHoy=tcEventoCategoriaFestivo(evHoy); /* 'nacional'|'local'|null */
+      var esFechaEspecialFija=(m===1&&(d===1||d===6))||(m===12&&d===25);
+      var esDesplazadoHoy=tcEventoTieneTipo(evHoy,'Festivo desplazado');
+      var esRamosHoy=tcEventoTieneTipo(evHoy,'Domingo de Ramos');
+      var esEspecialHoy=tcEventoTieneTipo(evHoy,'Festivo especial')||
+        (catHoy==='nacional'&&esFechaEspecialFija);
+      /* Domingo: se calcula primero la fecha real del lunes siguiente
+         (puede cruzar mes/año) para saber si está marcado Festivo
+         desplazado. Si el domingo no quedó ya clasificado como festivo por
+         su propio evento (aunque tenga uno no festivo, p.ej. Semana Santa)
+         y el lunes sí está desplazado, el domingo era el festivo original:
+         se reconstruye su categoría (especial si es fecha fija, si no
+         normal) sin duplicar nada cuando el domingo ya quedó festivo. */
+      var lunesEsDesplazado=false;
+      if(dowFinal===6){
+        var dSig=new Date(a,m-1,d); dSig.setDate(dSig.getDate()+1);
+        var keySig=dSig.getFullYear()+'-'+tcPad(dSig.getMonth()+1)+'-'+tcPad(dSig.getDate());
+        lunesEsDesplazado=tcEventoTieneTipo(tcEventoDia(keySig),'Festivo desplazado');
+      }
+      var esFestivoHoy=false;
+      if(esDesplazadoHoy){ R.festivoDesplazadoDias++; esFestivoHoy=true; }
+      else if(esRamosHoy){ R.domingoRamosDias++; esFestivoHoy=true; }
+      else if(esEspecialHoy){ R.festivoEspecialDias++; esFestivoHoy=true; }
+      else if(catHoy==='nacional'||catHoy==='local'){ R.festivoTrabajadoDias++; esFestivoHoy=true; }
+      else if(dowFinal===6&&lunesEsDesplazado&&!esFestivoHoy){
+        if(esFechaEspecialFija) R.festivoEspecialDias++; else R.festivoTrabajadoDias++;
+        esFestivoHoy=true;
+      }
+      if(dowFinal===6&&!(esFestivoHoy&&lunesEsDesplazado)) R.plusDomingoDias++;
     }
     /* DEV-008R3 — Estados válidos existentes: D, V (no laborable) y
        CM/CT/CN/PM/PT/PN (laborable). Solo estos cuentan como "día con
@@ -5927,6 +5986,7 @@ function tcResumenLaboral(anio,mes){
     'partidoDias','tpHasta2h','tpMas2h','tpPendiente',
     'primaTardeDias','plusSabadoDias','plusDomingoDias', /* DEV-008R2 */
     'tpMensualUnidades','tpDiarioUnidades', /* DEV-008R3 */
+    'festivoTrabajadoDias','festivoEspecialDias','domingoRamosDias','festivoDesplazadoDias', /* DEV-008R10 */
     'diasPendientesRevision','diasConDatos'];
   var anual={anio:a, mes:null, nombreMes:'Año '+a};
   claves.forEach(function(k){ anual[k]=0; });
@@ -6070,6 +6130,12 @@ function tcNomRenderProvisional(data){
   add('4A0I','Prima diaria tarde','unid',R.primaTardeDias,'días');
   add('4A30','Plus por sábado trabajado','unid',R.plusSabadoDias,'días');
   add('4A27','Plus por domingo trabajado','unid',R.plusDomingoDias,'días');
+  /* DEV-008R10 — Festivo trabajado desde reg.turno + tcEventoDia(fecha real);
+     ver tcResumenLaboralMes(). Categorías excluyentes, add() oculta si 0. */
+  add('4A28','Festivo trabajado','unid',R.festivoTrabajadoDias,'días');
+  add('4A72','Plus festivo especial trabajado','unid',R.festivoEspecialDias,'días');
+  add('4A93','Plus Domingo de Ramos trabajado','unid',R.domingoRamosDias,'días');
+  add('4A37','Plus Festivo Desplazado','unid',R.festivoDesplazadoDias,'días');
 
   /* Celda de descripción con su código (si lo tiene). */
   function descCelda(cod,desc){
@@ -9927,9 +9993,9 @@ function tcEnsureEventosLoaded(){
   try{ EVENTOS=JSON.parse(localStorage.getItem(STORE_EVENTOS)||'{}'); }
   catch(e){ EVENTOS={}; }
 }
-function saveEventos(){
-  try{ localStorage.setItem(STORE_EVENTOS,JSON.stringify(EVENTOS||{})); }
-  catch(e){ tcToast('⚠️ Error guardando eventos laborales'); }
+function saveEventos(datos){
+  try{ localStorage.setItem(STORE_EVENTOS,JSON.stringify(datos||{})); return true; }
+  catch(e){ return false; }
 }
 
 /* Diccionario de clasificación por palabra clave (sin acentos, minúsculas) */
@@ -9940,6 +10006,9 @@ var EV_TIPOS=[
   {re:/marat[oó]n/, tipo:'Maratón'},
   {re:/apertura/, tipo:'Apertura comercial'},
   {re:/vispera/, tipo:'Víspera de festivo'},
+  {re:/domingo\s*de\s*ramos/, tipo:'Domingo de Ramos'},
+  {re:/festivo\s*especial/, tipo:'Festivo especial'},
+  {re:/festivo\s*(desplazado|traslad)/, tipo:'Festivo desplazado'},
   {re:/festivo\s*local|local/, tipo:'Festivo local'},
   {re:/festivo\s*nacional|nacional/, tipo:'Festivo nacional'},
   {re:/festivo/, tipo:'Festivo'}
@@ -10001,6 +10070,34 @@ function tcParsearEventos(texto){
   return porAnio;
 }
 
+/* Tipos permitidos en la revisión editable (independiente de la propuesta
+   automática de evClasificarTipo, que puede sugerir otras etiquetas). */
+var EV_TIPOS_PERMITIDOS=['Festivo','Festivo local','Festivo nacional','Festivo especial',
+  'Domingo de Ramos','Festivo desplazado','Semana Santa','Feria','Rocío','Maratón',
+  'Apertura comercial','Víspera de festivo','Evento especial'];
+
+/* Filas en edición tras el parseo OCR/PDF (revisión antes de guardar).
+   Cada fila: {id, fecha:'YYYY-MM-DD', tipo, nombre}. El OCR/PDF solo propone:
+   nada se escribe en EVENTOS hasta que el usuario valida y confirma. */
+var evEventosFilas=[];
+var evEventosSeq=0;
+
+function tcEventosTipoPermitido(tipo){
+  return EV_TIPOS_PERMITIDOS.indexOf(tipo)>=0?tipo:'Evento especial';
+}
+
+/* Convierte el resultado agrupado por año del parser en una lista plana editable. */
+function tcEventosFilasDesdeParseo(porAnio){
+  var filas=[];
+  Object.keys(porAnio).sort().forEach(function(anio){
+    Object.keys(porAnio[anio]).sort().forEach(function(k){
+      var ev=porAnio[anio][k];
+      filas.push({id:++evEventosSeq, fecha:k, tipo:tcEventosTipoPermitido(ev.tipo), nombre:ev.nombre||''});
+    });
+  });
+  return filas;
+}
+
 window.tcOpenEventos=function(){
   tcEnsureEventosLoaded();
   tcEventosReset();
@@ -10009,11 +10106,13 @@ window.tcOpenEventos=function(){
 
 window.tcEventosReset=function(){
   evParsedPorAnio=null; evColaConflictos=[]; evAniosOmitir={};
+  evEventosFilas=[];
   var fileEl=document.getElementById('ev-file'); if(fileEl) fileEl.value='';
   document.getElementById('ev-prog').style.display='none';
   document.getElementById('ev-actions').style.display='none';
   document.getElementById('ev-zone-wrap').style.display='';
-  document.getElementById('ev-resumen-wrap').innerHTML='';
+  document.getElementById('ev-editor-wrap').innerHTML='';
+  document.getElementById('ev-error-wrap').innerHTML='';
   document.getElementById('ev-conflicto-wrap').innerHTML='';
 };
 
@@ -10097,46 +10196,140 @@ function tcEventosLeerImagen(file){
   reader.readAsDataURL(file);
 }
 
+/* El PDF/OCR solo propone datos: el resultado se vuelca en una lista editable
+   (evEventosFilas) para que el usuario la revise, corrija o complete antes de
+   confirmar. Si no se detecta nada, la lista se abre vacía para introducirlo
+   a mano — nunca se guarda ni se inventa nada sin confirmación explícita. */
 function tcEventosProcesarTexto(texto){
   var porAnio=tcParsearEventos(texto);
   var anios=Object.keys(porAnio);
   var totalEventos=0; anios.forEach(function(a){ totalEventos+=Object.keys(porAnio[a]).length; });
-  if(totalEventos===0){
-    document.getElementById('ev-bar').style.width='100%';
-    document.getElementById('ev-prog-txt').textContent='No se detectaron eventos';
-    document.getElementById('ev-resumen-wrap').innerHTML='<div class="tc-tip">No se ha podido detectar ninguna fecha. Prueba con otro archivo más legible.</div>';
-    document.getElementById('ev-actions').style.display='flex';
-    document.getElementById('ev-btn-guardar').style.display='none';
-    evParsedPorAnio=null;
-    return;
-  }
-  evParsedPorAnio=porAnio;
+  evEventosFilas=tcEventosFilasDesdeParseo(porAnio);
   document.getElementById('ev-bar').style.width='100%';
-  document.getElementById('ev-prog-txt').textContent='✔ '+totalEventos+' eventos detectados';
+  document.getElementById('ev-prog-txt').textContent=totalEventos>0
+    ? ('✔ '+totalEventos+' eventos detectados · revisa y confirma antes de guardar')
+    : 'No se ha detectado ningún evento automáticamente. Añádelos manualmente abajo.';
+  document.getElementById('ev-error-wrap').innerHTML='';
+  tcRenderEventosEditor();
   document.getElementById('ev-btn-guardar').style.display='';
-  tcRenderEventosResumen(porAnio);
   document.getElementById('ev-actions').style.display='flex';
 }
 
-function tcRenderEventosResumen(porAnio){
-  var html='';
-  Object.keys(porAnio).sort().forEach(function(anio){
-    var claves=Object.keys(porAnio[anio]).sort();
-    html+='<div class="tc-cal-resumen"><div class="tc-cal-resumen-title">Año '+tcEsc(anio)+' · '+claves.length+' eventos</div>';
-    html+='<div class="tc-cal-resumen-grid">';
-    claves.forEach(function(k){
-      html+='<div class="tc-cal-res-item"><div class="tc-cal-res-cod" style="font-size:11px;">'+tcFmtF(k)+'</div>'+
-        '<div class="tc-cal-res-n">'+tcEsc(porAnio[anio][k].tipo)+'<br><span style="opacity:.7">'+tcEsc(porAnio[anio][k].nombre)+'</span></div></div>';
+/* Pinta la lista editable (fecha/tipo/nombre + añadir/eliminar). Mientras se
+   revisa, esta lista es la única fuente de verdad: nada se guarda todavía. */
+function tcRenderEventosEditor(){
+  var wrap=document.getElementById('ev-editor-wrap');
+  if(!wrap) return;
+  var filas=evEventosFilas.slice().sort(function(a,b){ return (a.fecha||'').localeCompare(b.fecha||''); });
+  var html='<div class="tc-cal-resumen-title" style="margin:10px 0 6px;">Revisión de eventos (edítalos antes de guardar)</div>';
+  if(filas.length===0){
+    html+='<div class="tc-tip">No hay eventos en la lista todavía. Añádelos con el botón de abajo.</div>';
+  } else {
+    filas.forEach(function(f){
+      html+='<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">'
+        +'<input class="tc-inp" type="date" style="flex:0 0 150px;" value="'+tcEsc(f.fecha||'')+'" onchange="tcEventosFilaCampo('+f.id+',\'fecha\',this.value)">'
+        +'<select class="tc-sel" style="flex:1 1 170px;" onchange="tcEventosFilaCampo('+f.id+',\'tipo\',this.value)">'
+        +EV_TIPOS_PERMITIDOS.map(function(t){ return '<option value="'+tcEsc(t)+'"'+(t===f.tipo?' selected':'')+'>'+tcEsc(t)+'</option>'; }).join('')
+        +'</select>'
+        +'<input class="tc-inp" type="text" style="flex:2 1 200px;" placeholder="Nombre del evento" value="'+tcEsc(f.nombre||'')+'" onchange="tcEventosFilaCampo('+f.id+',\'nombre\',this.value)">'
+        +'<button class="tc-btn tc-btn-danger" style="flex:0 0 auto;padding:8px 12px;" onclick="tcEventosEliminarFila('+f.id+')" title="Eliminar fila">&#10005;</button>'
+        +'</div>';
     });
-    html+='</div></div>';
-  });
-  document.getElementById('ev-resumen-wrap').innerHTML=html;
+  }
+  html+='<button class="tc-btn tc-btn-ghost" style="margin-top:4px;" onclick="tcEventosAnadirFila()">&#10133; Añadir evento</button>';
+  wrap.innerHTML=html;
 }
 
-/* Confirmación: comprueba año a año si ya existe calendario de eventos.
-   Si existe, pregunta Reemplazar/Cancelar (por año) antes de guardar. */
+window.tcEventosFilaCampo=function(id,campo,valor){
+  for(var i=0;i<evEventosFilas.length;i++){
+    if(evEventosFilas[i].id===id){ evEventosFilas[i][campo]=valor; break; }
+  }
+};
+
+window.tcEventosAnadirFila=function(){
+  evEventosFilas.push({id:++evEventosSeq, fecha:'', tipo:'Festivo', nombre:''});
+  document.getElementById('ev-error-wrap').innerHTML='';
+  tcRenderEventosEditor();
+};
+
+window.tcEventosEliminarFila=function(id){
+  evEventosFilas=evEventosFilas.filter(function(f){ return f.id!==id; });
+  document.getElementById('ev-error-wrap').innerHTML='';
+  tcRenderEventosEditor();
+};
+
+/* Valida la lista editada: fechas reales, campos obligatorios y duplicados.
+   Se permiten varias filas con la misma fecha siempre que tengan distinto
+   tipo (varias clasificaciones el mismo día); solo se rechaza fecha+tipo
+   repetidos. Devuelve la lista de errores (vacía si todo es correcto). */
+function tcEventosValidarFilas(){
+  var errores=[];
+  var vistos={};
+  if(evEventosFilas.length===0){
+    errores.push('Añade al menos un evento antes de guardar.');
+  }
+  evEventosFilas.forEach(function(f,idx){
+    var etiqueta='Fila '+(idx+1);
+    if(!f.fecha||!tcCambioFechaValida(f.fecha)){
+      errores.push(etiqueta+': la fecha no es válida.');
+      return;
+    }
+    if(EV_TIPOS_PERMITIDOS.indexOf(f.tipo)<0){
+      errores.push(etiqueta+' ('+tcFmtF(f.fecha)+'): el tipo no es válido.');
+      return;
+    }
+    if(!f.nombre||!f.nombre.trim()){
+      errores.push(etiqueta+' ('+tcFmtF(f.fecha)+'): falta el nombre.');
+      return;
+    }
+    var claveDupe=f.fecha+'||'+f.tipo;
+    if(vistos[claveDupe]){
+      errores.push('Fecha y tipo duplicados: '+tcFmtF(f.fecha)+' ('+f.tipo+') aparece más de una vez.');
+    } else {
+      vistos[claveDupe]=true;
+    }
+  });
+  return errores;
+}
+
+/* Confirmación: primero valida la lista editada (fechas reales, campos
+   obligatorios, duplicados). Si hay cualquier error no se guarda nada. Si es
+   válida, agrupa por año y comprueba si ya existe calendario: si existe,
+   pregunta Reemplazar/Cancelar (por año) antes de guardar. */
 window.tcEventosConfirm=function(){
-  if(!evParsedPorAnio) return;
+  var errores=tcEventosValidarFilas();
+  var errWrap=document.getElementById('ev-error-wrap');
+  if(errores.length>0){
+    errWrap.innerHTML='<div class="tc-aviso tc-aviso-red">⚠️ Revisa estos datos antes de guardar:<br>'
+      +errores.map(function(e){ return '· '+tcEsc(e); }).join('<br>')+'</div>';
+    return;
+  }
+  errWrap.innerHTML='';
+  /* Varias filas pueden compartir fecha con distinto tipo (validado arriba:
+     solo se rechaza fecha+tipo repetidos). Se agrupan por fecha antes de
+     guardar: {tipo:tipos[0], tipos:[únicos], nombre:nombres únicos unidos
+     con " · "}. Con un solo tipo se conserva el formato antiguo {tipo,nombre}
+     para no migrar destructivamente lo ya existente. */
+  var porFecha={};
+  evEventosFilas.forEach(function(f){
+    if(!porFecha[f.fecha]) porFecha[f.fecha]={tipos:[],nombres:[]};
+    var grp=porFecha[f.fecha];
+    if(grp.tipos.indexOf(f.tipo)<0) grp.tipos.push(f.tipo);
+    var nombreTrim=f.nombre.trim();
+    if(grp.nombres.indexOf(nombreTrim)<0) grp.nombres.push(nombreTrim);
+  });
+  var porAnio={};
+  Object.keys(porFecha).forEach(function(fecha){
+    var anio=fecha.slice(0,4);
+    if(!porAnio[anio]) porAnio[anio]={};
+    var grp=porFecha[fecha];
+    if(grp.tipos.length>1){
+      porAnio[anio][fecha]={tipo:grp.tipos[0],tipos:grp.tipos,nombre:grp.nombres.join(' · ')};
+    } else {
+      porAnio[anio][fecha]={tipo:grp.tipos[0],nombre:grp.nombres.join(' · ')};
+    }
+  });
+  evParsedPorAnio=porAnio;
   tcEnsureEventosLoaded();
   evColaConflictos=Object.keys(evParsedPorAnio).filter(function(a){
     return EVENTOS[a]&&Object.keys(EVENTOS[a]).length>0;
@@ -10166,23 +10359,42 @@ function tcEventosResolverSiguienteConflicto(){
   };
 }
 
+/* Guardado real: prepara una copia (no toca EVENTOS todavía), intenta
+   persistirla y solo tras éxito confirmado sustituye EVENTOS, registra
+   metadatos, cierra el editor, repinta y muestra el aviso de éxito. Si la
+   persistencia falla, EVENTOS y el editor abierto se conservan tal cual
+   estaban: nunca se informa de un éxito que no ha ocurrido. */
 function tcEventosGuardarFinal(){
   if(!evParsedPorAnio) return;
   tcEnsureEventosLoaded();
+  var copia=JSON.parse(JSON.stringify(EVENTOS||{}));
   var aniosGuardados=[];
   Object.keys(evParsedPorAnio).forEach(function(anio){
     if(evAniosOmitir[anio]) return; /* usuario canceló este año */
-    EVENTOS[anio]=evParsedPorAnio[anio]; /* reemplaza solo ese año, o crea si es nuevo */
+    copia[anio]=evParsedPorAnio[anio]; /* reemplaza solo ese año, o crea si es nuevo */
     aniosGuardados.push(anio);
+  });
+  if(aniosGuardados.length===0){
+    evParsedPorAnio=null; evColaConflictos=[]; evAniosOmitir={}; evEventosFilas=[];
+    tcClose();
+    tcEventosReset();
+    tcToast('No se ha guardado ningún año (cancelado)');
+    return;
+  }
+  var ok=saveEventos(copia);
+  if(!ok){
+    tcToast('⚠️ Error guardando eventos laborales. No se han aplicado los cambios.');
+    return; /* EVENTOS y el editor abierto quedan como estaban */
+  }
+  EVENTOS=copia;
+  aniosGuardados.forEach(function(anio){
     if(typeof window.tcAdminRegistrarMetaEventos==='function'){ window.tcAdminRegistrarMetaEventos(anio); }
   });
-  saveEventos();
-  evParsedPorAnio=null; evColaConflictos=[]; evAniosOmitir={};
+  evParsedPorAnio=null; evColaConflictos=[]; evAniosOmitir={}; evEventosFilas=[];
   tcClose();
   tcEventosReset();
   tcRenderCal();
-  if(aniosGuardados.length>0) tcToast('✔ Eventos guardados para '+aniosGuardados.join(', '));
-  else tcToast('No se ha guardado ningún año (cancelado)');
+  tcToast('✔ Eventos guardados para '+aniosGuardados.join(', '));
 }
 
 /* --- Combinación visual con el Calendario de Turnos (solo lectura, aditivo) ---
@@ -10207,11 +10419,27 @@ function tcEventoDia(key){
   var anio=key.slice(0,4);
   return (EVENTOS&&EVENTOS[anio]&&EVENTOS[anio][key])||null;
 }
-/* Clasifica un tipo de evento como festivo 'nacional' | 'local' | null (evento anual, no festivo puntual). */
-function tcEventoCategoriaFestivo(tipo){
-  if(tipo==='Festivo local') return 'local';
-  if(tipo==='Festivo nacional'||tipo==='Festivo') return 'nacional';
+/* Clasifica un evento como festivo 'nacional' | 'local' | null (evento anual, no festivo puntual).
+   Acepta directamente el texto del tipo, o el registro completo del evento: si trae
+   valor.tipos (array no vacío) revisa todos esos tipos; si no, revisa [valor.tipo].
+   'nacional' si contiene Festivo/Festivo nacional/Festivo especial/Festivo desplazado;
+   'local' solo si contiene Festivo local y ninguno de los anteriores; si no, null. */
+function tcEventoCategoriaFestivo(valor){
+  var tipos=(valor&&typeof valor==='object')
+    ?((Array.isArray(valor.tipos)&&valor.tipos.length>0)?valor.tipos:[valor.tipo])
+    :[valor];
+  var TIPOS_NACIONAL=['Festivo','Festivo nacional','Festivo especial','Festivo desplazado'];
+  if(tipos.some(function(t){ return TIPOS_NACIONAL.indexOf(t)>=0; })) return 'nacional';
+  if(tipos.indexOf('Festivo local')>=0) return 'local';
   return null;
+}
+/* Comprueba si un evento (registro nuevo agrupado con tipos:[...] o registro
+   antiguo con un único tipo) incluye una clasificación concreta. Aditiva: no
+   cambia el formato guardado, solo la forma de consultarlo. */
+function tcEventoTieneTipo(ev,tipo){
+  if(!ev) return false;
+  if(Array.isArray(ev.tipos)) return ev.tipos.indexOf(tipo)>=0;
+  return ev.tipo===tipo;
 }
 /* Abreviatura para mostrar en la columna de semana (nunca dentro de la celda). */
 function tcEventoAbrevAnual(tipo){
