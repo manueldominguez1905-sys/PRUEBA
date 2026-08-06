@@ -57,16 +57,26 @@ html, body {
   background-color: var(--color-primary); color: #ffffff;
   padding: 14px 16px; position: sticky; top: 0; z-index: 100;
   box-shadow: var(--shadow);
+  flex-wrap: nowrap; gap: 8px; /* DEV-008R15: cabecera siempre en una línea */
 }
 .app-header h1 { font-size: 1.15rem; margin: 0; font-weight: 600; }
-.header-left { display: flex; align-items: center; gap: 10px; }
-.material-icon { font-size: 1.4rem; }
+/* DEV-008R15: header-left puede encogerse (title trunca) sin empujar los botones */
+.header-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; overflow: hidden; }
+.material-icon { font-size: 1.4rem; flex-shrink: 0; }
+/* DEV-008R15: header-right fijo, sin encoger, sin salto de línea */
+.header-right { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; flex-wrap: nowrap; }
 .icon-btn {
   background: rgba(255,255,255,.15); border: none; color: #fff;
   font-size: 1.2rem; padding: 8px 10px; border-radius: 50%;
-  cursor: pointer; transition: background 0.2s ease;
+  cursor: pointer; transition: background 0.2s ease; flex-shrink: 0;
 }
 .icon-btn:hover { background: rgba(255,255,255,.3); }
+/* DEV-008R15: el título nunca salta de línea; se trunca con puntos suspensivos */
+#headerTitle {
+  min-width: 0; flex: 1 1 auto; overflow: hidden;
+  white-space: nowrap; text-overflow: ellipsis;
+}
+#btnVolver { flex-shrink: 0; }
 
 /* ===== DEV-007R6 — Centro de mensajes (aditivo) ===== */
 #msgBadge {
@@ -271,6 +281,14 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
   .card-value { font-size: 1.4rem; }
   .form-row label { flex: 1 1 100%; }
   .filters label { flex: 1 1 100%; }
+  /* DEV-008R15: cabecera móvil — espacios/padding reducidos, botones siempre
+     visibles y pulsables, título truncado en vez de saltar de línea */
+  .app-header { padding: 10px 12px; gap: 6px; }
+  .header-left { gap: 6px; }
+  .header-right { gap: 4px; }
+  #headerTitle { font-size: 0.92rem; }
+  .material-icon { font-size: 1.2rem; }
+  .icon-btn { font-size: 1.05rem; padding: 7px 8px; }
 }
 @media (min-width: 600px) {
   .menu-grid { grid-template-columns: 1fr 1fr 1fr; }
@@ -376,7 +394,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-cgrid{display:flex;flex-direction:column;gap:9px;}
 #tc .tc-cgrid-mini{gap:4px;}
 #tc .tc-week-row{display:grid;grid-template-columns:minmax(30px,58px) repeat(7,minmax(0,1fr));gap:9px;align-items:stretch;}
-#tc .tc-week-row--mini{grid-template-columns:minmax(18px,26px) repeat(7,minmax(0,1fr));gap:4px;}
+#tc .tc-week-row--mini{grid-template-columns:minmax(44px,58px) repeat(7,minmax(0,1fr));gap:4px;} /* DEV-008R16: ancho suficiente para nº semana + evento en 2 líneas */
 #tc .tc-week-label{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 2px;overflow:hidden;}
 #tc .tc-week-num{container-type:inline-size;container-name:tcwk;font-size:11px;font-weight:800;color:var(--brand);line-height:1.25;white-space:nowrap;display:block;width:100%;}
 #tc .tc-week-full{display:none;}
@@ -387,6 +405,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 }
 #tc .tc-week-row--mini .tc-week-num{font-size:8px;}
 #tc .tc-week-ev{font-size:10px;font-weight:800;color:var(--accent);line-height:1.25;text-transform:uppercase;letter-spacing:.2px;}
+/* DEV-008R16: evento semanal en anual — 2 líneas como máximo, sin desbordar la columna mini */
+#tc .tc-week-row--mini .tc-week-ev{font-size:7px;line-height:1.15;white-space:normal;word-break:break-word;margin-top:1px;overflow-wrap:break-word;}
 
 /* ============================================================
    COMPONENTE ÚNICO DE CELDA DE DÍA (DEV-002)
@@ -418,6 +438,7 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-dpend{position:absolute;top:2px;right:3px;font-size:9px;line-height:1;z-index:2;}
 #tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:6px;pointer-events:none;z-index:0;}
 #tc .tc-d-arch{position:absolute;top:2px;right:3px;font-size:9px;line-height:1;z-index:2;opacity:.7;pointer-events:none;} /* DEV-007R7 — marca de hoja archivada */
+#tc .tc-d-mini .tc-d-arch{top:1px;right:1px;font-size:6.5px;} /* DEV-008R16: tamaño/posición ajustados a la celda mini */
 
 /* Modificador --mini: mismo componente .tc-d, reducido para la vista Anual (12 meses).
    Solo cambia tamaño/tipografía; toda la lógica de color, estado y estructura es la de .tc-d. */
@@ -600,7 +621,7 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-008</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-008R14</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-008R18</span></div>
         <div style="margin-top:8px;"><strong>Descripción:</strong> Calendario de eventos con varias clasificaciones por fecha, tipos de festivo ampliados y guardado de eventos con verificación real de persistencia antes de sustituir los datos.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -4469,13 +4490,7 @@ function tcRenderCal(){
 
     /* Etiqueta de evento anual (Feria, Semana Santa, Rocío, Maratón...) para la fila de semana.
        Nunca se muestra dentro de las celdas, solo aquí, debajo del número de semana. */
-    var etiquetaAnual=null;
-    semanaCeldas.forEach(function(c){
-      if(etiquetaAnual) return;
-      var k=tcFk(c.y,c.m,c.d);
-      var ev=tcEventoDia(k);
-      if(ev && !tcEventoCategoriaFestivo(ev)) etiquetaAnual=tcEventoAbrevAnual(ev.tipo);
-    });
+    var etiquetaAnual=tcSemanaEtiqueta(semanaCeldas.map(function(c){return tcFk(c.y,c.m,c.d);})); /* DEV-008R16 */
 
     var row=document.createElement('div');
     row.className='tc-week-row';
@@ -4674,7 +4689,10 @@ function tcRenderAnual(scrollToActual){
         var keyRef=tcFk(anio,m,primerDia);
         var semISO=tcSemanaISO(keyRef);
         var numSemana=semISO.split('W')[1];
-        wkCell.innerHTML='<span class="tc-week-num"><span class="tc-week-full">Sem. '+numSemana+'</span><span class="tc-week-short">S.'+numSemana+'</span></span>';
+        /* DEV-008R16 — mismo evento semanal que en Mensual, bajo el número de semana */
+        var etiquetaSemana=tcSemanaEtiqueta(semanaCeldas.map(function(d){return d==null?null:tcFk(anio,m,d);}));
+        wkCell.innerHTML='<span class="tc-week-num"><span class="tc-week-full">Sem. '+numSemana+'</span><span class="tc-week-short">S.'+numSemana+'</span></span>'+
+          (etiquetaSemana?('<div class="tc-week-ev">'+etiquetaSemana+'</div>'):'');
       }
       row.appendChild(wkCell);
 
@@ -4697,6 +4715,16 @@ function tcRenderAnual(scrollToActual){
           } else {
             cell.style.background=t.bg;
           }
+        }
+        /* DEV-008R16 — Carpeta de hoja archivada (mismo criterio que Mensual):
+           solo si no hay miniatura/imagen válida, y solo si no hay ya un aviso
+           de cambio pendiente o incidencia (esos avisos prevalecen y ocupan la
+           misma esquina). La bandera de evento (🎌, esquina opuesta) no es un
+           aviso y puede coexistir con la carpeta. */
+        var _thumbMini=reg?(reg.thumbData||reg.imgData):null;
+        if(reg&&reg.hojaArchivada&&!(_thumbMini&&tcImagenDataUrlValida(_thumbMini))&&!reg.cambioPendiente&&!reg.incidencia){
+          var archMini=document.createElement('div'); archMini.className='tc-d-arch'; archMini.textContent='🗂️';
+          archMini.title='Hoja archivada · datos conservados'; cell.appendChild(archMini);
         }
         var numEl=document.createElement('div'); numEl.className='tc-dnum'; numEl.textContent=d;
         if(reg&&reg.turno&&TURNO[reg.turno]) numEl.style.color=TURNO[reg.turno].textColor;
@@ -10599,17 +10627,60 @@ function tcEventoTieneTipo(ev,tipo){
   if(Array.isArray(ev.tipos)) return ev.tipos.indexOf(tipo)>=0;
   return ev.tipo===tipo;
 }
-/* Abreviatura para mostrar en la columna de semana (nunca dentro de la celda). */
+/* DEV-008R17 — Texto para mostrar en la columna de semana (nunca dentro de la
+   celda). Palabra completa (no abreviada); ninguna etiqueta puede tener menos
+   de 5 caracteres — el genérico de respaldo cae a 'Evento' si el tipo recibido
+   fuera más corto. */
 function tcEventoAbrevAnual(tipo){
   var MAP={
-    'Semana Santa':'SS',
-    'Feria':'FERIA',
-    'Rocío':'ROC',
-    'Maratón':'MAR',
-    'Apertura comercial':'APERT',
-    'Víspera de festivo':'VÍSP'
+    'Semana Santa':'Semana Santa',
+    'Feria':'Feria',
+    'Rocío':'Rocío',
+    'Maratón':'Maratón',
+    'Apertura comercial':'Apertura',
+    'Víspera de festivo':'Víspera',
+    'Evento especial':'Evento'
   };
-  return MAP[tipo]||String(tipo||'').toUpperCase().slice(0,5);
+  var txt=MAP[tipo]||String(tipo||'').trim();
+  return (txt&&txt.length>=5)?txt:'Evento';
+}
+/* DEV-008R17 — Etiqueta de un único evento (registro nuevo con tipos:[...] o
+   antiguo con un único tipo), sin aplicar la prioridad global entre tipos
+   (eso lo hace tcSemanaEtiqueta comparando entre TODOS los días de la
+   semana). Aquí solo se resuelve el nivel de respaldo: un festivo en
+   solitario, sin ningún otro tipo, no genera etiqueta. */
+function tcEventoEtiquetaSemana(ev){
+  if(!ev) return null;
+  if(tcEventoCategoriaFestivo(ev)) return null;
+  var tipos=(Array.isArray(ev.tipos)&&ev.tipos.length>0)?ev.tipos:[ev.tipo];
+  return tipos[0]?tcEventoAbrevAnual(tipos[0]):null;
+}
+/* DEV-008R17 — Recorre las claves 'YYYY-MM-DD' de una semana (huecos como
+   null, válido para Mensual y Anual), reúne los eventos de TODOS los días
+   antes de decidir, y aplica la prioridad global Semana Santa > Feria >
+   Rocío > Maratón > Apertura comercial > Víspera de festivo > Evento
+   especial — sin importar en qué día de la semana caiga cada evento (p.ej.
+   lunes Víspera + miércoles Feria → Feria). Si el registro combina festivo
+   con Feria/Semana Santa (o cualquier otro tipo de la prioridad), prevalece
+   ese tipo. Una sola etiqueta por semana; null si ninguna procede. */
+function tcSemanaEtiqueta(keys){
+  var PRIORIDAD=['Semana Santa','Feria','Rocío','Maratón','Apertura comercial','Víspera de festivo','Evento especial'];
+  var eventos=[];
+  for(var i=0;i<keys.length;i++){
+    if(!keys[i]) continue;
+    var ev=tcEventoDia(keys[i]);
+    if(ev) eventos.push(ev);
+  }
+  for(var p=0;p<PRIORIDAD.length;p++){
+    for(var e=0;e<eventos.length;e++){
+      if(tcEventoTieneTipo(eventos[e],PRIORIDAD[p])) return tcEventoAbrevAnual(PRIORIDAD[p]);
+    }
+  }
+  for(var e2=0;e2<eventos.length;e2++){
+    var lbl=tcEventoEtiquetaSemana(eventos[e2]);
+    if(lbl) return lbl;
+  }
+  return null;
 }
 
 /* Nueva función aditiva: permite a módulos externos (p.ej. Centro de
