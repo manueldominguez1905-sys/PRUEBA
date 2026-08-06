@@ -600,7 +600,7 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-008</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-008R13</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-008R14</span></div>
         <div style="margin-top:8px;"><strong>Descripción:</strong> Calendario de eventos con varias clasificaciones por fecha, tipos de festivo ampliados y guardado de eventos con verificación real de persistencia antes de sustituir los datos.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -1288,6 +1288,24 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
                 <div class="tc-prog-title" id="ev-prog-txt">Leyendo archivo&#8230;</div>
                 <div class="tc-prog-bg"><div class="tc-prog-bar" id="ev-bar" style="width:0%"></div></div>
                 <div id="ev-editor-wrap"></div>
+                <div id="ev-bulk-wrap" style="margin-top:14px;padding-top:14px;border-top:1px solid #E2E8F0;">
+                  <div class="tc-cal-resumen-title" style="margin-bottom:6px;">Pegado masivo</div>
+                  <div class="tc-tip">Una línea por evento: <code>DD/MM/AAAA | Tipo | Nombre</code> (también admite <code>AAAA-MM-DD | Tipo | Nombre</code>).</div>
+                  <textarea id="ev-bulk-text" class="tc-inp" rows="5" style="width:100%;margin-top:6px;font-family:monospace;" placeholder="25/12/2026 | Festivo | Navidad"></textarea>
+                  <button class="tc-btn tc-btn-ghost" style="margin-top:6px;" onclick="tcEventosPegadoMasivo()">&#128203; Añadir pegado</button>
+                  <div id="ev-bulk-error"></div>
+                </div>
+                <div id="ev-periodo-wrap" style="margin-top:14px;padding-top:14px;border-top:1px solid #E2E8F0;">
+                  <div class="tc-cal-resumen-title" style="margin-bottom:6px;">Añadir periodo</div>
+                  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                    <input class="tc-inp" type="date" id="ev-per-ini" style="flex:0 0 150px;" title="Fecha inicial">
+                    <input class="tc-inp" type="date" id="ev-per-fin" style="flex:0 0 150px;" title="Fecha final">
+                    <select class="tc-sel" id="ev-per-tipo" style="flex:1 1 170px;"></select>
+                    <input class="tc-inp" type="text" id="ev-per-nombre" placeholder="Nombre del evento" style="flex:2 1 200px;">
+                  </div>
+                  <button class="tc-btn tc-btn-ghost" style="margin-top:6px;" onclick="tcEventosAnadirPeriodo()">&#128197; Añadir periodo</button>
+                  <div id="ev-per-error"></div>
+                </div>
                 <div id="ev-error-wrap"></div>
                 <div id="ev-conflicto-wrap"></div>
               </div>
@@ -10114,6 +10132,12 @@ window.tcEventosReset=function(){
   document.getElementById('ev-editor-wrap').innerHTML='';
   document.getElementById('ev-error-wrap').innerHTML='';
   document.getElementById('ev-conflicto-wrap').innerHTML='';
+  var bulkTa=document.getElementById('ev-bulk-text'); if(bulkTa) bulkTa.value='';
+  var bulkErr=document.getElementById('ev-bulk-error'); if(bulkErr) bulkErr.innerHTML='';
+  var perIni=document.getElementById('ev-per-ini'); if(perIni) perIni.value='';
+  var perFin=document.getElementById('ev-per-fin'); if(perFin) perFin.value='';
+  var perNom=document.getElementById('ev-per-nombre'); if(perNom) perNom.value='';
+  var perErr=document.getElementById('ev-per-error'); if(perErr) perErr.innerHTML='';
 };
 
 window.tcEventosLoad=function(input){
@@ -10211,6 +10235,8 @@ function tcEventosProcesarTexto(texto){
     : 'No se ha detectado ningún evento automáticamente. Añádelos manualmente abajo.';
   document.getElementById('ev-error-wrap').innerHTML='';
   tcRenderEventosEditor();
+  var perTipoEl=document.getElementById('ev-per-tipo');
+  if(perTipoEl) perTipoEl.innerHTML=EV_TIPOS_PERMITIDOS.map(function(t){ return '<option value="'+tcEsc(t)+'">'+tcEsc(t)+'</option>'; }).join('');
   document.getElementById('ev-btn-guardar').style.display='';
   document.getElementById('ev-actions').style.display='flex';
 }
@@ -10239,6 +10265,138 @@ function tcRenderEventosEditor(){
   html+='<button class="tc-btn tc-btn-ghost" style="margin-top:4px;" onclick="tcEventosAnadirFila()">&#10133; Añadir evento</button>';
   wrap.innerHTML=html;
 }
+
+/* DEV-008R14 — Pegado masivo: una línea por evento "DD/MM/AAAA | Tipo | Nombre"
+   (también acepta "AAAA-MM-DD | Tipo | Nombre"). Se valida TODO el lote antes
+   de tocar evEventosFilas: si una sola línea es inválida no se añade nada y
+   se listan los errores. Las líneas válidas cuya fecha+tipo ya exista en
+   evEventosFilas (propuestas OCR o filas ya añadidas) se omiten y se informa
+   cuántas. Reutiliza tcCambioFechaValida y el mismo modelo de fila. */
+window.tcEventosPegadoMasivo=function(){
+  var ta=document.getElementById('ev-bulk-text');
+  var errWrap=document.getElementById('ev-bulk-error');
+  var texto=(ta&&ta.value)||'';
+  var lineas=texto.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(function(l){ return l.length>0; });
+  if(lineas.length===0){
+    errWrap.innerHTML='<div class="tc-aviso tc-aviso-red">⚠️ Pega al menos una línea con el formato DD/MM/AAAA | Tipo | Nombre.</div>';
+    return;
+  }
+  var anioEdit=vY;
+  var reDMY=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+  var reYMD=/^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+  var errores=[], parseadas=[];
+  lineas.forEach(function(linea,idx){
+    var etiqueta='Línea '+(idx+1);
+    var partes=linea.split('|');
+    if(partes.length!==3){
+      errores.push(etiqueta+': formato inválido, usa DD/MM/AAAA | Tipo | Nombre.');
+      return;
+    }
+    var fParte=partes[0].trim(), tipo=partes[1].trim(), nombre=partes[2].trim();
+    var iso=null, m;
+    if((m=reDMY.exec(fParte))){
+      iso=m[3]+'-'+tcPad(parseInt(m[2],10))+'-'+tcPad(parseInt(m[1],10));
+    } else if((m=reYMD.exec(fParte))){
+      iso=m[1]+'-'+tcPad(parseInt(m[2],10))+'-'+tcPad(parseInt(m[3],10));
+    } else {
+      errores.push(etiqueta+': fecha con formato no reconocido ("'+fParte+'").');
+      return;
+    }
+    if(!tcCambioFechaValida(iso)){
+      errores.push(etiqueta+': la fecha "'+fParte+'" no existe.');
+      return;
+    }
+    if(parseInt(iso.slice(0,4),10)!==anioEdit){
+      errores.push(etiqueta+' ('+tcFmtF(iso)+'): la fecha no pertenece al año que se está editando ('+anioEdit+').');
+      return;
+    }
+    if(EV_TIPOS_PERMITIDOS.indexOf(tipo)<0){
+      errores.push(etiqueta+' ('+tcFmtF(iso)+'): el tipo "'+tipo+'" no está permitido.');
+      return;
+    }
+    if(!nombre){
+      errores.push(etiqueta+' ('+tcFmtF(iso)+'): falta el nombre.');
+      return;
+    }
+    parseadas.push({fecha:iso,tipo:tipo,nombre:nombre});
+  });
+  if(errores.length>0){
+    errWrap.innerHTML='<div class="tc-aviso tc-aviso-red">⚠️ Revisa el pegado masivo antes de añadir:<br>'
+      +errores.map(function(e){ return '· '+tcEsc(e); }).join('<br>')+'</div>';
+    return;
+  }
+  var vistos={};
+  evEventosFilas.forEach(function(f){ vistos[f.fecha+'||'+f.tipo]=true; });
+  var omitidas=0;
+  parseadas.forEach(function(p){
+    var clave=p.fecha+'||'+p.tipo;
+    if(vistos[clave]){ omitidas++; return; }
+    vistos[clave]=true;
+    evEventosFilas.push({id:++evEventosSeq, fecha:p.fecha, tipo:p.tipo, nombre:p.nombre});
+  });
+  if(ta) ta.value='';
+  document.getElementById('ev-error-wrap').innerHTML='';
+  tcRenderEventosEditor();
+  errWrap.innerHTML=omitidas>0
+    ? '<div class="tc-aviso">ℹ️ '+omitidas+' línea(s) omitida(s): la fecha y el tipo ya existían.</div>'
+    : '';
+};
+
+/* DEV-008R14 — Añadir periodo: genera una fila por cada día entre fecha
+   inicial y final (ambas incluidas), mismo tipo y nombre, máximo 366 días.
+   Se valida todo antes de tocar evEventosFilas (fechas reales del año que se
+   está editando, orden cronológico, tipo permitido, nombre obligatorio y
+   límite de 366 días); si algo falla no se añade ningún día. Los días cuya
+   fecha+tipo ya exista en evEventosFilas se omiten y se informa cuántos. */
+window.tcEventosAnadirPeriodo=function(){
+  var errWrap=document.getElementById('ev-per-error');
+  var iniEl=document.getElementById('ev-per-ini'), finEl=document.getElementById('ev-per-fin');
+  var tipoEl=document.getElementById('ev-per-tipo'), nombreEl=document.getElementById('ev-per-nombre');
+  var ini=(iniEl&&iniEl.value)||'', fin=(finEl&&finEl.value)||'';
+  var tipo=(tipoEl&&tipoEl.value)||'', nombre=((nombreEl&&nombreEl.value)||'').trim();
+  var anioEdit=vY;
+  var errores=[];
+  if(!ini||!tcCambioFechaValida(ini)) errores.push('La fecha inicial no es válida.');
+  if(!fin||!tcCambioFechaValida(fin)) errores.push('La fecha final no es válida.');
+  if(errores.length>0){
+    errWrap.innerHTML='<div class="tc-aviso tc-aviso-red">⚠️ Revisa el periodo antes de añadir:<br>'
+      +errores.map(function(e){ return '· '+tcEsc(e); }).join('<br>')+'</div>';
+    return;
+  }
+  if(parseInt(ini.slice(0,4),10)!==anioEdit) errores.push('La fecha inicial no pertenece al año que se está editando ('+anioEdit+').');
+  if(parseInt(fin.slice(0,4),10)!==anioEdit) errores.push('La fecha final no pertenece al año que se está editando ('+anioEdit+').');
+  if(ini>fin) errores.push('La fecha inicial debe ser anterior o igual a la fecha final.');
+  if(EV_TIPOS_PERMITIDOS.indexOf(tipo)<0) errores.push('El tipo no está permitido.');
+  if(!nombre) errores.push('Falta el nombre del evento.');
+  var dIni=new Date(parseInt(ini.slice(0,4),10),parseInt(ini.slice(5,7),10)-1,parseInt(ini.slice(8,10),10));
+  var dFin=new Date(parseInt(fin.slice(0,4),10),parseInt(fin.slice(5,7),10)-1,parseInt(fin.slice(8,10),10));
+  if(errores.length===0){
+    var dias=Math.round((dFin-dIni)/86400000)+1;
+    if(dias>366) errores.push('El periodo no puede superar 366 días (tiene '+dias+').');
+  }
+  if(errores.length>0){
+    errWrap.innerHTML='<div class="tc-aviso tc-aviso-red">⚠️ Revisa el periodo antes de añadir:<br>'
+      +errores.map(function(e){ return '· '+tcEsc(e); }).join('<br>')+'</div>';
+    return;
+  }
+  var vistos={};
+  evEventosFilas.forEach(function(f){ vistos[f.fecha+'||'+f.tipo]=true; });
+  var omitidas=0;
+  var cursor=new Date(dIni.getTime());
+  while(cursor<=dFin){
+    var key=cursor.getFullYear()+'-'+tcPad(cursor.getMonth()+1)+'-'+tcPad(cursor.getDate());
+    var clave=key+'||'+tipo;
+    if(vistos[clave]){ omitidas++; }
+    else { vistos[clave]=true; evEventosFilas.push({id:++evEventosSeq, fecha:key, tipo:tipo, nombre:nombre}); }
+    cursor.setDate(cursor.getDate()+1);
+  }
+  iniEl.value=''; finEl.value=''; nombreEl.value='';
+  document.getElementById('ev-error-wrap').innerHTML='';
+  tcRenderEventosEditor();
+  errWrap.innerHTML=omitidas>0
+    ? '<div class="tc-aviso">ℹ️ '+omitidas+' día(s) omitido(s): la fecha y el tipo ya existían.</div>'
+    : '';
+};
 
 window.tcEventosFilaCampo=function(id,campo,valor){
   for(var i=0;i<evEventosFilas.length;i++){
