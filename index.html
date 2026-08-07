@@ -617,12 +617,12 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
 
   <!-- Modal de ajustes/versión -->
   <div id="modalSettings" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
+    <div style="box-sizing:border-box; background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; max-height:calc(100vh - 24px); max-height:calc(100dvh - 24px); overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
-        <div><strong>Aplicación:</strong> DEV-008</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-008R18</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Calendario de eventos con varias clasificaciones por fecha, tipos de festivo ampliados y guardado de eventos con verificación real de persistencia antes de sustituir los datos.</div>
+        <div><strong>Aplicación:</strong> DEV-010</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-010R2</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Primera conexión de importes entre las Tablas Salariales y la Nómina Provisional. Lector salarial público y de solo lectura (año + ID exacto → correcto / sin tabla / sin concepto / importe pendiente / almacén corrupto) que reutiliza tsLeerTablas() y nunca busca en otro año ni resuelve por código. La vista mensual conecta por ID exacto salario base (4A00_SALARIO_BASE, importe una vez, cantidad 30,00), tarde (4A0I_TARDE), sábado (4A30_SABADO_VIGENCIA), domingo (4A27_DOMINGO_VIGENCIA), partido mensual (4A10_PARTIDO_MES, una vez) y diario (4A41_PARTIDO_DIA) y festivos (4A28_FESTIVO, 4A72_FESTIVO_ESPECIAL, 4A93_RAMOS, 4A37_FESTIVO_DESPLAZ); días × importe salvo los marcados «una vez». Solo tabla del mismo año; sin tabla/ID/importe → celda «Pdte.» y aviso en el recibo; almacén corrupto → ningún importe y aviso específico; formato español con dos decimales; total devengado solo si salario base y todos los conceptos visibles tienen importe. La vista anual sigue sin importes; nocturnidad, desplazamiento y el resto siguen pendientes. Sin cambios en cantidades, calendario, turnos, eventos, persistencia, importación, backups ni cálculos.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
@@ -661,6 +661,11 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
   <div id="menuPrincipal" class="menu-principal">
     <div class="watermark">LIQUIDACIÓN</div>
     <div id="bannerAviso" class="banner-aviso" style="display:none;"></div>
+    <div id="bannerBackupPendiente" class="banner-aviso banner-alerta" role="alert" aria-live="polite" style="display:none; flex-wrap:wrap;">
+      <span class="banner-icono" aria-hidden="true">💾</span>
+      <div><strong>Copia de seguridad pendiente</strong><br>Aún no has guardado la copia de hoy.</div>
+      <button id="btnDescargarBackupPendiente" type="button" class="btn btn-primary" style="margin-left:auto;">Descargar copia de seguridad</button>
+    </div>
     <div class="menu-resumen">
       <div class="resumen-item">
         <span class="resumen-label">Recaudado</span>
@@ -925,7 +930,7 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
     <section id="tab-backup" class="tab-content">
       <h2>💾 Copias de Seguridad</h2>
       <div class="info-box">
-        <p>📅 <strong>Copia automática diaria:</strong> se descarga al abrir la app.</p>
+        <p>📅 <strong>Copia diaria:</strong> si hoy no hay copia, la app muestra un aviso con un botón para descargarla.</p>
         <p id="estadoBackupAuto" style="margin-top:6px;"></p>
       </div>
       <div class="form-card">
@@ -1530,7 +1535,7 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
     <section id="tab-nomina" class="tab-content">
       <h2>💶 Nómina</h2>
       <div class="info-box" style="margin-bottom:14px;">
-        ℹ️ Cálculo <strong>provisional</strong>, recalculado desde las jornadas registradas. Aún no se calculan euros, salario base, IRPF ni Seguridad Social: los importes quedan pendientes de las tablas salariales.
+        ℹ️ Cálculo provisional, recalculado desde las jornadas registradas. Los importes conectados proceden de la tabla salarial del mismo año. Los conceptos todavía no conectados, las deducciones, el IRPF, la Seguridad Social y el líquido permanecen pendientes.
       </div>
       <div class="form-card" style="margin-bottom:14px;">
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
@@ -2834,6 +2839,24 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     if (mostrarAviso) mostrarToast("Los datos en memoria no son válidos. No se ha generado ninguna copia.", "error");
     return false;
   }
+  // DEV-009 — Tablas Salariales (Centro de Administración, independiente del
+  // Calendario Conductor). Bloque SIEMPRE presente como objeto (vacío {} si no
+  // hay tablas instaladas), con la misma exigencia que el resto: si existe
+  // pero está dañado, no se genera ninguna copia.
+  var tablasSalarialesParaGuardar = {};
+  try {
+    if (typeof window.tcExportarTablasSalariales === "function") {
+      var tsBloqueExport = window.tcExportarTablasSalariales();
+      if (tsBloqueExport === null) {
+        if (mostrarAviso) mostrarToast("No se pudo verificar las Tablas Salariales. No se ha generado ninguna copia.", "error");
+        return false;
+      }
+      tablasSalarialesParaGuardar = JSON.parse(JSON.stringify(tsBloqueExport || {}));
+    }
+  } catch (e) {
+    if (mostrarAviso) mostrarToast("No se pudo verificar las Tablas Salariales. No se ha generado ninguna copia.", "error");
+    return false;
+  }
 
   // Copia profunda verificable de todo lo que va a guardarse.
   var calendarioParaGuardar, recaudacionesParaGuardar, liquidacionesParaGuardar;
@@ -2861,7 +2884,9 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     liquidaciones: liquidacionesParaGuardar,
     calendarioConductor: calendarioParaGuardar,
     calendarioConductorIncluido: true,
-    calendarioConductorMeta: { totalDias: conteo.total, hojasRuta: conteo.hojas, jornadas: conteo.jornadas, fechaExportacion: fechaExportacion }
+    calendarioConductorMeta: { totalDias: conteo.total, hojasRuta: conteo.hojas, jornadas: conteo.jornadas, fechaExportacion: fechaExportacion },
+    tablasSalariales: tablasSalarialesParaGuardar,
+    tablasSalarialesIncluido: true
   };
   var json;
   try {
@@ -2940,6 +2965,18 @@ function importarDatos(archivo) {
         var calendarioIncluidoValido = esObjetoBackup(cc) && cc.schema === 1 && esObjetoBackup(cc.dias);
         if (!calendarioIncluidoValido) {
           mostrarToast("El backup indica un Calendario Conductor incluido pero no es válido. No se ha importado nada.", "error");
+          return;
+        }
+      }
+      // DEV-009 — Tablas Salariales: mismo criterio que el Calendario Conductor.
+      // Compatible con copias antiguas: si el backup no declara
+      // tablasSalarialesIncluido, no se toca nada de lo ya guardado.
+      var tsSolicitado = datos.tablasSalarialesIncluido === true;
+      if (tsSolicitado) {
+        var tsIncluidoValido = typeof window.tcValidarTablasSalarialesImportadas === "function"
+          && window.tcValidarTablasSalarialesImportadas(datos.tablasSalariales);
+        if (!tsIncluidoValido) {
+          mostrarToast("El backup indica Tablas Salariales incluidas pero no son válidas. No se ha importado nada.", "error");
           return;
         }
       }
@@ -3055,6 +3092,13 @@ function importarDatos(archivo) {
         mostrarToast("No se puede asegurar la vuelta atrás del Calendario Conductor. No se ha importado nada.", "error");
         return;
       }
+      // DEV-009 — Instantánea previa de Tablas Salariales (para poder revertir).
+      var tsPrevioRaw = null, tsPrevioLegible = true;
+      try { tsPrevioRaw = localStorage.getItem('tc_v1_tablas_salariales'); } catch (e) { tsPrevioLegible = false; }
+      if (tsSolicitado && !tsPrevioLegible) {
+        mostrarToast("No se puede asegurar la vuelta atrás de las Tablas Salariales. No se ha importado nada.", "error");
+        return;
+      }
 
       // ============================================================
       // 3) REVERSIÓN ÚNICA Y VERIFICADA
@@ -3072,6 +3116,18 @@ function importarDatos(archivo) {
             }
           } catch (e) { calendarioRevertido = false; }
         }
+        // DEV-009 — Reversión directa al valor previo (existiera o no); no usa
+        // tcImportarTablasSalariales porque esta es la instantánea cruda, no un
+        // bloque nuevo que deba revalidarse.
+        var tsRevertido = true;
+        if (tsSolicitado) {
+          tsRevertido = false;
+          try {
+            if (tsPrevioRaw != null) localStorage.setItem('tc_v1_tablas_salariales', tsPrevioRaw);
+            else localStorage.removeItem('tc_v1_tablas_salariales');
+            tsRevertido = true;
+          } catch (e) { tsRevertido = false; }
+        }
         return Promise.all([
           reemplazarTodos(STORE_RECAUDACIONES, recaudacionesPrevias),
           reemplazarTodos(STORE_LIQUIDACIONES, liquidacionesPrevias)
@@ -3082,7 +3138,7 @@ function importarDatos(archivo) {
             listaLiquidaciones = liquidacionesPrevias;
             try { actualizarResumen(); renderizarRecaudaciones(); renderizarLiquidaciones(); } catch (e) {}
           }
-          return datosRevertidos && calendarioRevertido;
+          return datosRevertidos && calendarioRevertido && tsRevertido;
         }).catch(function () { return false; });
       }
       function avisarFalloImportacion(mensaje) {
@@ -3109,6 +3165,24 @@ function importarDatos(archivo) {
         } catch (e) { calendarioRestaurado = false; }
         if (!calendarioRestaurado) {
           avisarFalloImportacion("No se pudo restaurar el Calendario Conductor. No se ha importado nada.");
+          return;
+        }
+      }
+
+      // ============================================================
+      // 4b) DEV-009 — Tablas Salariales, ya validadas en el paso 1. Igual que
+      //     el calendario: si falla, se revierte TODO (incluido el calendario
+      //     ya restaurado) antes de avisar.
+      // ============================================================
+      if (tsSolicitado) {
+        var tsAplicado = false;
+        try {
+          if (typeof window.tcImportarTablasSalariales === "function") {
+            tsAplicado = window.tcImportarTablasSalariales(datos.tablasSalariales) === true;
+          }
+        } catch (e) { tsAplicado = false; }
+        if (!tsAplicado) {
+          avisarFalloImportacion("No se pudieron restaurar las Tablas Salariales. No se ha importado nada.");
           return;
         }
       }
@@ -3151,32 +3225,88 @@ function inicializarBackup() {
     if (!archivo) { mostrarToast("Selecciona primero un archivo JSON.", "error"); return; }
     confirmarAccion(boton, "⬆️ Importar datos", function () { importarDatos(archivo); document.getElementById("inputImportarJSON").value = ""; });
   });
+  var btnDescargarPendiente = document.getElementById("btnDescargarBackupPendiente");
+  if (btnDescargarPendiente) btnDescargarPendiente.addEventListener("click", descargarBackupPendiente);
   mostrarEstadoBackupAuto();
 }
 
 var BACKUP_AUTO_KEY = "tussam_ultimo_backup_auto";
 var BACKUP_AUTO_NOMBRE = "BackupTUSSAM_automatico.json";
+// Al iniciar la app NO se descarga nada: si hoy no consta una copia confirmada
+// solo se muestra un aviso persistente. La descarga se ejecuta únicamente cuando
+// el usuario pulsa el botón (ver descargarBackupPendiente), nunca por temporizador
+// ni durante la carga.
 function comprobarBackupAutomatico() {
   var hoy = fechaHoyISO(), ultimoBackup = localStorage.getItem(BACKUP_AUTO_KEY);
-  if (ultimoBackup === hoy) return;
-  var copiaCompleta = exportarDatosArchivo(BACKUP_AUTO_NOMBRE, false);
-  if (copiaCompleta === true) {
-    localStorage.setItem(BACKUP_AUTO_KEY, hoy);
-    try{
-      var horaActual=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-      localStorage.setItem('tussam_ultimo_backup_auto_hora', horaActual);
-    }catch(e){}
-    mostrarToast("Copia automática generada", "success");
-  } else {
+  if (ultimoBackup === hoy) { ocultarAvisoBackupPendiente(); return; }
+  mostrarAvisoBackupPendiente();
+}
+function mostrarAvisoBackupPendiente() {
+  var banner = document.getElementById("bannerBackupPendiente");
+  if (banner) banner.style.display = "flex";
+}
+function ocultarAvisoBackupPendiente() {
+  var banner = document.getElementById("bannerBackupPendiente");
+  if (banner) banner.style.display = "none";
+}
+// Solo se llama desde el clic del botón del aviso. La fecha/hora del backup se
+// guardan EXCLUSIVAMENTE después de que la descarga se haya ejecutado con éxito;
+// si la generación falla no se guarda nada y se muestra el error existente.
+var BACKUP_AUTO_HORA_KEY = "tussam_ultimo_backup_auto_hora";
+var descargaBackupEnCurso = false; // impide dobles descargas por clics repetidos
+function descargarBackupPendiente() {
+  if (descargaBackupEnCurso) return;            // evita dobles descargas por clics repetidos
+  // Si la copia de hoy ya quedó registrada (p. ej. un segundo clic tras un éxito),
+  // no se vuelve a descargar: solo se asegura el banner oculto.
+  if (localStorage.getItem(BACKUP_AUTO_KEY) === fechaHoyISO()) { ocultarAvisoBackupPendiente(); return; }
+  descargaBackupEnCurso = true;
+  var boton = document.getElementById("btnDescargarBackupPendiente");
+  if (boton) boton.disabled = true;             // deshabilita el botón al comenzar
+  // Conserva fecha y hora anteriores para poder restaurarlas si algo falla.
+  var fechaPrevia = localStorage.getItem(BACKUP_AUTO_KEY);
+  var horaPrevia  = localStorage.getItem(BACKUP_AUTO_HORA_KEY);
+  try {
+    var copiaCompleta = exportarDatosArchivo(BACKUP_AUTO_NOMBRE, false); // genera la descarga
+    if (copiaCompleta !== true) {
+      throw new Error("copia_incompleta");
+    }
+    // Escribe primero la hora; la fecha de hoy se escribe en último lugar como
+    // marcador final de éxito (si algo falla antes, hoy nunca queda registrado).
+    var horaActual = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    localStorage.setItem(BACKUP_AUTO_HORA_KEY, horaActual);
+    localStorage.setItem(BACKUP_AUTO_KEY, fechaHoyISO());
+    // Solo si descarga y ambas escrituras terminan bien: oculta banner y muestra éxito.
+    ocultarAvisoBackupPendiente();
+    mostrarToast("Copia de seguridad guardada", "success");
+    mostrarEstadoBackupAuto();
+  } catch (e) {
+    // Restaura fecha y hora en dos bloques independientes, para que el fallo de
+    // uno no impida el otro.
+    try {
+      // Elimina primero el posible marcador nuevo y luego intenta restaurar la
+      // fecha anterior: si esa restauración falla, la clave queda eliminada,
+      // nunca con la fecha de hoy.
+      localStorage.removeItem(BACKUP_AUTO_KEY);
+      if (fechaPrevia !== null) localStorage.setItem(BACKUP_AUTO_KEY, fechaPrevia);
+    } catch (eFecha) {}
+    try {
+      // Se intenta siempre, aunque la restauración de la fecha haya fallado.
+      if (horaPrevia === null) localStorage.removeItem(BACKUP_AUTO_HORA_KEY);
+      else localStorage.setItem(BACKUP_AUTO_HORA_KEY, horaPrevia);
+    } catch (eHora) {}
+    // Muestra error y conserva visible el banner.
+    mostrarAvisoBackupPendiente();
     mostrarToast("No se pudo generar una copia completa. No se ha registrado como realizada.", "error");
+  } finally {
+    if (boton) boton.disabled = false;          // reactiva siempre el botón
+    descargaBackupEnCurso = false;
   }
-  mostrarEstadoBackupAuto();
 }
 function mostrarEstadoBackupAuto() {
   var elemento = document.getElementById("estadoBackupAuto");
   if (!elemento) return;
   var ultimoBackup = localStorage.getItem(BACKUP_AUTO_KEY);
-  elemento.textContent = ultimoBackup ? "Última copia automática: " + formatearFecha(ultimoBackup) : "Todavía no se ha generado ninguna copia automática.";
+  elemento.textContent = ultimoBackup ? "Última copia diaria: " + formatearFecha(ultimoBackup) : "Todavía no se ha generado ninguna copia diaria.";
 }
 
 function rellenarFormularioConOCR(datos) {
@@ -6052,6 +6182,43 @@ var NOM_TAB='resumen', NOM_ANIO=null, NOM_MES=null;
 
 function tcNomDur(min){ return tcMinANominaHHMM(min)+' <span style="color:var(--color-text-secondary);font-size:0.8em;">('+tcMinAHorasMin(min)+')</span>'; }
 
+/* DEV-010 — Importe en formato monetario español con dos decimales y símbolo €
+   (p.ej. 2941.65 → "2.941,65 €"). Solo formatea números finitos. */
+function tcNomFmtEuro(n){
+  if(typeof n!=='number'||!isFinite(n)) return '';
+  var s=Math.abs(n).toFixed(2), p=s.split('.');
+  p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  return (n<0?'-':'')+p[0]+','+p[1]+' €';
+}
+
+/* DEV-010R1 — Importe monetario en euros → CÉNTIMOS enteros con redondeo
+   DECIMAL al céntimo (mitad hacia arriba). Nunca acumula euros con decimales
+   binarios: cada importe de línea se convierte aquí a un entero de céntimos y
+   los totales se suman ya en céntimos. La corrección 1e-9 compensa el error de
+   representación binaria (p.ej. 1,005 se almacena como 1.00499999…): como los
+   importes de las tablas tienen 4 decimales como máximo, nunca acerca un valor
+   legítimo a la frontera de redondeo. Devuelve null si el euro no es finito o
+   si los céntimos no son un entero seguro (→ la línea y el total quedan Pdte.). */
+function tcNomEuroACentimos(euros){
+  if(typeof euros!=='number'||!isFinite(euros)) return null;
+  var signo=euros<0?-1:1;
+  var centimos=Math.round(Math.abs(euros)*100+1e-9)*signo;
+  if(!Number.isSafeInteger(centimos)) return null;
+  return centimos;
+}
+
+/* DEV-010R1 — Formatea un entero de CÉNTIMOS como importe español "1.234,56 €".
+   El formato parte siempre de los céntimos ya redondeados, no del euro flotante.
+   Devuelve '' si no recibe un entero seguro. */
+function tcNomFmtCentimos(centimos){
+  if(!Number.isSafeInteger(centimos)) return '';
+  var neg=centimos<0; centimos=Math.abs(centimos);
+  var ent=Math.floor(centimos/100), dec=centimos%100;
+  var e=String(ent).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  var d=(dec<10?'0':'')+dec;
+  return (neg?'-':'')+e+','+d+' €';
+}
+
 /* Rellena los selectores de año y mes (años presentes en dias + año actual). */
 function tcNomPoblarSelectores(){
   var selA=document.getElementById('nomAnio'), selM=document.getElementById('nomMes');
@@ -6059,6 +6226,15 @@ function tcNomPoblarSelectores(){
   var hoy=new Date();
   var anios={}; anios[hoy.getFullYear()]=true;
   Object.keys(dias).forEach(function(k){ var y=parseInt(String(k).slice(0,4),10); if(!isNaN(y)) anios[y]=true; });
+  /* DEV-010R1 — Une también los años con tabla salarial válida (lector público
+     de solo lectura). Protegido: si el lector no existe, no altera la lista; el
+     almacén corrupto devuelve [] y por tanto no añade años ni bloquea nada. No
+     se buscan importes en años alternativos: esto solo puebla el selector. */
+  try{
+    if(typeof window.tsLeerAniosTablas==='function'){
+      window.tsLeerAniosTablas().forEach(function(y){ if(typeof y==='number'&&!isNaN(y)) anios[y]=true; });
+    }
+  }catch(e){}
   var lista=Object.keys(anios).map(function(x){return parseInt(x,10);}).sort(function(a,b){return b-a;});
   if(NOM_ANIO==null) NOM_ANIO=hoy.getFullYear();
   if(NOM_MES==null) NOM_MES=hoy.getMonth()+1;
@@ -6148,18 +6324,25 @@ function tcNomRenderProvisional(data){
   /* Conceptos devengados con CANTIDAD ≠ 0. Solo se listan los que se han
      generado; el salario base se muestra aparte (siempre). */
   var filas=[];
-  function add(cod,desc,tipo,val,unidad){
+  /* DEV-010 — idSal/modo son OPCIONALES: solo los conceptos indicados para la
+     conexión mensual los aportan. modo 'dias' = días × importe; modo 'once' =
+     importe una sola vez (aunque la cantidad mostrada sea 30). El resto de
+     conceptos (nocturnidad, desplazamiento, deje, TP 2h…) NO se conectan aún:
+     su importe sigue «Pdte.». La cantidad mostrada (cant) no se altera nunca. */
+  function add(cod,desc,tipo,val,unidad,idSal,modo){
     if(!val) return; /* 0, null o undefined: no se muestra */
     var cant = (tipo==='minutos') ? tcMinANominaHHMM(val)
              : (String(val)+(unidad?(' '+unidad):''));
-    filas.push({ cod:cod, desc:desc, cant:cant });
+    filas.push({ cod:cod, desc:desc, cant:cant,
+                 idSal:idSal||null, modo:modo||null,
+                 dias:(typeof val==='number'?val:0) });
   }
   /* DEV-008R3 — Mutuamente excluyentes (ver tcResumenLaboralMes): 4A10 cuando
      el mes está completo y asignado oficialmente a turno partido (cantidad
      fija 30); 4A41 cuando no (un día PM/PT/PN = una unidad). add() ya oculta
      la fila cuyo valor sea 0, así que nunca se muestran ambas a la vez. */
-  add('4A10','Turno partido','unid',R.tpMensualUnidades,'días');
-  add('4A41','Turno partido diario','unid',R.tpDiarioUnidades,'días');
+  add('4A10','Turno partido','unid',R.tpMensualUnidades,'días','4A10_PARTIDO_MES','once');
+  add('4A41','Turno partido diario','unid',R.tpDiarioUnidades,'días','4A41_PARTIDO_DIA','dias');
   add('4A4E','TP hasta 2 horas','unid',R.tpHasta2h,'ud.');
   add('4A4F','TP mayor de 2 horas','unid',R.tpMas2h,'ud.');
   add('4A31','Horas extraordinarias','minutos',R.horasExtraordinarias);
@@ -6173,15 +6356,15 @@ function tcNomRenderProvisional(data){
   add(null,'Deje normal','minutos',R.dejeNormal);
   add(null,'Deje · Extra Calle 7','minutos',R.extraCalle7);
   /* DEV-008R2 — Desde el turno final (reg.turno); ver tcResumenLaboralMes(). */
-  add('4A0I','Prima diaria tarde','unid',R.primaTardeDias,'días');
-  add('4A30','Plus por sábado trabajado','unid',R.plusSabadoDias,'días');
-  add('4A27','Plus por domingo trabajado','unid',R.plusDomingoDias,'días');
+  add('4A0I','Prima diaria tarde','unid',R.primaTardeDias,'días','4A0I_TARDE','dias');
+  add('4A30','Plus por sábado trabajado','unid',R.plusSabadoDias,'días','4A30_SABADO_VIGENCIA','dias');
+  add('4A27','Plus por domingo trabajado','unid',R.plusDomingoDias,'días','4A27_DOMINGO_VIGENCIA','dias');
   /* DEV-008R10 — Festivo trabajado desde reg.turno + tcEventoDia(fecha real);
      ver tcResumenLaboralMes(). Categorías excluyentes, add() oculta si 0. */
-  add('4A28','Festivo trabajado','unid',R.festivoTrabajadoDias,'días');
-  add('4A72','Plus festivo especial trabajado','unid',R.festivoEspecialDias,'días');
-  add('4A93','Plus Domingo de Ramos trabajado','unid',R.domingoRamosDias,'días');
-  add('4A37','Plus Festivo Desplazado','unid',R.festivoDesplazadoDias,'días');
+  add('4A28','Festivo trabajado','unid',R.festivoTrabajadoDias,'días','4A28_FESTIVO','dias');
+  add('4A72','Plus festivo especial trabajado','unid',R.festivoEspecialDias,'días','4A72_FESTIVO_ESPECIAL','dias');
+  add('4A93','Plus Domingo de Ramos trabajado','unid',R.domingoRamosDias,'días','4A93_RAMOS','dias');
+  add('4A37','Plus Festivo Desplazado','unid',R.festivoDesplazadoDias,'días','4A37_FESTIVO_DESPLAZ','dias');
 
   /* Celda de descripción con su código (si lo tiene). */
   function descCelda(cod,desc){
@@ -6205,33 +6388,78 @@ function tcNomRenderProvisional(data){
     +'<div class="nom-r-h n">Importe descuento</div>';
   h+='<div class="nom-r-sec">I · Devengos</div>';
 
-  /* Salario base: SIEMPRE presente. Sin días naturales; mientras no haya días de
-     alta, salario ni importe fiables, tanto la cantidad como el importe quedan
-     "Pendiente de configuración". */
-  h+=descCelda(null,'Sueldo - Salario base')
-    +'<div class="n nom-recibo-pend">Pdte.</div>'
-    +'<div class="n nom-recibo-pend">Pdte.</div>'
+  /* DEV-010 — Resolución del importe de un concepto conectado, SOLO en vista
+     mensual y SOLO del MISMO año de la nómina (anio=R.anio). Devuelve el HTML
+     interior de la celda «Importe devengo» y el número (null = Pdte.). Marca
+     estadoAlmacenCorrupto (almacén dañado → ningún importe) o faltaAlgunImporte
+     (sin tabla / sin ID / importe pendiente). No busca en otros años. */
+  var anio=R.anio;
+  var estadoAlmacenCorrupto=false;   /* almacén dañado detectado al leer */
+  var faltaAlgunImporte=false;       /* algún concepto conectado sin importe utilizable */
+  function resolverImporte(idSal,modo,dias){
+    if(!esMes||!idSal) return { inner:celdaPend, cent:null };
+    var r=window.tsLeerImporteConcepto(anio,idSal);
+    if(r.estado==='corrupto'){ estadoAlmacenCorrupto=true; return { inner:celdaPend, cent:null }; }
+    if(r.estado!=='ok'){ faltaAlgunImporte=true; return { inner:celdaPend, cent:null }; }
+    /* DEV-010R1 — Importe final de la línea (euros) → céntimos enteros con
+       redondeo decimal. Si no es finito o no cabe como entero seguro, la línea
+       queda «Pdte.» (y con ella el total). No se acumulan euros flotantes. */
+    var euros=(modo==='once')?r.importe:(r.importe*(dias||0));
+    var cent=tcNomEuroACentimos(euros);
+    if(cent==null){ faltaAlgunImporte=true; return { inner:celdaPend, cent:null }; }
+    return { inner:tcEsc(tcNomFmtCentimos(cent)), cent:cent };
+  }
+
+  /* Salario base: SIEMPRE presente. En vista mensual (DEV-010) la cantidad es
+     fija 30,00 y el importe (una sola vez) se toma de 4A00_SALARIO_BASE del año
+     de la nómina; en anual permanece «Pdte.» como hasta ahora. */
+  var sbRes=resolverImporte('4A00_SALARIO_BASE','once',null);
+  h+=descCelda('4A00','Sueldo - Salario base')
+    +(esMes?'<div class="n">30,00</div>':'<div class="n nom-recibo-pend">Pdte.</div>')
+    +'<div class="n">'+sbRes.inner+'</div>'
     +'<div class="n"></div>';
 
-  /* Resto de conceptos (solo los de cantidad ≠ 0). Importe € pendiente de tablas. */
+  /* Total devengado: solo se muestra si el salario base y TODOS los conceptos
+     visibles tienen importe; si falta uno, queda «Pdte.». Los conceptos no
+     conectados (importe null) impiden el total, como es debido. DEV-010R1 — el
+     total se acumula EXCLUSIVAMENTE con los céntimos ya redondeados de cada
+     línea; nunca con euros de coma flotante. */
+  var todosImportes=(sbRes.cent!=null);
+  var totalCent=(sbRes.cent!=null)?sbRes.cent:0;
+
+  /* Resto de conceptos (solo los de cantidad ≠ 0). Importe € por ID exacto. */
   filas.forEach(function(f){
+    var res=resolverImporte(f.idSal,f.modo,f.dias);
+    if(res.cent==null) todosImportes=false; else totalCent+=res.cent;
     h+=descCelda(f.cod,f.desc)
       +'<div class="n">'+tcEsc(f.cant)+'</div>'
-      +'<div class="n">'+celdaPend+'</div>'
+      +'<div class="n">'+res.inner+'</div>'
       +'<div class="n"></div>';
   });
   h+='</div></div>';
   /* Deducciones (II) y bases de cotización se OCULTAN: aún no hay datos fiables. */
 
-  /* --- Totales (se muestran como pendientes hasta que existan importes) --- */
+  /* --- Totales. Devengado real solo cuando todo tiene importe; a deducir y
+     líquido siguen pendientes (DEV-010: deducciones aún no conectadas). --- */
+  var mostrarTotal=(esMes&&todosImportes&&Number.isSafeInteger(totalCent));
   h+='<div class="nom-recibo-tot">';
-  h+='<div class="r"><span>Total devengado</span><span class="nom-recibo-pend">'+PEND+'</span></div>';
+  h+='<div class="r"><span>Total devengado</span><span'+(mostrarTotal?'':' class="nom-recibo-pend"')+'>'+(mostrarTotal?tcEsc(tcNomFmtCentimos(totalCent)):PEND)+'</span></div>';
   h+='<div class="r"><span>Total a deducir</span><span class="nom-recibo-pend">'+PEND+'</span></div>';
   h+='<div class="r big"><span>Líquido a percibir (provisional)</span><span class="nom-recibo-pend">'+PEND+'</span></div>';
   h+='</div>';
 
-  /* --- Leyenda + aviso obligatorio --- */
-  h+='<div class="nom-recibo-foot">Sueldo - Salario base: Pendiente de configuración (faltan días de alta, salario e importe fiables). Pdte. = pendiente de configuración. La columna D/HR/% recoge días, horas (formato HH.MM) o porcentajes recalculados desde las jornadas registradas; los importes en € se completarán al cargar las tablas salariales. Los conceptos aparecen conforme se generan y solo si su cantidad es distinta de cero.</div>';
+  /* --- Aviso específico de importes (DEV-010, dentro del recibo, sin bloquear
+     la app). El almacén corrupto tiene prioridad y su mensaje es propio. --- */
+  if(estadoAlmacenCorrupto){
+    h+='<div class="nom-recibo-aviso">⚠️ El almacén de Tablas Salariales está dañado: no se muestra ningún importe. Restaura una copia de seguridad válida para recuperar los importes.</div>';
+  } else if(faltaAlgunImporte){
+    h+='<div class="nom-recibo-aviso">⚠️ Faltan importes en la tabla salarial de '+anio+' (tabla ausente, concepto no encontrado o importe pendiente): las celdas afectadas y el total devengado quedan como «Pdte.». Revisa las Tablas Salariales de ese año.</div>';
+  }
+
+  /* --- Leyenda + aviso obligatorio. La nota de salario base solo aparece
+     mientras su importe siga pendiente (DEV-010). --- */
+  var sbNota=(sbRes.cent==null)?'Sueldo - Salario base: Pendiente de configuración (faltan días de alta, salario e importe fiables). ':'';
+  h+='<div class="nom-recibo-foot">'+sbNota+'Pdte. = pendiente de configuración. La columna D/HR/% recoge días, horas (formato HH.MM) o porcentajes recalculados desde las jornadas registradas; los importes en € proceden de las Tablas Salariales del mismo año. Los conceptos aparecen conforme se generan y solo si su cantidad es distinta de cero.</div>';
   h+='<div class="nom-recibo-aviso">Documento provisional. Los datos se actualizarán durante el mes y no sustituyen a la nómina oficial.</div>';
 
   h+='</div>';
@@ -11059,7 +11287,10 @@ window.tcMsgAbrirDia=function(fecha){
       calendarioLaboral:'📅 Calendario Laboral',
       calendariosInstalados:'📋 Calendarios instalados',
       eliminarCalendario:'🗑️ Eliminar calendario',
-      estadoSistema:'🗄 Estado del Sistema'
+      estadoSistema:'🗄 Estado del Sistema',
+      tablasSalariales:'💶 Tablas Salariales',
+      tablasSalarialesEditor:'💶 Revisión de tabla salarial',
+      tablasSalarialesConfirmar:'⚠️ Confirmar sustitución'
     };
 
     /* ---------- Acceso: botón "Administrador" en el modal de ajustes ---------- */
@@ -11192,6 +11423,1528 @@ window.tcMsgAbrirDia=function(fecha){
       adminGuardarMeta(meta);
     };
 
+    /* ==========================================================================
+       DEV-009R6 — Receptor de Tablas Salariales (Centro de Administración).
+       Módulo aditivo e independiente, autocontenido en esta IIFE. Importa
+       tablas salariales desde PDF/imagen reutilizando PDF.js y el OCR ya
+       existentes en la app (obtenerApiKeyOCR/comprimirImagen/
+       leerTicketConOCRSpace/cargarPDFjsSiNecesario) sin añadir librerías. La
+       lectura de PDF es TABULAR por coordenadas Y/X (tsProcesarPaginaTabular):
+       agrupa items por fila conservando su X y su Y, detecta líneas de
+       cabecera (ID y Artículo como roles DISTINTOS —ID literal seguro,
+       Artículo a fuente—, Código, Concepto, Importe, Unidad, Fuente) y usa
+       sus límites de columna para asignar cada celda, uniendo continuaciones
+       multilínea solo si están próximas en Y a la fila anterior dentro del
+       área de tabla (los pies "Página N"/"N/M" se ignoran; una continuación
+       superior ambigua se informa, nunca se fusiona) y cerrando la fila al
+       terminar cada página. Una página digital es válida solo si su parseo
+       produce ≥1 fila COMPLETA (un código suelto no basta); si no, se prueba
+       la línea suelta (una fila completa en un solo fragmento evita OCR) y,
+       en último término, render+OCR si hay clave — también cuando
+       getTextContent falla o agota plazo. Las filas de OCR se deduplican
+       contra las digitales (por ID o código+concepto+importe+unidad+fuente).
+       El agrupador de líneas por coordenadas (tsTextoPorLineas/
+       tsAgruparCeldasPorLinea) es una copia LOCAL a este módulo: tcTextoPorLineas
+       del Diario vive dentro de otra IIFE y no es accesible desde aquí.
+       Extrae y conserva por fila: id (si el origen lo trae se respeta; si no,
+       se genera desde código+concepto), código (vacío solo con "SIN CÓDIGO" e
+       ID explícito), concepto, importe, unidad y fuente completa. SIEMPRE se
+       muestra una revisión editable (añadir/modificar/eliminar filas) antes
+       de guardar nada; si no se detecta ninguna fila el editor se abre vacío
+       sin bloquear la app, pero NUNCA se permite guardar/sustituir con cero
+       filas. El importe pendiente (PENDIENTE/SIN IMPORTE/NO INDICADO/raya/
+       columna vacía) se guarda como null, nunca como 0 ni negativo. Al
+       detectar el año en una importación se actualiza a la vez tsEditAnio y
+       el campo visible (tsFijarAnioEditor); un import fallido no toca
+       ninguno de los dos. Se guarda una tabla ACTIVA por año, independiente
+       entre años (tc_v1_tablas_salariales); actualizar un año nunca toca los
+       demás. Sustituir una tabla ya existente exige ver antes qué se añade,
+       modifica y elimina, y confirmarlo explícitamente. El guardado es
+       transaccional: si falla, la tabla anterior y el editor abierto se
+       conservan íntegros. Un almacén corrupto bloquea guardar/editar/
+       eliminar (nunca se sobrescribe ni se trata como vacío en silencio).
+       Cada fila solo admite id/codigo/concepto/importe/unidad/fuente:
+       cualquier propiedad desconocida la rechaza. numConceptos/numPendientes
+       se recalculan siempre desde las filas (leer, guardar, importar,
+       exportar), nunca se confía en los contadores guardados. No se guarda
+       el PDF ni sus imágenes, solo los datos ya revisados. No se conecta con
+       la Nómina Provisional ni con ningún cálculo existente. */
+    var STORE_TS='tc_v1_tablas_salariales';
+    var tsAlmacenCorrupto=false; /* true si la última lectura detectó JSON corrupto o forma inválida */
+    var tsAlmacenErrorMsg='';
+
+    /* ---------- Seguridad de texto (defensa en profundidad además del escapado
+       al renderizar): rechaza controles y cualquier cosa con pinta de HTML o
+       atributo de evento. Se usa tanto al validar ediciones manuales como al
+       validar backups importados/exportados. ---------- */
+    function tsTextoSeguro(v,max){
+      if(typeof v!=='string') return false;
+      if(v.length>max) return false;
+      /* Controles no imprimibles (salvo tab/LF/CR), comprobados por codigo
+         de caracter para no depender de escapes de unicode en el literal. */
+      for(var ci=0;ci<v.length;ci++){
+        var cc=v.charCodeAt(ci);
+        if(cc<32&&cc!==9&&cc!==10&&cc!==13) return false;
+        if(cc===127) return false;
+      }
+      if(/<[a-z!/]/i.test(v)) return false;      /* cualquier apertura de etiqueta */
+      if(/on[a-z]+\s*=/i.test(v)) return false;  /* onclick=, onerror=, ... */
+      if(/javascript:/i.test(v)) return false;
+      return true;
+    }
+
+    /* ---------- Lectura del almacén (consciente de corrupción) ----------
+       Nunca convierte JSON corrupto o con forma inválida en {} de forma
+       transparente para quien escribe: solo la LECTURA para pintar pantallas
+       usa {} como valor de repliegue, pero deja marcado tsAlmacenCorrupto
+       para que cualquier acción de guardar/editar/eliminar se bloquee. */
+    function tsLeerTablas(){
+      var raw=null;
+      try{ raw=localStorage.getItem(STORE_TS); }
+      catch(e){ tsAlmacenCorrupto=true; tsAlmacenErrorMsg='No se pudo acceder al almacenamiento local.'; return {}; }
+      if(raw==null){ tsAlmacenCorrupto=false; tsAlmacenErrorMsg=''; return {}; }
+      var d;
+      try{ d=JSON.parse(raw); }
+      catch(e){ tsAlmacenCorrupto=true; tsAlmacenErrorMsg='El almacén de Tablas Salariales contiene JSON corrupto.'; return {}; }
+      if(!d||typeof d!=='object'||Array.isArray(d)){
+        tsAlmacenCorrupto=true; tsAlmacenErrorMsg='El almacén de Tablas Salariales tiene un formato inesperado.'; return {};
+      }
+      var anios=Object.keys(d);
+      for(var i=0;i<anios.length;i++){
+        var clave=anios[i], t=d[clave];
+        if(!/^\d{4}$/.test(clave)||!tsTablaAnioValida(t)||String(t.anio)!==clave){
+          tsAlmacenCorrupto=true;
+          tsAlmacenErrorMsg='La tabla del año "'+clave+'" no es válida en el almacén.';
+          return {};
+        }
+        /* Contadores recalculados SIEMPRE desde las filas al leer: nunca se
+           confía en los numConceptos/numPendientes persistidos (pueden venir
+           desactualizados de un backup antiguo). */
+        var pend=0;
+        for(var j=0;j<t.filas.length;j++){ if(t.filas[j].importe==null) pend++; }
+        if(!t.meta||typeof t.meta!=='object') t.meta={};
+        t.meta.numConceptos=t.filas.length;
+        t.meta.numPendientes=pend;
+      }
+      tsAlmacenCorrupto=false; tsAlmacenErrorMsg='';
+      return d;
+    }
+    function tsGuardarTablas(datos){
+      try{ localStorage.setItem(STORE_TS,JSON.stringify(datos||{})); return true; }
+      catch(e){ return false; }
+    }
+    /* Refresca el estado de corrupción con una lectura real y lo devuelve. */
+    function tsAlmacenCorruptoActual(){ tsLeerTablas(); return tsAlmacenCorrupto; }
+    /* Guarda de escritura: bloquea guardar/editar/eliminar si el almacén no es
+       válido, avisando siempre con el motivo concreto. */
+    function tsAlmacenOk(){
+      if(tsAlmacenCorruptoActual()){
+        mostrarToast('⚠️ '+(tsAlmacenErrorMsg||'El almacén de Tablas Salariales no es válido.')+' No se puede guardar, editar ni eliminar hasta restaurar una copia de seguridad válida.','error');
+        return false;
+      }
+      return true;
+    }
+
+    /* ---------- DEV-010 — Lector salarial público y de SOLO LECTURA ----------
+       Recibe año + ID de concepto y devuelve el importe de ESE año en
+       exclusiva. Reutiliza tsLeerTablas() (misma validación y detección de
+       corrupción); no escribe nada. NUNCA busca en otro año ni resuelve por
+       código: la coincidencia es SIEMPRE por ID exacto (comparado con espacios
+       recortados). Estados devueltos:
+         { estado:'ok',          importe:<número> }  → concepto con importe
+         { estado:'sinTabla',    importe:null      }  → no hay tabla de ese año
+         { estado:'sinConcepto', importe:null      }  → ese ID no está en la tabla
+         { estado:'pendiente',   importe:null      }  → el ID existe pero importe null
+         { estado:'corrupto',    importe:null      }  → almacén no válido (sin importe)
+       Un almacén corrupto tiene prioridad: nunca se interpreta como "sin tabla". */
+    window.tsLeerImporteConcepto=function(anio,id){
+      var idBuscado=String(id==null?'':id).trim();
+      var datos=tsLeerTablas();
+      if(tsAlmacenCorrupto) return { estado:'corrupto', importe:null };
+      var clave=String(anio);
+      if(!/^\d{4}$/.test(clave)) return { estado:'sinTabla', importe:null };
+      var t=datos[clave];
+      if(!t||!Array.isArray(t.filas)) return { estado:'sinTabla', importe:null };
+      if(!idBuscado) return { estado:'sinConcepto', importe:null };
+      for(var i=0;i<t.filas.length;i++){
+        var f=t.filas[i];
+        if(f&&typeof f.id==='string'&&f.id.trim()===idBuscado){
+          if(f.importe==null) return { estado:'pendiente', importe:null };
+          return { estado:'ok', importe:f.importe };
+        }
+      }
+      return { estado:'sinConcepto', importe:null };
+    };
+
+    /* ---------- DEV-010R1 — Lector público de años de las tablas salariales ----
+       SOLO LECTURA. Reutiliza tsLeerTablas() (misma validación y detección de
+       corrupción) y devuelve los años (números de 4 dígitos) con tabla válida.
+       Si el almacén está corrupto devuelve []. No escribe nada, no busca
+       importes ni resuelve por código. */
+    window.tsLeerAniosTablas=function(){
+      var datos=tsLeerTablas();
+      if(tsAlmacenCorrupto) return [];
+      var anios=[];
+      Object.keys(datos).forEach(function(k){
+        if(/^\d{4}$/.test(k)){ var y=parseInt(k,10); if(!isNaN(y)) anios.push(y); }
+      });
+      return anios;
+    };
+
+    /* ---------- Normalización / generación de ID ---------- */
+    function tsSlug(s){
+      return String(s||'').toLowerCase()
+        .replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i')
+        .replace(/[óòö]/g,'o').replace(/[úùü]/g,'u').replace(/ñ/g,'n')
+        .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60);
+    }
+    var tsSeq=0;
+    /* Propuesta inicial de ID a partir de código+concepto, desambiguada frente
+       a los IDs ya usados en la revisión actual. El usuario puede editarlo
+       libremente después ("Si falta ID, genéralo desde código+concepto y
+       permite editarlo; si existe, respétalo"). */
+    function tsGenerarId(codigo,concepto,idsUsados){
+      var base=(tsSlug(codigo)?tsSlug(codigo)+'-':'')+tsSlug(concepto);
+      if(!base) base='concepto-'+(++tsSeq);
+      var candidato=base, n=2;
+      idsUsados=idsUsados||{};
+      while(idsUsados[candidato.toLowerCase()]){ candidato=base+'-'+n; n++; }
+      return candidato;
+    }
+
+    /* ---------- Normalizador estricto de importes ----------
+       Acepta EXACTAMENTE estos formatos españoles: "1.234,56" (miles con
+       punto en grupos de 3 + coma decimal), "1234,56" (coma decimal sin
+       miles), "1.234.567" (miles con punto, entero) y "1234" (entero simple).
+       Cualquier otra cosa (separadores incoherentes, texto parcial, formato
+       mixto, etc.) se rechaza devolviendo null. Nunca acepta 0 ni negativos:
+       ambos se tratan igual que "no reconocido" (null → pendiente en el
+       parseo, error de validación al guardar manualmente). */
+    function tsNormalizarImporte(texto){
+      var t=String(texto==null?'':texto).trim();
+      if(t==='') return null;
+      var limpio=null;
+      if(/^\d{1,3}(\.\d{3})*,\d{1,4}$/.test(t)) limpio=t.replace(/\./g,'').replace(',','.');
+      else if(/^\d+,\d{1,4}$/.test(t)) limpio=t.replace(',','.');
+      else if(/^\d{1,3}(\.\d{3})+$/.test(t)) limpio=t.replace(/\./g,'');
+      else if(/^\d+$/.test(t)) limpio=t;
+      else return null; /* separadores incoherentes o texto parcial: rechazado */
+      var num=parseFloat(limpio);
+      if(!isFinite(num)||num<=0) return null; /* nunca 0 ni negativos */
+      return num;
+    }
+    /* Redisplay de un número ya validado como texto editable en español. */
+    function tsFormatearImporte(n){
+      if(typeof n!=='number'||!isFinite(n)) return '';
+      var s=String(n);
+      return s.indexOf('.')>=0?s.replace('.',','):s;
+    }
+
+    /* Busca el primer importe reconocible en cualquier punto del texto (no
+       exige que esté al final: puede haber columnas de unidad y/o fuente
+       después). Prioriza candidatos con coma decimal (inequívocos en este
+       dominio); si no hay ninguno, prueba con enteros de 2+ dígitos. Si el
+       PRIMER candidato encontrado no es un importe válido (negativo, cero o
+       formato incoherente, p.ej. "1,234.56" mezclando separadores) se informa
+       como error en vez de probar el siguiente candidato como si el inválido
+       no hubiese estado ahí: eso ocultaría un importe explícito erróneo
+       tratándolo como ausente. Los años sueltos sin separadores (1900-2099,
+       p.ej. "2024" de una cabecera de convenio) nunca se consideran
+       candidatos a importe. Devuelve:
+       - null: no hay ningún número en el texto → importe pendiente, sin aviso.
+       - {explicito:true,importe:null,inicio,fin}: marcador explícito de
+         pendiente (PENDIENTE/SIN IMPORTE/raya aislada) → importe pendiente.
+       - {error:true,texto,inicio}: se encontró un número pero no es un
+         importe válido → la fila entera debe rechazarse.
+       - {importe,inicio,fin,unidad}: importe válido encontrado. */
+    var TS_RE_UNIDAD=/^(€\s*\/\s*\S+|€|EUR|%|ud\.?|d[ií]as?|horas?|min(?:utos)?)/i;
+    /* Marcador explícito de pendiente en texto libre: SOLO se usa cuando no
+       hay ningún número real en la línea. Un concepto puede legítimamente
+       contener la palabra "pendiente" en su propio texto (p.ej. "Prima
+       pendiente de definir 50,00"): si además hay un importe numérico válido
+       en la línea, ese importe real manda (y el concepto conserva la palabra
+       "pendiente" sin truncarse ahí); el marcador de texto solo decide la fila
+       cuando es la única señal disponible, y se toma su ÚLTIMA aparición
+       inequívoca (no la primera) para acercarse a la columna de importe, que
+       normalmente va al final de la línea. */
+    var TS_RE_PENDIENTE_TEXTO_G=/\b(PENDIENTE|SIN\s+IMPORTE|NO\s+INDICADO)\b/gi;
+    function tsBuscarImporteEnTexto(texto){
+      var t=String(texto==null?'':texto);
+      var candidatos=[], m;
+      var reGlobal=/-?\d[\d.,]*/g;
+      while((m=reGlobal.exec(t))!==null){
+        if(/^(19|20)\d{2}$/.test(m[0])) continue; /* año suelto sin separadores: nunca es importe */
+        candidatos.push({texto:m[0],inicio:m.index,fin:m.index+m[0].length});
+      }
+      if(!candidatos.length){
+        var mPend=null, mIter;
+        TS_RE_PENDIENTE_TEXTO_G.lastIndex=0;
+        while((mIter=TS_RE_PENDIENTE_TEXTO_G.exec(t))!==null) mPend=mIter; /* se queda con la última */
+        if(mPend) return {importe:null,inicio:mPend.index,fin:mPend.index+mPend[0].length,unidad:null,explicito:true};
+        var mRaya=/(^|\s)([-—–])(\s|$)/.exec(t);
+        if(mRaya) return {importe:null,inicio:mRaya.index+mRaya[1].length,fin:mRaya.index+mRaya[1].length+mRaya[2].length,unidad:null,explicito:true};
+        return null;
+      }
+      var conComa=candidatos.filter(function(c){ return c.texto.indexOf(',')>=0; });
+      var orden=conComa.length?conComa:candidatos;
+      var primero=orden[0];
+      var valor=tsNormalizarImporte(primero.texto);
+      if(valor===null) return {error:true,texto:primero.texto,inicio:primero.inicio};
+      var resto=t.slice(primero.fin).trim();
+      var unidad=null;
+      var mU=TS_RE_UNIDAD.exec(resto);
+      if(mU) unidad=mU[0].replace(/\s+/g,'');
+      return {importe:valor,inicio:primero.inicio,fin:primero.fin,unidad:unidad};
+    }
+
+    /* Interpreta el CONTENIDO EXACTO de una columna de importe ya delimitada
+       ("ID opcional | código | concepto | importe | unidad | fuente"): a
+       diferencia de tsBuscarImporteEnTexto no busca dentro de texto libre,
+       valida la columna completa. Vacío, "-"/"—"/"–", "PENDIENTE" o "SIN
+       IMPORTE" → pendiente (null), incluida la columna vacía explícita.
+       Cualquier otro valor debe ser EXACTAMENTE un importe reconocido por
+       tsNormalizarImporte (con sufijo de unidad opcional); si no lo es
+       (negativo, cero, formato incoherente) se devuelve como error para que
+       la fila completa se rechace. */
+    var TS_RE_PENDIENTE_EXPLICITO=/^(PENDIENTE|SIN\s*IMPORTE|NO\s*INDICADO|-|—|–)$/i;
+    /* "SIN CÓDIGO" (tolerante a la tilde) marca explícitamente que la fila no
+       tiene código de nómina; solo se admite cuando la fila trae un ID
+       explícito (ver tsFinalizarFilaTabular / tsParsearLineaDelimitada). */
+    var TS_RE_SIN_CODIGO=/^SIN\s*C[OÓ]DIGO$/i;
+    function tsParsearColumnaImporte(texto){
+      var t=String(texto==null?'':texto).trim();
+      if(t===''||TS_RE_PENDIENTE_EXPLICITO.test(t)) return {importe:null,unidad:null};
+      var m=/^([\-–—]?[\d.,]+)\s*(€\s*\/\s*\S+|€|EUR|%|ud\.?|d[ií]as?|horas?|min(?:utos)?)?$/i.exec(t);
+      var numTxt=m?m[1]:t;
+      var unidad=(m&&m[2])?m[2].replace(/\s+/g,''):null;
+      var valor=tsNormalizarImporte(numTxt);
+      if(valor===null) return {error:true,texto:t};
+      return {importe:valor,unidad:unidad};
+    }
+
+    /* ---------- Parser de texto (PDF u OCR) a filas propuestas ----------
+       Best-effort: es solo una PROPUESTA, el usuario revisa/edita/añade/
+       elimina filas siempre antes de guardar. Solo se aceptan filas con
+       código alfanumérico real (2-7 caracteres que contengan letras Y
+       números): es lo que permite ignorar cabeceras, años sueltos y
+       artículos de convenio (p.ej. "2024" o "Artículo 49") sin tratarlos
+       como conceptos salariales. Dos formas de línea:
+       1) Delimitada (tabulador, ';' o '|'): permite un ID explícito en la
+          primera columna cuando no tiene pinta de código y hay >=4 columnas;
+          si no hay ID explícito, se generará uno. Las columnas vacías se
+          conservan tal cual (no se eliminan) para no desplazar el resto de
+          columnas. La columna de fuente, cuando está presente, se respeta
+          tal cual; si falta, se usa el nombre del archivo importado.
+       2) Texto libre reconstruido por líneas (código + concepto + importe,
+          con posibles columnas de unidad/fuente después); la fuente siempre
+          es el nombre del archivo importado. */
+    function tsEsCodigoAlfanumerico(tok){
+      return typeof tok==='string'&&/^[0-9A-Z]{2,7}$/i.test(tok)&&/[0-9]/.test(tok)&&/[A-Za-z]/.test(tok);
+    }
+    /* Forma de ID (no de código): contiene '_' o '-' (p.ej. "4A00_SALARIO_BASE").
+       Se usa tanto en el parseo tabular como en el de línea suelta para decidir
+       si el texto que precede al código es un ID de verdad o si es más bien
+       artículo/texto libre que debe guardarse como fuente en su lugar. */
+    function tsPareceId(tok){
+      return typeof tok==='string'&&/^[A-Za-z0-9][A-Za-z0-9_-]*[_-][A-Za-z0-9_-]*$/.test(tok);
+    }
+    /* Validador de código PERMISIVO para columnas ya identificadas por cabecera
+       (parseo tabular): a diferencia de tsEsCodigoAlfanumerico (que exige letra
+       Y número para poder distinguir un código de un año suelto cuando NO hay
+       columnas conocidas), aquí la columna "Código" ya está localizada sin
+       ambigüedad por su cabecera, así que también se aceptan códigos
+       puramente numéricos reales del convenio (p.ej. "4188"). Sigue
+       rechazando un año suelto (1900-2099) por si acaso apareciera mal
+       alineado en la columna. */
+    function tsCodigoTabularValido(tok){
+      var t=String(tok||'').trim();
+      if(!t||!tsTextoSeguro(t,40)) return false;
+      if(!/^[0-9A-Za-z][0-9A-Za-z.\-\/]{0,19}$/.test(t)) return false;
+      if(/^(19|20)\d{2}$/.test(t)) return false;
+      return true;
+    }
+    /* Formato delimitado (tabulador, ';' o '|') con esquema de columnas FIJO
+       por número de columnas, para no adivinar el rol de cada una:
+         · ≥6 columnas → ID | Código | Concepto | Importe | Unidad | Fuente…
+         · 3–5 columnas → Código | Concepto | Importe [ | Unidad | Fuente… ]
+       La columna de código así situada es INEQUÍVOCA, así que se acepta con
+       tsCodigoTabularValido (incluye códigos numéricos, salvo años) o el
+       marcador "SIN CÓDIGO" (que exige ID explícito, solo posible con ≥6
+       columnas). Si la columna que debe ser código no lo es, la fila se
+       RECHAZA con aviso (no se reinterpretan las columnas ni se adivina). La
+       fuente se conserva COMPLETA: todas las columnas sobrantes se unen con
+       " | " para no perder información. */
+    function tsParsearLineaDelimitada(l){
+      if(!/\t|;|\|/.test(l)) return null;
+      var partes=l.split(/\t|;|\|/).map(function(s){ return s.trim(); });
+      if(partes.length<3) return null;
+      var id=null, codIdx;
+      if(partes.length>=6){ id=partes[0]||null; codIdx=1; }
+      else { codIdx=0; } /* 3–5 columnas: código primero, sin ID */
+      var codigoTxt=partes[codIdx]||'';
+      var esSinCodigo=TS_RE_SIN_CODIGO.test(codigoTxt);
+      var esCodigo=tsCodigoTabularValido(codigoTxt);
+      if(!esCodigo&&!esSinCodigo){
+        return {error:'línea "'+l+'": la columna de código ("'+(codigoTxt||'—')+'") no es un código válido con este número de columnas; se rechaza la fila (no se adivina otra distribución).'};
+      }
+      if(esSinCodigo&&!id){
+        return {error:'línea "'+l+'": "SIN CÓDIGO" solo se admite con un ID explícito, presente únicamente con 6+ columnas (ID|Código|Concepto|Importe|Unidad|Fuente).'};
+      }
+      var codigo=esSinCodigo?'':codigoTxt;
+      var resto=partes.slice(codIdx+1);
+      var concepto=(resto[0]||'').trim();
+      if(!concepto) return null;
+      var colImporte=resto.length>=2?resto[1]:'';
+      var infoImporte=tsParsearColumnaImporte(colImporte);
+      if(infoImporte.error) return {error:'código '+(codigo||'—')+' ('+concepto+'): el importe "'+infoImporte.texto+'" no es válido (negativo, cero o formato incoherente).'};
+      var colUnidad=(resto.length>=3?resto[2]:'').trim();
+      var unidad=colUnidad||infoImporte.unidad||'€';
+      var colFuente=resto.length>=4?resto.slice(3).filter(Boolean).join(' | ').trim():'';
+      return {id:id,codigo:codigo,concepto:concepto,importe:infoImporte.importe,unidad:unidad,fuente:colFuente||null};
+    }
+    /* Localiza el código EN CUALQUIER POSICIÓN de la línea (nunca asume que es
+       el primer texto): candidato = token alfanumérico con letra y número. Si
+       hay más de un candidato posible no se adivina cuál es el bueno: la fila
+       se rechaza e informa. El texto ANTERIOR al código se conserva como ID
+       si tiene forma de ID (contiene '_' o '-'); si es texto/artículo libre se
+       guarda como fuente y el ID se genera después desde código+concepto. */
+    var TS_RE_CODIGO_TOKEN=/\b[0-9A-Za-z]{2,7}\b/g;
+    function tsParsearLinea(linea){
+      var l=String(linea||'').trim();
+      if(!l) return null;
+      var delim=tsParsearLineaDelimitada(l);
+      if(delim) return delim;
+      var candidatos=[], m;
+      TS_RE_CODIGO_TOKEN.lastIndex=0;
+      while((m=TS_RE_CODIGO_TOKEN.exec(l))!==null){
+        if(tsEsCodigoAlfanumerico(m[0])) candidatos.push({texto:m[0],inicio:m.index,fin:m.index+m[0].length});
+      }
+      if(candidatos.length===0) return null; /* sin código alfanumérico: cabecera/año/artículo/texto libre, se ignora */
+      if(candidatos.length>1){
+        return {error:'línea "'+l+'": hay más de un código alfanumérico posible ('+candidatos.map(function(c){return c.texto;}).join(', ')+'); no se puede determinar cuál es, se rechaza la fila.'};
+      }
+      var cand=candidatos[0];
+      var codigo=cand.texto;
+      var anterior=l.slice(0,cand.inicio).trim().replace(/[\s.\-:]+$/,'');
+      var posterior=l.slice(cand.fin).trim().replace(/^[\s.\-:]+/,'');
+      if(!posterior) return null; /* nada tras el código: no hay concepto, no es una fila */
+      var info=tsBuscarImporteEnTexto(posterior);
+      if(info&&info.error){
+        return {error:'código '+codigo+': el importe "'+info.texto+'" no es válido (negativo, cero o formato incoherente).'};
+      }
+      var concepto=posterior, importe=null, unidad='€';
+      if(info){
+        concepto=posterior.slice(0,info.inicio).trim().replace(/[\s.\-:]+$/,'');
+        importe=info.importe;
+        if(info.unidad) unidad=info.unidad;
+      }
+      concepto=concepto.trim();
+      if(!concepto) return null;
+      var id=null, fuente=null;
+      if(anterior){
+        if(tsPareceId(anterior)) id=anterior; else fuente=anterior;
+      }
+      return {id:id,codigo:codigo,concepto:concepto,importe:importe,unidad:unidad,fuente:fuente};
+    }
+    function tsParsearTexto(texto){
+      var lineas=String(texto||'').split(/\r?\n/);
+      var propuestas=[], errores=[];
+      for(var i=0;i<lineas.length;i++){
+        var f=tsParsearLinea(lineas[i]);
+        if(!f) continue;
+        if(f.error) errores.push(f.error); else propuestas.push(f);
+      }
+      return {propuestas:propuestas,errores:errores};
+    }
+    function tsDetectarAnio(texto){
+      var m=/\b(20\d{2})\b/.exec(String(texto||''));
+      return m?parseInt(m[1],10):(new Date().getFullYear());
+    }
+
+    /* ==========================================================================
+       ---------- Lectura TABULAR por coordenadas Y/X (reemplaza el parseo
+       lineal para PDF con capa de texto real) ----------
+       En vez de aplanar cada página a texto y buscar un código al principio de
+       cada línea, se agrupan los items por fila (misma Y, con la misma
+       tolerancia que tsTextoPorLineas) conservando la posición X de cada
+       celda. Se detectan líneas de cabecera (ID/Artículo, Código, Concepto,
+       Importe, Unidad, Fuente) y sus límites de columna (el punto medio entre
+       cabeceras consecutivas, más robusto que el propio X de la cabecera: un
+       valor numérico de la columna Importe puede empezar unos píxeles a la
+       izquierda de su etiqueta por alineación) se usan para asignar cada celda
+       de las filas siguientes a su columna real, sin asumir que el código es
+       el primer texto. Las líneas sin ID ni código pero con contenido en
+       Concepto/Fuente se consideran continuación de la fila anterior y se
+       fusionan con ella (une celdas multilínea) hasta que aparece un nuevo
+       código/ID. Si el documento no tiene ninguna cabecera reconocible en
+       ninguna página, esta ruta no aporta nada y se usa el parseo de línea
+       suelta (tsParsearLinea/tsParsearTexto) sobre el texto completo, que ya
+       localiza el código en cualquier posición y rechaza filas ambiguas en
+       vez de adivinar. ========================================================== */
+    /* Cabecera ID y cabecera Artículo son DISTINTAS y se tratan aparte: bajo
+       una columna "ID" el valor es un identificador seguro y se conserva
+       literalmente aunque no lleve '_'/'-' (p.ej. "BASE1"); bajo una columna
+       "Artículo" el valor NO es un ID sino una referencia documental y se
+       guarda como fuente. */
+    var TS_RE_HEAD_ID=/^id\b/i;
+    var TS_RE_HEAD_ART=/^art[ií]culo/i;
+    var TS_RE_HEAD_COD=/^c[oó]digo/i;
+    var TS_RE_HEAD_CONC=/^concepto/i;
+    var TS_RE_HEAD_IMP=/^importe/i;
+    var TS_RE_HEAD_UNI=/^unidad/i;
+    var TS_RE_HEAD_FUENTE=/^fuente/i;
+    /* Pies de página / paginación que NUNCA deben fusionarse como continuación
+       de la última fila: "Página N", "Página N de M" o "N/M". */
+    var TS_RE_PIE=/^(p[áa]g(?:ina)?\.?\s+\d+(?:\s+de\s+\d+)?|\d+\s*\/\s*\d+)$/i;
+    /* Prefijos que NUNCA son continuación de una fila: notas, avisos y
+       encabezados de bloque. Una línea que empiece por cualquiera de ellos no
+       se fusiona jamás; se informa para revisión (salvo los pies de paginación,
+       que TS_RE_PIE ya ignora en silencio como pie reconocido). */
+    var TS_RE_NOTA=/^(nota|observaci[oó]n(?:es)?|advertencia|p[áa]gina|fuente|vigencia)\b/i;
+    /* Separación vertical máxima (px, en el mismo sistema de coordenadas Y del
+       PDF) para aceptar una línea como continuación multilínea real de la fila
+       anterior: una continuación es la segunda línea envuelta de una celda y
+       queda MUY pegada a su fila; un pie o una nota queda mucho más abajo. */
+    var TS_MAX_GAP_CONT=20;
+    /* Agrupa los items de una página por fila (±4px, igual criterio que
+       tsTextoPorLineas) conservando la X de cada celda Y la coordenada Y de la
+       línea (necesaria para el control de proximidad de las continuaciones),
+       ordenadas de arriba a abajo y cada fila de izquierda a derecha. */
+    function tsAgruparCeldasPorLinea(items){
+      var validos=(items||[]).filter(function(it){return it.str&&it.str.trim();});
+      var grupos={};
+      validos.forEach(function(it){
+        var y=Math.round(it.transform[5]/4)*4;
+        (grupos[y]=grupos[y]||[]).push(it);
+      });
+      var ys=Object.keys(grupos).map(Number).sort(function(a,b){return b-a;});
+      return ys.map(function(y){
+        return {y:y,celdas:grupos[y].slice().sort(function(a,b){return a.transform[4]-b.transform[4];})
+          .map(function(it){return {x:it.transform[4],texto:it.str.trim()};})
+          .filter(function(c){return c.texto;})};
+      });
+    }
+    /* ¿Esta línea es una cabecera de tabla? Exige como mínimo Código+Concepto+
+       Importe (columnas imprescindibles); ID, Artículo y Unidad son
+       opcionales. ID y Artículo son roles distintos (ver arriba). Si no hay
+       una celda que encaje literalmente con "Fuente", se usa la primera celda
+       a la derecha de Unidad (o de Importe si no hay Unidad) como límite de
+       esa columna, aunque su etiqueta sea otra (p.ej. "Vigencia"): la
+       posición manda sobre el nombre exacto. */
+    function tsDetectarCabeceraLinea(celdas){
+      var h={};
+      celdas.forEach(function(c){
+        var t=c.texto;
+        if(h.codigo==null&&TS_RE_HEAD_COD.test(t)) h.codigo=c.x;
+        else if(h.concepto==null&&TS_RE_HEAD_CONC.test(t)) h.concepto=c.x;
+        else if(h.importe==null&&TS_RE_HEAD_IMP.test(t)) h.importe=c.x;
+        else if(h.unidad==null&&TS_RE_HEAD_UNI.test(t)) h.unidad=c.x;
+        else if(h.fuente==null&&TS_RE_HEAD_FUENTE.test(t)) h.fuente=c.x;
+        else if(h.id==null&&TS_RE_HEAD_ID.test(t)) h.id=c.x;
+        else if(h.articulo==null&&TS_RE_HEAD_ART.test(t)) h.articulo=c.x;
+      });
+      if(h.codigo==null||h.concepto==null||h.importe==null) return null;
+      var cols=[];
+      Object.keys(h).forEach(function(k){ cols.push({nombre:k,x:h[k]}); });
+      if(h.fuente==null){
+        var limiteDer=h.unidad!=null?h.unidad:h.importe;
+        var extra=null;
+        celdas.forEach(function(c){
+          if(c.x>limiteDer+2&&(extra===null||c.x<extra)){
+            var yaUsada=cols.some(function(cc){return Math.abs(cc.x-c.x)<2;});
+            if(!yaUsada) extra=c.x;
+          }
+        });
+        if(extra!=null) cols.push({nombre:'fuente',x:extra});
+      }
+      cols.sort(function(a,b){return a.x-b.x;});
+      return cols;
+    }
+    /* Asigna cada celda de una línea de datos a su columna: el límite entre
+       columnas consecutivas es el punto medio entre sus X de cabecera (no el
+       propio X de inicio), para tolerar que un valor numérico de Importe
+       empiece unos píxeles antes que su etiqueta. La primera columna no tiene
+       límite izquierdo (cualquier celda más a la izquierda que la segunda
+       columna cae en la primera). */
+    function tsAsignarColumnas(celdas,cols){
+      var limites=cols.map(function(c,i){ return i>0?(cols[i-1].x+c.x)/2:-Infinity; });
+      var out={};
+      celdas.forEach(function(c){
+        var elegido=null;
+        for(var i=cols.length-1;i>=0;i--){ if(c.x>=limites[i]){ elegido=cols[i]; break; } }
+        if(!elegido) return;
+        out[elegido.nombre]=(out[elegido.nombre]?out[elegido.nombre]+' ':'')+c.texto;
+      });
+      return out;
+    }
+    function tsEsInicioFilaTabular(asignado){
+      return !!(asignado.id&&asignado.id.trim())||!!(asignado.articulo&&asignado.articulo.trim())||!!(asignado.codigo&&asignado.codigo.trim());
+    }
+    /* Un ID seguro es un identificador de una sola pieza (sin espacios) y sin
+       caracteres peligrosos: bajo una columna "ID" se conserva literalmente
+       aunque no lleve '_'/'-' (p.ej. "BASE1"). Un valor con espacios (una
+       frase, un artículo envuelto) NO es un ID seguro y se degrada a fuente. */
+    function tsIdSeguro(tok){
+      var t=String(tok||'').trim();
+      return !!t&&!/\s/.test(t)&&tsTextoSeguro(t,120);
+    }
+    /* Cierra la fila tabular en curso (si hay) aplicando las reglas de
+       ID/código/importe y la deja en estado.propuestas o estado.errores. Una
+       fila sin concepto (p.ej. texto ajeno a la tabla que cayó dentro del
+       rango de columnas, como un pie de página) se descarta en silencio: no
+       es una fila reconocible de la tabla, no un error de datos. */
+    function tsFinalizarFilaTabular(estado){
+      var f=estado.fila;
+      estado.fila=null;
+      if(!f) return;
+      var concepto=(f.concepto||'').trim();
+      if(!concepto) return;
+      var fuenteExtra='', id=null;
+      /* Columna ID: identificador seguro conservado literalmente; si no lo es
+         (frase con espacios) se degrada a fuente. Columna Artículo: nunca es
+         ID, siempre va a fuente. */
+      var idTxt=(f.id||'').trim();
+      if(idTxt){ if(tsIdSeguro(idTxt)) id=idTxt; else fuenteExtra=idTxt; }
+      var artTxt=(f.articulo||'').trim();
+      if(artTxt) fuenteExtra=fuenteExtra?(fuenteExtra+' | '+artTxt):artTxt;
+      var codigoTxt=(f.codigo||'').trim(), codigo=null;
+      if(TS_RE_SIN_CODIGO.test(codigoTxt)){
+        if(!id){ estado.errores.push('Fila "'+concepto+'": "SIN CÓDIGO" solo se admite con un ID explícito en la columna de ID.'); return; }
+        codigo='';
+      } else if(tsCodigoTabularValido(codigoTxt)){
+        codigo=codigoTxt;
+      } else {
+        estado.errores.push('Fila "'+concepto+'": no se ha podido determinar un código válido (columna Código: "'+(codigoTxt||'—')+'"); se rechaza la fila.');
+        return;
+      }
+      var importeColTxt=(f.importe||'').trim();
+      var unidadColTxt=(f.unidad||'').trim();
+      if(!importeColTxt&&unidadColTxt){
+        /* Un importe alineado a la derecha puede caer justo en el límite con
+           la columna Unidad (p.ej. "62,26 € Día" cuando la etiqueta de
+           cabecera "Importe" queda muy a la izquierda de sus propios
+           valores numéricos): si el texto de Unidad EMPIEZA por un número
+           reconocible, se recupera de ahí como importe real y el resto
+           (tras el número y su posible sufijo de unidad) se conserva como
+           unidad de verdad, en vez de perder el importe o confundirlo con
+           una unidad. */
+        var mRescate=/^([\-–—]?[\d.,]+)\s*(€\s*\/\s*\S+|€|EUR|%|ud\.?|d[ií]as?|horas?|min(?:utos)?)?\s*/i.exec(unidadColTxt);
+        if(mRescate&&tsNormalizarImporte(mRescate[1])!==null){
+          importeColTxt=mRescate[1];
+          var unidadRescatada=mRescate[2]?mRescate[2].replace(/\s+/g,''):null;
+          unidadColTxt=unidadColTxt.slice(mRescate[0].length).trim()||unidadRescatada||'';
+        }
+      }
+      var infoImporte=tsParsearColumnaImporte(importeColTxt);
+      if(infoImporte.error){
+        estado.errores.push('Fila "'+concepto+'" (código '+(codigo||'—')+'): el importe "'+infoImporte.texto+'" no es válido (negativo, cero o formato incoherente).');
+        return;
+      }
+      var unidad=unidadColTxt||infoImporte.unidad||'€';
+      var fuente=(f.fuente||'').trim();
+      if(fuenteExtra) fuente=fuenteExtra+(fuente?(' | '+fuente):'');
+      estado.propuestas.push({id:id,codigo:codigo,concepto:concepto,importe:infoImporte.importe,unidad:unidad,fuente:fuente||null});
+    }
+    function tsProcesarLineaTabular(estado,linea){
+      var celdas=linea.celdas, y=linea.y;
+      /* Texto completo de la línea, construido ANTES de decidir si es inicio de
+         fila: pie y nota se reconocen por el texto entero aunque sus fragmentos
+         hayan caído en ID/Artículo/Código u otras columnas y engañarían a
+         tsEsInicioFilaTabular. */
+      var textoLinea=celdas.map(function(c){return c.texto;}).join(' ').trim();
+      var cabecera=tsDetectarCabeceraLinea(celdas);
+      if(cabecera){
+        tsFinalizarFilaTabular(estado);
+        estado.cols=cabecera;
+        estado.huboCabecera=true;
+        return;
+      }
+      if(!estado.cols) return; /* todavía sin cabecera detectada: línea fuera de tabla, se ignora */
+      /* Pie/nota se comprueban ANTES de tsEsInicioFilaTabular. Ambos son una
+         interrupción: cierran la fila anterior (impidiendo que una línea
+         posterior vuelva a fusionarse con ella). */
+      if(TS_RE_PIE.test(textoLinea)){
+        tsFinalizarFilaTabular(estado); /* pie reconocido: cierra la fila anterior y se descarta el pie */
+        return;
+      }
+      if(TS_RE_NOTA.test(textoLinea)){
+        /* Nota/Observación/Advertencia/Página/Fuente/Vigencia: cierra la fila
+           anterior, no crea propuesta y registra aviso. */
+        tsFinalizarFilaTabular(estado);
+        estado.errores.push('Línea de nota/aviso no fusionada ("'+textoLinea.slice(0,60)+'"): revísala manualmente.');
+        return;
+      }
+      var asignado=tsAsignarColumnas(celdas,estado.cols);
+      if(Object.keys(asignado).length===0){
+        /* Línea vacía asignable: interrupción; cierra la fila para bloquear
+           una fusión posterior. */
+        tsFinalizarFilaTabular(estado);
+        return;
+      }
+      if(tsEsInicioFilaTabular(asignado)){
+        tsFinalizarFilaTabular(estado);
+        estado.fila={id:asignado.id||'',articulo:asignado.articulo||'',codigo:asignado.codigo||'',concepto:asignado.concepto||'',importe:asignado.importe||'',unidad:asignado.unidad||'',fuente:asignado.fuente||''};
+        estado.ultimaY=y;
+        return;
+      }
+      /* No es cabecera, pie, nota ni inicio de fila: solo puede ser una
+         continuación multilínea real. Cualquier motivo de rechazo CIERRA la fila
+         actual para impedir que una línea posterior vuelva a fusionarse con
+         ella: solo se fusiona la línea INMEDIATAMENTE siguiente y válida. */
+      if(!estado.fila){
+        /* Continuación en la parte superior de una página sin fila previa
+           abierta (la fila anterior se cerró al terminar la página anterior):
+           es AMBIGUA — podría pertenecer a la última fila de la página previa.
+           Nunca se fusiona automáticamente; se informa para revisión manual. */
+        estado.errores.push('Posible continuación sin fila previa en esta página ("'+textoLinea.slice(0,60)+'"): revísala manualmente; no se ha fusionado.');
+        return;
+      }
+      /* La continuación válida es la línea inmediatamente siguiente en Y: la
+         distancia debe ser > 0 (orden Y correcto, la nueva línea queda por
+         debajo) y ≤ TS_MAX_GAP_CONT (muy pegada). Fuera de ese rango
+         (separación excesiva u orden Y incorrecto) es una interrupción. */
+      var gapY=(estado.ultimaY!=null)?(estado.ultimaY-y):null;
+      if(gapY==null||gapY<=0||gapY>TS_MAX_GAP_CONT){
+        tsFinalizarFilaTabular(estado);
+        estado.errores.push('Posible continuación alejada o desordenada respecto a su fila ("'+textoLinea.slice(0,60)+'"): revísala manualmente; no se ha fusionado.');
+        return;
+      }
+      /* Una continuación real aparece EXCLUSIVAMENTE en Concepto/Fuente y no
+         trae importe ni unidad (ni ID/código/artículo, que ya la habrían marcado
+         como inicio de fila en tsEsInicioFilaTabular). Si trae importe/unidad
+         propios, no es una envoltura de celda: interrupción, cierra la fila. */
+      if(asignado.importe||asignado.unidad){
+        tsFinalizarFilaTabular(estado);
+        estado.errores.push('Posible continuación con importe/unidad propios ("'+textoLinea.slice(0,60)+'"): revísala manualmente; no se ha fusionado.');
+        return;
+      }
+      if(!asignado.concepto&&!asignado.fuente){
+        /* Sin contenido en las únicas columnas admitidas para una continuación:
+           alineación incompatible; interrupción, cierra la fila. */
+        tsFinalizarFilaTabular(estado);
+        estado.errores.push('Posible continuación con alineación incompatible ("'+textoLinea.slice(0,60)+'"): revísala manualmente; no se ha fusionado.');
+        return;
+      }
+      if(asignado.concepto) estado.fila.concepto=(estado.fila.concepto?estado.fila.concepto+' ':'')+asignado.concepto;
+      if(asignado.fuente) estado.fila.fuente=(estado.fila.fuente?estado.fila.fuente+' ':'')+asignado.fuente;
+      estado.ultimaY=y;
+    }
+    function tsNuevoEstadoTabular(){
+      return {cols:null,huboCabecera:false,fila:null,ultimaY:null,propuestas:[],errores:[]};
+    }
+    /* Procesa una página SIN cerrar la fila (la continuidad de cabeceras se
+       mantiene entre páginas); el llamador debe invocar tsFinalizarFilaTabular
+       al terminar cada página para cerrar la fila abierta en el borde de
+       página (una continuación al principio de la página siguiente será, por
+       tanto, ambigua y se informará en vez de fusionarse). */
+    function tsProcesarPaginaTabular(estado,items){
+      tsAgruparCeldasPorLinea(items).forEach(function(linea){ tsProcesarLineaTabular(estado,linea); });
+    }
+    /* Clave de coincidencia EXACTA de una fila: ID, código, concepto, importe,
+       unidad y fuente, todos normalizados (recortados y en minúsculas). Nunca
+       colapsa por ID a solas: dos filas con el mismo ID pero contenido distinto
+       producen claves distintas y ambas se conservan (el validador bloqueará el
+       ID duplicado en el editor). */
+    function tsClaveFilaExacta(p){
+      return [p.id,p.codigo,p.concepto,p.importe,p.unidad,p.fuente].map(function(v){
+        return String(v==null?'':v).trim().toLowerCase();
+      }).join(String.fromCharCode(1));
+    }
+    /* Deduplicación ACOTADA: quita de las filas OCR SOLO las que coinciden
+       EXACTAMENTE (los seis campos normalizados) con una fila digital de la
+       MISMA página. Nunca compara OCR↔OCR, digital↔digital ni entre páginas. */
+    function tsDedupOCRContraDigital(ocrProps,digitalProps){
+      var claves={};
+      (digitalProps||[]).forEach(function(f){ claves[tsClaveFilaExacta(f)]=true; });
+      return (ocrProps||[]).filter(function(p){ return !claves[tsClaveFilaExacta(p)]; });
+    }
+
+    /* ---------- Estado de edición (revisión antes de guardar) ---------- */
+    var tsEditAnio=null;          /* año que se está editando */
+    var tsEditFilas=[];           /* [{seq,id,codigo,concepto,importeTexto,unidad,fuente,idAuto}] */
+    var tsEditArchivoFuente='';   /* nombre del último PDF/imagen importado en esta sesión de edición */
+    var tsEditSeq=0;
+    var tsPendiente=null;         /* {nuevaTabla,diff} en espera de confirmación de sustitución */
+
+    function tsEditReset(anio){
+      tsEditAnio=anio||(new Date().getFullYear());
+      tsEditFilas=[];
+      tsEditArchivoFuente='';
+    }
+    function tsIdsUsadosActuales(excluirSeq){
+      var m={};
+      tsEditFilas.forEach(function(f){ if(f.seq!==excluirSeq&&f.id) m[f.id.toLowerCase()]=true; });
+      return m;
+    }
+    function tsEditAnadirDesdeParseo(propuestas,archivoNombre){
+      tsEditArchivoFuente=archivoNombre||tsEditArchivoFuente;
+      propuestas.forEach(function(p){
+        var idAuto=!p.id;
+        var id=p.id?p.id:tsGenerarId(p.codigo,p.concepto,tsIdsUsadosActuales(null));
+        tsEditFilas.push({
+          seq:++tsEditSeq,id:id,codigo:p.codigo||'',concepto:p.concepto,
+          importeTexto:(p.importe!=null?tsFormatearImporte(p.importe):''),
+          unidad:p.unidad||'€',fuente:(p.fuente||archivoNombre||''),idAuto:idAuto
+        });
+      });
+    }
+    function tsEditCargarDesdeTabla(tabla){
+      tsEditFilas=(tabla&&Array.isArray(tabla.filas)?tabla.filas:[]).map(function(f){
+        return {
+          seq:++tsEditSeq,id:f.id,codigo:f.codigo||'',concepto:f.concepto||'',
+          importeTexto:(typeof f.importe==='number'&&isFinite(f.importe))?tsFormatearImporte(f.importe):'',
+          unidad:f.unidad||'€',fuente:f.fuente||'',idAuto:false
+        };
+      });
+      tsEditArchivoFuente=(tabla&&tabla.meta&&tabla.meta.archivoFuente)||'';
+    }
+
+    /* ---------- Espera acotada a que PDF.js esté listo ----------
+       Nunca reintenta indefinidamente: tras un número máximo de intentos
+       (~12*400ms ≈ 4,8s) termina con un error controlado en vez de encadenar
+       setTimeout para siempre. El primer intento (intentos===0) SIEMPRE
+       invoca cargarPDFjsSiNecesario() antes de mirar _pdfjsEstado: esa
+       función reintenta la carga aunque el intento anterior haya dejado
+       _pdfjsEstado en 'error' (solo se bloquea a sí misma mientras está
+       'cargando'), así que una nueva importación después de un fallo vuelve
+       a intentar la descarga en vez de repetir el mismo error sin más. Solo
+       a partir del segundo sondeo se comprueba si ese nuevo intento también
+       ha terminado en error. */
+    function tsEsperarPdfjs(intentos,onListo,onError){
+      if(typeof pdfjsLib!=='undefined'){ onListo(); return; }
+      if(intentos===0){
+        if(typeof cargarPDFjsSiNecesario==='function') cargarPDFjsSiNecesario();
+        setTimeout(function(){ tsEsperarPdfjs(intentos+1,onListo,onError); },400);
+        return;
+      }
+      if(typeof _pdfjsEstado!=='undefined'&&_pdfjsEstado==='error'){
+        onError('No se pudo cargar PDF.js (sin conexión o bloqueado).'); return;
+      }
+      if(intentos>=12){ onError('No se pudo cargar PDF.js. Comprueba la conexión e inténtalo de nuevo.'); return; }
+      setTimeout(function(){ tsEsperarPdfjs(intentos+1,onListo,onError); },400);
+    }
+    /* Reconstruye el texto de una página de PDF agrupando los items por su
+       coordenada Y (misma línea si están a ±4px), ordenados por X dentro de
+       cada línea, en vez de unir todo el contenido con espacios (evita
+       mezclar columnas). Copia LOCAL a este módulo, con el mismo criterio
+       que tcTextoPorLineas del Diario (calendario anual): esa función vive
+       dentro de la IIFE del Diario y no es accesible desde aquí, así que
+       reutilizarla directamente lanzaría un ReferenceError. Se agrupa aparte
+       (nombre ts*, sin tocar el Diario) para no ocultar ese error de ámbito
+       tratando un PDF digital como si estuviera escaneado. */
+    function tsTextoPorLineas(items){
+      var validos=(items||[]).filter(function(it){return it.str&&it.str.trim();});
+      if(!validos.length) return '';
+      var grupos={};
+      validos.forEach(function(it){
+        var y=Math.round(it.transform[5]/4)*4;
+        if(!grupos[y]) grupos[y]=[];
+        grupos[y].push(it);
+      });
+      var ys=Object.keys(grupos).map(Number).sort(function(a,b){return b-a;});
+      var lineas=ys.map(function(y){
+        var row=grupos[y].slice().sort(function(a,b){return a.transform[4]-b.transform[4];});
+        return row.map(function(it){return it.str.trim();}).filter(Boolean).join(' ');
+      });
+      return lineas.join('\n');
+    }
+
+    /* Tiempos máximos por paso (ms) para no quedar nunca colgado en "Leyendo
+       archivo…": apertura del documento, obtención de página, extracción de
+       texto, render a canvas, compresión de imagen y OCR. Si una promesa
+       tarda más que su plazo se rechaza con un error controlado en vez de
+       esperar indefinidamente (p.ej. una promesa de OCR que nunca resuelve). */
+    var TS_PLAZOS_MS={lectura:15000,apertura:20000,pagina:10000,extraccion:10000,render:15000,compresion:10000,ocr:30000};
+    function tsConPlazo(promesa,ms,mensaje){
+      return new Promise(function(resolve,reject){
+        var listo=false;
+        var t=setTimeout(function(){
+          if(listo) return;
+          listo=true;
+          reject(new Error(mensaje));
+        },ms);
+        promesa.then(function(v){
+          if(listo) return;
+          listo=true; clearTimeout(t); resolve(v);
+        },function(e){
+          if(listo) return;
+          listo=true; clearTimeout(t); reject(e);
+        });
+      });
+    }
+
+    /* ---------- Lectura de PDF/imagen (reutiliza PDF.js y OCR existentes, sin
+       duplicar librerías). Nunca se guarda el PDF ni sus imágenes: solo se usa
+       el texto extraído para proponer filas. Cada página se procesa con el
+       lector TABULAR por coordenadas (tsProcesarPaginaTabular) cerrando su
+       fila al terminar la página. Una página digital se considera VÁLIDA solo
+       si su parseo produce ≥1 fila COMPLETA (concepto + código/SIN CÓDIGO +
+       importe/pendiente resuelto); encontrar únicamente un código suelto NO
+       basta. Si el parseo tabular no da ninguna fila, se prueba el parseo de
+       línea suelta sobre el texto de la página (una fila completa contenida en
+       un único fragmento también evita el OCR). Solo si la página sigue sin
+       producir ninguna fila completa se renderiza y se aplica OCR — y solo si
+       hay clave; si getTextContent() falla o agota su plazo, también se
+       intenta render+OCR. Las filas de OCR se DEDUPLICAN contra las digitales
+       (por ID explícito o, sin ID, por código+concepto+importe+unidad+fuente)
+       para no duplicar entre ambas vías. Sin clave OCR, solo se informa de
+       "página escaneada" cuando realmente ha quedado una página sin recuperar.
+       Todos los pasos (FileReader, documento, página, texto, render,
+       compresión, OCR) capturan sus errores Y tienen un plazo máximo
+       (TS_PLAZOS_MS): el editor nunca queda colgado en "Leyendo…". Ambos
+       lectores (PDF e imagen) entregan el mismo contrato a onDone:
+       onDone({propuestas,errores,textoAnio}, meta). ---------- */
+    function tsLeerPDF(file,onDone,onError){
+      tsEsperarPdfjs(0,function(){ tsLeerPDFConLib(file,onDone,onError); },onError);
+    }
+    function tsLeerArchivoConPlazo(file,comoDataUrl,mensajeError){
+      return tsConPlazo(new Promise(function(resolve,reject){
+        var reader=new FileReader();
+        reader.onerror=function(){ reject(new Error(mensajeError)); };
+        reader.onload=function(ev){ resolve(ev.target.result); };
+        try{
+          if(comoDataUrl) reader.readAsDataURL(file); else reader.readAsArrayBuffer(file);
+        }catch(e){ reject(new Error(mensajeError)); }
+      }),TS_PLAZOS_MS.lectura,mensajeError);
+    }
+    /* Renderiza una página a imagen y la pasa por el OCR existente, con plazos
+       en cada paso. Resuelve con el texto reconocido; rechaza si algún paso
+       falla o agota su plazo. */
+    function tsOCRDePagina(page,numeroPagina,apiKey){
+      return new Promise(function(resolve,reject){
+        var vp,cv;
+        try{ vp=page.getViewport({scale:2.0}); cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height; }
+        catch(e){ reject(e); return; }
+        tsConPlazo(page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise,TS_PLAZOS_MS.render,'Tiempo agotado renderizando la página '+numeroPagina+'.').then(function(){
+          var img;
+          try{ img=cv.toDataURL('image/jpeg',0.75); }catch(e){ reject(e); return; }
+          tsConPlazo(comprimirImagen(img),TS_PLAZOS_MS.compresion,'Tiempo agotado comprimiendo la página '+numeroPagina+'.').then(function(comprimida){
+            return tsConPlazo(leerTicketConOCRSpace(comprimida,apiKey),TS_PLAZOS_MS.ocr,'Tiempo agotado en el OCR de la página '+numeroPagina+'.');
+          }).then(resolve,reject);
+        },reject);
+      });
+    }
+    function tsLeerPDFConLib(file,onDone,onError){
+      tsLeerArchivoConPlazo(file,false,'Tiempo agotado leyendo el archivo PDF.').then(function(buffer){
+        var datos;
+        try{ datos=new Uint8Array(buffer); }
+        catch(e){ onError('No se pudo leer el archivo PDF.'); return; }
+        var docPromise;
+        try{ docPromise=pdfjsLib.getDocument({data:datos}).promise; }
+        catch(e){ onError('No se pudo abrir el PDF.'); return; }
+        tsConPlazo(docPromise,TS_PLAZOS_MS.apertura,'Tiempo agotado abriendo el PDF.').then(function(pdf){
+          var total=pdf.numPages, n=1;
+          var apiKey=(typeof obtenerApiKeyOCR==='function')?obtenerApiKeyOCR():null;
+          var avisoSinClave=false, avisoFalloPagina=false;
+          var estadoTab=tsNuevoEstadoTabular();
+          var idxProp=0, idxErr=0;               /* filas/errores tabulares ya consumidos */
+          var filasAcum=[], erroresAcum=[], textoAnio='';
+          var digitalPorPagina={};               /* filas digitales por página, para dedup OCR↔digital de la MISMA página */
+          /* Acumula filas SIN deduplicar: nunca digital↔digital, OCR↔OCR ni
+             entre páginas. La única deducción permitida (OCR↔digital de la
+             misma página, coincidencia exacta) se aplica antes, en intentarOCR. */
+          function agregar(props){
+            (props||[]).forEach(function(p){ filasAcum.push(p); });
+          }
+          function finalizar(){
+            onDone({propuestas:filasAcum,errores:erroresAcum,textoAnio:textoAnio},{sinClaveOCR:avisoSinClave,falloPagina:avisoFalloPagina});
+          }
+          /* Procesa el resultado digital de una página; devuelve true si la
+             página aportó ≥1 fila completa (digital), false si necesita OCR.
+             Registra las filas digitales por página para la deduplicación
+             acotada del OCR de respaldo. */
+          function procesarDigital(numeroPagina,tc){
+            var lineasPag='';
+            try{ lineasPag=tsTextoPorLineas(tc.items); }catch(e){ lineasPag=''; }
+            textoAnio+=lineasPag+'\n';
+            try{ tsProcesarPaginaTabular(estadoTab,tc.items); }catch(e){}
+            tsFinalizarFilaTabular(estadoTab);    /* cierra la fila al terminar la página */
+            var filasPag=estadoTab.propuestas.slice(idxProp); idxProp=estadoTab.propuestas.length;
+            var errsPag=estadoTab.errores.slice(idxErr); idxErr=estadoTab.errores.length;
+            erroresAcum.push.apply(erroresAcum,errsPag);
+            if(filasPag.length>0){ digitalPorPagina[numeroPagina]=filasPag; agregar(filasPag); return true; }
+            /* Sin fila tabular: probar línea suelta (fila completa en un solo
+               fragmento delimitado o de texto libre) antes de recurrir a OCR. */
+            var fb=tsParsearTexto(lineasPag);
+            erroresAcum.push.apply(erroresAcum,fb.errores);
+            if(fb.propuestas.length>0){ digitalPorPagina[numeroPagina]=fb.propuestas; agregar(fb.propuestas); return true; }
+            return false;
+          }
+          /* OCR de respaldo de una página no recuperada digitalmente. Sin clave,
+             solo marca el aviso (página realmente sin recuperar) — distinto del
+             fallo técnico (catch) y del OCR vacío. Con clave: una página solo se
+             considera recuperada si el parser OCR produce ≥1 propuesta completa;
+             si el OCR resuelve con texto vacío, ilegible o cero propuestas, se
+             activa avisoFalloPagina y se registra el aviso, conservando siempre
+             los errores del parser. Las filas OCR se deduplican solo contra las
+             filas digitales de ESTA misma página (coincidencia exacta). */
+          function intentarOCR(page,numeroPagina,cb){
+            if(!apiKey){ avisoSinClave=true; cb(); return; }
+            tsOCRDePagina(page,numeroPagina,apiKey).then(function(textoOCRPag){
+              textoAnio+=(textoOCRPag||'')+'\n';
+              var fb=tsParsearTexto(textoOCRPag||'');
+              erroresAcum.push.apply(erroresAcum,fb.errores); /* conservar errores del parser */
+              if(fb.propuestas.length>0){
+                agregar(tsDedupOCRContraDigital(fb.propuestas,digitalPorPagina[numeroPagina]));
+              } else {
+                avisoFalloPagina=true;
+                erroresAcum.push('Página '+numeroPagina+': OCR completado sin filas salariales recuperables');
+              }
+              cb();
+            }).catch(function(){ avisoFalloPagina=true; cb(); });
+          }
+          function siguiente(){
+            if(n>total){ finalizar(); return; }
+            var numeroPagina=n; n++;
+            tsConPlazo(pdf.getPage(numeroPagina),TS_PLAZOS_MS.pagina,'Tiempo agotado obteniendo la página '+numeroPagina+'.').then(function(page){
+              tsConPlazo(page.getTextContent(),TS_PLAZOS_MS.extraccion,'Tiempo agotado extrayendo el texto de la página '+numeroPagina+'.').then(function(tc2){
+                var okDigital=false;
+                try{ okDigital=procesarDigital(numeroPagina,tc2); }catch(e){ okDigital=false; }
+                if(okDigital){ siguiente(); return; }
+                intentarOCR(page,numeroPagina,siguiente); /* 0 filas digitales → OCR de respaldo */
+              }).catch(function(){
+                /* getTextContent falló o agotó plazo: intentar render+OCR. */
+                intentarOCR(page,numeroPagina,siguiente);
+              });
+            }).catch(function(){ avisoFalloPagina=true; siguiente(); });
+          }
+          siguiente();
+        }).catch(function(err){
+          onError((err&&/^Tiempo agotado/.test(err.message||''))?err.message:'No se pudo abrir el PDF (documento dañado o no válido).');
+        });
+      }).catch(function(err){
+        onError((err&&err.message)?err.message:'No se pudo leer el archivo PDF.');
+      });
+    }
+    function tsLeerImagen(file,onDone,onError){
+      var apiKey=(typeof obtenerApiKeyOCR==='function')?obtenerApiKeyOCR():null;
+      if(!apiKey){ onError('⚠️ Configura primero tu clave OCR.space en Liquidaciones.'); return; }
+      tsLeerArchivoConPlazo(file,true,'Tiempo agotado leyendo el archivo de imagen.').then(function(dataUrl){
+        return tsConPlazo(comprimirImagen(dataUrl),TS_PLAZOS_MS.compresion,'Tiempo agotado comprimiendo la imagen.');
+      }).then(function(comprimida){
+        return tsConPlazo(leerTicketConOCRSpace(comprimida,apiKey),TS_PLAZOS_MS.ocr,'Tiempo agotado en el OCR de la imagen.');
+      }).then(function(textoOCR){
+        /* Una imagen suelta nunca trae coordenadas (el OCR devuelve texto
+           plano): se usa siempre el parseo de línea suelta, que ya localiza
+           el código en cualquier posición y rechaza filas ambiguas. */
+        var resultado=tsParsearTexto(textoOCR||'');
+        onDone({propuestas:resultado.propuestas,errores:resultado.errores,textoAnio:textoOCR||''},{sinClaveOCR:false,falloPagina:false});
+      }).catch(function(err){
+        onError((err&&/^Tiempo agotado/.test(err.message||''))?err.message:'Error leyendo la imagen con OCR');
+      });
+    }
+
+    /* Fija el año de la edición actual y sincroniza el campo visible EN EL
+       MISMO momento (nunca uno sin el otro): tanto al detectarlo desde una
+       importación como al editarlo a mano en el input. */
+    function tsFijarAnioEditor(anio){
+      tsEditAnio=anio;
+      var el=document.getElementById('ts-editor-anio');
+      if(el) el.value=String(anio);
+    }
+
+    window.tsImportarArchivo=function(input){
+      var file=input.files&&input.files[0]; if(!file) return;
+      var estadoEl=document.getElementById('ts-import-estado');
+      if(estadoEl) estadoEl.textContent='Leyendo archivo…';
+      var esPDF=(file.type==='application/pdf')||/\.pdf$/i.test(file.name);
+      var esImagen=/^image\//.test(file.type)||/\.(jpe?g|png|webp)$/i.test(file.name);
+      function terminar(resultado,meta){
+        meta=meta||{};
+        var propuestas=resultado.propuestas||[], erroresParseo=resultado.errores||[];
+        if(tsEditFilas.length===0){
+          var anioDet=tsDetectarAnio(resultado.textoAnio||'');
+          if(anioDet) tsFijarAnioEditor(anioDet);
+        }
+        tsEditAnadirDesdeParseo(propuestas,file.name);
+        if(estadoEl){
+          var avisos=[];
+          if(meta.sinClaveOCR) avisos.push('algunas páginas están escaneadas: configura la clave OCR.space para leerlas');
+          if(meta.falloPagina) avisos.push('alguna página no se pudo procesar por completo');
+          if(erroresParseo.length) avisos.push(erroresParseo.length+' fila(s) rechazada(s): '+erroresParseo.slice(0,3).join('; ')+(erroresParseo.length>3?'…':''));
+          var base=propuestas.length>0
+            ?('✔ '+propuestas.length+' conceptos detectados en "'+file.name+'"')
+            :('No se ha detectado ningún concepto automáticamente en "'+file.name+'". Añádelos manualmente abajo.');
+          estadoEl.textContent=base+(avisos.length?(' · ⚠️ '+avisos.join('; ')):'')+' · revisa y confirma antes de guardar';
+        }
+        input.value='';
+        tsRenderPantallaEditor();
+      }
+      function fallo(msg){
+        if(estadoEl) estadoEl.textContent='';
+        mostrarToast(msg,'error');
+        input.value='';
+      }
+      if(esPDF) tsLeerPDF(file,terminar,fallo);
+      else if(esImagen) tsLeerImagen(file,terminar,fallo);
+      else { fallo('Formato no soportado. Usa PDF o imagen (JPG, PNG, WEBP).'); }
+    };
+
+    window.tsFilaCampo=function(seq,campo,valor){
+      for(var i=0;i<tsEditFilas.length;i++){
+        if(tsEditFilas[i].seq===seq){
+          var f=tsEditFilas[i];
+          if(campo==='importe'){
+            /* Solo se guarda el texto tal cual: la normalización estricta
+               (y el rechazo de formatos incoherentes) ocurre al validar. */
+            f.importeTexto=valor;
+          } else if(campo==='id'){
+            f.id=valor; f.idAuto=false;
+          } else {
+            f[campo]=valor;
+            if((campo==='codigo'||campo==='concepto')&&f.idAuto){
+              f.id=tsGenerarId(f.codigo,f.concepto,tsIdsUsadosActuales(f.seq));
+            }
+          }
+          break;
+        }
+      }
+      /* Se repinta siempre: si se acaba de regenerar el ID automático (código o
+         concepto cambiados), el campo ID visible tiene que reflejarlo. */
+      tsRenderPantallaEditor();
+    };
+    window.tsFilaEliminar=function(seq){
+      tsEditFilas=tsEditFilas.filter(function(f){ return f.seq!==seq; });
+      tsRenderPantallaEditor();
+    };
+    window.tsFilaAnadir=function(){
+      /* idAuto:true — igual que las filas propuestas por PDF/OCR: mientras el
+         usuario no toque el campo ID a mano, se deriva de código+concepto. */
+      tsEditFilas.push({seq:++tsEditSeq,id:'concepto-'+tsEditSeq,codigo:'',concepto:'',importeTexto:'',unidad:'€',fuente:'(entrada manual)',idAuto:true});
+      tsRenderPantallaEditor();
+    };
+    window.tsAnioCambiar=function(valor){
+      var n=parseInt(valor,10);
+      if(!isNaN(n)) tsFijarAnioEditor(n);
+    };
+
+    /* ---------- Validación + construcción de la revisión editable ----------
+       Un único recorrido: valida cada fila (concepto, ID único, textos sin
+       HTML/eventos, importe con el normalizador estricto — nunca 0 ni
+       negativo) y, si todo es correcto, devuelve también las filas ya
+       limpias y listas para guardar. Si hay CUALQUIER error no se guarda
+       nada. */
+    function tsProcesarEdicion(){
+      var errores=[], filas=[], ids={};
+      if(!tsEditAnio||!/^\d{4}$/.test(String(tsEditAnio))||tsEditAnio<1900||tsEditAnio>2200){
+        errores.push('El año no es válido.');
+      }
+      tsEditFilas.forEach(function(f,idx){
+        var etiqueta='Fila '+(idx+1);
+        var concepto=(f.concepto||'').trim();
+        if(!concepto){ errores.push(etiqueta+': falta el concepto.'); return; }
+        if(!tsTextoSeguro(concepto,300)){ errores.push(etiqueta+': el concepto contiene caracteres no permitidos (HTML/etiquetas).'); return; }
+        var id=(f.id||'').trim();
+        if(!id){ errores.push(etiqueta+' ('+concepto+'): falta el ID.'); return; }
+        if(!tsTextoSeguro(id,120)){ errores.push(etiqueta+' ('+concepto+'): el ID contiene caracteres no permitidos.'); return; }
+        var codigo=(f.codigo||'').trim();
+        if(codigo&&!tsTextoSeguro(codigo,40)){ errores.push(etiqueta+' ('+concepto+'): el código contiene caracteres no permitidos.'); return; }
+        var unidad=(f.unidad||'').trim()||'€';
+        if(!tsTextoSeguro(unidad,20)){ errores.push(etiqueta+' ('+concepto+'): la unidad contiene caracteres no permitidos.'); return; }
+        var fuente=(f.fuente||'').trim()||'(entrada manual)';
+        if(!tsTextoSeguro(fuente,120)){ errores.push(etiqueta+' ('+concepto+'): la fuente contiene caracteres no permitidos.'); return; }
+        var idNorm=id.toLowerCase();
+        if(ids[idNorm]){ errores.push('ID duplicado: "'+id+'" aparece más de una vez (usa códigos repetidos con ID distinto).'); return; }
+        var importeTexto=(f.importeTexto==null?'':String(f.importeTexto)).trim();
+        var importe=null;
+        if(importeTexto!==''){
+          importe=tsNormalizarImporte(importeTexto);
+          if(importe===null){
+            errores.push(etiqueta+' ('+concepto+'): el importe "'+importeTexto+'" no es válido (usa 1.234,56 o 1234,56; nunca 0 ni negativo).');
+            return;
+          }
+        }
+        ids[idNorm]=true;
+        filas.push({id:id,codigo:codigo,concepto:concepto,importe:importe,unidad:unidad,fuente:fuente});
+      });
+      return {errores:errores,filas:filas};
+    }
+
+    /* ---------- Render del editor (revisión editable) ---------- */
+    function tsRenderEditorFilasHTML(){
+      if(tsEditFilas.length===0){
+        return '<div class="help-text" style="text-align:center;">No hay conceptos todavía. Impórtalos desde un PDF/imagen o añádelos manualmente.</div>';
+      }
+      return tsEditFilas.map(function(f){
+        return '<div style="border:1px solid var(--color-border);border-radius:8px;padding:10px;margin-bottom:8px;">'
+          +'<div style="display:flex;gap:6px;margin-bottom:6px;">'
+          +'<input type="text" placeholder="Código" value="'+escaparHTML(f.codigo||'')+'" style="width:70px;padding:8px;border-radius:6px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text);" onchange="window.tsFilaCampo('+f.seq+',\'codigo\',this.value)">'
+          +'<input type="text" placeholder="Concepto" value="'+escaparHTML(f.concepto||'')+'" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text);" onchange="window.tsFilaCampo('+f.seq+',\'concepto\',this.value)">'
+          +'</div>'
+          +'<div style="display:flex;gap:6px;align-items:center;">'
+          +'<input type="text" inputmode="decimal" placeholder="Importe (vacío = pendiente, ej. 1.234,56)" value="'+escaparHTML(f.importeTexto||'')+'" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text);" onchange="window.tsFilaCampo('+f.seq+',\'importe\',this.value)">'
+          +'<input type="text" placeholder="Unidad" value="'+escaparHTML(f.unidad||'')+'" style="width:70px;padding:8px;border-radius:6px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text);" onchange="window.tsFilaCampo('+f.seq+',\'unidad\',this.value)">'
+          +'<button class="btn btn-secondary" style="padding:8px 10px;" onclick="window.tsFilaEliminar('+f.seq+')" title="Eliminar fila">✕</button>'
+          +'</div>'
+          +'<div style="display:flex;gap:6px;margin-top:6px;">'
+          +'<input type="text" placeholder="ID" value="'+escaparHTML(f.id||'')+'" style="flex:1;padding:6px 8px;border-radius:6px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text-secondary);font-size:0.8rem;" onchange="window.tsFilaCampo('+f.seq+',\'id\',this.value)">'
+          +'<input type="text" placeholder="Fuente" value="'+escaparHTML(f.fuente||'')+'" style="flex:1;padding:6px 8px;border-radius:6px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text-secondary);font-size:0.8rem;" onchange="window.tsFilaCampo('+f.seq+',\'fuente\',this.value)">'
+          +'</div>'
+          +'</div>';
+      }).join('');
+    }
+    function tsRenderPantallaEditor(){
+      var wrap=document.getElementById('ts-editor-filas');
+      if(wrap) wrap.innerHTML=tsRenderEditorFilasHTML();
+    }
+    function tsPantallaEditorHTML(volverBtn){
+      var existiaAntes=!!tsLeerTablas()[String(tsEditAnio)];
+      var html=volverBtn;
+      html+='<div class="card" style="margin-bottom:10px;">';
+      html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'
+        +'<label style="font-size:0.85rem;color:var(--color-text-secondary);">Año</label>'
+        +'<input type="number" id="ts-editor-anio" value="'+escaparHTML(String(tsEditAnio))+'" style="width:100px;padding:8px;border-radius:6px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text);" onchange="window.tsAnioCambiar(this.value)">'
+        +'</div>';
+      html+='<p class="help-text" style="margin:0 0 10px;">Importa un PDF o imagen de la tabla salarial (opcional): se reutilizan el mismo PDF.js y OCR del resto de la app. No se guarda el archivo, solo los datos que confirmes abajo.</p>';
+      html+='<input type="file" accept=".pdf,image/*" onchange="window.tsImportarArchivo(this)" style="margin-bottom:6px;">';
+      html+='<div id="ts-import-estado" class="help-text" style="margin:4px 0 0;"></div>';
+      html+='</div>';
+      html+='<div id="ts-editor-filas">'+tsRenderEditorFilasHTML()+'</div>';
+      html+='<button class="btn btn-secondary" style="width:100%;margin:6px 0 14px;" onclick="window.tsFilaAnadir()">➕ Añadir concepto</button>';
+      html+='<div id="ts-editor-error"></div>';
+      html+='<div style="display:flex;gap:10px;">'
+        +'<button class="btn btn-secondary" style="flex:1;" onclick="window.adminVolverPublic()">Cancelar</button>'
+        +'<button class="btn btn-primary" style="flex:1;" onclick="window.tsConfirmarGuardado()">💾 '+(existiaAntes?'Revisar y sustituir':'Guardar')+'</button>'
+        +'</div>';
+      return html;
+    }
+
+    /* ---------- Sustitución con diff + confirmación ---------- */
+    function tsCalcularDiff(filasViejas,filasNuevas){
+      var mapViejo={}; (filasViejas||[]).forEach(function(f){ mapViejo[f.id]=f; });
+      var mapNuevo={}; (filasNuevas||[]).forEach(function(f){ mapNuevo[f.id]=f; });
+      var anadidos=[],modificados=[],eliminados=[];
+      (filasNuevas||[]).forEach(function(f){
+        var v=mapViejo[f.id];
+        if(!v) anadidos.push(f);
+        else if(v.codigo!==f.codigo||v.concepto!==f.concepto||v.importe!==f.importe||v.unidad!==f.unidad||v.fuente!==f.fuente) modificados.push(f);
+      });
+      (filasViejas||[]).forEach(function(f){ if(!mapNuevo[f.id]) eliminados.push(f); });
+      return {anadidos:anadidos,modificados:modificados,eliminados:eliminados};
+    }
+
+    window.tsConfirmarGuardado=function(){
+      if(!tsAlmacenOk()) return;
+      var resultado=tsProcesarEdicion();
+      var errWrap=document.getElementById('ts-editor-error');
+      if(resultado.errores.length>0){
+        if(errWrap) errWrap.innerHTML='<div style="background:#FEF3C7;border-left:3px solid #E6A817;border-radius:6px;padding:10px 12px;font-size:0.85rem;color:#78350F;margin-bottom:10px;">⚠️ Revisa estos datos antes de guardar:<br>'
+          +resultado.errores.map(function(e){ return '· '+escaparHTML(e); }).join('<br>')+'</div>';
+        return;
+      }
+      /* Nunca se guarda ni se sustituye una tabla con cero filas: ni al crear
+         una tabla nueva ni al actualizar una existente (que quedaría vacía). */
+      if(resultado.filas.length===0){
+        if(errWrap) errWrap.innerHTML='<div style="background:#FEF3C7;border-left:3px solid #E6A817;border-radius:6px;padding:10px 12px;font-size:0.85rem;color:#78350F;margin-bottom:10px;">⚠️ No hay ningún concepto para guardar. Añade al menos una fila antes de guardar.</div>';
+        return;
+      }
+      if(errWrap) errWrap.innerHTML='';
+      var filasLimpias=resultado.filas;
+      var numPendientes=filasLimpias.filter(function(f){ return f.importe==null; }).length;
+      var nuevaTabla={
+        anio:tsEditAnio,
+        filas:filasLimpias,
+        meta:{
+          fechaActualizacion:(typeof fechaHoyISO==='function'?fechaHoyISO():''),
+          archivoFuente:tsEditArchivoFuente||'(entrada manual)',
+          numConceptos:filasLimpias.length,
+          numPendientes:numPendientes
+        }
+      };
+      var actuales=tsLeerTablas();
+      var existente=actuales[String(tsEditAnio)];
+      if(!existente){
+        tsGuardarDefinitivo(nuevaTabla);
+        return;
+      }
+      tsPendiente={nuevaTabla:nuevaTabla,diff:tsCalcularDiff(existente.filas||[],filasLimpias)};
+      window.adminIrAPublic('tablasSalarialesConfirmar');
+    };
+
+    function tsPantallaConfirmarHTML(volverBtn){
+      if(!tsPendiente) return volverBtn+'<div class="help-text">No hay ningún cambio pendiente.</div>';
+      var d=tsPendiente.diff;
+      function lista(titulo,arr){
+        if(arr.length===0) return '';
+        return '<div style="margin-top:10px;"><strong>'+titulo+' ('+arr.length+')</strong><div style="font-size:0.85rem;color:var(--color-text-secondary);line-height:1.6;">'
+          +arr.map(function(f){ return '· '+escaparHTML(f.concepto)+(f.codigo?(' ['+escaparHTML(f.codigo)+']'):''); }).join('<br>')
+          +'</div></div>';
+      }
+      var html=volverBtn;
+      html+='<div class="card" style="margin-bottom:14px;">';
+      html+='<div style="font-weight:700;margin-bottom:6px;">⚠️ Vas a sustituir la tabla del año '+escaparHTML(String(tsPendiente.nuevaTabla.anio))+'</div>';
+      html+='<p class="help-text" style="margin:0;">Revisa los cambios antes de confirmar. La tabla anterior de este año se sustituirá por completo; el resto de años no se ven afectados.</p>';
+      html+=lista('Añadidos',d.anadidos)+lista('Modificados',d.modificados)+lista('Eliminados',d.eliminados);
+      if(d.anadidos.length===0&&d.modificados.length===0&&d.eliminados.length===0){
+        html+='<p class="help-text" style="margin-top:10px;">No hay diferencias respecto a la tabla guardada.</p>';
+      }
+      html+='</div>';
+      html+='<div style="display:flex;gap:10px;">'
+        +'<button class="btn btn-secondary" style="flex:1;" onclick="window.tsCancelarConfirmacion()">Cancelar</button>'
+        +'<button class="btn btn-primary" style="flex:1;" onclick="window.tsAplicarConfirmacion()">✔ Confirmar sustitución</button>'
+        +'</div>';
+      return html;
+    }
+    window.tsCancelarConfirmacion=function(){
+      tsPendiente=null;
+      window.adminVolverPublic(); /* vuelve al editor, que sigue intacto */
+    };
+    window.tsAplicarConfirmacion=function(){
+      if(!tsPendiente) return;
+      var nuevaTabla=tsPendiente.nuevaTabla;
+      tsPendiente=null;
+      var ok=tsGuardarDefinitivo(nuevaTabla);
+      if(!ok){
+        /* El guardado falló: se vuelve al editor (tsEditFilas sigue intacto,
+           nada se ha tocado) en vez de dejar la pantalla de confirmación
+           huérfana sin cambio pendiente que mostrar. */
+        window.adminVolverPublic();
+      }
+    };
+
+    /* Guardado transaccional: bloquea si el almacén está corrupto, RE-VALIDA
+       el bloque completo con el mismo validador estricto que se usa al leer/
+       exportar/importar (nunca se escribe algo que ese validador rechazaría
+       si volviera a leerse), prepara una copia completa (no toca la tabla
+       real todavía), intenta persistirla y SOLO tras éxito confirmado
+       sustituye el año correspondiente. Si falla, la tabla anterior y el
+       editor abierto se conservan íntegros: nunca se declara éxito que no ha
+       ocurrido, y nunca se tocan otros años. Devuelve true/false. */
+    function tsGuardarDefinitivo(nuevaTabla){
+      if(!tsAlmacenOk()) return false;
+      /* Se clona la tabla y se RECALCULAN sus contadores (numConceptos y
+         numPendientes) desde sus propias filas ANTES de validar y persistir:
+         nunca se guarda un contador heredado que no corresponda a las filas
+         reales. Se valida y persiste esa copia, no el objeto de entrada. */
+      var tabla=JSON.parse(JSON.stringify(nuevaTabla));
+      var filas=Array.isArray(tabla.filas)?tabla.filas:[];
+      tabla.meta=tabla.meta||{};
+      tabla.meta.numConceptos=filas.length;
+      tabla.meta.numPendientes=filas.filter(function(f){ return f.importe==null; }).length;
+      if(!tsTablaAnioValida(tabla)){
+        mostrarToast('⚠️ Los datos a guardar no son válidos. No se ha guardado nada.','error');
+        return false;
+      }
+      var actuales=tsLeerTablas();
+      var copia=JSON.parse(JSON.stringify(actuales));
+      copia[String(tabla.anio)]=tabla;
+      var ok=tsGuardarTablas(copia);
+      if(!ok){
+        mostrarToast('⚠️ Error guardando la tabla salarial. Se ha conservado la tabla anterior.','error');
+        return false; /* el editor sigue abierto con los datos tal cual estaban */
+      }
+      mostrarToast('✔ Tabla salarial guardada para el año '+tabla.anio,'success');
+      adminStack=['main','datosOficiales','tablasSalariales'];
+      adminRenderPantalla('tablasSalariales');
+      return true;
+    }
+
+    /* ---------- Pantalla: lista de tablas instaladas ----------
+       Los contadores (conceptos/pendientes) se recalculan SIEMPRE desde
+       t.filas en el momento de pintar: nunca se confía en los valores de
+       meta guardados (pueden venir de un backup antiguo o manipulado). */
+    function tsPantallaListaHTML(){
+      if(tsAlmacenCorruptoActual()){
+        return '<div class="card" style="border:1px solid var(--color-danger);">'
+          +'<div style="font-weight:700;color:var(--color-danger);margin-bottom:6px;">⚠️ Almacén de Tablas Salariales dañado</div>'
+          +'<p class="help-text" style="margin:0;">'+escaparHTML(tsAlmacenErrorMsg||'Los datos guardados no son válidos.')+' No se puede importar, editar ni eliminar hasta restaurar una copia de seguridad válida desde Copias de Seguridad.</p>'
+          +'</div>';
+      }
+      var tablas=tsLeerTablas();
+      var anios=Object.keys(tablas).sort();
+      var html='<button class="btn btn-primary" style="width:100%;margin-bottom:12px;" onclick="window.tsAbrirEditorNuevo()">⬆️ Importar tabla salarial (PDF)</button>';
+      if(anios.length===0){
+        html+='<div class="card" style="text-align:center;color:var(--color-text-secondary);">No hay tablas salariales instaladas.</div>';
+        return html;
+      }
+      anios.forEach(function(anio){
+        var t=tablas[anio]||{};
+        var meta=t.meta||{};
+        var filas=Array.isArray(t.filas)?t.filas:[];
+        var numConceptos=filas.length;
+        var numPendientes=filas.filter(function(f){ return f.importe==null; }).length;
+        html+='<div class="card" style="margin-bottom:10px;">'
+          +'<div style="font-weight:700;margin-bottom:6px;">💶 Año '+escaparHTML(anio)+'</div>'
+          +'<div style="font-size:0.85rem;color:var(--color-text-secondary);line-height:1.6;">'
+          +'Última actualización: '+(meta.fechaActualizacion?formatearFecha(meta.fechaActualizacion):'—')+'<br>'
+          +'Archivo fuente: '+escaparHTML(meta.archivoFuente||'—')+'<br>'
+          +'Conceptos: '+numConceptos+'<br>'
+          +'Pendientes de importe: '+numPendientes
+          +'</div>'
+          +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">'
+          +'<button class="btn btn-secondary" style="flex:1;" onclick="window.tsAbrirEditorExistente(\''+escaparHTML(anio)+'\')">👁️ Ver/Editar</button>'
+          +'<button class="btn btn-secondary" style="flex:1;" onclick="window.tsAbrirEditorActualizar(\''+escaparHTML(anio)+'\')">⬆️ Actualizar</button>'
+          +'<button class="btn btn-secondary" data-anio-borrar-ts="'+escaparHTML(anio)+'" style="flex:1;">🗑️ Eliminar</button>'
+          +'</div></div>';
+      });
+      return html;
+    }
+    function tsWireBotonesEliminar(){
+      Array.prototype.forEach.call(document.querySelectorAll('[data-anio-borrar-ts]'),function(btn){
+        var textoOriginal=btn.textContent;
+        btn.addEventListener('click',function(){
+          confirmarAccion(btn,textoOriginal,function(){
+            if(!tsAlmacenOk()) return;
+            var anio=btn.getAttribute('data-anio-borrar-ts');
+            var tablas=tsLeerTablas();
+            delete tablas[anio]; /* no afecta a ningún otro año */
+            if(tsGuardarTablas(tablas)){
+              mostrarToast('Tabla salarial '+anio+' eliminada','success');
+            } else {
+              mostrarToast('⚠️ No se pudo eliminar la tabla salarial.','error');
+            }
+            adminRenderPantalla('tablasSalariales');
+          });
+        });
+      });
+    }
+    window.tsAbrirEditorNuevo=function(){
+      if(!tsAlmacenOk()) return;
+      tsEditReset(new Date().getFullYear());
+      window.adminIrAPublic('tablasSalarialesEditor');
+    };
+    window.tsAbrirEditorExistente=function(anio){
+      if(!tsAlmacenOk()) return;
+      var tabla=tsLeerTablas()[anio];
+      tsEditReset(parseInt(anio,10));
+      if(tabla) tsEditCargarDesdeTabla(tabla);
+      window.adminIrAPublic('tablasSalarialesEditor');
+    };
+    window.tsAbrirEditorActualizar=function(anio){
+      if(!tsAlmacenOk()) return;
+      tsEditReset(parseInt(anio,10)); /* editor vacío: la nueva importación sustituye tras confirmar el diff */
+      window.adminIrAPublic('tablasSalarialesEditor');
+    };
+
+    /* ---------- Puentes para Copias de Seguridad (exportación/importación) ----------
+       Estructura exportada: { "<anio>": {anio, filas:[{id,codigo,concepto,
+       importe,unidad,fuente}], meta:{fechaActualizacion,archivoFuente,
+       numConceptos,numPendientes}} }. Compatible con copias antiguas: si el
+       backup no declara tablasSalarialesIncluido, no se toca nada de lo ya
+       guardado. Un mismo validador estricto (tcValidarTablasSalarialesImportadas
+       → tsTablaAnioValida → tsFilaValidaImportada) se reutiliza al LEER, al
+       GUARDAR (a través de tsAlmacenOk), al EXPORTAR y al IMPORTAR: una copia
+       con clave de año inconsistente, IDs duplicados, campos fuera de rango o
+       con HTML/eventos se rechaza siempre por completo. */
+    var TS_FILA_CLAVES_CONOCIDAS={id:1,codigo:1,concepto:1,importe:1,unidad:1,fuente:1};
+    function tsFilaValidaImportada(f){
+      if(!f||typeof f!=='object'||Array.isArray(f)) return false;
+      var fKeys=Object.keys(f);
+      for(var fk=0;fk<fKeys.length;fk++){ if(!TS_FILA_CLAVES_CONOCIDAS[fKeys[fk]]) return false; } /* cada fila SOLO admite id,codigo,concepto,importe,unidad,fuente */
+      if(!tsTextoSeguro(f.id,120)||!f.id.trim()) return false;
+      if(!tsTextoSeguro(f.concepto,300)||!f.concepto.trim()) return false;
+      if('codigo' in f&&f.codigo!=null&&!tsTextoSeguro(f.codigo,40)) return false;
+      if('unidad' in f&&f.unidad!=null&&!tsTextoSeguro(f.unidad,20)) return false;
+      if('fuente' in f&&f.fuente!=null&&!tsTextoSeguro(f.fuente,120)) return false;
+      if(f.importe!==null&&(typeof f.importe!=='number'||!isFinite(f.importe)||f.importe<=0)) return false;
+      return true;
+    }
+    /* Fecha ISO real (no solo con la forma AAAA-MM-DD): rechaza calendarios
+       imposibles como "2024-13-40" que la simple expresión regular dejaría
+       pasar. Comparado en UTC para no depender de la zona horaria local. */
+    function tsEsFechaISOReal(s){
+      if(typeof s!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+      var p=s.split('-');
+      var y=parseInt(p[0],10), mo=parseInt(p[1],10), d=parseInt(p[2],10);
+      if(mo<1||mo>12||d<1||d>31) return false;
+      var dt=new Date(Date.UTC(y,mo-1,d));
+      return dt.getUTCFullYear()===y&&dt.getUTCMonth()===(mo-1)&&dt.getUTCDate()===d;
+    }
+    var TS_TABLA_CLAVES_CONOCIDAS={anio:1,filas:1,meta:1};
+    var TS_META_CLAVES_CONOCIDAS={fechaActualizacion:1,archivoFuente:1,numConceptos:1,numPendientes:1};
+    function tsTablaAnioValida(t){
+      if(!t||typeof t!=='object'||Array.isArray(t)) return false;
+      var tKeys=Object.keys(t);
+      for(var tk=0;tk<tKeys.length;tk++){ if(!TS_TABLA_CLAVES_CONOCIDAS[tKeys[tk]]) return false; } /* no se conservan metadatos desconocidos */
+      if(typeof t.anio!=='number'||!isFinite(t.anio)||Math.floor(t.anio)!==t.anio||t.anio<1900||t.anio>2200) return false;
+      /* Una entrada anual DEBE tener al menos una fila: filas:[] es inválida
+         (el almacén vacío global {} sí es válido, pero un año presente con
+         cero conceptos no; se rechaza en lectura, guardado, importación y
+         exportación). */
+      if(!Array.isArray(t.filas)||t.filas.length<1||t.filas.length>5000) return false;
+      var ids={};
+      for(var i=0;i<t.filas.length;i++){
+        var f=t.filas[i];
+        if(!tsFilaValidaImportada(f)) return false;
+        var idNorm=f.id.trim().toLowerCase();
+        if(ids[idNorm]) return false; /* ID duplicado: bloque rechazado */
+        ids[idNorm]=true;
+      }
+      if(!t.meta||typeof t.meta!=='object'||Array.isArray(t.meta)) return false;
+      var metaKeys=Object.keys(t.meta);
+      for(var mk=0;mk<metaKeys.length;mk++){ if(!TS_META_CLAVES_CONOCIDAS[metaKeys[mk]]) return false; } /* no se conservan metadatos desconocidos */
+      if('fechaActualizacion' in t.meta&&t.meta.fechaActualizacion!=null){
+        if(!tsEsFechaISOReal(t.meta.fechaActualizacion)) return false;
+      }
+      if('archivoFuente' in t.meta&&t.meta.archivoFuente!=null&&!tsTextoSeguro(t.meta.archivoFuente,200)) return false;
+      if('numConceptos' in t.meta&&t.meta.numConceptos!=null&&(typeof t.meta.numConceptos!=='number'||t.meta.numConceptos<0)) return false;
+      if('numPendientes' in t.meta&&t.meta.numPendientes!=null&&(typeof t.meta.numPendientes!=='number'||t.meta.numPendientes<0)) return false;
+      return true;
+    }
+    window.tcValidarTablasSalarialesImportadas=function(bloque){
+      if(!bloque||typeof bloque!=='object'||Array.isArray(bloque)) return false;
+      var anios=Object.keys(bloque);
+      if(anios.length>500) return false;
+      for(var a=0;a<anios.length;a++){
+        var clave=anios[a], t=bloque[clave];
+        if(!/^\d{4}$/.test(clave)) return false;
+        if(!tsTablaAnioValida(t)) return false;
+        if(String(t.anio)!==clave) return false; /* la clave anual DEBE coincidir con tabla.anio */
+      }
+      return true;
+    };
+    window.tcExportarTablasSalariales=function(){
+      try{
+        var raw=localStorage.getItem(STORE_TS);
+        if(raw==null) return {};
+        var datos=JSON.parse(raw);
+        if(!window.tcValidarTablasSalarialesImportadas(datos)) return null; /* mismo validador que lectura/importación */
+        var copia=JSON.parse(JSON.stringify(datos)); /* también verifica que serializa sin problemas */
+        /* numConceptos/numPendientes se recalculan SIEMPRE desde las filas al
+           exportar (igual que al leer): nunca se confía en los contadores ya
+           guardados, que podrían venir desactualizados. */
+        Object.keys(copia).forEach(function(anio){
+          var t=copia[anio], pendientes=0;
+          t.filas.forEach(function(f){ if(f.importe==null) pendientes++; });
+          if(!t.meta||typeof t.meta!=='object') t.meta={};
+          t.meta.numConceptos=t.filas.length;
+          t.meta.numPendientes=pendientes;
+        });
+        return copia;
+      }catch(e){ return null; }
+    };
+    /* Restauración transaccional de un backup ya validado por
+       tcValidarTablasSalarialesImportadas: recalcula los contadores desde las
+       filas (nunca confía en los del backup) y, si falla al escribir, se
+       revierte al valor previo (existiera o no) devolviendo false. */
+    window.tcImportarTablasSalariales=function(bloque){
+      if(!window.tcValidarTablasSalarialesImportadas(bloque)) return false;
+      var copia;
+      try{
+        copia=JSON.parse(JSON.stringify(bloque));
+        Object.keys(copia).forEach(function(anio){
+          var t=copia[anio], pendientes=0;
+          t.filas.forEach(function(f){ if(f.importe==null) pendientes++; });
+          if(!t.meta||typeof t.meta!=='object') t.meta={};
+          t.meta.numConceptos=t.filas.length;
+          t.meta.numPendientes=pendientes;
+        });
+      }catch(e){ return false; }
+      var anteriorRaw=null, existiaAntes=false;
+      try{ anteriorRaw=localStorage.getItem(STORE_TS); existiaAntes=(anteriorRaw!=null); }catch(e){}
+      try{
+        localStorage.setItem(STORE_TS,JSON.stringify(copia));
+        tsAlmacenCorrupto=false; tsAlmacenErrorMsg='';
+        return true;
+      }catch(e){
+        try{
+          if(existiaAntes) localStorage.setItem(STORE_TS,anteriorRaw);
+          else localStorage.removeItem(STORE_TS);
+        }catch(e2){}
+        return false;
+      }
+    };
+
     /* ---------- Pantallas ---------- */
     function adminListaCalendariosHTML(conBorrar){
       var eventos={}; try{ eventos=JSON.parse(localStorage.getItem('tc_v1_eventos')||'{}'); }catch(e){}
@@ -11286,12 +13039,23 @@ window.tcMsgAbrirDia=function(fecha){
         campos:[{label:'Año', valor:'—'}]
       });
 
-      /* Tablas Salariales (aún no implementado) */
-      bloques.push({
-        titulo:'Tablas Salariales',
-        estado:'pendiente',
-        campos:[{label:'Año', valor:'—'}]
-      });
+      /* Tablas Salariales: años instalados, o error si el almacén está
+         corrupto (nunca se muestra "pendiente" tapando una corrupción real). */
+      if(tsAlmacenCorruptoActual()){
+        bloques.push({
+          titulo:'Tablas Salariales',
+          estado:'error',
+          campos:[{label:'Error', valor:tsAlmacenErrorMsg||'Almacén dañado'}]
+        });
+      } else {
+        var tsTablasEstado=tsLeerTablas();
+        var tsAniosEstado=Object.keys(tsTablasEstado).sort();
+        bloques.push({
+          titulo:'Tablas Salariales',
+          estado:tsAniosEstado.length>0?'ok':'pendiente',
+          campos:[{label:'Año instalado', valor:tsAniosEstado.length>0?tsAniosEstado.join(', '):'—'}]
+        });
+      }
 
       /* Base de Datos */
       var estadoDB=(typeof db!=='undefined'&&db)?'ok':(!window.indexedDB?'error':'pendiente');
@@ -11351,7 +13115,7 @@ window.tcMsgAbrirDia=function(fecha){
           '<div class="menu-grid">'+
           '<button class="menu-btn" onclick="window.adminIrAPublic(\'calendarioLaboral\')"><span class="menu-icon">📅</span><span class="menu-label">Calendario Laboral</span></button>'+
           '<button class="menu-btn" onclick="window.adminProximamente()"><span class="menu-icon">📄</span><span class="menu-label">Convenios</span></button>'+
-          '<button class="menu-btn" onclick="window.adminProximamente()"><span class="menu-icon">💶</span><span class="menu-label">Tablas Salariales</span></button>'+
+          '<button class="menu-btn" onclick="window.adminIrAPublic(\'tablasSalariales\')"><span class="menu-icon">💶</span><span class="menu-label">Tablas Salariales</span></button>'+
           '</div>';
       } else if(pantalla==='calendarioLaboral'){
         body.innerHTML=volverBtn+
@@ -11367,6 +13131,13 @@ window.tcMsgAbrirDia=function(fecha){
         adminWireBotonesEliminar();
       } else if(pantalla==='estadoSistema'){
         body.innerHTML=volverBtn+adminEstadoSistemaHTML();
+      } else if(pantalla==='tablasSalariales'){
+        body.innerHTML=volverBtn+tsPantallaListaHTML();
+        tsWireBotonesEliminar();
+      } else if(pantalla==='tablasSalarialesEditor'){
+        body.innerHTML=tsPantallaEditorHTML(volverBtn);
+      } else if(pantalla==='tablasSalarialesConfirmar'){
+        body.innerHTML=tsPantallaConfirmarHTML(volverBtn);
       }
     }
 
