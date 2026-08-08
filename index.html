@@ -645,8 +645,8 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-010</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-010R11</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> App laboral y nómina provisional.<br>Importes desde la tabla salarial activa.<br>IRPF activo; cotizaciones pendientes.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-010R12</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> App laboral y nómina provisional.<br>Importes desde la tabla salarial activa.<br>IRPF, cotizaciones y líquido estimados.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
@@ -7523,6 +7523,42 @@ function tcNomFmtCentimos(centimos){
   return (neg?'-':'')+e+','+d+' €';
 }
 
+/* DEV-010R12 — Formatea un porcentaje (número 0..100, máximo dos decimales) como
+   texto español con dos decimales y coma (p.ej. 4.85 → "4,85 %", 0 → "0,00 %").
+   Parte de las centésimas enteras del porcentaje, no del float. */
+function tcNomFmtPct(p){
+  if(typeof p!=='number'||!isFinite(p)) return '';
+  var pc=Math.round(p*100);
+  var neg=pc<0; pc=Math.abs(pc);
+  var ent=Math.floor(pc/100), dec=pc%100;
+  return (neg?'-':'')+String(ent)+','+(dec<10?'0':'')+dec+' %';
+}
+
+/* DEV-010R12 — Helper SEGURO ÚNICO para aplicar un porcentaje a una base en
+   CÉNTIMOS. Representación entera exacta:
+       porcentajeCentésimas = Math.round(porcentaje × 100)
+       descuentoCent        = Math.round(baseCent × porcentajeCentésimas / 10000)
+   Comprueba: base entero seguro; porcentaje finito, en rango 0..100 y con un
+   máximo de dos decimales; centésimas de porcentaje enteras y no negativas;
+   producto y resultado enteros seguros (Number.isSafeInteger antes y después).
+   Devuelve el descuento en céntimos (entero) o null si algo no es seguro. Con
+   porcentaje 0 devuelve 0 (fila visible a 0,00 €). No se usa para el IRPF de R11,
+   que conserva su propia expresión inalterada. */
+function tcNomAplicarPorcentaje(baseCent, porcentaje){
+  if(!Number.isSafeInteger(baseCent)) return null;
+  if(typeof porcentaje!=='number' || !isFinite(porcentaje)) return null;
+  if(porcentaje<0 || porcentaje>100) return null;
+  var pc=Math.round(porcentaje*100);
+  /* Máximo dos decimales: el redondeo no debe desplazar el valor real. */
+  if(Math.abs(porcentaje*100 - pc) > 1e-9) return null;
+  if(!Number.isSafeInteger(pc) || pc<0) return null;
+  var prod=baseCent*pc;
+  if(!Number.isSafeInteger(prod)) return null;
+  var res=Math.round(prod/10000);
+  if(!Number.isSafeInteger(res)) return null;
+  return res;
+}
+
 /* Rellena los selectores de año y mes (años presentes en dias + año actual). */
 function tcNomPoblarSelectores(){
   var selA=document.getElementById('nomAnio'), selM=document.getElementById('nomMes');
@@ -7694,26 +7730,30 @@ function tcNomRenderProvisional(data){
      4A66_COMIENZO_FINAL_BARQ_MACAR) ni se hardcodea importe alguno. El resto de
      conceptos no enlazados (deje, TP 2h…) sigue «Pdte.». La cantidad mostrada
      (cant) no se altera nunca. */
-  function add(cod,desc,tipo,val,unidad,idSal,modo){
+  function add(cod,desc,tipo,val,unidad,idSal,modo,cotiza){
     if(!val) return; /* 0, null o undefined: no se muestra */
     var cant = (tipo==='minutos') ? tcMinANominaHHMM(val)
              : (String(val)+(unidad?(' '+unidad):''));
+    /* DEV-010R12 — 'cotiza' es un METADATO INTERNO EXPLÍCITO: marca la fila como
+       concepto cotizable ordinario para la base de contingencias comunes. NO se
+       deduce de tener idSal (hay conceptos con importe que no cotizan aquí). */
     filas.push({ cod:cod, desc:desc, cant:cant,
                  idSal:idSal||null, modo:modo||null,
-                 dias:(typeof val==='number'?val:0) });
+                 dias:(typeof val==='number'?val:0),
+                 cotiza:(cotiza===true) });
   }
   /* DEV-008R3 — Mutuamente excluyentes (ver tcResumenLaboralMes): 4A10 cuando
      el mes está completo y asignado oficialmente a turno partido (cantidad
      fija 30); 4A41 cuando no (un día PM/PT/PN = una unidad). add() ya oculta
      la fila cuyo valor sea 0, así que nunca se muestran ambas a la vez. */
-  add('4A10','Turno partido','unid',R.tpMensualUnidades,'días','4A10_PARTIDO_MES','once');
-  add('4A41','Turno partido diario','unid',R.tpDiarioUnidades,'días','4A41_PARTIDO_DIA','dias');
+  add('4A10','Turno partido','unid',R.tpMensualUnidades,'días','4A10_PARTIDO_MES','once',true);
+  add('4A41','Turno partido diario','unid',R.tpDiarioUnidades,'días','4A41_PARTIDO_DIA','dias',true);
   add('4A4E','TP hasta 2 horas','unid',R.tpHasta2h,'ud.');
   add('4A4F','TP mayor de 2 horas','unid',R.tpMas2h,'ud.');
   add('4A31','Horas extraordinarias','minutos',R.horasExtraordinarias);
-  add('4A33','Horas nocturnas','minutos',R.nocturnidadGeneral,null,'4A33_NOCTURNIDAD_GENERAL','horas');
-  add('4B25','Horas nocturnas Semana Santa','minutos',R.nocturnidadSemanaSanta,null,'4B25_NOCT_SS','horas');
-  add('4B25','Horas nocturnas Feria','minutos',R.nocturnidadFeria,null,'4B25_NOCT_FERIA','horas');
+  add('4A33','Horas nocturnas','minutos',R.nocturnidadGeneral,null,'4A33_NOCTURNIDAD_GENERAL','horas',true);
+  add('4B25','Horas nocturnas Semana Santa','minutos',R.nocturnidadSemanaSanta,null,'4B25_NOCT_SS','horas',true);
+  add('4B25','Horas nocturnas Feria','minutos',R.nocturnidadFeria,null,'4B25_NOCT_FERIA','horas',true);
   add('4A58','Solape Semana Santa','minutos',R.solapeSemanaSanta); /* DEV-007R8 */
   add('4A59','Solape Feria','minutos',R.solapeFeria);
   add('4A82','Aplicación Artículo 20 d)','minutos',R.excesoEquivalente);
@@ -7728,19 +7768,19 @@ function tcNomRenderProvisional(data){
      como «€/liquidación», la nómina provisional oficial demuestra que el importe
      se aplica POR HORA (6 h 03 min × 21,09 €/h = 127,59 €); esa unidad textual no
      interviene en el cálculo. No se hardcodea ningún importe (21,09/127,59). */
-  add('49A6','Cómputo desplazamiento mensual (T.D.)','minutos',R.td,null,'49A6_DESPLAZAMIENTO','horas');
+  add('49A6','Cómputo desplazamiento mensual (T.D.)','minutos',R.td,null,'49A6_DESPLAZAMIENTO','horas',true);
   add(null,'Deje normal','minutos',R.dejeNormal);
   add(null,'Deje · Extra Calle 7','minutos',R.extraCalle7);
   /* DEV-008R2 — Desde el turno final (reg.turno); ver tcResumenLaboralMes(). */
-  add('4A0I','Prima diaria tarde','unid',R.primaTardeDias,'días','4A0I_TARDE','dias');
-  add('4A30','Plus por sábado trabajado','unid',R.plusSabadoDias,'días','4A30_SABADO_VIGENCIA','dias');
-  add('4A27','Plus por domingo trabajado','unid',R.plusDomingoDias,'días','4A27_DOMINGO_VIGENCIA','dias');
+  add('4A0I','Prima diaria tarde','unid',R.primaTardeDias,'días','4A0I_TARDE','dias',true);
+  add('4A30','Plus por sábado trabajado','unid',R.plusSabadoDias,'días','4A30_SABADO_VIGENCIA','dias',true);
+  add('4A27','Plus por domingo trabajado','unid',R.plusDomingoDias,'días','4A27_DOMINGO_VIGENCIA','dias',true);
   /* DEV-008R10 — Festivo trabajado desde reg.turno + tcEventoDia(fecha real);
      ver tcResumenLaboralMes(). Categorías excluyentes, add() oculta si 0. */
-  add('4A28','Festivo trabajado','unid',R.festivoTrabajadoDias,'días','4A28_FESTIVO','dias');
-  add('4A72','Plus festivo especial trabajado','unid',R.festivoEspecialDias,'días','4A72_FESTIVO_ESPECIAL','dias');
-  add('4A93','Plus Domingo de Ramos trabajado','unid',R.domingoRamosDias,'días','4A93_RAMOS','dias');
-  add('4A37','Plus Festivo Desplazado','unid',R.festivoDesplazadoDias,'días','4A37_FESTIVO_DESPLAZ','dias');
+  add('4A28','Festivo trabajado','unid',R.festivoTrabajadoDias,'días','4A28_FESTIVO','dias',true);
+  add('4A72','Plus festivo especial trabajado','unid',R.festivoEspecialDias,'días','4A72_FESTIVO_ESPECIAL','dias',true);
+  add('4A93','Plus Domingo de Ramos trabajado','unid',R.domingoRamosDias,'días','4A93_RAMOS','dias',true);
+  add('4A37','Plus Festivo Desplazado','unid',R.festivoDesplazadoDias,'días','4A37_FESTIVO_DESPLAZ','dias',true);
 
   /* Celda de descripción con su código (si lo tiene). */
   function descCelda(cod,desc){
@@ -7855,11 +7895,19 @@ function tcNomRenderProvisional(data){
      línea; nunca con euros de coma flotante. */
   var todosImportes=(sbRes.cent!=null);
   var totalCent=(sbRes.cent!=null)?sbRes.cent:0;
+  /* DEV-010R12 — Base cotizable ordinaria en CÉNTIMOS, acumulada de forma
+     INDEPENDIENTE del total devengado. Solo suma conceptos conectados marcados
+     como cotizables (metadato explícito f.cotiza). El salario base es cotizable
+     ordinario y siempre está presente. La antigüedad (más abajo) también cotiza. */
+  var cotizableOrdinarioCent=(sbRes.cent!=null)?sbRes.cent:0;
+  var salarioBaseCent=(sbRes.cent!=null)?sbRes.cent:null; /* referencia para prorrata/tope */
+  var antiguedadCent=0; /* MENOS2 (o sin fila de antigüedad): 0 */
 
   /* Resto de conceptos (solo los de cantidad ≠ 0). Importe € por ID exacto. */
   filas.forEach(function(f){
     var res=resolverImporte(f.idSal,f.modo,f.dias);
-    if(res.cent==null) todosImportes=false; else totalCent+=res.cent;
+    if(res.cent==null){ todosImportes=false; }
+    else { totalCent+=res.cent; if(f.cotiza) cotizableOrdinarioCent+=res.cent; }
     h+=descCelda(f.cod,f.desc)
       +'<div class="n">'+tcEsc(f.cant)+'</div>'
       +'<div class="n">'+res.inner+'</div>'
@@ -7895,7 +7943,8 @@ function tcNomRenderProvisional(data){
     } else if(Object.prototype.hasOwnProperty.call(ANT_ID,_tramoAnt)){
       /* Un solo ID según el tramo vigente; importe mensual único (modo 'once'). */
       var antRes=resolverImporte(ANT_ID[_tramoAnt],'once',null);
-      if(antRes.cent==null) todosImportes=false; else totalCent+=antRes.cent;
+      if(antRes.cent==null){ todosImportes=false; }
+      else { totalCent+=antRes.cent; cotizableOrdinarioCent+=antRes.cent; antiguedadCent=antRes.cent; }
       h+=descCelda(null,'Antigüedad')
         +'<div class="n">'+tcEsc(ANT_ANIOS[_tramoAnt]+' años')+'</div>'
         +'<div class="n">'+antRes.inner+'</div>'
@@ -7904,70 +7953,130 @@ function tcNomRenderProvisional(data){
     /* MENOS2 (o cualquier valor no económico): sin fila y aporta cero. */
   }
 
-  /* ===================== DEV-010R11 — II · DEDUCCIONES: RETENCIÓN IRPF (/401)
-     Conecta EXCLUSIVAMENTE el descuento de IRPF con la Nómina Provisional mensual
-     usando el porcentaje guardado en tc_v1_config_descuentos, leído por la API
-     pública window.tcDescuentosLeer().config.irpf. NUNCA se hardcodea el 10 %.
+  /* ===================== DEV-010R12 — II · DEDUCCIONES: IRPF (/401) + COTIZACIONES
+     SOCIALES DEL TRABAJADOR (/350, /370, /380)
+     Conecta con la Nómina Provisional mensual el IRPF (formula de R11, INALTERADA)
+     y las tres cotizaciones sociales del trabajador. Todos los porcentajes se leen
+     EXCLUSIVAMENTE de la configuración ya guardada mediante window.tcDescuentosLeer()
+     (config.irpf, config.contingenciasComunes, config.desempleo,
+     config.formacionProfesional). NUNCA se hardcodean.
+
      El apartado solo se muestra en vista mensual y con perfil AUTORIZADO
-     (Conductor-Perceptor); en vista anual y en perfiles no autorizados se conserva
-     el comportamiento actual (sin apartado de deducciones). El importe SOLO se
-     calcula cuando el total devengado es completo y válido:
-       porcentajeCentésimas = Math.round(irpf × 100)   (0..10000, entero)
-       irpfCent = Math.round(totalCent × porcentajeCentésimas / 10000)
-     verificando Number.isSafeInteger en totalCent, en el producto y en el
-     resultado antes de aceptarlo (redondeo monetario existente). NO se conectan
-     contingencias comunes, desempleo, formación profesional ni horas
-     extraordinarias: necesitan una base de cotización distinta del total
-     devengado. */
-  var irpfCalculado=false;   /* true solo si se resolvió un importe de IRPF real */
-  var avisoDescuentos=null;  /* 'sinConfig' | 'noVerificable' (solo con total válido) */
+     (Conductor-Perceptor). Los importes SOLO se calculan sobre un total devengado
+     COMPLETO y válido; si el total está pendiente, las filas quedan «Pdte.» sin
+     leer configuración ni calcular.
+
+     BASES INTERNAS ESTIMADAS (nunca son datos configurables ni editables; solo se
+     mencionan como «estimadas automáticamente» en la nota final):
+       masaFijaCent    = salarioBaseCent + antiguedadCent   (antiguedad 0 en MENOS2)
+       prorrataEstCent = Math.round(masaFijaCent × 77341 / 219653)   (calibración
+                         interna contrastada con julio 2026; se adapta al salario
+                         base y a la antigüedad de la tabla activa)
+       baseCCBruta     = cotizableOrdinarioCent + prorrataEstCent
+       topeEstCent     = Math.round(476112 × salarioBaseCent / 219653)
+       baseCCCent      = Math.min(baseCCBruta, topeEstCent)
+       baseCPCent      = baseCCCent   (en R12 las horas extras aún no tienen importe
+                         conectado, por eso la base de desempleo/formación coincide
+                         con la de contingencias comunes; /390 NO se muestra)
+     Se comprueba Number.isSafeInteger antes y después de cada operación; si algún
+     producto no es seguro o algún importe está pendiente, NO se calculan cotizaciones.
+
+     Las HORAS EXTRAORDINARIAS (4A31) no se conectan aún: no forman parte de la base
+     de contingencias comunes y solo se sumarán a la base de desempleo/formación
+     cuando exista un importe devengado válido en una versión futura. La línea /390
+     no se muestra en R12. */
+  var irpfCalculado=false;         /* true solo si se resolvió un importe de IRPF real */
+  var cotizacionesCalculadas=false;/* true solo si /350, /370 y /380 se resolvieron */
+  var irpfCent=null, contingenciasCent=null, desempleoCent=null, formacionCent=null;
+  var avisoDescuentos=null;        /* 'sinConfig' | 'noVerificable' (solo con total válido) */
   if(NOM_AUTORIZADO && esMes){
     var irpfPctInner=celdaPend, irpfImpInner=celdaPend;
-    /* Solo se calcula sobre un total devengado COMPLETO y válido; si el total está
-       pendiente, la fila queda «Pdte.» sin leer configuración ni calcular. */
+    var ccPctInner=celdaPend,  ccImpInner=celdaPend;   /* /350 contingencias comunes */
+    var duPctInner=celdaPend,  duImpInner=celdaPend;   /* /370 desempleo */
+    var fpPctInner=celdaPend,  fpImpInner=celdaPend;   /* /380 formación profesional */
+    /* Solo se calcula sobre un total devengado COMPLETO y válido. */
     if(todosImportes && Number.isSafeInteger(totalCent)){
-      /* Lectura protegida del porcentaje de IRPF (nunca lanza). Estados:
-         'ok' (porcentaje válido) | 'sinConfig' | 'noVerificable' (corrupto, lector
-         ausente, excepción o resultado inesperado). */
-      var _ldEstado='noVerificable', _irpfPct=null;
+      /* Lectura protegida de la configuración (nunca lanza). Estados:
+         'ok' | 'sinConfig' | 'noVerificable' (corrupto, lector ausente o excepción). */
+      var _cfgEstado='noVerificable', _cfg=null;
       try {
         if(typeof window.tcDescuentosLeer==='function'){
           var _ld=window.tcDescuentosLeer();
           if(_ld && typeof _ld==='object'){
-            if(_ld.estado==='ok'){
-              if(_ld.config && typeof _ld.config==='object' &&
-                 typeof _ld.config.irpf==='number' && isFinite(_ld.config.irpf) &&
-                 _ld.config.irpf>=0 && _ld.config.irpf<=100){
-                _ldEstado='ok'; _irpfPct=_ld.config.irpf;
-              } else { _ldEstado='noVerificable'; }
-            } else if(_ld.estado==='sinConfig'){ _ldEstado='sinConfig'; }
-            else { _ldEstado='noVerificable'; } /* 'corrupto' u otro → no verificable */
-          } else { _ldEstado='noVerificable'; }
-        } else { _ldEstado='noVerificable'; }
-      } catch(e){ _ldEstado='noVerificable'; }
+            if(_ld.estado==='ok' && _ld.config && typeof _ld.config==='object'){
+              _cfgEstado='ok'; _cfg=_ld.config;
+            } else if(_ld.estado==='sinConfig'){ _cfgEstado='sinConfig'; }
+            else { _cfgEstado='noVerificable'; } /* 'corrupto' u otro → no verificable */
+          } else { _cfgEstado='noVerificable'; }
+        } else { _cfgEstado='noVerificable'; }
+      } catch(e){ _cfgEstado='noVerificable'; }
 
-      if(_ldEstado==='ok'){
-        /* Porcentaje a centésimas de porcentaje (entero) y cálculo en céntimos, sin
-           redondear el total ni el porcentaje antes de lo exigido por esta
-           representación. */
-        var _pc=Math.round(_irpfPct*100);
-        var _irpfCent=null;
-        if(Number.isSafeInteger(totalCent) && Number.isSafeInteger(_pc) && _pc>=0){
-          var _prod=totalCent*_pc;
-          if(Number.isSafeInteger(_prod)){
-            var _calc=Math.round(_prod/10000);
-            if(Number.isSafeInteger(_calc)) _irpfCent=_calc;
+      if(_cfgEstado==='ok'){
+        /* Validación individual de cada porcentaje (número finito y rango 0..100). */
+        var _pctVal=function(v){ return (typeof v==='number' && isFinite(v) && v>=0 && v<=100) ? v : null; };
+        var _pIrpf=_pctVal(_cfg.irpf), _pCC=_pctVal(_cfg.contingenciasComunes),
+            _pDU=_pctVal(_cfg.desempleo), _pFP=_pctVal(_cfg.formacionProfesional);
+
+        /* --- IRPF (/401): fórmula de R11 INALTERADA, sobre el total devengado. --- */
+        if(_pIrpf!=null){
+          var _pc=Math.round(_pIrpf*100);
+          var _irpfCent=null;
+          if(Number.isSafeInteger(totalCent) && Number.isSafeInteger(_pc) && _pc>=0){
+            var _prod=totalCent*_pc;
+            if(Number.isSafeInteger(_prod)){
+              var _calc=Math.round(_prod/10000);
+              if(Number.isSafeInteger(_calc)) _irpfCent=_calc;
+            }
           }
+          if(_irpfCent!=null){
+            irpfCent=_irpfCent;
+            irpfPctInner=tcEsc(tcNomFmtPct(_pIrpf));
+            irpfImpInner=tcEsc(tcNomFmtCentimos(_irpfCent));
+            irpfCalculado=true;
+          } else { avisoDescuentos='noVerificable'; }
+        } else { avisoDescuentos='noVerificable'; }
+
+        /* --- BASES INTERNAS ESTIMADAS (en céntimos, con guardas de seguridad). --- */
+        var _bases=null;
+        (function(){
+          if(!Number.isSafeInteger(salarioBaseCent)) return;      /* salario base pendiente */
+          if(!Number.isSafeInteger(antiguedadCent)) return;
+          if(!Number.isSafeInteger(cotizableOrdinarioCent)) return;
+          var _masa=salarioBaseCent+antiguedadCent;
+          if(!Number.isSafeInteger(_masa)) return;
+          var _prodP=_masa*77341;
+          if(!Number.isSafeInteger(_prodP)) return;
+          var _prorr=Math.round(_prodP/219653);
+          if(!Number.isSafeInteger(_prorr)) return;
+          var _bruta=cotizableOrdinarioCent+_prorr;
+          if(!Number.isSafeInteger(_bruta)) return;
+          var _prodT=476112*salarioBaseCent;
+          if(!Number.isSafeInteger(_prodT)) return;
+          var _tope=Math.round(_prodT/219653);
+          if(!Number.isSafeInteger(_tope)) return;
+          var _baseCC=Math.min(_bruta,_tope);
+          if(!Number.isSafeInteger(_baseCC)) return;
+          _bases={ baseCC:_baseCC, baseCP:_baseCC }; /* R12: baseCP = baseCC (sin horas extras) */
+        })();
+
+        /* --- COTIZACIONES (/350, /370, /380) con el helper seguro único. --- */
+        if(_bases && _pCC!=null && _pDU!=null && _pFP!=null){
+          var _cc=tcNomAplicarPorcentaje(_bases.baseCC, _pCC);
+          var _du=tcNomAplicarPorcentaje(_bases.baseCP, _pDU);
+          var _fp=tcNomAplicarPorcentaje(_bases.baseCP, _pFP);
+          if(_cc!=null && _du!=null && _fp!=null){
+            contingenciasCent=_cc; desempleoCent=_du; formacionCent=_fp;
+            ccPctInner=tcEsc(tcNomFmtPct(_pCC)); ccImpInner=tcEsc(tcNomFmtCentimos(_cc));
+            duPctInner=tcEsc(tcNomFmtPct(_pDU)); duImpInner=tcEsc(tcNomFmtCentimos(_du));
+            fpPctInner=tcEsc(tcNomFmtPct(_pFP)); fpImpInner=tcEsc(tcNomFmtCentimos(_fp));
+            cotizacionesCalculadas=true;
+          } else { avisoDescuentos='noVerificable'; }
+        } else if(_pCC==null || _pDU==null || _pFP==null){
+          avisoDescuentos='noVerificable'; /* algún porcentaje social inválido */
         }
-        if(_irpfCent!=null){
-          var _pcEnt=Math.floor(_pc/100), _pcDec=_pc%100;
-          irpfPctInner=tcEsc(String(_pcEnt)+','+(_pcDec<10?'0':'')+_pcDec+' %');
-          irpfImpInner=tcEsc(tcNomFmtCentimos(_irpfCent));
-          irpfCalculado=true;
-        } else {
-          avisoDescuentos='noVerificable'; /* resultado inesperado */
-        }
-      } else if(_ldEstado==='sinConfig'){
+        /* _bases==null (importe pendiente o producto no seguro): filas «Pdte.» sin
+           calcular; con total válido esto solo ocurriría por desbordamiento. */
+      } else if(_cfgEstado==='sinConfig'){
         avisoDescuentos='sinConfig';
       } else {
         avisoDescuentos='noVerificable';
@@ -7978,22 +8087,50 @@ function tcNomRenderProvisional(data){
       +'<div class="n">'+irpfPctInner+'</div>'
       +'<div class="n"></div>'
       +'<div class="n">'+irpfImpInner+'</div>';
+    h+=descCelda('/350','Trabajador contingencias comunes')
+      +'<div class="n">'+ccPctInner+'</div>'
+      +'<div class="n"></div>'
+      +'<div class="n">'+ccImpInner+'</div>';
+    h+=descCelda('/370','Trabajador desempleo')
+      +'<div class="n">'+duPctInner+'</div>'
+      +'<div class="n"></div>'
+      +'<div class="n">'+duImpInner+'</div>';
+    h+=descCelda('/380','Trabajador formación profesional')
+      +'<div class="n">'+fpPctInner+'</div>'
+      +'<div class="n"></div>'
+      +'<div class="n">'+fpImpInner+'</div>';
   }
   h+='</div></div>';
-  /* Solo el IRPF se conecta en R11; contingencias sociales y horas extraordinarias
-     siguen sin fila (falta la base de cotización). */
+  /* IRPF + cotizaciones sociales conectados en R12. Las horas extraordinarias (/390)
+     no se muestran: aún no existe un importe devengado conectado. */
 
-  /* --- Totales. Devengado real solo cuando todo tiene importe; a deducir y
-     líquido siguen pendientes (DEV-010: deducciones aún no conectadas). --- */
+  /* --- Totales. Devengado real solo cuando todo tiene importe. DEV-010R12 — El
+     total a deducir y el líquido provisional SOLO se calculan cuando IRPF,
+     contingencias, desempleo y formación están todos correctamente calculados; si
+     falta cualquier importe, configuración, tabla, perfil o cálculo seguro, ambos
+     permanecen «Pendiente de configuración». Nunca se calcula un líquido parcial.
+       totalDeduccionesCent = irpfCent + contingenciasCent + desempleoCent + formacionCent
+       liquidoCent          = totalCent − totalDeduccionesCent --- */
   var mostrarTotal=(esMes&&todosImportes&&Number.isSafeInteger(totalCent));
+  var _dedC=(irpfCalculado && cotizacionesCalculadas &&
+             Number.isSafeInteger(irpfCent) && Number.isSafeInteger(contingenciasCent) &&
+             Number.isSafeInteger(desempleoCent) && Number.isSafeInteger(formacionCent));
+  var totalDeduccionesCent=null, liquidoCent=null, calculoCompleto=false;
+  if(mostrarTotal && _dedC){
+    var _td=irpfCent+contingenciasCent+desempleoCent+formacionCent;
+    if(Number.isSafeInteger(_td)){
+      var _liq=totalCent-_td;
+      if(Number.isSafeInteger(_liq)){
+        totalDeduccionesCent=_td; liquidoCent=_liq; calculoCompleto=true;
+      }
+    }
+  }
   h+='<div class="nom-recibo-tot">';
   h+='<div class="r"><span>Total devengado</span><span'+(mostrarTotal?'':' class="nom-recibo-pend"')+'>'+(mostrarTotal?tcEsc(tcNomFmtCentimos(totalCent)):PEND)+'</span></div>';
-  h+='<div class="r"><span>Total a deducir</span><span class="nom-recibo-pend">'+PEND+'</span></div>';
-  h+='<div class="r big"><span>Líquido a percibir (provisional)</span><span class="nom-recibo-pend">'+PEND+'</span></div>';
-  /* DEV-010R11 — En R11 aún NO existe un total de deducciones completo (faltan las
-     cotizaciones sociales), por eso «Total a deducir» y «Líquido» siguen «Pdte.»
-     y no se usa solo el IRPF como total. Nota breve solo cuando el IRPF se calculó. */
-  if(irpfCalculado) h+='<div style="padding:4px 0 0; font-size:10px; line-height:1.4; opacity:.85; color:#123a8c;">IRPF calculado; cotizaciones sociales pendientes de base de cotización.</div>';
+  h+='<div class="r"><span>Total a deducir (estimado)</span><span'+(calculoCompleto?'':' class="nom-recibo-pend"')+'>'+(calculoCompleto?tcEsc(tcNomFmtCentimos(totalDeduccionesCent)):PEND)+'</span></div>';
+  h+='<div class="r big"><span>Líquido a percibir (provisional)</span><span'+(calculoCompleto?'':' class="nom-recibo-pend"')+'>'+(calculoCompleto?tcEsc(tcNomFmtCentimos(liquidoCent)):PEND)+'</span></div>';
+  /* DEV-010R12 — Nota breve solo cuando el cálculo mensual es completo. */
+  if(calculoCompleto) h+='<div style="padding:4px 0 0; font-size:10px; line-height:1.4; opacity:.85; color:#123a8c;">Cotizaciones y líquido estimados automáticamente para un mes ordinario. Pueden variar en bajas, liquidaciones, atrasos o situaciones excepcionales.</div>';
   h+='</div>';
 
   /* --- Aviso específico de importes (DEV-010, dentro del recibo, sin bloquear
@@ -8030,9 +8167,9 @@ function tcNomRenderProvisional(data){
      por lo que los avisos de la cadena anterior —que cubren el total pendiente—
      no coinciden con este. sinConfig y no verificable tienen mensajes distintos. */
   if(avisoDescuentos==='sinConfig'){
-    h+='<div class="nom-recibo-aviso">⚠️ Configura los porcentajes de «Descuentos e IRPF» en Ajustes para calcular la retención de IRPF: la fila /401 permanece «Pdte.» (no se aplica ningún porcentaje por defecto).</div>';
+    h+='<div class="nom-recibo-aviso">⚠️ Configura los porcentajes de «Descuentos e IRPF» en Ajustes para calcular las deducciones (IRPF y cotizaciones sociales): las filas /401, /350, /370 y /380 permanecen «Pdte.» (no se aplica ningún porcentaje por defecto) y el líquido queda sin calcular.</div>';
   } else if(avisoDescuentos==='noVerificable'){
-    h+='<div class="nom-recibo-aviso">⚠️ No se pudo verificar la configuración de descuentos: la retención de IRPF (/401) permanece «Pdte.». Revisa la configuración de «Descuentos e IRPF» en Ajustes.</div>';
+    h+='<div class="nom-recibo-aviso">⚠️ No se pudo verificar la configuración de descuentos: las deducciones (IRPF /401 y cotizaciones /350, /370, /380) permanecen «Pdte.» y no se calcula el líquido. Revisa la configuración de «Descuentos e IRPF» en Ajustes.</div>';
   }
 
   /* --- Leyenda + aviso obligatorio. La nota de salario base solo aparece
