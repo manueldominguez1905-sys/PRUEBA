@@ -645,12 +645,13 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-010</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-010R9</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Perfil laboral persistente del usuario (clave localStorage tc_v1_perfil_laboral): nombre opcional, categoría profesional elegida EXCLUSIVAMENTE mediante un &lt;select&gt; cerrado de 28 categorías agrupadas en siete &lt;optgroup&gt;, y fecha de antigüedad reconocida (real y no futura); el grupo profesional se deriva de la categoría y no se almacena. API pública tcPerfilLeer/tcPerfilGuardar/tcPerfilEliminar/tcPerfilCalcularTramo/tcPerfilInfoNomina; tramos de antigüedad (MENOS2/2/4/9/14/19/24/NO_APLICABLE/INVALIDO) calculados a años completos al último día del mes solicitado, con manejo del 29 de febrero. Modal de configuración inicial accesible (role=dialog, foco, Escape) que no bloquea el resto de la app y permite «Configurar después»; acción «Perfil laboral» en Ajustes para consultar, editar y eliminar (confirmación integrada, sin confirm()). La Nómina sustituye el texto genérico «Datos del trabajador» por nombre, categoría, grupo, fecha de antigüedad y tramo del mes mostrado. El perfil se incluye en exportación, validación, importación y rollback de copias (perfilLaboral: objeto válido o null). NO se ha modificado ninguna fórmula, cantidad, ID salarial, modo, tabla activa, jornada, calendario ni concepto económico: primera conexión de importes entre las Tablas Salariales y la Nómina Provisional se mantiene intacta. Lector salarial público y de solo lectura (año + ID exacto → correcto / sin tabla / sin concepto / importe pendiente / almacén corrupto) que reutiliza tsLeerTablas() y nunca busca en otro año ni resuelve por código. La vista mensual conecta por ID exacto salario base (4A00_SALARIO_BASE, importe una vez, cantidad 30,00), tarde (4A0I_TARDE), sábado (4A30_SABADO_VIGENCIA), domingo (4A27_DOMINGO_VIGENCIA), partido mensual (4A10_PARTIDO_MES, una vez) y diario (4A41_PARTIDO_DIA) y festivos (4A28_FESTIVO, 4A72_FESTIVO_ESPECIAL, 4A93_RAMOS, 4A37_FESTIVO_DESPLAZ); días × importe salvo los marcados «una vez». Utiliza exclusivamente la tabla salarial activa, con independencia del año de la nómina; sin tabla/ID/importe → celda «Pdte.» y aviso en el recibo; almacén corrupto → ningún importe y aviso específico; formato español con dos decimales; total devengado solo si salario base y todos los conceptos visibles tienen importe. Las horas nocturnas de Semana Santa y Feria ya están conectadas por sus IDs exactos (4B25) y se calculan por hora. La vista anual sigue sin importes; los demás conceptos no enlazados siguen pendientes. El perfil laboral se integra en persistencia, exportación, importación y rollback de backups; los cálculos económicos permanecen sin cambios. DEV-010R6: el perfil laboral admite el mismo catálogo cerrado de 28 categorías ya existente, sin cambios. En esta versión provisional los cálculos económicos de la Nómina Provisional están habilitados ÚNICAMENTE para la categoría CONDUCTOR_PERCEPTOR: se leen del perfil (API tcPerfilInfoNomina) y solo se resuelven importes cuando el perfil es válido y su categoría es Conductor-Perceptor. Las demás categorías conservan su perfil y se muestran correctamente en «Datos del trabajador», pero todos sus importes y el total devengado quedan como «Pdte.» hasta una futura configuración. No se han universalizado ni modificado las tablas salariales, ni ninguna fórmula, cantidad, ID económico, modo ni redondeo existente. DEV-010R7: conecta la antigüedad mensual de Conductor-Perceptor con la tabla salarial activa. A partir del tramo del mes (API tcPerfilInfoNomina/tcPerfilCalcularTramo) selecciona un ÚNICO ID exacto (ANTIGUEDAD_CP_2/4/9/14/19/24) según el tramo vigente, sin sumar tramos, sin proporcionalidad y sin multiplicar por años, meses ni días: el importe se resuelve una sola vez al mes. Menos de dos años (MENOS2) no genera devengo ni fila y no bloquea el total. Los importes proceden EXCLUSIVAMENTE de la tabla salarial activa (nunca hardcodeados); si falta el ID, está pendiente o no es válido, la fila y el total devengado quedan «Pdte.»; con fecha de antigüedad inválida (INVALIDO) o no aplicable al periodo (NO_APLICABLE) no se consulta ningún ID y el total queda «Pdte.». Las demás categorías continúan pendientes de configuración económica. DEV-010R8: conecta la nocturnidad general de Conductor-Perceptor con la tabla salarial activa mediante el ID salarial exacto 4A33_NOCTURNIDAD_GENERAL y modo 'horas'. Se calcula por hora a partir de los minutos ya determinados por la app (fórmula (minutos/60)×importe_hora), sin redondear minutos ni horas antes de multiplicar y redondeando únicamente el importe final a céntimos; participa en el total devengado con céntimos enteros. Reutiliza el mecanismo resolverImporte() existente y su GUARDA CENTRAL: solo se consulta el ID con perfil válido y categoría CONDUCTOR_PERCEPTOR (las demás categorías, sin perfil o perfil corrupto, y la vista anual no realizan ninguna consulta al ID). Cero minutos no genera fila; ID ausente, importe pendiente o no numérico deja la fila y el total «Pdte.». Semana Santa y Feria continúan usando sus IDs independientes (4B25) y la clasificación por día no cambia: los minutos de Semana Santa o Feria no se suman como nocturnidad general. NO se conecta el plus mensual 4B11_NOCTURNIDAD ni ningún otro plus adicional; ningún importe se hardcodea. DEV-010R9: conecta el cómputo mensual de tiempo de desplazamiento (T.D.) de Conductor-Perceptor con la tabla salarial activa mediante el ID salarial exacto 49A6_DESPLAZAMIENTO y modo 'horas'. El dato R.td llega en MINUTOS acumulados del mes y se calcula por hora con la fórmula (minutos/60)×importe_hora, sin redondear minutos ni horas antes de multiplicar y redondeando únicamente el importe final a céntimos; participa una sola vez en el total devengado con céntimos enteros. El formato visible HH.MM (p.ej. 6.03) NO es un decimal: son 6 h 03 min (363 min), nunca 6,03. La fórmula se ha contrastado con el caso oficial 6.03 → 127,59 € usando 21,09 €/hora ((363/60)×21,09 = 127,5945 → 127,59 €); jamás se multiplica 6,03 × 21,09 ni se hardcodean 21,09/127,59. Reutiliza el mecanismo resolverImporte() existente y su GUARDA CENTRAL: solo se consulta el ID con perfil válido y categoría CONDUCTOR_PERCEPTOR (las demás categorías, sin perfil o perfil corrupto, y la vista anual no realizan ninguna consulta al ID). Cero minutos no genera fila ni consulta; ID ausente, importe pendiente o no numérico deja la fila y el total «Pdte.». Aunque la tabla PDF rotule la unidad como «€/liquidación», esa unidad textual es errónea y no interviene en el cálculo: el importe se trata como precio por hora, según demuestra la nómina oficial. No se modifica el PDF, la tabla activa, el importador, el dato almacenado de unidad ni cómo se acumulan los minutos de R.td, y no se enlaza ningún otro desplazamiento (p.ej. 4A66_COMIENZO_FINAL_BARQ_MACAR).</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-010R11</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Perfil laboral persistente del usuario (clave localStorage tc_v1_perfil_laboral): nombre opcional, categoría profesional elegida EXCLUSIVAMENTE mediante un &lt;select&gt; cerrado de 28 categorías agrupadas en siete &lt;optgroup&gt;, y fecha de antigüedad reconocida (real y no futura); el grupo profesional se deriva de la categoría y no se almacena. API pública tcPerfilLeer/tcPerfilGuardar/tcPerfilEliminar/tcPerfilCalcularTramo/tcPerfilInfoNomina; tramos de antigüedad (MENOS2/2/4/9/14/19/24/NO_APLICABLE/INVALIDO) calculados a años completos al último día del mes solicitado, con manejo del 29 de febrero. Modal de configuración inicial accesible (role=dialog, foco, Escape) que no bloquea el resto de la app y permite «Configurar después»; acción «Perfil laboral» en Ajustes para consultar, editar y eliminar (confirmación integrada, sin confirm()). La Nómina sustituye el texto genérico «Datos del trabajador» por nombre, categoría, grupo, fecha de antigüedad y tramo del mes mostrado. El perfil se incluye en exportación, validación, importación y rollback de copias (perfilLaboral: objeto válido o null). NO se ha modificado ninguna fórmula, cantidad, ID salarial, modo, tabla activa, jornada, calendario ni concepto económico: primera conexión de importes entre las Tablas Salariales y la Nómina Provisional se mantiene intacta. Lector salarial público y de solo lectura (año + ID exacto → correcto / sin tabla / sin concepto / importe pendiente / almacén corrupto) que reutiliza tsLeerTablas() y nunca busca en otro año ni resuelve por código. La vista mensual conecta por ID exacto salario base (4A00_SALARIO_BASE, importe una vez, cantidad 30,00), tarde (4A0I_TARDE), sábado (4A30_SABADO_VIGENCIA), domingo (4A27_DOMINGO_VIGENCIA), partido mensual (4A10_PARTIDO_MES, una vez) y diario (4A41_PARTIDO_DIA) y festivos (4A28_FESTIVO, 4A72_FESTIVO_ESPECIAL, 4A93_RAMOS, 4A37_FESTIVO_DESPLAZ); días × importe salvo los marcados «una vez». Utiliza exclusivamente la tabla salarial activa, con independencia del año de la nómina; sin tabla/ID/importe → celda «Pdte.» y aviso en el recibo; almacén corrupto → ningún importe y aviso específico; formato español con dos decimales; total devengado solo si salario base y todos los conceptos visibles tienen importe. Las horas nocturnas de Semana Santa y Feria ya están conectadas por sus IDs exactos (4B25) y se calculan por hora. La vista anual sigue sin importes; los demás conceptos no enlazados siguen pendientes. El perfil laboral se integra en persistencia, exportación, importación y rollback de backups; los cálculos económicos permanecen sin cambios. DEV-010R6: el perfil laboral admite el mismo catálogo cerrado de 28 categorías ya existente, sin cambios. En esta versión provisional los cálculos económicos de la Nómina Provisional están habilitados ÚNICAMENTE para la categoría CONDUCTOR_PERCEPTOR: se leen del perfil (API tcPerfilInfoNomina) y solo se resuelven importes cuando el perfil es válido y su categoría es Conductor-Perceptor. Las demás categorías conservan su perfil y se muestran correctamente en «Datos del trabajador», pero todos sus importes y el total devengado quedan como «Pdte.» hasta una futura configuración. No se han universalizado ni modificado las tablas salariales, ni ninguna fórmula, cantidad, ID económico, modo ni redondeo existente. DEV-010R7: conecta la antigüedad mensual de Conductor-Perceptor con la tabla salarial activa. A partir del tramo del mes (API tcPerfilInfoNomina/tcPerfilCalcularTramo) selecciona un ÚNICO ID exacto (ANTIGUEDAD_CP_2/4/9/14/19/24) según el tramo vigente, sin sumar tramos, sin proporcionalidad y sin multiplicar por años, meses ni días: el importe se resuelve una sola vez al mes. Menos de dos años (MENOS2) no genera devengo ni fila y no bloquea el total. Los importes proceden EXCLUSIVAMENTE de la tabla salarial activa (nunca hardcodeados); si falta el ID, está pendiente o no es válido, la fila y el total devengado quedan «Pdte.»; con fecha de antigüedad inválida (INVALIDO) o no aplicable al periodo (NO_APLICABLE) no se consulta ningún ID y el total queda «Pdte.». Las demás categorías continúan pendientes de configuración económica. DEV-010R8: conecta la nocturnidad general de Conductor-Perceptor con la tabla salarial activa mediante el ID salarial exacto 4A33_NOCTURNIDAD_GENERAL y modo 'horas'. Se calcula por hora a partir de los minutos ya determinados por la app (fórmula (minutos/60)×importe_hora), sin redondear minutos ni horas antes de multiplicar y redondeando únicamente el importe final a céntimos; participa en el total devengado con céntimos enteros. Reutiliza el mecanismo resolverImporte() existente y su GUARDA CENTRAL: solo se consulta el ID con perfil válido y categoría CONDUCTOR_PERCEPTOR (las demás categorías, sin perfil o perfil corrupto, y la vista anual no realizan ninguna consulta al ID). Cero minutos no genera fila; ID ausente, importe pendiente o no numérico deja la fila y el total «Pdte.». Semana Santa y Feria continúan usando sus IDs independientes (4B25) y la clasificación por día no cambia: los minutos de Semana Santa o Feria no se suman como nocturnidad general. NO se conecta el plus mensual 4B11_NOCTURNIDAD ni ningún otro plus adicional; ningún importe se hardcodea. DEV-010R9: conecta el cómputo mensual de tiempo de desplazamiento (T.D.) de Conductor-Perceptor con la tabla salarial activa mediante el ID salarial exacto 49A6_DESPLAZAMIENTO y modo 'horas'. El dato R.td llega en MINUTOS acumulados del mes y se calcula por hora con la fórmula (minutos/60)×importe_hora, sin redondear minutos ni horas antes de multiplicar y redondeando únicamente el importe final a céntimos; participa una sola vez en el total devengado con céntimos enteros. El formato visible HH.MM (p.ej. 6.03) NO es un decimal: son 6 h 03 min (363 min), nunca 6,03. La fórmula se ha contrastado con el caso oficial 6.03 → 127,59 € usando 21,09 €/hora ((363/60)×21,09 = 127,5945 → 127,59 €); jamás se multiplica 6,03 × 21,09 ni se hardcodean 21,09/127,59. Reutiliza el mecanismo resolverImporte() existente y su GUARDA CENTRAL: solo se consulta el ID con perfil válido y categoría CONDUCTOR_PERCEPTOR (las demás categorías, sin perfil o perfil corrupto, y la vista anual no realizan ninguna consulta al ID). Cero minutos no genera fila ni consulta; ID ausente, importe pendiente o no numérico deja la fila y el total «Pdte.». Aunque la tabla PDF rotule la unidad como «€/liquidación», esa unidad textual es errónea y no interviene en el cálculo: el importe se trata como precio por hora, según demuestra la nómina oficial. No se modifica el PDF, la tabla activa, el importador, el dato almacenado de unidad ni cómo se acumulan los minutos de R.td, y no se enlaza ningún otro desplazamiento (p.ej. 4A66_COMIENZO_FINAL_BARQ_MACAR). DEV-010R10: incorpora una configuración persistente e independiente de porcentajes personales de descuento (clave localStorage tc_v1_config_descuentos, esquema estricto version:1 + irpf, contingenciasComunes, desempleo, formacionProfesional y horasExtraordinarias como números finitos entre 0 y 100 con un máximo de dos decimales; sin strings numéricos, NaN, Infinity, null, propiedades ausentes ni desconocidas). Los valores iniciales del formulario son 10,00 / 4,85 / 1,60 / 0,10 / 4,70 %, tomados de las nóminas aportadas, pero NO se persisten automáticamente: la lectura devuelve «sinConfig» hasta que el usuario pulsa expresamente «Guardar». API pública independiente tcDescuentosLeer/tcDescuentosGuardar/tcDescuentosEliminar/tcDescuentosValidar/tcDescuentosAbrirModal/tcDescuentosCerrarModal, que nunca lanza excepciones al exterior, con guardado y eliminación transaccionales (lectura previa obligatoria, verificación por relectura exacta y restauración verificada del valor anterior ante cualquier fallo). Botón «💶 Descuentos e IRPF» en Ajustes (debajo de «Perfil laboral») que abre un modal accesible propio (role=dialog, aria-modal, aria-labelledby, foco inicial, trampa de Tab, cierre con Escape, restauración de foco, usable en móvil y modo oscuro; nunca se abre automáticamente). La configuración se integra en exportación, importación y rollback de copias (configDescuentos: objeto válido o null; corrupto o lector ausente aborta el backup; backups antiguos sin la propiedad conservan la configuración actual). ESTA VERSIÓN SOLO GUARDA, VALIDA, MUESTRA, EXPORTA, IMPORTA Y RESTAURA los porcentajes: TODAVÍA NO SE APLICAN a la Nómina Provisional. No se calculan bases de cotización, ni descuentos (IRPF, contingencias comunes, desempleo, formación profesional ni horas extraordinarias), ni total a deducir, ni líquido; las bases están pendientes de configuración. No se ha modificado ninguna fórmula, cantidad, ID salarial, modo, redondeo, tabla activa, jornada, calendario ni el perfil laboral; los devengos, pendientes y totales son idénticos a DEV-010R9. DEV-010R11: conecta EXCLUSIVAMENTE el descuento de IRPF con la Nómina Provisional mensual usando el porcentaje guardado en tc_v1_config_descuentos, leído mediante la API pública window.tcDescuentosLeer().config.irpf (nunca se hardcodea el 10 %). Solo en vista mensual, con perfil autorizado (Conductor-Perceptor) y cuando el total devengado es completo y válido se calcula la retención con la fórmula en céntimos enteros: porcentajeCentésimas = Math.round(irpf × 100); irpfCent = Math.round(totalCent × porcentajeCentésimas / 10000), verificando Number.isSafeInteger en el total, el producto y el resultado antes de aceptarlo (ejemplo: 1.625,16 € al 10 % = 162,516 € → 162,52 €). En la rejilla del recibo, tras todos los devengos, aparece el apartado «II · Deducciones» con la fila /401 «Retención a cuenta IRPF»: columna D/HR/% con el porcentaje configurado (dos decimales y coma española, p.ej. 10,00 %), importe de devengo vacío e importe de descuento calculado; con 0 % se muestra 0,00 % y 0,00 €. Estados: configuración válida + total devengado válido → fila con importe; sin configuración → fila «Pdte.» y aviso para configurar «Descuentos e IRPF» en Ajustes (nunca se inventa el 10 %); configuración corrupta, lector ausente, excepción o resultado inesperado → fila «Pdte.» y aviso de que la configuración de descuentos no pudo verificarse; total devengado pendiente → fila «Pdte.» sin calcular sobre un subtotal incompleto; vista anual, perfil sin configurar/corrupto o categoría no soportada → no se calcula IRPF y se conserva el comportamiento y la prioridad de avisos actuales. TODAVÍA NO se conectan contingencias comunes, desempleo, formación profesional ni cotización por horas extraordinarias (necesitan una base de cotización distinta del total devengado); la futura cotización de horas extraordinarias (4,70 %) solo se mostrará cuando exista un importe devengado de horas extraordinarias distinto de cero y nunca se aplicará al total devengado. «Total a deducir» y «Líquido a percibir» permanecen «Pendiente de configuración» (no se usa solo el IRPF como total a deducir ni se calcula un líquido parcial), con una nota breve: «IRPF calculado; cotizaciones sociales pendientes de base de cotización». No se ha modificado tc_v1_config_descuentos ni su esquema, el modal de descuentos, su validación o persistencia, la exportación/importación/rollback, las tablas salariales, ni ningún ID, cantidad, modo, fórmula o redondeo de devengos, el perfil laboral, jornadas, calendario ni el total devengado existente.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
       <button id="btnPerfilLaboral" class="btn btn-primary" style="width:100%; margin-top:20px;">👤 Perfil laboral</button>
+      <button id="btnDescuentosIRPF" class="btn btn-primary" style="width:100%; margin-top:10px;">💶 Descuentos e IRPF</button>
       <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:10px;">🛠️ Administrador</button>
       <button id="btnCerrarSettings" class="btn btn-secondary" style="width:100%; margin-top:10px;">Cerrar</button>
     </div>
@@ -742,6 +743,57 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
           <button type="button" id="tcPerfilDespuesBtn" class="btn btn-secondary">Configurar después</button>
           <button type="button" id="tcPerfilEliminarBtn" class="btn btn-danger" style="display:none;">Eliminar perfil</button>
           <button type="button" id="tcPerfilCerrarBtn" class="btn btn-secondary" style="display:none;">Cerrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== DESCUENTOS E IRPF (DEV-010R10) =====================
+       Modal independiente para configurar porcentajes personales de descuento.
+       SOLO guarda/valida/muestra: NO aplica los porcentajes a la Nómina. Reutiliza
+       las clases perfil-* (ya preparadas para móvil y modo oscuro) pero no comparte
+       ni mezcla su clave con tc_v1_perfil_laboral. -->
+  <div id="modalDescuentos" class="perfil-overlay" data-abierto="0" role="dialog" aria-modal="true" aria-labelledby="descTitulo" aria-describedby="descIntro">
+    <div class="perfil-box">
+      <h2 id="descTitulo" class="perfil-titulo">💶 Descuentos e IRPF</h2>
+      <p id="descIntro" class="perfil-intro">Estos porcentajes se guardan para una futura estimación de descuentos. Todavía no se aplican a la nómina porque las bases de cotización están pendientes de configuración.</p>
+      <div id="descAvisoCorrupto" class="perfil-aviso-corrupto" role="alert" style="display:none;"></div>
+
+      <form id="descuentosForm" novalidate>
+        <div class="perfil-campo" id="descCampoIrpf">
+          <label for="tcDescIrpf">IRPF (%)</label>
+          <input type="number" id="tcDescIrpf" min="0" max="100" step="0.01" inputmode="decimal" autocomplete="off" aria-describedby="tcDescIrpfError" />
+          <div id="tcDescIrpfError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <div class="perfil-campo" id="descCampoContingencias">
+          <label for="tcDescContingencias">Contingencias comunes (%)</label>
+          <input type="number" id="tcDescContingencias" min="0" max="100" step="0.01" inputmode="decimal" autocomplete="off" aria-describedby="tcDescContingenciasError" />
+          <div id="tcDescContingenciasError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <div class="perfil-campo" id="descCampoDesempleo">
+          <label for="tcDescDesempleo">Desempleo (%)</label>
+          <input type="number" id="tcDescDesempleo" min="0" max="100" step="0.01" inputmode="decimal" autocomplete="off" aria-describedby="tcDescDesempleoError" />
+          <div id="tcDescDesempleoError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <div class="perfil-campo" id="descCampoFormacion">
+          <label for="tcDescFormacion">Formación profesional (%)</label>
+          <input type="number" id="tcDescFormacion" min="0" max="100" step="0.01" inputmode="decimal" autocomplete="off" aria-describedby="tcDescFormacionError" />
+          <div id="tcDescFormacionError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <div class="perfil-campo" id="descCampoHorasExtra">
+          <label for="tcDescHorasExtra">Horas extraordinarias (%)</label>
+          <input type="number" id="tcDescHorasExtra" min="0" max="100" step="0.01" inputmode="decimal" autocomplete="off" aria-describedby="tcDescHorasExtraError" />
+          <div id="tcDescHorasExtraError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <div class="perfil-botones">
+          <button type="submit" id="tcDescGuardarBtn" class="btn btn-primary">Guardar</button>
+          <button type="button" id="tcDescEliminarBtn" class="btn btn-danger" style="display:none;">Eliminar configuración</button>
+          <button type="button" id="tcDescCancelarBtn" class="btn btn-secondary">Cancelar</button>
         </div>
       </form>
     </div>
@@ -3016,6 +3068,41 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     return false;
   }
 
+  // DEV-010R10 — Configuración de Descuentos e IRPF. Casos EXACTOS:
+  //   · Lector ausente (tcDescuentosLeer no es función) → error y se ABORTA.
+  //   · estado 'ok' con configuración válida → objeto completo con version:1.
+  //   · estado 'sinConfig' → configDescuentos:null.
+  //   · 'corrupto', estado inesperado, resultado inválido o excepción → se ABORTA.
+  // No se convierte una configuración dañada en null en silencio. Siempre
+  // presente en el backup. No interviene en ningún cálculo económico.
+  var configDescuentosParaGuardar = null;
+  if (typeof window.tcDescuentosLeer !== "function") {
+    if (mostrarAviso) mostrarToast("No se pudo acceder a la configuración de descuentos. No se ha generado ninguna copia.", "error");
+    return false;
+  }
+  try {
+    var _cdRead = window.tcDescuentosLeer();
+    if (_cdRead && _cdRead.estado === "ok" && _cdRead.config) {
+      configDescuentosParaGuardar = {
+        version: 1,
+        irpf: _cdRead.config.irpf,
+        contingenciasComunes: _cdRead.config.contingenciasComunes,
+        desempleo: _cdRead.config.desempleo,
+        formacionProfesional: _cdRead.config.formacionProfesional,
+        horasExtraordinarias: _cdRead.config.horasExtraordinarias
+      };
+    } else if (_cdRead && _cdRead.estado === "sinConfig") {
+      configDescuentosParaGuardar = null;
+    } else {
+      // 'corrupto', estado inesperado o resultado inválido: no se genera copia.
+      if (mostrarAviso) mostrarToast("No se pudo verificar la configuración de descuentos (está dañada). No se ha generado ninguna copia.", "error");
+      return false;
+    }
+  } catch (e) {
+    if (mostrarAviso) mostrarToast("No se pudo verificar la configuración de descuentos. No se ha generado ninguna copia.", "error");
+    return false;
+  }
+
   // Copia profunda verificable de todo lo que va a guardarse.
   var calendarioParaGuardar, recaudacionesParaGuardar, liquidacionesParaGuardar;
   try {
@@ -3047,7 +3134,8 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     tablasSalarialesIncluido: true,
     tablaSalarialActiva: tablaSalarialActivaParaGuardar,
     tablaSalarialActivaIncluido: true,
-    perfilLaboral: perfilLaboralParaGuardar
+    perfilLaboral: perfilLaboralParaGuardar,
+    configDescuentos: configDescuentosParaGuardar
   };
   var json;
   try {
@@ -3174,6 +3262,27 @@ function importarDatos(archivo) {
           return;
         }
         perfilNuevoValidado = _plVal.perfil;
+      }
+      // DEV-010R10 — Configuración de Descuentos e IRPF. Solo se procesa si el
+      // backup DECLARA la propiedad (los backups antiguos que no la traen NO
+      // tocan la configuración actual). null → eliminar la configuración al
+      // restaurar. Objeto → debe ser una configuración válida (version:1, cinco
+      // porcentajes numéricos 0..100 con máximo dos decimales, sin propiedades
+      // desconocidas); si no lo es (objeto inválido, versión ausente, string
+      // numérico, propiedad extra o porcentaje fuera de rango), se rechaza TODO
+      // el backup aquí, antes de tocar nada.
+      var descSolicitado = Object.prototype.hasOwnProperty.call(datos, "configDescuentos");
+      var descEsNull = descSolicitado && datos.configDescuentos === null;
+      var descNuevoValidado = null;
+      if (descSolicitado && !descEsNull) {
+        var _cdVal = (typeof window.tcDescuentosValidar === "function")
+          ? window.tcDescuentosValidar(datos.configDescuentos)
+          : { ok: false };
+        if (!_cdVal.ok) {
+          mostrarToast("El backup incluye una configuración de descuentos no válida. No se ha importado nada.", "error");
+          return;
+        }
+        descNuevoValidado = _cdVal.config;
       }
       // Compatible con backups version 1 (anteriores a DEV-004R1, sin bloque
       // de calendario) y version 2 (calendarioConductor podía ser directamente
@@ -3310,6 +3419,14 @@ function importarDatos(archivo) {
         mostrarToast("No se puede asegurar la vuelta atrás del perfil laboral. No se ha importado nada.", "error");
         return;
       }
+      // DEV-010R10 — Instantánea previa de la CONFIGURACIÓN DE DESCUENTOS, para
+      // revertirla dentro del mismo rollback. Solo importa si el backup lo solicita.
+      var descPrevioRaw = null, descPrevioLegible = true;
+      try { descPrevioRaw = localStorage.getItem('tc_v1_config_descuentos'); } catch (e) { descPrevioLegible = false; }
+      if (descSolicitado && !descPrevioLegible) {
+        mostrarToast("No se puede asegurar la vuelta atrás de la configuración de descuentos. No se ha importado nada.", "error");
+        return;
+      }
 
       // ============================================================
       // 3) REVERSIÓN ÚNICA Y VERIFICADA
@@ -3359,6 +3476,16 @@ function importarDatos(archivo) {
             perfilRevertido = true;
           } catch (e) { perfilRevertido = false; }
         }
+        // DEV-010R10 — Reversión de la CONFIGURACIÓN DE DESCUENTOS al valor exacto
+        // anterior (o eliminación si antes no existía), con VERIFICACIÓN por relectura.
+        var descRevertido = true;
+        if (descSolicitado) {
+          descRevertido = false;
+          try {
+            if (descPrevioRaw != null) { localStorage.setItem('tc_v1_config_descuentos', descPrevioRaw); descRevertido = (localStorage.getItem('tc_v1_config_descuentos') === descPrevioRaw); }
+            else { localStorage.removeItem('tc_v1_config_descuentos'); descRevertido = (localStorage.getItem('tc_v1_config_descuentos') == null); }
+          } catch (e) { descRevertido = false; }
+        }
         return Promise.all([
           reemplazarTodos(STORE_RECAUDACIONES, recaudacionesPrevias),
           reemplazarTodos(STORE_LIQUIDACIONES, liquidacionesPrevias)
@@ -3371,7 +3498,7 @@ function importarDatos(archivo) {
           }
           // Refresca la Nómina con el perfil revertido, si está abierta.
           if (perfilSolicitado) { try { if (typeof window.tcRenderNomina === "function") { var _s = document.getElementById("tab-nomina"); if (_s && _s.style.display !== "none") window.tcRenderNomina(); } } catch (e) {} }
-          return datosRevertidos && calendarioRevertido && tsRevertido && tsActivaRevertido && perfilRevertido;
+          return datosRevertidos && calendarioRevertido && tsRevertido && tsActivaRevertido && perfilRevertido && descRevertido;
         }).catch(function () { return false; });
       }
       function avisarFalloImportacion(mensaje) {
@@ -3458,6 +3585,33 @@ function importarDatos(archivo) {
         } catch (e) { perfilAplicado = false; }
         if (!perfilAplicado) {
           avisarFalloImportacion("No se pudo restaurar el perfil laboral. No se ha importado nada.");
+          return;
+        }
+      }
+
+      // ============================================================
+      // 4e) DEV-010R10 — CONFIGURACIÓN DE DESCUENTOS, con el mismo rollback.
+      //     Objeto validado → se escribe; null → se elimina. Cualquier fallo de
+      //     escritura activa el rollback completo (calendario, tablas, tabla
+      //     activa, perfil y configuración de descuentos).
+      // ============================================================
+      if (descSolicitado) {
+        var descAplicado = false;
+        try {
+          if (descEsNull) {
+            localStorage.removeItem('tc_v1_config_descuentos');
+            // Relee: solo se da por aplicado si la clave quedó realmente ausente.
+            descAplicado = (localStorage.getItem('tc_v1_config_descuentos') == null);
+          } else {
+            // Se serializa una sola vez y se escribe esa misma cadena.
+            var descNuevoSerializado = JSON.stringify(descNuevoValidado);
+            localStorage.setItem('tc_v1_config_descuentos', descNuevoSerializado);
+            // Relee: solo se da por aplicado si lo releído coincide exactamente.
+            descAplicado = (localStorage.getItem('tc_v1_config_descuentos') === descNuevoSerializado);
+          }
+        } catch (e) { descAplicado = false; }
+        if (!descAplicado) {
+          avisarFalloImportacion("No se pudo restaurar la configuración de descuentos. No se ha importado nada.");
           return;
         }
       }
@@ -4512,9 +4666,358 @@ function inicializarCamaraOCR() {
 })();
 
 
+/* ==========================================================================
+   DEV-010R10 — CONFIGURACIÓN DE DESCUENTOS E IRPF (persistente y editable)
+   Clave localStorage: tc_v1_config_descuentos (INDEPENDIENTE de
+   tc_v1_perfil_laboral; nunca se mezclan).
+   Esquema ESTRICTO:
+     { version:1, irpf, contingenciasComunes, desempleo,
+       formacionProfesional, horasExtraordinarias }
+   · version obligatoria y exactamente el número 1.
+   · Las cinco propiedades restantes son obligatorias.
+   · Todos los porcentajes deben ser números finitos (nunca strings, NaN,
+     Infinity ni null), en el rango 0..100 inclusive y con un máximo de dos
+     decimales. No se completan silenciosamente propiedades ausentes ni se
+     admiten propiedades desconocidas.
+   ESTE MÓDULO SOLO GUARDA / VALIDA / MUESTRA / EXPORTA / IMPORTA / RESTAURA los
+   porcentajes. NO los aplica a la Nómina, NO calcula bases, descuentos, IRPF,
+   total a deducir ni líquido. No toca ninguna otra clave, fórmula, cantidad,
+   ID salarial, modo, redondeo ni el perfil laboral.
+   ========================================================================== */
+(function(){
+  'use strict';
+
+  var TC_DESC_KEY = 'tc_v1_config_descuentos';
+  /* Propiedades permitidas del esquema (para rechazar claves desconocidas). */
+  var TC_DESC_CLAVES = { version:1, irpf:1, contingenciasComunes:1, desempleo:1, formacionProfesional:1, horasExtraordinarias:1 };
+  /* Metadatos de los cinco porcentajes: orden del esquema, etiqueta, elementos
+     del formulario y valor INICIAL sugerido (procedente de las nóminas
+     aportadas; NUNCA se persiste automáticamente). */
+  var TC_DESC_CAMPOS = [
+    { prop:'irpf',                 label:'IRPF',                   input:'tcDescIrpf',          campoDiv:'descCampoIrpf',          errDiv:'tcDescIrpfError',          inicial:10.00 },
+    { prop:'contingenciasComunes', label:'Contingencias comunes',  input:'tcDescContingencias', campoDiv:'descCampoContingencias', errDiv:'tcDescContingenciasError', inicial:4.85 },
+    { prop:'desempleo',            label:'Desempleo',              input:'tcDescDesempleo',     campoDiv:'descCampoDesempleo',     errDiv:'tcDescDesempleoError',     inicial:1.60 },
+    { prop:'formacionProfesional', label:'Formación profesional',  input:'tcDescFormacion',     campoDiv:'descCampoFormacion',     errDiv:'tcDescFormacionError',     inicial:0.10 },
+    { prop:'horasExtraordinarias', label:'Horas extraordinarias',  input:'tcDescHorasExtra',    campoDiv:'descCampoHorasExtra',    errDiv:'tcDescHorasExtraError',    inicial:4.70 }
+  ];
+
+  /* Un porcentaje válido es un número finito real (nunca string/boolean),
+     0<=v<=100 y con como máximo dos decimales (tolerancia de coma flotante). */
+  function _descPorcentajeValido(v){
+    if(typeof v!=='number' || !isFinite(v)) return false;   /* rechaza strings, NaN, Infinity, null */
+    if(v<0 || v>100) return false;                          /* rango 0..100 inclusive */
+    if(Math.abs(v*100 - Math.round(v*100)) > 1e-9) return false; /* máximo dos decimales */
+    return true;
+  }
+
+  /* Validación PURA (no escribe, nunca lanza). Rechaza propiedades desconocidas,
+     versión distinta de 1, porcentajes ausentes o no válidos.
+     Devuelve {ok:true, config:{...}} (objeto nuevo con las claves en el orden del
+     esquema) o {ok:false, error, campo}. */
+  function tcDescuentosValidar(datos){
+    try {
+      if(!datos || typeof datos!=='object' || Array.isArray(datos))
+        return { ok:false, error:'La configuración no es un objeto válido.', campo:null };
+      /* Ninguna propiedad desconocida. */
+      for(var k in datos){
+        if(Object.prototype.hasOwnProperty.call(datos,k) && !TC_DESC_CLAVES[k])
+          return { ok:false, error:'La configuración contiene propiedades no reconocidas.', campo:null };
+      }
+      /* version OBLIGATORIA y exactamente el número 1 (rechaza ausente, null,
+         "1", 0, 1.0-como-string, etc.). Nunca se completa en silencio. */
+      if(datos.version!==1)
+        return { ok:false, error:'Versión de configuración no soportada.', campo:null };
+      var out = { version:1 };
+      for(var i=0;i<TC_DESC_CAMPOS.length;i++){
+        var c = TC_DESC_CAMPOS[i];
+        /* La propiedad debe existir explícitamente: no se rellena por defecto. */
+        if(!Object.prototype.hasOwnProperty.call(datos, c.prop))
+          return { ok:false, error:'Falta el porcentaje de '+c.label+'.', campo:c.prop };
+        var v = datos[c.prop];
+        if(!_descPorcentajeValido(v))
+          return { ok:false, error:'El porcentaje de '+c.label+' debe ser un número entre 0 y 100 con un máximo de dos decimales.', campo:c.prop };
+        out[c.prop] = v;
+      }
+      return { ok:true, config:out };
+    } catch(e){
+      return { ok:false, error:'No se pudo validar la configuración.', campo:null };
+    }
+  }
+
+  /* ---------- API pública de lectura (nunca lanza) ----------
+     {estado:'ok', config:{...}} | {estado:'sinConfig'} | {estado:'corrupto'} */
+  function tcDescuentosLeer(){
+    var raw;
+    try { raw = localStorage.getItem(TC_DESC_KEY); }
+    catch(e){ return { estado:'corrupto' }; }
+    if(raw==null) return { estado:'sinConfig' };
+    var obj;
+    try { obj = JSON.parse(raw); } catch(e){ return { estado:'corrupto' }; }
+    var v = tcDescuentosValidar(obj);
+    if(!v.ok) return { estado:'corrupto' };
+    return { estado:'ok', config:v.config };
+  }
+
+  /* ---------- Guardado TRANSACCIONAL (nunca lanza) ----------
+     1) Valida el objeto completo. 2) Lee OBLIGATORIAMENTE el valor anterior; si
+     no se puede leer, aborta SIN escribir. 3) Serializa. 4) Escribe. 5) Relee y
+     compara EXACTAMENTE con el JSON escrito. 6) Si falla, restaura el valor
+     anterior exacto (o elimina la clave si antes no existía) y VERIFICA la
+     restauración. Nunca devuelve ok:true sin verificar la persistencia.
+     {ok:true, config} | {ok:false, error, campo}. */
+  function tcDescuentosGuardar(datos){
+    var v = tcDescuentosValidar(datos);
+    if(!v.ok) return { ok:false, error:v.error, campo:v.campo||null };
+    var serial;
+    try { serial = JSON.stringify(v.config); }
+    catch(e){ return { ok:false, error:'No se pudo serializar la configuración.', campo:null }; }
+    /* Lectura obligatoria del valor anterior ANTES de escribir. */
+    var previo, previoLegible=true;
+    try { previo = localStorage.getItem(TC_DESC_KEY); } catch(e){ previoLegible=false; }
+    if(!previoLegible)
+      return { ok:false, error:'No se pudo leer el estado anterior de la configuración. No se ha guardado nada.', campo:null };
+    /* Escritura + verificación por relectura exacta. */
+    var verificado=false;
+    try {
+      localStorage.setItem(TC_DESC_KEY, serial);
+      verificado = (localStorage.getItem(TC_DESC_KEY) === serial);
+    } catch(e){ verificado=false; }
+    if(verificado) return { ok:true, config:v.config };
+    /* Fallo de escritura o de verificación: restaurar el estado anterior EXACTO
+       (o eliminar si no existía) y verificar la restauración. */
+    var restaurado=false;
+    try {
+      if(previo!=null){ localStorage.setItem(TC_DESC_KEY, previo); restaurado = (localStorage.getItem(TC_DESC_KEY) === previo); }
+      else { localStorage.removeItem(TC_DESC_KEY); restaurado = (localStorage.getItem(TC_DESC_KEY) == null); }
+    } catch(e){ restaurado=false; }
+    if(!restaurado)
+      return { ok:false, error:'No se pudo guardar la configuración y no se pudo asegurar el estado anterior. Revisa el almacenamiento.', campo:null };
+    return { ok:false, error:'No se pudo guardar la configuración (almacenamiento no disponible). Se ha conservado la configuración anterior.', campo:null };
+  }
+
+  /* ---------- Eliminación TRANSACCIONAL (nunca lanza) ----------
+     1) Lee el valor anterior; si no se puede leer, aborta SIN eliminar.
+     2) Elimina. 3) Verifica ausencia. 4) Si falla, restaura y verifica el valor
+     anterior. Nunca devuelve éxito sin verificar.
+     {ok:true, estado:'sinConfig'} | {ok:false, error}. */
+  function tcDescuentosEliminar(){
+    var previo, previoLegible=true;
+    try { previo = localStorage.getItem(TC_DESC_KEY); } catch(e){ previoLegible=false; }
+    if(!previoLegible)
+      return { ok:false, error:'No se pudo leer el estado anterior de la configuración. No se ha eliminado nada.' };
+    if(previo==null) return { ok:true, estado:'sinConfig' };
+    var eliminado=false;
+    try {
+      localStorage.removeItem(TC_DESC_KEY);
+      eliminado = (localStorage.getItem(TC_DESC_KEY) == null);
+    } catch(e){ eliminado=false; }
+    if(!eliminado){
+      var restaurado=false;
+      try { localStorage.setItem(TC_DESC_KEY, previo); restaurado = (localStorage.getItem(TC_DESC_KEY) === previo); }
+      catch(e){ restaurado=false; }
+      if(!restaurado)
+        return { ok:false, error:'No se pudo eliminar la configuración y no se pudo asegurar el estado anterior. Revisa el almacenamiento.' };
+      return { ok:false, error:'No se pudo eliminar la configuración. Se ha conservado la configuración anterior.' };
+    }
+    return { ok:true, estado:'sinConfig' };
+  }
+
+  /* ---------- Interfaz (modal accesible propio) ---------- */
+  var _descPrevFocus = null;
+
+  /* Convierte el texto de un <input type="number"> en un número con como máximo
+     dos decimales, a prueba de manipulación del DOM (rechaza notación
+     científica, comas, hex, espacios internos, más de dos decimales, etc.).
+     Devuelve {ok:true, valor} o {ok:false}. El rango 0..100 lo comprueba después
+     la validación central. */
+  function _descParseNum(str){
+    if(typeof str!=='string') return { ok:false };
+    var s = str.trim();
+    if(s==='') return { ok:false };
+    if(!/^-?\d+(\.\d{1,2})?$/.test(s)) return { ok:false };
+    var n = Number(s);
+    if(typeof n!=='number' || !isFinite(n)) return { ok:false };
+    return { ok:true, valor:n };
+  }
+
+  function _descLimpiarErrores(){
+    TC_DESC_CAMPOS.forEach(function(c){
+      var d=document.getElementById(c.campoDiv); if(d) d.classList.remove('tiene-error');
+      var e=document.getElementById(c.errDiv); if(e) e.textContent='';
+    });
+  }
+  function _descMostrarError(campo, mensaje){
+    var meta=null;
+    for(var i=0;i<TC_DESC_CAMPOS.length;i++){ if(TC_DESC_CAMPOS[i].prop===campo){ meta=TC_DESC_CAMPOS[i]; break; } }
+    if(!meta) meta=TC_DESC_CAMPOS[0];
+    var d=document.getElementById(meta.campoDiv); if(d) d.classList.add('tiene-error');
+    var e=document.getElementById(meta.errDiv); if(e) e.textContent=mensaje;
+  }
+
+  function _descFocusables(){
+    var box=document.querySelector('#modalDescuentos .perfil-box');
+    if(!box) return [];
+    var nodes=box.querySelectorAll('button, input, select, textarea, [href], [tabindex]');
+    return Array.prototype.filter.call(nodes, function(el){
+      if(el.disabled) return false;
+      if(el.getAttribute && el.getAttribute('tabindex')==='-1') return false;
+      return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+    });
+  }
+  function _descKeydown(e){
+    var key=e.key;
+    if(key==='Escape' || e.keyCode===27){ e.preventDefault(); tcDescuentosCerrarModal(); return; }
+    if(key==='Tab' || e.keyCode===9){
+      var f=_descFocusables();
+      if(!f.length) return;
+      var first=f[0], last=f[f.length-1], active=document.activeElement;
+      if(e.shiftKey && active===first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && active===last){ e.preventDefault(); first.focus(); }
+    }
+  }
+
+  /* Formatea un número para mostrarlo en el input (hasta dos decimales, sin
+     forzar ceros de más de los que el <input type=number> conserva). */
+  function _descFmt(v){
+    if(typeof v!=='number' || !isFinite(v)) return '';
+    return String(Math.round(v*100)/100);
+  }
+
+  function tcDescuentosAbrirModal(){
+    try {
+      var overlay=document.getElementById('modalDescuentos');
+      if(!overlay) return;
+      _descPrevFocus = document.activeElement;
+      var lectura=tcDescuentosLeer();
+
+      var avc=document.getElementById('descAvisoCorrupto');
+      if(avc){
+        if(lectura.estado==='corrupto'){
+          avc.style.display='';
+          avc.textContent='La configuración guardada está dañada o no es válida. Puedes sustituirla guardando una nueva.';
+        } else { avc.style.display='none'; avc.textContent=''; }
+      }
+
+      /* Sin configuración (o corrupta) → valores INICIALES sugeridos (no
+         persistidos). Con configuración válida → valores guardados. */
+      TC_DESC_CAMPOS.forEach(function(c){
+        var inp=document.getElementById(c.input); if(!inp) return;
+        if(lectura.estado==='ok') inp.value = _descFmt(lectura.config[c.prop]);
+        else inp.value = _descFmt(c.inicial);
+      });
+      _descLimpiarErrores();
+
+      /* «Eliminar configuración» solo si existe una configuración VÁLIDA. */
+      var btnEliminar=document.getElementById('tcDescEliminarBtn');
+      if(btnEliminar){
+        btnEliminar.style.display = (lectura.estado==='ok') ? '' : 'none';
+        btnEliminar.removeAttribute('data-confirmando');
+        btnEliminar.textContent='Eliminar configuración';
+      }
+
+      overlay.setAttribute('data-abierto','1');
+      var primero=document.getElementById(TC_DESC_CAMPOS[0].input);
+      setTimeout(function(){ try{ if(primero) primero.focus(); }catch(e){} }, 0);
+    } catch(e){}
+  }
+
+  function tcDescuentosCerrarModal(){
+    try {
+      var overlay=document.getElementById('modalDescuentos');
+      if(!overlay) return;
+      overlay.setAttribute('data-abierto','0');
+      try { if(_descPrevFocus && typeof _descPrevFocus.focus==='function') _descPrevFocus.focus(); } catch(e){}
+      _descPrevFocus=null;
+    } catch(e){}
+  }
+
+  /* Guardado desde la UI: revalidación COMPLETA. Lee el texto de cada input,
+     lo convierte con guardas estrictas y solo entonces construye el objeto que
+     pasa por la validación central antes de persistir. */
+  function _descGuardarDesdeUI(){
+    _descLimpiarErrores();
+    var datos={ version:1 };
+    var primerError=null;
+    for(var i=0;i<TC_DESC_CAMPOS.length;i++){
+      var c=TC_DESC_CAMPOS[i];
+      var inp=document.getElementById(c.input);
+      var parsed=_descParseNum(inp ? inp.value : '');
+      if(!parsed.ok){
+        if(!primerError) primerError={ campo:c.prop, mensaje:'Introduce un número entre 0 y 100 con un máximo de dos decimales.' };
+        continue;
+      }
+      datos[c.prop]=parsed.valor;
+    }
+    if(primerError){
+      _descMostrarError(primerError.campo, primerError.mensaje);
+      var meta0=null; for(var j=0;j<TC_DESC_CAMPOS.length;j++){ if(TC_DESC_CAMPOS[j].prop===primerError.campo){ meta0=TC_DESC_CAMPOS[j]; break; } }
+      if(meta0){ try{ document.getElementById(meta0.input).focus(); }catch(e){} }
+      return;
+    }
+    var res=tcDescuentosGuardar(datos);
+    if(!res.ok){
+      _descMostrarError(res.campo||TC_DESC_CAMPOS[0].prop, res.error||'No se pudo guardar la configuración.');
+      var metaE=null; for(var k=0;k<TC_DESC_CAMPOS.length;k++){ if(TC_DESC_CAMPOS[k].prop===res.campo){ metaE=TC_DESC_CAMPOS[k]; break; } }
+      if(metaE){ try{ document.getElementById(metaE.input).focus(); }catch(e){} }
+      return;
+    }
+    if(typeof mostrarToast==='function') mostrarToast('Configuración de descuentos guardada.', 'success');
+    tcDescuentosCerrarModal();
+  }
+
+  function _descEliminarDesdeUI(btn){
+    /* Confirmación integrada reutilizada (nunca confirm()). */
+    confirmarAccion(btn, 'Eliminar configuración', function(){
+      var res=tcDescuentosEliminar();
+      if(!res.ok){
+        if(typeof mostrarToast==='function') mostrarToast(res.error||'No se pudo eliminar la configuración.', 'error');
+        return;
+      }
+      if(typeof mostrarToast==='function') mostrarToast('Configuración de descuentos eliminada.', 'success');
+      tcDescuentosCerrarModal();
+    });
+  }
+
+  function tcDescuentosInit(){
+    var overlay=document.getElementById('modalDescuentos');
+    if(!overlay) return;
+    var form=document.getElementById('descuentosForm');
+    if(form) form.addEventListener('submit', function(e){ e.preventDefault(); _descGuardarDesdeUI(); });
+    /* Al escribir en un campo se limpia su error. */
+    TC_DESC_CAMPOS.forEach(function(c){
+      var inp=document.getElementById(c.input);
+      if(inp) inp.addEventListener('input', function(){
+        var d=document.getElementById(c.campoDiv); if(d) d.classList.remove('tiene-error');
+        var e=document.getElementById(c.errDiv); if(e) e.textContent='';
+      });
+    });
+    var btnCancelar=document.getElementById('tcDescCancelarBtn');
+    if(btnCancelar) btnCancelar.addEventListener('click', function(){ tcDescuentosCerrarModal(); });
+    var btnEliminar=document.getElementById('tcDescEliminarBtn');
+    if(btnEliminar) btnEliminar.addEventListener('click', function(){ _descEliminarDesdeUI(btnEliminar); });
+    overlay.addEventListener('keydown', _descKeydown);
+    var btnAbrir=document.getElementById('btnDescuentosIRPF');
+    if(btnAbrir) btnAbrir.addEventListener('click', function(){
+      var ms=document.getElementById('modalSettings'); if(ms) ms.style.display='none';
+      tcDescuentosAbrirModal();
+    });
+  }
+
+  /* Exposición pública (API independiente del perfil laboral). */
+  window.tcDescuentosLeer        = tcDescuentosLeer;
+  window.tcDescuentosGuardar     = tcDescuentosGuardar;
+  window.tcDescuentosEliminar    = tcDescuentosEliminar;
+  window.tcDescuentosValidar     = tcDescuentosValidar;
+  window.tcDescuentosAbrirModal  = tcDescuentosAbrirModal;
+  window.tcDescuentosCerrarModal = tcDescuentosCerrarModal;
+  window.tcDescuentosInit        = tcDescuentosInit;
+})();
+
+
 document.addEventListener("DOMContentLoaded", function () {
   inicializarTema(); inicializarTabs();
   if (typeof window.tcPerfilInit === "function") window.tcPerfilInit();
+  if (typeof window.tcDescuentosInit === "function") window.tcDescuentosInit();
   document.querySelectorAll(".btn-toggle-filtros").forEach(function (boton) {
     boton.addEventListener("click", function () {
       var panel = document.getElementById(boton.getAttribute("data-target"));
@@ -7386,8 +7889,85 @@ function tcNomRenderProvisional(data){
     }
     /* MENOS2 (o cualquier valor no económico): sin fila y aporta cero. */
   }
+
+  /* ===================== DEV-010R11 — II · DEDUCCIONES: RETENCIÓN IRPF (/401)
+     Conecta EXCLUSIVAMENTE el descuento de IRPF con la Nómina Provisional mensual
+     usando el porcentaje guardado en tc_v1_config_descuentos, leído por la API
+     pública window.tcDescuentosLeer().config.irpf. NUNCA se hardcodea el 10 %.
+     El apartado solo se muestra en vista mensual y con perfil AUTORIZADO
+     (Conductor-Perceptor); en vista anual y en perfiles no autorizados se conserva
+     el comportamiento actual (sin apartado de deducciones). El importe SOLO se
+     calcula cuando el total devengado es completo y válido:
+       porcentajeCentésimas = Math.round(irpf × 100)   (0..10000, entero)
+       irpfCent = Math.round(totalCent × porcentajeCentésimas / 10000)
+     verificando Number.isSafeInteger en totalCent, en el producto y en el
+     resultado antes de aceptarlo (redondeo monetario existente). NO se conectan
+     contingencias comunes, desempleo, formación profesional ni horas
+     extraordinarias: necesitan una base de cotización distinta del total
+     devengado. */
+  var irpfCalculado=false;   /* true solo si se resolvió un importe de IRPF real */
+  var avisoDescuentos=null;  /* 'sinConfig' | 'noVerificable' (solo con total válido) */
+  if(NOM_AUTORIZADO && esMes){
+    var irpfPctInner=celdaPend, irpfImpInner=celdaPend;
+    /* Solo se calcula sobre un total devengado COMPLETO y válido; si el total está
+       pendiente, la fila queda «Pdte.» sin leer configuración ni calcular. */
+    if(todosImportes && Number.isSafeInteger(totalCent)){
+      /* Lectura protegida del porcentaje de IRPF (nunca lanza). Estados:
+         'ok' (porcentaje válido) | 'sinConfig' | 'noVerificable' (corrupto, lector
+         ausente, excepción o resultado inesperado). */
+      var _ldEstado='noVerificable', _irpfPct=null;
+      try {
+        if(typeof window.tcDescuentosLeer==='function'){
+          var _ld=window.tcDescuentosLeer();
+          if(_ld && typeof _ld==='object'){
+            if(_ld.estado==='ok'){
+              if(_ld.config && typeof _ld.config==='object' &&
+                 typeof _ld.config.irpf==='number' && isFinite(_ld.config.irpf) &&
+                 _ld.config.irpf>=0 && _ld.config.irpf<=100){
+                _ldEstado='ok'; _irpfPct=_ld.config.irpf;
+              } else { _ldEstado='noVerificable'; }
+            } else if(_ld.estado==='sinConfig'){ _ldEstado='sinConfig'; }
+            else { _ldEstado='noVerificable'; } /* 'corrupto' u otro → no verificable */
+          } else { _ldEstado='noVerificable'; }
+        } else { _ldEstado='noVerificable'; }
+      } catch(e){ _ldEstado='noVerificable'; }
+
+      if(_ldEstado==='ok'){
+        /* Porcentaje a centésimas de porcentaje (entero) y cálculo en céntimos, sin
+           redondear el total ni el porcentaje antes de lo exigido por esta
+           representación. */
+        var _pc=Math.round(_irpfPct*100);
+        var _irpfCent=null;
+        if(Number.isSafeInteger(totalCent) && Number.isSafeInteger(_pc) && _pc>=0){
+          var _prod=totalCent*_pc;
+          if(Number.isSafeInteger(_prod)){
+            var _calc=Math.round(_prod/10000);
+            if(Number.isSafeInteger(_calc)) _irpfCent=_calc;
+          }
+        }
+        if(_irpfCent!=null){
+          var _pcEnt=Math.floor(_pc/100), _pcDec=_pc%100;
+          irpfPctInner=tcEsc(String(_pcEnt)+','+(_pcDec<10?'0':'')+_pcDec+' %');
+          irpfImpInner=tcEsc(tcNomFmtCentimos(_irpfCent));
+          irpfCalculado=true;
+        } else {
+          avisoDescuentos='noVerificable'; /* resultado inesperado */
+        }
+      } else if(_ldEstado==='sinConfig'){
+        avisoDescuentos='sinConfig';
+      } else {
+        avisoDescuentos='noVerificable';
+      }
+    }
+    h+='<div class="nom-r-sec">II · Deducciones</div>';
+    h+=descCelda('/401','Retención a cuenta IRPF')
+      +'<div class="n">'+irpfPctInner+'</div>'
+      +'<div class="n"></div>'
+      +'<div class="n">'+irpfImpInner+'</div>';
+  }
   h+='</div></div>';
-  /* Deducciones (II) y bases de cotización se OCULTAN: aún no hay datos fiables. */
+  /* Solo el IRPF se conecta en R11; contingencias sociales y horas extraordinarias
+     siguen sin fila (falta la base de cotización). */
 
   /* --- Totales. Devengado real solo cuando todo tiene importe; a deducir y
      líquido siguen pendientes (DEV-010: deducciones aún no conectadas). --- */
@@ -7396,6 +7976,10 @@ function tcNomRenderProvisional(data){
   h+='<div class="r"><span>Total devengado</span><span'+(mostrarTotal?'':' class="nom-recibo-pend"')+'>'+(mostrarTotal?tcEsc(tcNomFmtCentimos(totalCent)):PEND)+'</span></div>';
   h+='<div class="r"><span>Total a deducir</span><span class="nom-recibo-pend">'+PEND+'</span></div>';
   h+='<div class="r big"><span>Líquido a percibir (provisional)</span><span class="nom-recibo-pend">'+PEND+'</span></div>';
+  /* DEV-010R11 — En R11 aún NO existe un total de deducciones completo (faltan las
+     cotizaciones sociales), por eso «Total a deducir» y «Líquido» siguen «Pdte.»
+     y no se usa solo el IRPF como total. Nota breve solo cuando el IRPF se calculó. */
+  if(irpfCalculado) h+='<div style="padding:4px 0 0; font-size:10px; line-height:1.4; opacity:.85; color:#123a8c;">IRPF calculado; cotizaciones sociales pendientes de base de cotización.</div>';
   h+='</div>';
 
   /* --- Aviso específico de importes (DEV-010, dentro del recibo, sin bloquear
@@ -7425,6 +8009,16 @@ function tcNomRenderProvisional(data){
     h+='<div class="nom-recibo-aviso">⚠️ La tabla salarial activa (año '+tcEsc(String(infoActiva.id))+') ya no existe o no es válida: todos los importes quedan como «Pdte.». Activa una tabla válida en las Tablas Salariales.</div>';
   } else if(faltaAlgunImporte){
     h+='<div class="nom-recibo-aviso">⚠️ Faltan importes en la tabla salarial activa (año '+tcEsc(String(infoActiva.anio))+'): concepto no encontrado o importe pendiente. Las celdas afectadas y el total devengado quedan como «Pdte.». Revisa esa tabla.</div>';
+  }
+
+  /* DEV-010R11 — Aviso específico de la RETENCIÓN DE IRPF. Solo puede activarse
+     con total devengado válido (avisoDescuentos se fija únicamente en ese caso),
+     por lo que los avisos de la cadena anterior —que cubren el total pendiente—
+     no coinciden con este. sinConfig y no verificable tienen mensajes distintos. */
+  if(avisoDescuentos==='sinConfig'){
+    h+='<div class="nom-recibo-aviso">⚠️ Configura los porcentajes de «Descuentos e IRPF» en Ajustes para calcular la retención de IRPF: la fila /401 permanece «Pdte.» (no se aplica ningún porcentaje por defecto).</div>';
+  } else if(avisoDescuentos==='noVerificable'){
+    h+='<div class="nom-recibo-aviso">⚠️ No se pudo verificar la configuración de descuentos: la retención de IRPF (/401) permanece «Pdte.». Revisa la configuración de «Descuentos e IRPF» en Ajustes.</div>';
   }
 
   /* --- Leyenda + aviso obligatorio. La nota de salario base solo aparece
