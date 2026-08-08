@@ -193,6 +193,30 @@ textarea { width: 100%; resize: vertical; font-family: monospace; }
 .btn-edit { background-color: var(--color-primary); color: #fff; }
 .btn-sm { padding: 6px 10px; font-size: 0.8rem; border-radius: 6px; margin-right: 4px; border: none; cursor: pointer; }
 
+/* ===== DEV-010R5 — Perfil laboral (modal) ===== */
+.perfil-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 10000; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
+.perfil-overlay[data-abierto="1"] { display: flex; }
+.perfil-box { box-sizing: border-box; background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 16px; padding: 22px 20px; width: 100%; max-width: 440px; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; box-shadow: 0 4px 28px rgba(0,0,0,0.3); }
+.perfil-titulo { margin: 0 0 6px; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; }
+.perfil-intro { margin: 0 0 14px; font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; }
+.perfil-campo { margin-bottom: 14px; display: flex; flex-direction: column; gap: 5px; }
+.perfil-campo label { font-size: 0.9rem; font-weight: 600; color: var(--color-text); }
+.perfil-campo .perfil-opt { font-weight: 400; color: var(--color-text-secondary); font-size: 0.8rem; }
+.perfil-campo input, .perfil-campo select { width: 100%; box-sizing: border-box; max-width: 100%; }
+.perfil-grupo { font-size: 0.85rem; color: var(--color-text-secondary); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px; padding: 7px 10px; }
+.perfil-grupo strong { color: var(--color-text); }
+.perfil-grupo.vacio { font-style: italic; }
+.perfil-error { font-size: 0.82rem; color: var(--color-danger); min-height: 0; line-height: 1.35; }
+.perfil-error:empty { display: none; }
+.perfil-error::before { content: "⚠ "; }
+.perfil-campo.tiene-error input, .perfil-campo.tiene-error select { border-color: var(--color-danger); box-shadow: 0 0 0 2px var(--color-danger-bg); }
+.perfil-aviso-corrupto { background: var(--color-danger-bg); color: var(--color-danger); border: 1px solid var(--color-danger); border-radius: 8px; padding: 10px 12px; font-size: 0.85rem; margin-bottom: 14px; line-height: 1.4; }
+.perfil-aviso-corrupto::before { content: "⚠ "; font-weight: 700; }
+.perfil-botones { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.perfil-botones .btn { width: 100%; }
+.perfil-datos { font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.7; margin: 0 0 14px; }
+.perfil-datos strong { color: var(--color-text); }
+
 .btn-toggle-filtros { margin-bottom: 10px; }
 .btn-toggle-filtros.activo { background-color: var(--color-primary); color: #fff; }
 .filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 14px; background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 12px; }
@@ -621,13 +645,105 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> DEV-010</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-010R4</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> Primera conexión de importes entre las Tablas Salariales y la Nómina Provisional. Lector salarial público y de solo lectura (año + ID exacto → correcto / sin tabla / sin concepto / importe pendiente / almacén corrupto) que reutiliza tsLeerTablas() y nunca busca en otro año ni resuelve por código. La vista mensual conecta por ID exacto salario base (4A00_SALARIO_BASE, importe una vez, cantidad 30,00), tarde (4A0I_TARDE), sábado (4A30_SABADO_VIGENCIA), domingo (4A27_DOMINGO_VIGENCIA), partido mensual (4A10_PARTIDO_MES, una vez) y diario (4A41_PARTIDO_DIA) y festivos (4A28_FESTIVO, 4A72_FESTIVO_ESPECIAL, 4A93_RAMOS, 4A37_FESTIVO_DESPLAZ); días × importe salvo los marcados «una vez». Utiliza exclusivamente la tabla salarial activa, con independencia del año de la nómina; sin tabla/ID/importe → celda «Pdte.» y aviso en el recibo; almacén corrupto → ningún importe y aviso específico; formato español con dos decimales; total devengado solo si salario base y todos los conceptos visibles tienen importe. Las horas nocturnas de Semana Santa y Feria ya están conectadas por sus IDs exactos (4B25) y se calculan por hora. La vista anual sigue sin importes; la nocturnidad general y los demás conceptos no enlazados siguen pendientes. Sin cambios en cantidades, calendario, turnos, eventos, persistencia, importación, backups ni cálculos.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-010R7</span></div>
+        <div style="margin-top:8px;"><strong>Descripción:</strong> Perfil laboral persistente del usuario (clave localStorage tc_v1_perfil_laboral): nombre opcional, categoría profesional elegida EXCLUSIVAMENTE mediante un &lt;select&gt; cerrado de 28 categorías agrupadas en siete &lt;optgroup&gt;, y fecha de antigüedad reconocida (real y no futura); el grupo profesional se deriva de la categoría y no se almacena. API pública tcPerfilLeer/tcPerfilGuardar/tcPerfilEliminar/tcPerfilCalcularTramo/tcPerfilInfoNomina; tramos de antigüedad (MENOS2/2/4/9/14/19/24/NO_APLICABLE/INVALIDO) calculados a años completos al último día del mes solicitado, con manejo del 29 de febrero. Modal de configuración inicial accesible (role=dialog, foco, Escape) que no bloquea el resto de la app y permite «Configurar después»; acción «Perfil laboral» en Ajustes para consultar, editar y eliminar (confirmación integrada, sin confirm()). La Nómina sustituye el texto genérico «Datos del trabajador» por nombre, categoría, grupo, fecha de antigüedad y tramo del mes mostrado. El perfil se incluye en exportación, validación, importación y rollback de copias (perfilLaboral: objeto válido o null). NO se ha modificado ninguna fórmula, cantidad, ID salarial, modo, tabla activa, jornada, calendario ni concepto económico: primera conexión de importes entre las Tablas Salariales y la Nómina Provisional se mantiene intacta. Lector salarial público y de solo lectura (año + ID exacto → correcto / sin tabla / sin concepto / importe pendiente / almacén corrupto) que reutiliza tsLeerTablas() y nunca busca en otro año ni resuelve por código. La vista mensual conecta por ID exacto salario base (4A00_SALARIO_BASE, importe una vez, cantidad 30,00), tarde (4A0I_TARDE), sábado (4A30_SABADO_VIGENCIA), domingo (4A27_DOMINGO_VIGENCIA), partido mensual (4A10_PARTIDO_MES, una vez) y diario (4A41_PARTIDO_DIA) y festivos (4A28_FESTIVO, 4A72_FESTIVO_ESPECIAL, 4A93_RAMOS, 4A37_FESTIVO_DESPLAZ); días × importe salvo los marcados «una vez». Utiliza exclusivamente la tabla salarial activa, con independencia del año de la nómina; sin tabla/ID/importe → celda «Pdte.» y aviso en el recibo; almacén corrupto → ningún importe y aviso específico; formato español con dos decimales; total devengado solo si salario base y todos los conceptos visibles tienen importe. Las horas nocturnas de Semana Santa y Feria ya están conectadas por sus IDs exactos (4B25) y se calculan por hora. La vista anual sigue sin importes; la nocturnidad general y los demás conceptos no enlazados siguen pendientes. El perfil laboral se integra en persistencia, exportación, importación y rollback de backups; los cálculos económicos permanecen sin cambios. DEV-010R6: el perfil laboral admite el mismo catálogo cerrado de 28 categorías ya existente, sin cambios. En esta versión provisional los cálculos económicos de la Nómina Provisional están habilitados ÚNICAMENTE para la categoría CONDUCTOR_PERCEPTOR: se leen del perfil (API tcPerfilInfoNomina) y solo se resuelven importes cuando el perfil es válido y su categoría es Conductor-Perceptor. Las demás categorías conservan su perfil y se muestran correctamente en «Datos del trabajador», pero todos sus importes y el total devengado quedan como «Pdte.» hasta una futura configuración. No se han universalizado ni modificado las tablas salariales, ni ninguna fórmula, cantidad, ID económico, modo ni redondeo existente. DEV-010R7: conecta la antigüedad mensual de Conductor-Perceptor con la tabla salarial activa. A partir del tramo del mes (API tcPerfilInfoNomina/tcPerfilCalcularTramo) selecciona un ÚNICO ID exacto (ANTIGUEDAD_CP_2/4/9/14/19/24) según el tramo vigente, sin sumar tramos, sin proporcionalidad y sin multiplicar por años, meses ni días: el importe se resuelve una sola vez al mes. Menos de dos años (MENOS2) no genera devengo ni fila y no bloquea el total. Los importes proceden EXCLUSIVAMENTE de la tabla salarial activa (nunca hardcodeados); si falta el ID, está pendiente o no es válido, la fila y el total devengado quedan «Pdte.»; con fecha de antigüedad inválida (INVALIDO) o no aplicable al periodo (NO_APLICABLE) no se consulta ningún ID y el total queda «Pdte.». Las demás categorías continúan pendientes de configuración económica.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
-      <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:20px;">🛠️ Administrador</button>
+      <button id="btnPerfilLaboral" class="btn btn-primary" style="width:100%; margin-top:20px;">👤 Perfil laboral</button>
+      <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:10px;">🛠️ Administrador</button>
       <button id="btnCerrarSettings" class="btn btn-secondary" style="width:100%; margin-top:10px;">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- ===================== PERFIL LABORAL (DEV-010R5) =====================
+       Modal único reutilizado para la configuración INICIAL y para la EDICIÓN
+       posterior desde Ajustes. La categoría se elige EXCLUSIVAMENTE mediante el
+       <select> cerrado siguiente (sin input, texto libre ni datalist). -->
+  <div id="modalPerfil" class="perfil-overlay" data-abierto="0" role="dialog" aria-modal="true" aria-labelledby="perfilTitulo" aria-describedby="perfilIntro">
+    <div class="perfil-box">
+      <h2 id="perfilTitulo" class="perfil-titulo">👤 Perfil laboral</h2>
+      <p id="perfilIntro" class="perfil-intro">Configura tu perfil laboral. Estos datos se guardan solo en este dispositivo y todavía no modifican ningún importe de la Nómina.</p>
+      <div id="perfilAvisoCorrupto" class="perfil-aviso-corrupto" role="alert" style="display:none;"></div>
+
+      <form id="perfilForm" novalidate>
+        <div class="perfil-campo" id="perfilCampoNombre">
+          <label for="tcPerfilNombre">Nombre <span class="perfil-opt">(opcional)</span></label>
+          <input type="text" id="tcPerfilNombre" maxlength="100" autocomplete="off" inputmode="text" aria-describedby="tcPerfilNombreError" />
+          <div id="tcPerfilNombreError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <div class="perfil-campo" id="perfilCampoCategoria">
+          <label for="tcPerfilCategoria">Categoría profesional</label>
+          <select id="tcPerfilCategoria" required aria-describedby="tcPerfilGrupo tcPerfilCategoriaError">
+            <option value="">Selecciona una categoría</option>
+
+            <optgroup label="Grupo I — Personal superior o titulado">
+              <option value="JEFE_DEPARTAMENTO">Jefe de Departamento</option>
+              <option value="TITULADO_GRADO_SUPERIOR">Titulado de Grado Superior</option>
+              <option value="TITULADO_GRADO_MEDIO">Titulado de Grado Medio</option>
+              <option value="ANALISTA_DE_SISTEMAS">Analista de Sistemas</option>
+            </optgroup>
+
+            <optgroup label="Grupo II — Personal administrativo">
+              <option value="JEFE_DE_NEGOCIADO">Jefe de Negociado</option>
+              <option value="SUBJEFE_DE_NEGOCIADO">Subjefe de Negociado</option>
+              <option value="ADMINISTRATIVO">Administrativo</option>
+              <option value="AUXILIAR_ADMINISTRATIVO">Auxiliar Administrativo</option>
+            </optgroup>
+
+            <optgroup label="Grupo III — Personal especial">
+              <option value="AUXILIAR_DE_CLINICA">Auxiliar de Clínica</option>
+              <option value="OPERADOR">Operador</option>
+              <option value="PROGRAMADOR">Programador</option>
+              <option value="SECRETARIO">Secretario</option>
+            </optgroup>
+
+            <optgroup label="Grupo IV — Personal de explotación">
+              <option value="JEFE_DE_TRAFICO">Jefe de Tráfico</option>
+              <option value="CONTROLADOR">Controlador</option>
+              <option value="SUPERVISOR">Supervisor</option>
+              <option value="CONDUCTOR_PERCEPTOR">Conductor-Perceptor</option>
+            </optgroup>
+
+            <optgroup label="Grupo V — Personal de talleres">
+              <option value="MAESTRO_TALLER">Maestro de Taller</option>
+              <option value="JEFE_DE_EQUIPO">Jefe de Equipo</option>
+              <option value="JEFE_LIMPIEZA_Y_OTROS">Jefe de Limpieza y Otros</option>
+              <option value="OFICIAL_ESPECIALISTA">Oficial Especialista</option>
+              <option value="OFICIAL">Oficial</option>
+              <option value="OFICIAL_COCHE_TALLER">Oficial Coche Taller</option>
+              <option value="AYUDANTE">Ayudante</option>
+              <option value="ALMACENERO">Almacenero</option>
+              <option value="PEON">Peón</option>
+            </optgroup>
+
+            <optgroup label="Grupo VI — Servicios auxiliares">
+              <option value="AUXILIAR_MTR">Auxiliar M.T.R.</option>
+              <option value="CONDUCTOR">Conductor</option>
+            </optgroup>
+
+            <optgroup label="Grupo VII — Personal subalterno">
+              <option value="TELEFONISTA_ORDENANZA">Telefonista-Ordenanza</option>
+            </optgroup>
+          </select>
+          <div id="tcPerfilGrupo" class="perfil-grupo vacio" aria-live="polite">Grupo profesional: —</div>
+          <div id="tcPerfilCategoriaError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <div class="perfil-campo" id="perfilCampoFecha">
+          <label for="tcPerfilFecha">Fecha de antigüedad reconocida</label>
+          <input type="date" id="tcPerfilFecha" required aria-describedby="tcPerfilFechaError" />
+          <div id="tcPerfilFechaError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <div class="perfil-botones">
+          <button type="submit" id="tcPerfilGuardarBtn" class="btn btn-primary">Guardar perfil</button>
+          <button type="button" id="tcPerfilDespuesBtn" class="btn btn-secondary">Configurar después</button>
+          <button type="button" id="tcPerfilEliminarBtn" class="btn btn-danger" style="display:none;">Eliminar perfil</button>
+          <button type="button" id="tcPerfilCerrarBtn" class="btn btn-secondary" style="display:none;">Cerrar</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -2867,6 +2983,39 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     }
   } catch (e) { tablaSalarialActivaParaGuardar = null; }
 
+  // DEV-010R5 — Perfil laboral. Casos EXACTOS:
+  //   · Lector ausente (tcPerfilLeer no es función) → error y se ABORTA.
+  //   · estado 'ok' con perfil válido → objeto actual con version:1.
+  //   · estado 'sinPerfil' → perfilLaboral:null.
+  //   · 'corrupto', estado inesperado, resultado inválido o excepción → se ABORTA.
+  // No se convierte un perfil dañado en null en silencio. Siempre presente en el
+  // backup. No interviene en ningún cálculo económico.
+  var perfilLaboralParaGuardar = null;
+  if (typeof window.tcPerfilLeer !== "function") {
+    if (mostrarAviso) mostrarToast("No se pudo acceder al perfil laboral. No se ha generado ninguna copia.", "error");
+    return false;
+  }
+  try {
+    var _plRead = window.tcPerfilLeer();
+    if (_plRead && _plRead.estado === "ok" && _plRead.perfil) {
+      perfilLaboralParaGuardar = {
+        version: 1,
+        nombre: _plRead.perfil.nombre,
+        categoriaId: _plRead.perfil.categoriaId,
+        fechaAntiguedad: _plRead.perfil.fechaAntiguedad
+      };
+    } else if (_plRead && _plRead.estado === "sinPerfil") {
+      perfilLaboralParaGuardar = null;
+    } else {
+      // 'corrupto', estado inesperado o resultado inválido: no se genera copia.
+      if (mostrarAviso) mostrarToast("No se pudo verificar el perfil laboral (está dañado). No se ha generado ninguna copia.", "error");
+      return false;
+    }
+  } catch (e) {
+    if (mostrarAviso) mostrarToast("No se pudo verificar el perfil laboral. No se ha generado ninguna copia.", "error");
+    return false;
+  }
+
   // Copia profunda verificable de todo lo que va a guardarse.
   var calendarioParaGuardar, recaudacionesParaGuardar, liquidacionesParaGuardar;
   try {
@@ -2897,7 +3046,8 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     tablasSalariales: tablasSalarialesParaGuardar,
     tablasSalarialesIncluido: true,
     tablaSalarialActiva: tablaSalarialActivaParaGuardar,
-    tablaSalarialActivaIncluido: true
+    tablaSalarialActivaIncluido: true,
+    perfilLaboral: perfilLaboralParaGuardar
   };
   var json;
   try {
@@ -3005,6 +3155,25 @@ function importarDatos(archivo) {
           mostrarToast("El backup indica una tabla salarial activa que no corresponde a ninguna tabla incluida. No se ha importado nada.", "error");
           return;
         }
+      }
+      // DEV-010R5 — Perfil laboral. Solo se procesa si el backup DECLARA la
+      // propiedad (los backups antiguos que no la traen no tocan el perfil
+      // actual). null → eliminar el perfil al restaurar. Objeto → debe ser un
+      // perfil válido (categoría del catálogo cerrado, fecha real y no futura,
+      // sin propiedades desconocidas); si no lo es, se rechaza TODO el backup
+      // aquí, antes de tocar nada.
+      var perfilSolicitado = Object.prototype.hasOwnProperty.call(datos, "perfilLaboral");
+      var perfilEsNull = perfilSolicitado && datos.perfilLaboral === null;
+      var perfilNuevoValidado = null;
+      if (perfilSolicitado && !perfilEsNull) {
+        var _plVal = (typeof window.tcPerfilValidar === "function")
+          ? window.tcPerfilValidar(datos.perfilLaboral)
+          : { ok: false };
+        if (!_plVal.ok) {
+          mostrarToast("El backup incluye un perfil laboral no válido. No se ha importado nada.", "error");
+          return;
+        }
+        perfilNuevoValidado = _plVal.perfil;
       }
       // Compatible con backups version 1 (anteriores a DEV-004R1, sin bloque
       // de calendario) y version 2 (calendarioConductor podía ser directamente
@@ -3133,6 +3302,14 @@ function importarDatos(archivo) {
         mostrarToast("No se puede asegurar la vuelta atrás de la tabla salarial activa. No se ha importado nada.", "error");
         return;
       }
+      // DEV-010R5 — Instantánea previa del PERFIL LABORAL, para revertirlo dentro
+      // del mismo rollback. Solo importa si el backup lo solicita.
+      var perfilPrevioRaw = null, perfilPrevioLegible = true;
+      try { perfilPrevioRaw = localStorage.getItem('tc_v1_perfil_laboral'); } catch (e) { perfilPrevioLegible = false; }
+      if (perfilSolicitado && !perfilPrevioLegible) {
+        mostrarToast("No se puede asegurar la vuelta atrás del perfil laboral. No se ha importado nada.", "error");
+        return;
+      }
 
       // ============================================================
       // 3) REVERSIÓN ÚNICA Y VERIFICADA
@@ -3172,6 +3349,16 @@ function importarDatos(archivo) {
             tsActivaRevertido = true;
           } catch (e) { tsActivaRevertido = false; }
         }
+        // DEV-010R5 — Reversión del PERFIL LABORAL al valor exacto anterior.
+        var perfilRevertido = true;
+        if (perfilSolicitado) {
+          perfilRevertido = false;
+          try {
+            if (perfilPrevioRaw != null) localStorage.setItem('tc_v1_perfil_laboral', perfilPrevioRaw);
+            else localStorage.removeItem('tc_v1_perfil_laboral');
+            perfilRevertido = true;
+          } catch (e) { perfilRevertido = false; }
+        }
         return Promise.all([
           reemplazarTodos(STORE_RECAUDACIONES, recaudacionesPrevias),
           reemplazarTodos(STORE_LIQUIDACIONES, liquidacionesPrevias)
@@ -3182,7 +3369,9 @@ function importarDatos(archivo) {
             listaLiquidaciones = liquidacionesPrevias;
             try { actualizarResumen(); renderizarRecaudaciones(); renderizarLiquidaciones(); } catch (e) {}
           }
-          return datosRevertidos && calendarioRevertido && tsRevertido && tsActivaRevertido;
+          // Refresca la Nómina con el perfil revertido, si está abierta.
+          if (perfilSolicitado) { try { if (typeof window.tcRenderNomina === "function") { var _s = document.getElementById("tab-nomina"); if (_s && _s.style.display !== "none") window.tcRenderNomina(); } } catch (e) {} }
+          return datosRevertidos && calendarioRevertido && tsRevertido && tsActivaRevertido && perfilRevertido;
         }).catch(function () { return false; });
       }
       function avisarFalloImportacion(mensaje) {
@@ -3253,6 +3442,27 @@ function importarDatos(archivo) {
       }
 
       // ============================================================
+      // 4d) DEV-010R5 — PERFIL LABORAL, con el mismo rollback. Objeto validado →
+      //     se escribe; null → se elimina. Cualquier fallo de escritura activa el
+      //     rollback completo (calendario, tablas, tabla activa y perfil).
+      // ============================================================
+      if (perfilSolicitado) {
+        var perfilAplicado = false;
+        try {
+          if (perfilEsNull) {
+            localStorage.removeItem('tc_v1_perfil_laboral');
+          } else {
+            localStorage.setItem('tc_v1_perfil_laboral', JSON.stringify(perfilNuevoValidado));
+          }
+          perfilAplicado = true;
+        } catch (e) { perfilAplicado = false; }
+        if (!perfilAplicado) {
+          avisarFalloImportacion("No se pudo restaurar el perfil laboral. No se ha importado nada.");
+          return;
+        }
+      }
+
+      // ============================================================
       // 5) Recaudaciones y liquidaciones. Se comprueban TODOS los resultados
       //    reales antes de mostrar mensajes o cambiar las listas en memoria:
       //    Promise.all no falla aunque reemplazarTodos resuelva false.
@@ -3263,6 +3473,8 @@ function importarDatos(archivo) {
           actualizarResumen();
           renderizarRecaudaciones(); renderizarLiquidaciones();
           try { if (typeof window.tcMsgRefrescar === "function") window.tcMsgRefrescar(); } catch (e) {} /* DEV-007R6 */
+          // DEV-010R5 — Refresca la Nómina si está abierta para reflejar el perfil restaurado.
+          if (perfilSolicitado) { try { if (typeof window.tcRenderNomina === "function") { var _sn = document.getElementById("tab-nomina"); if (_sn && _sn.style.display !== "none") window.tcRenderNomina(); } } catch (e) {} }
           // DEV-010R3 — Aviso si el backup traía varias tablas sin activa
           // marcada: no se elige ninguna, debe seleccionarse a mano.
           var sufijoActiva = tsActivaManualPendiente
@@ -3799,9 +4011,510 @@ function inicializarCamaraOCR() {
   }
 }
 
+/* ============================================================================
+   DEV-010R5 — PERFIL LABORAL PERSISTENTE
+   Clave localStorage: tc_v1_perfil_laboral
+     { version:1, nombre:"", categoriaId:"CONDUCTOR_PERCEPTOR", fechaAntiguedad:"YYYY-MM-DD" }
+   El grupo profesional se DERIVA de la categoría y NO se almacena.
+   Este módulo NO toca ninguna fórmula, cantidad, ID salarial, modo, tabla
+   activa, jornada, calendario ni concepto económico de la Nómina. Solo crea un
+   perfil laboral independiente y su interfaz.
+   ========================================================================== */
+(function(){
+  'use strict';
+
+  var TC_PERFIL_KEY = 'tc_v1_perfil_laboral';
+  var TC_PERFIL_MAX_NOMBRE = 100;
+  var TC_PERFIL_CLAVES = { version:1, nombre:1, categoriaId:1, fechaAntiguedad:1 };
+
+  function _esc(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  /* Catálogo profesional CERRADO y de SOLO LECTURA. El orden coincide con el
+     orden de aparición en el <select>. No se admite ninguna categoría fuera de
+     este catálogo. */
+  var TC_PERFIL_GRUPOS = [
+    { grupoId:'I',   grupoNombre:'Personal superior o titulado', cats:[
+      ['JEFE_DEPARTAMENTO','Jefe de Departamento'],
+      ['TITULADO_GRADO_SUPERIOR','Titulado de Grado Superior'],
+      ['TITULADO_GRADO_MEDIO','Titulado de Grado Medio'],
+      ['ANALISTA_DE_SISTEMAS','Analista de Sistemas']
+    ]},
+    { grupoId:'II',  grupoNombre:'Personal administrativo', cats:[
+      ['JEFE_DE_NEGOCIADO','Jefe de Negociado'],
+      ['SUBJEFE_DE_NEGOCIADO','Subjefe de Negociado'],
+      ['ADMINISTRATIVO','Administrativo'],
+      ['AUXILIAR_ADMINISTRATIVO','Auxiliar Administrativo']
+    ]},
+    { grupoId:'III', grupoNombre:'Personal especial', cats:[
+      ['AUXILIAR_DE_CLINICA','Auxiliar de Clínica'],
+      ['OPERADOR','Operador'],
+      ['PROGRAMADOR','Programador'],
+      ['SECRETARIO','Secretario']
+    ]},
+    { grupoId:'IV',  grupoNombre:'Personal de explotación', cats:[
+      ['JEFE_DE_TRAFICO','Jefe de Tráfico'],
+      ['CONTROLADOR','Controlador'],
+      ['SUPERVISOR','Supervisor'],
+      ['CONDUCTOR_PERCEPTOR','Conductor-Perceptor']
+    ]},
+    { grupoId:'V',   grupoNombre:'Personal de talleres', cats:[
+      ['MAESTRO_TALLER','Maestro de Taller'],
+      ['JEFE_DE_EQUIPO','Jefe de Equipo'],
+      ['JEFE_LIMPIEZA_Y_OTROS','Jefe de Limpieza y Otros'],
+      ['OFICIAL_ESPECIALISTA','Oficial Especialista'],
+      ['OFICIAL','Oficial'],
+      ['OFICIAL_COCHE_TALLER','Oficial Coche Taller'],
+      ['AYUDANTE','Ayudante'],
+      ['ALMACENERO','Almacenero'],
+      ['PEON','Peón']
+    ]},
+    { grupoId:'VI',  grupoNombre:'Servicios auxiliares', cats:[
+      ['AUXILIAR_MTR','Auxiliar M.T.R.'],
+      ['CONDUCTOR','Conductor']
+    ]},
+    { grupoId:'VII', grupoNombre:'Personal subalterno', cats:[
+      ['TELEFONISTA_ORDENANZA','Telefonista-Ordenanza']
+    ]}
+  ];
+
+  /* Índice id -> {id, nombre, grupoId, grupoNombre}, congelado. */
+  var TC_PERFIL_INDICE = (function(){
+    var idx = {};
+    TC_PERFIL_GRUPOS.forEach(function(g){
+      g.cats.forEach(function(c){
+        idx[c[0]] = Object.freeze({ id:c[0], nombre:c[1], grupoId:g.grupoId, grupoNombre:g.grupoNombre });
+      });
+    });
+    return idx;
+  })();
+
+  function tcPerfilCategoriaValida(id){
+    return typeof id==='string' && Object.prototype.hasOwnProperty.call(TC_PERFIL_INDICE, id);
+  }
+  function tcPerfilInfoCategoria(id){
+    return tcPerfilCategoriaValida(id) ? TC_PERFIL_INDICE[id] : null;
+  }
+
+  /* ---------- Utilidades de fecha (sin usar la fecha actual salvo el tope) ---- */
+  function tcPerfilFechaReal(iso){
+    if(typeof iso!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+    var p=iso.split('-'), y=+p[0], m=+p[1], d=+p[2];
+    if(m<1||m>12||d<1||d>31) return null;
+    var dt=new Date(y, m-1, d);
+    if(dt.getFullYear()!==y || dt.getMonth()!==m-1 || dt.getDate()!==d) return null;
+    return dt;
+  }
+  function tcPerfilHoyISO(){
+    var h=new Date(), mm=h.getMonth()+1, dd=h.getDate();
+    return h.getFullYear()+'-'+(mm<10?'0':'')+mm+'-'+(dd<10?'0':'')+dd;
+  }
+  function tcPerfilEsBisiesto(y){ return (y%4===0 && y%100!==0) || (y%400===0); }
+
+  /* Valida y NORMALIZA un objeto de perfil (de la UI o de un backup). No escribe.
+     Devuelve {ok:true, perfil:{version,nombre,categoriaId,fechaAntiguedad}} o
+     {ok:false, error, campo}. Rechaza propiedades desconocidas (backups). */
+  function tcPerfilValidar(datos){
+    if(!datos || typeof datos!=='object' || Array.isArray(datos))
+      return { ok:false, error:'El perfil no es un objeto válido.', campo:null };
+    for(var k in datos){
+      if(Object.prototype.hasOwnProperty.call(datos,k) && !TC_PERFIL_CLAVES[k])
+        return { ok:false, error:'El perfil contiene propiedades no reconocidas.', campo:null };
+    }
+    /* Esquema estricto: la versión es OBLIGATORIA y debe ser exactamente el
+       número 1. Se rechaza ausente, null, "1", 0, decimales o cualquier otro
+       valor. Nunca se completa una versión ausente automáticamente. */
+    if(datos.version!==1)
+      return { ok:false, error:'Versión de perfil no soportada.', campo:null };
+    var nombre = datos.nombre;
+    if(nombre==null) nombre='';
+    if(typeof nombre!=='string')
+      return { ok:false, error:'El nombre no es válido.', campo:'nombre' };
+    nombre = nombre.replace(/\s+/g,' ').trim();
+    if(nombre.length>TC_PERFIL_MAX_NOMBRE)
+      return { ok:false, error:'El nombre no puede superar los '+TC_PERFIL_MAX_NOMBRE+' caracteres.', campo:'nombre' };
+    if(!tcPerfilCategoriaValida(datos.categoriaId))
+      return { ok:false, error:'Selecciona una categoría profesional del listado.', campo:'categoriaId' };
+    var dt = tcPerfilFechaReal(datos.fechaAntiguedad);
+    if(!dt)
+      return { ok:false, error:'La fecha de antigüedad no es una fecha válida.', campo:'fechaAntiguedad' };
+    var hoy = tcPerfilFechaReal(tcPerfilHoyISO());
+    if(dt.getTime() > hoy.getTime())
+      return { ok:false, error:'La fecha de antigüedad no puede ser posterior a hoy.', campo:'fechaAntiguedad' };
+    return { ok:true, perfil:{ version:1, nombre:nombre, categoriaId:datos.categoriaId, fechaAntiguedad:datos.fechaAntiguedad } };
+  }
+
+  /* ---------- API pública ---------- */
+
+  /* Nunca lanza. {estado:'ok', perfil, categoria, grupo} | {estado:'sinPerfil'} | {estado:'corrupto'} */
+  function tcPerfilLeer(){
+    var raw;
+    try { raw = localStorage.getItem(TC_PERFIL_KEY); }
+    catch(e){ return { estado:'corrupto' }; }
+    if(raw==null) return { estado:'sinPerfil' };
+    var obj;
+    try { obj = JSON.parse(raw); } catch(e){ return { estado:'corrupto' }; }
+    var v = tcPerfilValidar(obj);
+    if(!v.ok) return { estado:'corrupto' };
+    var info = tcPerfilInfoCategoria(v.perfil.categoriaId);
+    if(!info) return { estado:'corrupto' };
+    return {
+      estado:'ok',
+      perfil: v.perfil,
+      categoria: { id:info.id, nombre:info.nombre },
+      grupo: { id:info.grupoId, nombre:info.grupoNombre }
+    };
+  }
+
+  /* Guardado TRANSACCIONAL. Valida, revalida la categoría contra el catálogo
+     cerrado y escribe con JSON.stringify verificando por relectura. Si no se
+     puede leer el valor anterior, aborta antes de escribir. Si la escritura o la
+     verificación fallan, restaura EXACTAMENTE el valor anterior (o removeItem si
+     no existía) y verifica también la restauración. Nunca devuelve ok:true sin
+     comprobar el valor persistido. No toca ningún otro dato.
+     {ok:true, perfil} | {ok:false, error, campo}. */
+  function tcPerfilGuardar(datos){
+    var v = tcPerfilValidar(datos);
+    if(!v.ok) return { ok:false, error:v.error, campo:v.campo||null };
+    if(!tcPerfilCategoriaValida(v.perfil.categoriaId))
+      return { ok:false, error:'Categoría profesional no válida.', campo:'categoriaId' };
+    var serial;
+    try { serial = JSON.stringify(v.perfil); }
+    catch(e){ return { ok:false, error:'No se pudo serializar el perfil.', campo:null }; }
+    /* Lectura obligatoria del valor anterior ANTES de escribir; si no se puede
+       leer, se aborta sin tocar nada. */
+    var previo, previoLegible=true;
+    try { previo = localStorage.getItem(TC_PERFIL_KEY); } catch(e){ previoLegible=false; }
+    if(!previoLegible)
+      return { ok:false, error:'No se pudo leer el estado anterior del perfil. No se ha guardado nada.', campo:null };
+    /* Escritura + verificación por relectura exacta contra el JSON escrito. */
+    var verificado=false;
+    try {
+      localStorage.setItem(TC_PERFIL_KEY, serial);
+      verificado = (localStorage.getItem(TC_PERFIL_KEY) === serial);
+    } catch(e){ verificado=false; }
+    if(verificado) return { ok:true, perfil:v.perfil };
+    /* Fallo de escritura o de verificación: restaurar el estado anterior EXACTO
+       (o eliminar si no existía) y verificar la restauración. */
+    var restaurado=false;
+    try {
+      if(previo!=null){ localStorage.setItem(TC_PERFIL_KEY, previo); restaurado = (localStorage.getItem(TC_PERFIL_KEY) === previo); }
+      else { localStorage.removeItem(TC_PERFIL_KEY); restaurado = (localStorage.getItem(TC_PERFIL_KEY) == null); }
+    } catch(e){ restaurado=false; }
+    if(!restaurado)
+      return { ok:false, error:'No se pudo guardar el perfil y no se pudo asegurar el estado anterior. Revisa el almacenamiento.', campo:null };
+    return { ok:false, error:'No se pudo guardar el perfil (almacenamiento no disponible). Se ha conservado el perfil anterior.', campo:null };
+  }
+
+  /* Eliminación TRANSACCIONAL de SOLO la clave del perfil. Si no se puede leer el
+     valor anterior, aborta antes de eliminar. Ejecuta removeItem y comprueba con
+     getItem que la clave ya no existe. Si la eliminación o la verificación fallan,
+     intenta restaurar el valor anterior. No refresca las vistas ni devuelve
+     ok:true hasta verificar la eliminación.
+     {ok:true, estado:'sinPerfil'} | {ok:false, error}. */
+  function tcPerfilEliminar(){
+    /* Lectura obligatoria del valor anterior; si no se puede leer, se aborta. */
+    var previo, previoLegible=true;
+    try { previo = localStorage.getItem(TC_PERFIL_KEY); } catch(e){ previoLegible=false; }
+    if(!previoLegible)
+      return { ok:false, error:'No se pudo leer el estado anterior del perfil. No se ha eliminado nada.' };
+    if(previo==null){ tcPerfilRefrescarVistas(); return { ok:true, estado:'sinPerfil' }; }
+    /* Eliminación + verificación de ausencia por relectura. */
+    var eliminado=false;
+    try {
+      localStorage.removeItem(TC_PERFIL_KEY);
+      eliminado = (localStorage.getItem(TC_PERFIL_KEY) == null);
+    } catch(e){ eliminado=false; }
+    if(!eliminado){
+      /* Fallo de eliminación o de verificación: restaurar el valor anterior. */
+      var restaurado=false;
+      try { localStorage.setItem(TC_PERFIL_KEY, previo); restaurado = (localStorage.getItem(TC_PERFIL_KEY) === previo); }
+      catch(e){ restaurado=false; }
+      if(!restaurado)
+        return { ok:false, error:'No se pudo eliminar el perfil y no se pudo asegurar el estado anterior. Revisa el almacenamiento.' };
+      return { ok:false, error:'No se pudo eliminar el perfil. Se ha conservado el perfil anterior.' };
+    }
+    /* Solo tras verificar la eliminación se refrescan vistas y se devuelve ok. */
+    tcPerfilRefrescarVistas();
+    return { ok:true, estado:'sinPerfil' };
+  }
+
+  /* Años completos al ÚLTIMO día del mes solicitado (mes 1-based). Nunca lanza;
+     nunca usa la fecha actual. Devuelve uno de:
+     MENOS2 / 2 / 4 / 9 / 14 / 19 / 24 / NO_APLICABLE / INVALIDO. */
+  function tcPerfilCalcularTramo(fechaAntiguedad, anio, mes){
+    var alta = tcPerfilFechaReal(fechaAntiguedad);
+    if(!alta) return 'INVALIDO';
+    if(typeof anio!=='number' || !isFinite(anio) || Math.floor(anio)!==anio || anio<1900 || anio>3000) return 'INVALIDO';
+    if(typeof mes!=='number'  || !isFinite(mes)  || Math.floor(mes)!==mes  || mes<1 || mes>12) return 'INVALIDO';
+    /* Último día del mes solicitado: new Date(anio, mes, 0) (mes 1-based). */
+    var ref = new Date(anio, mes, 0);
+    if(ref.getTime() < alta.getTime()) return 'NO_APLICABLE';
+    var years = ref.getFullYear() - alta.getFullYear();
+    var altaM = alta.getMonth(), altaD = alta.getDate();
+    var refM = ref.getMonth(), refD = ref.getDate();
+    /* 29 de febrero: en años no bisiestos el aniversario se alcanza el último
+       día de febrero (28). */
+    var effAltaD = altaD;
+    if(altaM===1 && altaD===29 && !tcPerfilEsBisiesto(ref.getFullYear())) effAltaD = 28;
+    if(refM < altaM || (refM===altaM && refD < effAltaD)) years--;
+    if(years < 0) years = 0; /* defensa: nunca años negativos */
+    if(years < 2)  return 'MENOS2';
+    if(years < 4)  return '2';
+    if(years < 9)  return '4';
+    if(years < 14) return '9';
+    if(years < 19) return '14';
+    if(years < 24) return '19';
+    return '24';
+  }
+
+  /* Combina perfil + categoría + grupo + fecha + tramo del mes. NO calcula importes.
+     {estado:'ok', nombre, categoriaId, categoriaNombre, grupoId, grupoNombre,
+      fechaAntiguedad, tramo} | {estado:'sinPerfil'} | {estado:'corrupto'}. */
+  function tcPerfilInfoNomina(anio, mes){
+    var r = tcPerfilLeer();
+    if(r.estado!=='ok') return { estado:r.estado };
+    return {
+      estado:'ok',
+      nombre: r.perfil.nombre,
+      categoriaId: r.categoria.id,
+      categoriaNombre: r.categoria.nombre,
+      grupoId: r.grupo.id,
+      grupoNombre: r.grupo.nombre,
+      fechaAntiguedad: r.perfil.fechaAntiguedad,
+      tramo: tcPerfilCalcularTramo(r.perfil.fechaAntiguedad, anio, mes)
+    };
+  }
+
+  /* Copia de solo lectura del catálogo (para pruebas / usos externos). */
+  function tcPerfilCatalogo(){
+    return TC_PERFIL_GRUPOS.map(function(g){
+      return { grupoId:g.grupoId, grupoNombre:g.grupoNombre,
+        categorias: g.cats.map(function(c){ return { id:c[0], nombre:c[1] }; }) };
+    });
+  }
+
+  /* ---------- Interfaz (modal reutilizado: inicial + edición) ---------- */
+  var _perfilPrevFocus = null;
+  var _perfilGuardando = false;
+
+  function tcPerfilRefrescarVistas(){
+    try {
+      if(typeof window.tcRenderNomina==='function'){
+        var sec=document.getElementById('tab-nomina');
+        if(sec && sec.style.display!=='none') window.tcRenderNomina();
+      }
+    } catch(e){}
+  }
+
+  function _perfilActualizarGrupo(){
+    var selCat=document.getElementById('tcPerfilCategoria');
+    var div=document.getElementById('tcPerfilGrupo');
+    if(!selCat||!div) return;
+    var info=tcPerfilInfoCategoria(selCat.value);
+    if(info){
+      div.classList.remove('vacio');
+      div.innerHTML='Grupo profesional: <strong>Grupo '+_esc(info.grupoId)+' — '+_esc(info.grupoNombre)+'</strong>';
+    } else {
+      div.classList.add('vacio');
+      div.textContent='Grupo profesional: —';
+    }
+  }
+
+  function _perfilLimpiarErrores(){
+    ['perfilCampoNombre','perfilCampoCategoria','perfilCampoFecha'].forEach(function(id){
+      var c=document.getElementById(id); if(c) c.classList.remove('tiene-error');
+    });
+    ['tcPerfilNombreError','tcPerfilCategoriaError','tcPerfilFechaError'].forEach(function(id){
+      var e=document.getElementById(id); if(e) e.textContent='';
+    });
+  }
+  function _perfilMostrarError(campo, mensaje){
+    var map={ nombre:['perfilCampoNombre','tcPerfilNombreError'],
+              categoriaId:['perfilCampoCategoria','tcPerfilCategoriaError'],
+              fechaAntiguedad:['perfilCampoFecha','tcPerfilFechaError'] };
+    var t=map[campo]||map.nombre;
+    var c=document.getElementById(t[0]); if(c) c.classList.add('tiene-error');
+    var e=document.getElementById(t[1]); if(e) e.textContent=mensaje;
+  }
+
+  function _perfilFocusables(){
+    var box=document.querySelector('#modalPerfil .perfil-box');
+    if(!box) return [];
+    var nodes=box.querySelectorAll('button, input, select, textarea, [href], [tabindex]');
+    return Array.prototype.filter.call(nodes, function(el){
+      if(el.disabled) return false;
+      if(el.getAttribute && el.getAttribute('tabindex')==='-1') return false;
+      return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+    });
+  }
+
+  function _perfilKeydown(e){
+    var key=e.key;
+    if(key==='Escape' || e.keyCode===27){
+      if(!_perfilGuardando){ e.preventDefault(); tcPerfilCerrarModal(); }
+      return;
+    }
+    if(key==='Tab' || e.keyCode===9){
+      var f=_perfilFocusables();
+      if(!f.length) return;
+      var first=f[0], last=f[f.length-1], active=document.activeElement;
+      if(e.shiftKey && active===first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && active===last){ e.preventDefault(); first.focus(); }
+    }
+  }
+
+  function tcPerfilAbrirModal(modo){
+    var overlay=document.getElementById('modalPerfil');
+    if(!overlay) return;
+    _perfilPrevFocus = document.activeElement;
+    _perfilGuardando = false;
+    var lectura=tcPerfilLeer();
+    var esEditar = (modo==='editar');
+
+    document.getElementById('perfilTitulo').textContent = esEditar ? '👤 Perfil laboral' : '👤 Configura tu perfil laboral';
+    document.getElementById('perfilIntro').textContent = esEditar
+      ? 'Consulta o modifica tu perfil laboral. Se guarda solo en este dispositivo y todavía no cambia ningún importe de la Nómina.'
+      : 'Puedes configurar tu perfil laboral ahora o más tarde desde Ajustes. Es opcional y no cambia ningún importe de la Nómina.';
+
+    var avc=document.getElementById('perfilAvisoCorrupto');
+    if(lectura.estado==='corrupto'){
+      avc.style.display='';
+      avc.textContent='El perfil guardado está dañado o no es válido. Puedes sustituirlo guardando uno nuevo o eliminarlo.';
+    } else { avc.style.display='none'; avc.textContent=''; }
+
+    var inNombre=document.getElementById('tcPerfilNombre');
+    var selCat=document.getElementById('tcPerfilCategoria');
+    var inFecha=document.getElementById('tcPerfilFecha');
+    inFecha.max = tcPerfilHoyISO();
+    if(lectura.estado==='ok'){
+      inNombre.value = lectura.perfil.nombre || '';
+      /* Al editar, seleccionar automáticamente la categoría almacenada. */
+      selCat.value = tcPerfilCategoriaValida(lectura.perfil.categoriaId) ? lectura.perfil.categoriaId : '';
+      inFecha.value = lectura.perfil.fechaAntiguedad || '';
+    } else {
+      /* sinPerfil o corrupto → NO autoseleccionar ninguna categoría (jamás
+         Conductor-Perceptor por defecto) ni fechas ficticias. */
+      inNombre.value=''; selCat.value=''; inFecha.value='';
+    }
+    _perfilActualizarGrupo();
+    _perfilLimpiarErrores();
+
+    var btnGuardar=document.getElementById('tcPerfilGuardarBtn');
+    var btnDespues=document.getElementById('tcPerfilDespuesBtn');
+    var btnEliminar=document.getElementById('tcPerfilEliminarBtn');
+    var btnCerrar=document.getElementById('tcPerfilCerrarBtn');
+    btnGuardar.textContent = esEditar ? 'Guardar cambios' : 'Guardar perfil';
+    btnDespues.style.display = esEditar ? 'none' : '';
+    btnCerrar.style.display  = esEditar ? '' : 'none';
+    var hayQueBorrar = (lectura.estado==='ok' || lectura.estado==='corrupto');
+    btnEliminar.style.display = (esEditar && hayQueBorrar) ? '' : 'none';
+    btnEliminar.removeAttribute('data-confirmando'); btnEliminar.textContent='Eliminar perfil';
+
+    overlay.setAttribute('data-abierto','1');
+    /* Foco inicial en el primer campo. */
+    setTimeout(function(){ try{ inNombre.focus(); }catch(e){} }, 0);
+  }
+
+  function tcPerfilCerrarModal(){
+    var overlay=document.getElementById('modalPerfil');
+    if(!overlay) return;
+    overlay.setAttribute('data-abierto','0');
+    _perfilGuardando=false;
+    try { if(_perfilPrevFocus && typeof _perfilPrevFocus.focus==='function') _perfilPrevFocus.focus(); } catch(e){}
+    _perfilPrevFocus=null;
+  }
+
+  function _perfilGuardarDesdeUI(){
+    _perfilLimpiarErrores();
+    var datos={
+      version: 1,
+      nombre: document.getElementById('tcPerfilNombre').value,
+      categoriaId: document.getElementById('tcPerfilCategoria').value,
+      fechaAntiguedad: document.getElementById('tcPerfilFecha').value
+    };
+    _perfilGuardando=true;
+    var res=tcPerfilGuardar(datos);
+    _perfilGuardando=false;
+    if(!res.ok){
+      _perfilMostrarError(res.campo||'nombre', res.error||'No se pudo guardar el perfil.');
+      var focoId={ nombre:'tcPerfilNombre', categoriaId:'tcPerfilCategoria', fechaAntiguedad:'tcPerfilFecha' }[res.campo];
+      if(focoId){ try{ document.getElementById(focoId).focus(); }catch(e){} }
+      return;
+    }
+    tcPerfilRefrescarVistas();
+    if(typeof mostrarToast==='function') mostrarToast('Perfil laboral guardado.', 'success');
+    tcPerfilCerrarModal();
+  }
+
+  function _perfilEliminarDesdeUI(btn){
+    /* Confirmación integrada en la interfaz (nunca confirm()). */
+    confirmarAccion(btn, 'Eliminar perfil', function(){
+      var res=tcPerfilEliminar();
+      if(!res.ok){
+        if(typeof mostrarToast==='function') mostrarToast(res.error||'No se pudo eliminar el perfil.', 'error');
+        return;
+      }
+      if(typeof mostrarToast==='function') mostrarToast('Perfil laboral eliminado.', 'success');
+      tcPerfilCerrarModal();
+    });
+  }
+
+  function tcPerfilInit(){
+    var overlay=document.getElementById('modalPerfil');
+    if(!overlay) return;
+    var form=document.getElementById('perfilForm');
+    if(form) form.addEventListener('submit', function(e){ e.preventDefault(); _perfilGuardarDesdeUI(); });
+    var selCat=document.getElementById('tcPerfilCategoria');
+    if(selCat) selCat.addEventListener('change', function(){
+      _perfilActualizarGrupo();
+      var c=document.getElementById('perfilCampoCategoria'); if(c) c.classList.remove('tiene-error');
+      var e=document.getElementById('tcPerfilCategoriaError'); if(e) e.textContent='';
+    });
+    var btnDespues=document.getElementById('tcPerfilDespuesBtn');
+    if(btnDespues) btnDespues.addEventListener('click', function(){ tcPerfilCerrarModal(); });
+    var btnCerrar=document.getElementById('tcPerfilCerrarBtn');
+    if(btnCerrar) btnCerrar.addEventListener('click', function(){ tcPerfilCerrarModal(); });
+    var btnEliminar=document.getElementById('tcPerfilEliminarBtn');
+    if(btnEliminar) btnEliminar.addEventListener('click', function(){ _perfilEliminarDesdeUI(btnEliminar); });
+    overlay.addEventListener('keydown', _perfilKeydown);
+    var btnPL=document.getElementById('btnPerfilLaboral');
+    if(btnPL) btnPL.addEventListener('click', function(){
+      var ms=document.getElementById('modalSettings'); if(ms) ms.style.display='none';
+      tcPerfilAbrirModal('editar');
+    });
+  }
+
+  /* Al terminar la inicialización: si no hay perfil válido, mostrar la
+     configuración inicial (no bloquea el resto de la app). */
+  function tcPerfilComprobarInicial(){
+    var r=tcPerfilLeer();
+    if(r.estado==='ok') return;
+    tcPerfilAbrirModal('inicial');
+  }
+
+  /* Exposición pública */
+  window.tcPerfilLeer            = tcPerfilLeer;
+  window.tcPerfilGuardar         = tcPerfilGuardar;
+  window.tcPerfilEliminar        = tcPerfilEliminar;
+  window.tcPerfilCalcularTramo   = tcPerfilCalcularTramo;
+  window.tcPerfilInfoNomina      = tcPerfilInfoNomina;
+  window.tcPerfilValidar         = tcPerfilValidar;
+  window.tcPerfilCategoriaValida = tcPerfilCategoriaValida;
+  window.tcPerfilInfoCategoria   = tcPerfilInfoCategoria;
+  window.tcPerfilCatalogo        = tcPerfilCatalogo;
+  window.tcPerfilAbrirModal      = tcPerfilAbrirModal;
+  window.tcPerfilCerrarModal     = tcPerfilCerrarModal;
+  window.tcPerfilInit            = tcPerfilInit;
+  window.tcPerfilComprobarInicial= tcPerfilComprobarInicial;
+})();
+
 
 document.addEventListener("DOMContentLoaded", function () {
   inicializarTema(); inicializarTabs();
+  if (typeof window.tcPerfilInit === "function") window.tcPerfilInit();
   document.querySelectorAll(".btn-toggle-filtros").forEach(function (boton) {
     boton.addEventListener("click", function () {
       var panel = document.getElementById(boton.getAttribute("data-target"));
@@ -3820,7 +4533,11 @@ document.addEventListener("DOMContentLoaded", function () {
     inicializarBackup(); inicializarEstadillo(); inicializarHistorial(); inicializarCamaraOCR();
     return Promise.all([cargarRecaudaciones(), cargarLiquidaciones()]);
   }).then(function () {
-    actualizarResumen(); comprobarBackupAutomatico(); var params=new URLSearchParams(window.location.search); var correoParam=params.get("correo"); if(correoParam){var texto=decodeURIComponent(correoParam); abrirSeccion("importar"); document.getElementById("textoCorreo").value=texto; document.getElementById("btnAnalizarCorreo").click(); window.history.replaceState({},"",window.location.pathname);} });
+    actualizarResumen(); comprobarBackupAutomatico(); var params=new URLSearchParams(window.location.search); var correoParam=params.get("correo"); if(correoParam){var texto=decodeURIComponent(correoParam); abrirSeccion("importar"); document.getElementById("textoCorreo").value=texto; document.getElementById("btnAnalizarCorreo").click(); window.history.replaceState({},"",window.location.pathname);}
+    /* DEV-010R5 — Configuración inicial del perfil laboral si no existe uno
+       válido. No bloquea el resto de la app; se puede posponer. Solo se ofrece
+       cuando NO se ha abierto la app desde un enlace de "correo". */
+    if(!correoParam && typeof window.tcPerfilComprobarInicial==="function") window.tcPerfilComprobarInicial(); });
 });
   </script>
 
@@ -6366,6 +7083,22 @@ function tcNomRenderResumen(data){
   return h;
 }
 
+/* DEV-010R5 — Texto legible del tramo de antigüedad devuelto por
+   tcPerfilCalcularTramo. No interviene en ningún cálculo económico. */
+function tcNomTramoTexto(tramo){
+  switch(tramo){
+    case 'MENOS2':       return 'Menos de 2 años';
+    case '2':            return 'De 2 a 3 años';
+    case '4':            return 'De 4 a 8 años';
+    case '9':            return 'De 9 a 13 años';
+    case '14':           return 'De 14 a 18 años';
+    case '19':           return 'De 19 a 23 años';
+    case '24':           return '24 años o más';
+    case 'NO_APLICABLE': return 'No aplicable (periodo anterior al alta)';
+    default:             return '—';
+  }
+}
+
 /* DEV-007R7 — Nómina provisional con ASPECTO DE RECIBO REAL (sin membrete ni
    datos de empresa). Solo se muestran conceptos con cantidad distinta de cero
    (más el salario base, siempre). Las CANTIDADES son fiables (se recalculan de
@@ -6379,6 +7112,36 @@ function tcNomRenderProvisional(data){
   var esMes=!!data.mesSeleccionado;
   var PEND='Pendiente de configuración';
   var celdaPend='<span class="nom-recibo-pend">Pdte.</span>'; /* importe € aún sin tablas */
+
+  /* ================== DEV-010R6 — DECISIÓN CENTRAL DE AUTORIZACIÓN ECONÓMICA
+     Versión provisional: los cálculos económicos SOLO están habilitados para la
+     categoría CONDUCTOR_PERCEPTOR. Antes de resolver cualquier importe mensual se
+     consulta el PERFIL LABORAL mediante la API pública tcPerfilInfoNomina(anio,mes).
+     Esta decisión es ÚNICA y central: todos los conceptos económicos dependen de
+     ella y no se dispersan comparaciones de categoría por concepto. Cuando el
+     estado NO es 'autorizado', resolverImporte() devuelve SIEMPRE un resultado
+     pendiente SIN consultar la tabla activa (cero llamadas a tsLeerImporteActivo).
+     No se altera la API ni el esquema persistente del perfil.
+       autorizado         → perfil ok y categoriaId === 'CONDUCTOR_PERCEPTOR'
+       sinPerfil          → no hay perfil configurado
+       perfilCorrupto     → perfil dañado o API no disponible/errónea
+       categoriaNoSoportada → perfil ok con categoría distinta de CONDUCTOR_PERCEPTOR */
+  var _perfilNom;
+  try {
+    _perfilNom=(typeof window.tcPerfilInfoNomina==='function')
+      ? window.tcPerfilInfoNomina(R.anio, R.mes) : null;
+  } catch(e){ _perfilNom=null; }
+  var NOM_ECON;
+  if(!_perfilNom || typeof _perfilNom!=='object' || !_perfilNom.estado){
+    NOM_ECON='perfilCorrupto';
+  } else if(_perfilNom.estado==='sinPerfil'){
+    NOM_ECON='sinPerfil';
+  } else if(_perfilNom.estado==='ok'){
+    NOM_ECON=(_perfilNom.categoriaId==='CONDUCTOR_PERCEPTOR')?'autorizado':'categoriaNoSoportada';
+  } else {
+    NOM_ECON='perfilCorrupto';
+  }
+  var NOM_AUTORIZADO=(NOM_ECON==='autorizado');
 
   /* Periodo de liquidación (dato fiable a partir del mes/año seleccionado).
      DEV-007R8 — El nº de días naturales del mes NO se usa como cantidad del
@@ -6470,7 +7233,25 @@ function tcNomRenderProvisional(data){
   h+='<div class="nom-recibo-title">Recibo de salarios · Provisional</div>';
   h+='<div class="nom-recibo-kv"><span class="k">Periodo de liquidación</span><span class="v">'+tcEsc(periodo)+'</span></div>';
   h+='<div class="nom-recibo-kv"><span class="k">Tabla salarial activa</span><span class="v'+(infoActiva.estado==='ok'?'':' nom-recibo-pend')+'">'+tcEsc(activaTxt)+'</span></div>';
-  h+='<div class="nom-recibo-kv"><span class="k">Datos del trabajador</span><span class="v nom-recibo-pend">'+PEND+'</span></div>';
+  /* DEV-010R5 — Datos del trabajador tomados del PERFIL LABORAL persistente.
+     Solo sustituye el texto genérico: NO calcula ni altera ningún importe. Sin
+     perfil válido se mantiene «Pendiente de configuración» sin bloquear nada.
+     DEV-010R6 — Reutiliza _perfilNom ya leído por la decisión central; la
+     categoría (incluidas las distintas de Conductor-Perceptor) se sigue
+     mostrando aquí correctamente aunque sus importes queden como «Pdte.». */
+  if(_perfilNom && _perfilNom.estado==='ok'){
+    if(_perfilNom.nombre)
+      h+='<div class="nom-recibo-kv"><span class="k">Trabajador</span><span class="v">'+tcEsc(_perfilNom.nombre)+'</span></div>';
+    h+='<div class="nom-recibo-kv"><span class="k">Categoría profesional</span><span class="v">'+tcEsc(_perfilNom.categoriaNombre)+'</span></div>';
+    h+='<div class="nom-recibo-kv"><span class="k">Grupo profesional</span><span class="v">Grupo '+tcEsc(_perfilNom.grupoId)+' — '+tcEsc(_perfilNom.grupoNombre)+'</span></div>';
+    h+='<div class="nom-recibo-kv"><span class="k">Fecha de antigüedad</span><span class="v">'+tcEsc(formatearFecha(_perfilNom.fechaAntiguedad))+'</span></div>';
+    if(esMes){
+      var _pend=(_perfilNom.tramo==='INVALIDO'||_perfilNom.tramo==='NO_APLICABLE');
+      h+='<div class="nom-recibo-kv"><span class="k">Antigüedad (tramo)</span><span class="v'+(_pend?' nom-recibo-pend':'')+'">'+tcEsc(tcNomTramoTexto(_perfilNom.tramo))+'</span></div>';
+    }
+  } else {
+    h+='<div class="nom-recibo-kv"><span class="k">Datos del trabajador</span><span class="v nom-recibo-pend">'+PEND+'</span></div>';
+  }
   h+='</div>';
 
   /* --- Rejilla: Descripción · D/HR/% · Importe devengo · Importe descuento --- */
@@ -6492,6 +7273,12 @@ function tcNomRenderProvisional(data){
   var estadoAlmacenCorrupto=(infoActiva.estado==='corrupto'); /* almacén dañado detectado al leer */
   var faltaAlgunImporte=false;       /* algún concepto conectado sin importe utilizable en la tabla activa */
   function resolverImporte(idSal,modo,dias){
+    /* DEV-010R6 — GUARDA CENTRAL: si la decisión económica no es 'autorizado'
+       (sin perfil, perfil corrupto/API no disponible o categoría distinta de
+       CONDUCTOR_PERCEPTOR), la línea queda «Pdte.» SIN consultar la tabla activa:
+       nunca se llama a tsLeerImporteActivo ni se reutilizan importes de otra
+       categoría. Es el único punto de decisión; los conceptos no la duplican. */
+    if(!NOM_AUTORIZADO) return { inner:celdaPend, cent:null };
     if(!esMes||!idSal) return { inner:celdaPend, cent:null };
     var r=window.tsLeerImporteActivo(idSal);
     if(r.estado==='corrupto'){ estadoAlmacenCorrupto=true; return { inner:celdaPend, cent:null }; }
@@ -6539,6 +7326,44 @@ function tcNomRenderProvisional(data){
       +'<div class="n">'+res.inner+'</div>'
       +'<div class="n"></div>';
   });
+
+  /* ===================== DEV-010R7 — ANTIGÜEDAD MENSUAL (Conductor-Perceptor)
+     Conecta la antigüedad con la TABLA SALARIAL ACTIVA mediante el ID EXACTO del
+     tramo vigente. Solo en vista mensual y solo cuando la decisión central es
+     'autorizado' (perfil válido y categoriaId === 'CONDUCTOR_PERCEPTOR'). Reutiliza
+     resolverImporte() —misma GUARDA CENTRAL, misma tabla activa y mismo redondeo a
+     céntimos ya existentes—; el importe de cada ID es el TOTAL mensual de ese tramo.
+     Se selecciona UN ÚNICO ID según el tramo devuelto por tcPerfilCalcularTramo;
+     NUNCA se suman tramos, NUNCA se calcula proporcional y NUNCA se multiplica por
+     años/meses/días (modo 'once' = importe mensual único). Los importes proceden
+     EXCLUSIVAMENTE de la tabla activa (jamás hardcodeados); sin fallback ni búsqueda
+     aproximada.
+       MENOS2                  → sin fila; aporta cero y no bloquea el total.
+       2/4/9/14/19/24          → una única fila con su ID exacto (una sola consulta).
+       INVALIDO / NO_APLICABLE → cero consultas de ID; total devengado «Pdte.».
+     Las categorías NO autorizadas no entran aquí: cero consultas ANTIGUEDAD_CP_*. */
+  var avisoAntTramo=null;
+  if(NOM_AUTORIZADO && esMes){
+    var _tramoAnt=(_perfilNom && _perfilNom.estado==='ok') ? _perfilNom.tramo : null;
+    /* Correspondencia EXACTA tramo → ID (sin fallback ni aproximación). */
+    var ANT_ID={ '2':'ANTIGUEDAD_CP_2', '4':'ANTIGUEDAD_CP_4', '9':'ANTIGUEDAD_CP_9',
+                 '14':'ANTIGUEDAD_CP_14', '19':'ANTIGUEDAD_CP_19', '24':'ANTIGUEDAD_CP_24' };
+    var ANT_ANIOS={ '2':2, '4':4, '9':9, '14':14, '19':19, '24':24 };
+    if(_tramoAnt==='INVALIDO' || _tramoAnt==='NO_APLICABLE'){
+      /* No se consulta ningún ID de antigüedad; el total devengado queda «Pdte.». */
+      avisoAntTramo=_tramoAnt;
+      todosImportes=false;
+    } else if(Object.prototype.hasOwnProperty.call(ANT_ID,_tramoAnt)){
+      /* Un solo ID según el tramo vigente; importe mensual único (modo 'once'). */
+      var antRes=resolverImporte(ANT_ID[_tramoAnt],'once',null);
+      if(antRes.cent==null) todosImportes=false; else totalCent+=antRes.cent;
+      h+=descCelda(null,'Antigüedad')
+        +'<div class="n">'+tcEsc(ANT_ANIOS[_tramoAnt]+' años')+'</div>'
+        +'<div class="n">'+antRes.inner+'</div>'
+        +'<div class="n"></div>';
+    }
+    /* MENOS2 (o cualquier valor no económico): sin fila y aporta cero. */
+  }
   h+='</div></div>';
   /* Deducciones (II) y bases de cotización se OCULTAN: aún no hay datos fiables. */
 
@@ -6552,9 +7377,26 @@ function tcNomRenderProvisional(data){
   h+='</div>';
 
   /* --- Aviso específico de importes (DEV-010, dentro del recibo, sin bloquear
-     la app). El almacén corrupto tiene prioridad y su mensaje es propio. --- */
-  if(estadoAlmacenCorrupto){
+     la app). DEV-010R6 — La decisión central de autorización tiene PRIORIDAD:
+     cuando no está autorizado, la tabla activa no se consulta para importes, así
+     que se muestra el aviso del PERFIL y se omiten los avisos de tabla salarial
+     (que solo son relevantes en modo autorizado). --- */
+  if(NOM_ECON==='sinPerfil'){
+    h+='<div class="nom-recibo-aviso">⚠️ Configura el perfil laboral para calcular la nómina provisional.</div>';
+  } else if(NOM_ECON==='perfilCorrupto'){
+    h+='<div class="nom-recibo-aviso">⚠️ No se pudo verificar el perfil laboral. Revisa su configuración.</div>';
+  } else if(NOM_ECON==='categoriaNoSoportada'){
+    h+='<div class="nom-recibo-aviso">⚠️ Los cálculos económicos todavía solo están disponibles para Conductor-Perceptor. La categoría seleccionada permanece pendiente de configuración.</div>';
+  } else if(estadoAlmacenCorrupto){
     h+='<div class="nom-recibo-aviso">⚠️ El almacén de Tablas Salariales está dañado: no se muestra ningún importe. Restaura una copia de seguridad válida para recuperar los importes.</div>';
+  } else if(avisoAntTramo==='INVALIDO'){
+    /* DEV-010R7 — Fecha de antigüedad no reconocible: no se consulta ningún ID de
+       antigüedad y el total devengado queda «Pdte.». */
+    h+='<div class="nom-recibo-aviso">⚠️ La fecha de antigüedad del perfil no es válida: no se calcula la antigüedad y el total devengado queda como «Pdte.». Revisa la fecha de antigüedad en el perfil laboral.</div>';
+  } else if(avisoAntTramo==='NO_APLICABLE'){
+    /* DEV-010R7 — La antigüedad no aplica al periodo (anterior al alta): sin
+       consulta de ID y total «Pdte.». */
+    h+='<div class="nom-recibo-aviso">⚠️ La fecha de antigüedad no es aplicable al periodo seleccionado (es anterior al alta): no se calcula la antigüedad y el total devengado queda como «Pdte.».</div>';
   } else if(esMes&&infoActiva.estado==='sinTablaActiva'){
     h+='<div class="nom-recibo-aviso">⚠️ No hay ninguna tabla salarial activa: todos los importes y el total devengado quedan como «Pdte.». Marca una tabla como activa en Administración → Datos Oficiales → Tablas Salariales.</div>';
   } else if(esMes&&infoActiva.estado==='referenciaInvalida'){
