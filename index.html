@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#7a1f2b" />
-  <title>Registro del Conductor</title>
+  <title>NEXO</title>
 
   <style>
 /* =========================================================
@@ -621,6 +621,126 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
 /* --- Eventos Laborales (aditivo, no altera estilos de turnos) --- */
 #tc .tc-ev-day{outline:2px dotted #C05621;outline-offset:-2px;}
 #tc .tc-ev-mark{position:absolute;top:2px;left:2px;font-size:9px;line-height:1;z-index:2;}
+
+/* =========================================================
+   CAPA VISUAL NEXO — FASE 1 (aislada, prefijo .nexo-)
+   Aditiva: no elimina ni altera estilos DEV-010 existentes.
+   Reutiliza las variables --color-* (compatible body.dark).
+   ========================================================= */
+:root{
+  --nexo-bg:#faf8f8;            /* blanco roto */
+  --nexo-card:#ffffff;
+  --nexo-card-border:rgba(0,0,0,.08);
+  --nexo-card-shadow:0 2px 10px rgba(0,0,0,.06);
+  --nexo-radius:15px;
+  --nexo-ok:#2e7d32;           /* verde correcto */
+  --nexo-pend:#e07b00;         /* naranja pendiente */
+  --nexo-info:#1565c0;         /* azul información */
+  --nexo-nav-h:60px;
+}
+body.dark{
+  --nexo-bg:#171313;
+  --nexo-card:#241e1e;
+  --nexo-card-border:rgba(255,255,255,.10);
+  --nexo-card-shadow:0 2px 10px rgba(0,0,0,.45);
+  --nexo-ok:#66bb6a;
+  --nexo-pend:#ffa726;
+  --nexo-info:#64b5f6;
+}
+
+/* --- Pantalla Inicio NEXO --- */
+.nexo-inicio{ background:var(--nexo-bg); }
+.nexo-bloque{ z-index:1; display:flex; flex-direction:column; gap:12px; }
+.nexo-bloque-titulo{
+  margin:0; font-size:.82rem; font-weight:700; letter-spacing:.04em;
+  text-transform:uppercase; color:var(--color-primary);
+}
+.nexo-card{
+  background:var(--nexo-card); border:1px solid var(--nexo-card-border);
+  border-radius:var(--nexo-radius); box-shadow:var(--nexo-card-shadow);
+  padding:14px 14px 16px;
+}
+/* El resumen dentro de una tarjeta NEXO conserva su maquetación original */
+.nexo-card .menu-resumen{ margin:0; }
+
+/* --- Barra de navegación inferior NEXO --- */
+.nexo-bottom-nav{
+  position:fixed; left:0; right:0; bottom:0; z-index:200;
+  display:flex; justify-content:space-around; align-items:stretch;
+  background:var(--color-surface);
+  border-top:1px solid var(--color-border);
+  box-shadow:0 -2px 10px rgba(0,0,0,.08);
+  padding-bottom:env(safe-area-inset-bottom);
+  max-width:100%;
+}
+body.dark .nexo-bottom-nav{ box-shadow:0 -2px 10px rgba(0,0,0,.5); }
+.nexo-nav-btn{
+  flex:1 1 0; min-width:0; min-height:44px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; padding:7px 2px;
+  background:transparent; border:none; cursor:pointer;
+  color:var(--color-text-secondary);
+  -webkit-tap-highlight-color:transparent;
+  transition:color .15s ease;
+}
+.nexo-nav-icon{ font-size:1.35rem; line-height:1; }
+.nexo-nav-text{ font-size:.68rem; font-weight:600; line-height:1; }
+.nexo-nav-btn.activo{ color:var(--color-primary); }
+.nexo-nav-btn:focus-visible{ outline:2px solid var(--color-primary); outline-offset:-2px; border-radius:8px; }
+
+/* Espacio inferior para que la barra no tape contenido/tablas/botones */
+body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-bottom)); }
+.nexo-inicio{ padding-bottom:calc(24px + var(--nexo-nav-h) + env(safe-area-inset-bottom)); }
+
+/* --- Panel «Más» (diálogo accesible) --- */
+.nexo-mas-panel{
+  position:fixed; inset:0; z-index:9998;
+  display:none; align-items:flex-end; justify-content:center;
+  background:rgba(0,0,0,.5);
+}
+.nexo-mas-panel.abierto{ display:flex; }
+.nexo-mas-contenido{
+  box-sizing:border-box; width:100%; max-width:520px;
+  background:var(--color-surface); color:var(--color-text);
+  border-radius:16px 16px 0 0;
+  padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+  box-shadow:0 -4px 28px rgba(0,0,0,.3);
+  max-height:calc(100dvh - 40px); overflow-y:auto; overscroll-behavior:contain;
+  animation:nexoSubir .2s ease;
+}
+@keyframes nexoSubir{ from{ transform:translateY(24px); opacity:.6; } to{ transform:translateY(0); opacity:1; } }
+.nexo-mas-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.nexo-mas-header h2{ margin:0; font-size:1.05rem; color:var(--color-primary); }
+.nexo-mas-cerrar{
+  background:transparent; border:none; cursor:pointer;
+  font-size:1.1rem; color:var(--color-text-secondary);
+  min-width:44px; min-height:44px; border-radius:10px;
+}
+.nexo-mas-cerrar:focus-visible{ outline:2px solid var(--color-primary); outline-offset:-2px; }
+.nexo-mas-acciones{ display:flex; flex-direction:column; gap:10px; }
+.nexo-mas-acciones button{
+  display:flex; align-items:center; gap:12px;
+  width:100%; min-height:48px; padding:12px 14px;
+  background:var(--nexo-card); color:var(--color-text);
+  border:1px solid var(--color-border); border-radius:12px;
+  font-size:.95rem; font-weight:600; text-align:left; cursor:pointer;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.nexo-mas-acciones button:hover{ border-color:var(--color-primary); }
+.nexo-mas-acciones button:focus-visible{ outline:2px solid var(--color-primary); outline-offset:-2px; }
+
+/* Estados semánticos reutilizables (verde/naranja/azul) */
+.nexo-estado-ok{ color:var(--nexo-ok); }
+.nexo-estado-pend{ color:var(--nexo-pend); }
+.nexo-estado-info{ color:var(--nexo-info); }
+
+/* Responsive: móvil primero (360/390/430) y escritorio centrado */
+@media (min-width:600px){
+  .nexo-bottom-nav{ position:fixed; left:50%; transform:translateX(-50%); max-width:1000px; border-radius:14px 14px 0 0; }
+}
+@media (min-width:900px){
+  .nexo-inicio{ max-width:1000px; margin-left:auto; margin-right:auto; }
+}
   </style>
 </head>
 <body>
@@ -628,33 +748,40 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
   <!-- ===================== CABECERA ===================== -->
   <header class="app-header">
     <div class="header-left">
-      <button id="btnVolver" class="icon-btn volver-btn" style="display:none;" aria-label="Volver al menú">←</button>
-      <span class="material-icon" id="headerIcon">🚌</span>
-      <h1 id="headerTitle">Registro del Conductor</h1>
+      <button id="btnVolver" class="icon-btn volver-btn" style="display:none;" aria-label="Volver al menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <span class="material-icon" id="headerIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6.6" r="2.4"/><path d="M6.5 20c0-4 2.6-6.6 5.5-6.6"/><path d="M8.5 20.2A8.2 8.2 0 0 0 18.6 10"/></svg></span>
+      <h1 id="headerTitle">NEXO</h1>
     </div>
     <div class="header-right">
-      <button id="btnMensajes" class="icon-btn" title="Centro de mensajes" aria-label="Centro de mensajes" style="position:relative;">🔔<span id="msgBadge" aria-hidden="true">0</span></button>
-      <button id="btnSettings" class="icon-btn" title="Ajustes" aria-label="Ajustes">⚙️</button>
-      <button id="btnTheme" class="icon-btn" title="Cambiar tema" aria-label="Cambiar tema">🌙</button>
+      <button id="btnMensajes" class="icon-btn" title="Centro de mensajes" aria-label="Centro de mensajes" style="position:relative;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 4.5 1.8 5.6 2 5.8H4c.2-.2 2-1.3 2-5.8z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span id="msgBadge" aria-hidden="true">0</span></button>
+      <button id="btnSettings" class="icon-btn" title="Ajustes" aria-label="Ajustes" hidden style="display:none !important;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg></button>
+      <button id="btnTheme" class="icon-btn" title="Cambiar tema" aria-label="Cambiar tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A7.5 7.5 0 0 1 9.5 4a7.5 7.5 0 1 0 10.5 10.5z"/></svg></button>
     </div>
   </header>
 
   <!-- Modal de ajustes/versión -->
   <div id="modalSettings" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
     <div style="box-sizing:border-box; background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; max-height:calc(100vh - 24px); max-height:calc(100dvh - 24px); overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
-      <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">⚙️ Información de la app</h2>
+      <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
-        <div><strong>Aplicación:</strong> DEV-010</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">DEV-010R12</span></div>
-        <div style="margin-top:8px;"><strong>Descripción:</strong> App laboral y nómina provisional.<br>Importes desde la tabla salarial activa.<br>IRPF, cotizaciones y líquido estimados.</div>
+        <div><strong>Aplicación:</strong> NEXO</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXO-003R2</span></div>
+        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXO-003R2 móvil, compacta y consistente.<br>Perfil y Descuentos se abren desde «Más»; ajustes solo muestran información.<br>Cálculos y datos DEV-010R17 sin cambios.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
-      <button id="btnPerfilLaboral" class="btn btn-primary" style="width:100%; margin-top:20px;">👤 Perfil laboral</button>
-      <button id="btnDescuentosIRPF" class="btn btn-primary" style="width:100%; margin-top:10px;">💶 Descuentos e IRPF</button>
-      <button id="btnAdminAcceso" class="btn btn-secondary" style="width:100%; margin-top:10px;">🛠️ Administrador</button>
-      <button id="btnCerrarSettings" class="btn btn-secondary" style="width:100%; margin-top:10px;">Cerrar</button>
+      <button id="btnCerrarSettings" class="btn btn-secondary" style="width:100%; margin-top:20px;">Cerrar</button>
     </div>
+  </div>
+
+  <!-- NEXO-003R2 — Contenedor OCULTO puente: SOLO conserva #btnAdminAcceso, que
+       sigue siendo necesario como puente para abrir Administración desde «Más»
+       (#nexoMasAdmin lo clica). Los antiguos #btnPerfilLaboral y #btnDescuentosIRPF
+       se han ELIMINADO del DOM: Perfil y Descuentos se abren directamente desde
+       «Más» con las APIs window.tcPerfilAbrirModal() y window.tcDescuentosAbrirModal().
+       Sus inicializaciones ya toleran que el botón no exista (if(btnPL)/if(btnAbrir)). -->
+  <div id="nexoPuenteOculto" aria-hidden="true" style="display:none !important;">
+    <button id="btnAdminAcceso" class="btn btn-secondary" type="button"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6.3a3.6 3.6 0 0 0-4.7 4.4l-4.9 4.9a1.7 1.7 0 0 0 2.4 2.4l4.9-4.9a3.6 3.6 0 0 0 4.4-4.7l-2.3 2.3-1.8-.3-.3-1.8z"/></svg> Administrador</button>
   </div>
 
   <!-- ===================== PERFIL LABORAL (DEV-010R5) =====================
@@ -663,7 +790,7 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
        <select> cerrado siguiente (sin input, texto libre ni datalist). -->
   <div id="modalPerfil" class="perfil-overlay" data-abierto="0" role="dialog" aria-modal="true" aria-labelledby="perfilTitulo" aria-describedby="perfilIntro">
     <div class="perfil-box">
-      <h2 id="perfilTitulo" class="perfil-titulo">👤 Perfil laboral</h2>
+      <h2 id="perfilTitulo" class="perfil-titulo"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>Perfil laboral</h2>
       <p id="perfilIntro" class="perfil-intro">Configura tu perfil laboral. Estos datos se guardan solo en este dispositivo y todavía no modifican ningún importe de la Nómina.</p>
       <div id="perfilAvisoCorrupto" class="perfil-aviso-corrupto" role="alert" style="display:none;"></div>
 
@@ -755,7 +882,7 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
        ni mezcla su clave con tc_v1_perfil_laboral. -->
   <div id="modalDescuentos" class="perfil-overlay" data-abierto="0" role="dialog" aria-modal="true" aria-labelledby="descTitulo" aria-describedby="descIntro">
     <div class="perfil-box">
-      <h2 id="descTitulo" class="perfil-titulo">💶 Descuentos e IRPF</h2>
+      <h2 id="descTitulo" class="perfil-titulo"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 9.2A4 4 0 0 0 9 12a4 4 0 0 0 6.5 2.8"/><path d="M7 11h5.5M7 13h4.5"/></svg>Descuentos e IRPF</h2>
       <p id="descIntro" class="perfil-intro">Estos porcentajes se guardan para una futura estimación de descuentos. Todavía no se aplican a la nómina porque las bases de cotización están pendientes de configuración.</p>
       <div id="descAvisoCorrupto" class="perfil-aviso-corrupto" role="alert" style="display:none;"></div>
 
@@ -803,7 +930,7 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
   <div id="msgPanel" data-abierto="0" role="dialog" aria-modal="true" aria-label="Centro de mensajes">
     <div class="msg-box">
       <div class="msg-head">
-        <h2>🔔 Centro de mensajes</h2>
+        <h2><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 4.5 1.8 5.6 2 5.8H4c.2-.2 2-1.3 2-5.8z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>Centro de mensajes</h2>
         <button id="msgCerrar" type="button" title="Cerrar" aria-label="Cerrar">✕</button>
       </div>
       <div id="msgLista"></div>
@@ -826,54 +953,77 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
   </div>
 
   <!-- ===================== PANTALLA: MENÚ PRINCIPAL ===================== -->
-  <div id="menuPrincipal" class="menu-principal">
-    <div class="watermark">LIQUIDACIÓN</div>
-    <div id="bannerAviso" class="banner-aviso" style="display:none;"></div>
-    <div id="bannerBackupPendiente" class="banner-aviso banner-alerta" role="alert" aria-live="polite" style="display:none; flex-wrap:wrap;">
-      <span class="banner-icono" aria-hidden="true">💾</span>
-      <div><strong>Copia de seguridad pendiente</strong><br>Aún no has guardado la copia de hoy.</div>
-      <button id="btnDescargarBackupPendiente" type="button" class="btn btn-primary" style="margin-left:auto;">Descargar copia de seguridad</button>
+  <div id="menuPrincipal" class="menu-principal nexo-inicio">
+    <div class="watermark">NEXO</div>
+
+    <!-- NEXO-003 — Resumen económico conservado OCULTO en Inicio: sus IDs siguen
+         siendo actualizados por actualizarResumen(); los valores se reutilizan en
+         el centro de Recaudación. No se muestran aquí (requisito Inicio). -->
+    <div id="nexoResumenEconomicoOculto" style="display:none;" aria-hidden="true">
+      <span id="totalRecaudado">0,00 €</span>
+      <span id="cardSaldo"><span id="saldoPendiente">0,00 €</span></span>
+      <span id="totalLiquidado">0,00 €</span>
     </div>
-    <div class="menu-resumen">
-      <div class="resumen-item">
-        <span class="resumen-label">Recaudado</span>
-        <span class="resumen-valor" id="totalRecaudado">0,00 €</span>
+
+    <!-- A. Saludo -->
+    <section class="nexo-bloque">
+      <div class="nexo-card nexo-saludo">
+        <div class="nexo-saludo-txt">
+          <div class="nexo-saludo-hola" id="nexoSaludoNombre">Hola</div>
+          <div class="nexo-saludo-fecha" id="nexoSaludoFecha">—</div>
+        </div>
+        <span class="nexo-saludo-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg></span>
       </div>
-      <div class="resumen-item resumen-saldo" id="cardSaldo">
-        <span class="resumen-label">Saldo</span>
-        <span class="resumen-valor" id="saldoPendiente">0,00 €</span>
+    </section>
+
+    <!-- B. Resumen del día -->
+    <section class="nexo-bloque">
+      <h2 class="nexo-bloque-titulo">Resumen del día</h2>
+      <div class="nexo-card">
+        <div class="nexo-dia-grid">
+          <div class="nexo-dia-item"><span class="k">Turno</span><span class="v" id="nexoDiaTurno">—</span></div>
+          <div class="nexo-dia-item"><span class="k">Servicio</span><span class="v" id="nexoDiaServicio">—</span></div>
+          <div class="nexo-dia-item"><span class="k">Inicio</span><span class="v" id="nexoDiaInicio">—</span></div>
+          <div class="nexo-dia-item"><span class="k">Fin previsto</span><span class="v" id="nexoDiaFin">—</span></div>
+        </div>
+        <div class="nexo-dia-estado" id="nexoDiaEstado"><span class="nexo-est-dot" aria-hidden="true"></span><span id="nexoDiaEstadoTxt">Sin datos de la jornada de hoy</span></div>
+        <div class="nexo-dia-btns">
+          <button type="button" class="btn btn-primary" id="nexoBtnVerJornada"><span class="nexo-inline-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg></span> Ver jornada</button>
+          <button type="button" class="btn btn-secondary" id="nexoBtnEditarHoy"><span class="nexo-inline-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></span> Editar hoy</button>
+        </div>
       </div>
-      <div class="resumen-item">
-        <span class="resumen-label">Liquidado</span>
-        <span class="resumen-valor" id="totalLiquidado">0,00 €</span>
+    </section>
+
+    <!-- C. Avisos importantes (banners con IDs originales; abren su destino real) -->
+    <section class="nexo-bloque" id="nexoAvisosBloque">
+      <h2 class="nexo-bloque-titulo">Avisos importantes</h2>
+      <div id="bannerAviso" class="banner-aviso" style="display:none;"></div>
+      <div id="bannerBackupPendiente" class="banner-aviso banner-alerta" role="alert" aria-live="polite" style="display:none; flex-wrap:wrap;">
+        <span class="banner-icono" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 5.5A1.5 1.5 0 0 1 6 4h9.5L20 8.5v10A1.5 1.5 0 0 1 18.5 20h-13A1.5 1.5 0 0 1 4.5 18.5z"/><path d="M8 4v5h6.5"/><path d="M8 20v-5.5h8V20"/></svg></span>
+        <div><strong>Copia de seguridad pendiente</strong><br>Aún no has guardado la copia de hoy.</div>
+        <button id="btnDescargarBackupPendiente" type="button" class="btn btn-primary" style="margin-left:auto;">Descargar copia de seguridad</button>
       </div>
-    </div>
-    <div class="menu-grid">
-      <button class="menu-btn" data-tab="recaudaciones">
-        <span class="menu-icon">💰</span><span class="menu-label">Recaudaciones</span>
-      </button>
-      <button class="menu-btn" data-tab="liquidaciones">
-        <span class="menu-icon">🧾</span><span class="menu-label">Liquidaciones</span>
-      </button>
-      <button class="menu-btn" data-tab="importar">
-        <span class="menu-icon">📥</span><span class="menu-label">Pegar texto Recaudacion </span>
-      </button>
-      <button class="menu-btn" data-tab="estadillo">
-        <span class="menu-icon">🪙</span><span class="menu-label">Estadillo</span>
-      </button>
-      <button class="menu-btn" data-tab="historial">
-        <span class="menu-icon">📜</span><span class="menu-label">Historial</span>
-      </button>
-      <button class="menu-btn" data-tab="backup">
-        <span class="menu-icon">💾</span><span class="menu-label">Copias de Seguridad</span>
-      </button>
-      <button class="menu-btn" data-tab="calendario">
-        <span class="menu-icon">📅</span><span class="menu-label">Calendario Conductor</span>
-      </button>
-      <button class="menu-btn" data-tab="nomina">
-        <span class="menu-icon">💶</span><span class="menu-label">Nómina</span>
-      </button>
-    </div>
+      <div id="nexoAvisosVacio" class="nexo-avisos-vacio">Sin avisos pendientes.</div>
+    </section>
+
+    <!-- D. Accesos rápidos -->
+    <section class="nexo-bloque">
+      <h2 class="nexo-bloque-titulo">Accesos rápidos</h2>
+      <div class="menu-grid">
+        <button class="nexo-acc-btn" id="nexoAccHojaRuta">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V8H18"/><path d="M9 12h6M9 15.5h6"/></svg></span><span class="menu-label">Hoja de ruta</span>
+        </button>
+        <button class="nexo-acc-btn" id="nexoAccVerJornada">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg></span><span class="menu-label">Ver jornada</span>
+        </button>
+        <button class="nexo-acc-btn" id="nexoAccRecaudacion">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></span><span class="menu-label">Recaudación</span>
+        </button>
+        <button class="nexo-acc-btn" id="nexoAccNomina">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H18"/><rect x="3" y="8" width="18" height="12" rx="2.5"/><path d="M16 12.5h5v3h-5a1.5 1.5 0 0 1 0-3z"/></svg></span><span class="menu-label">Nómina</span>
+        </button>
+      </div>
+    </section>
   </div>
 
   <!-- ===================== PANTALLAS DE SECCIÓN ===================== -->
@@ -901,11 +1051,11 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
           <label>Total (€) <input type="number" id="recTotal" step="0.01" value="0" readonly /></label>
         </div>
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary">💾 Guardar</button>
-          <button type="button" id="btnCancelarRec" class="btn btn-secondary">✖ Cancelar</button>
+          <button type="submit" class="btn btn-primary"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h6V4M8 20v-5h8v5"/></svg> Guardar</button>
+          <button type="button" id="btnCancelarRec" class="btn btn-secondary"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg> Cancelar</button>
         </div>
       </form>
-      <button type="button" class="btn btn-secondary btn-toggle-filtros" data-target="filtrosRec">🔍 Filtros y orden</button>
+      <button type="button" class="btn btn-secondary btn-toggle-filtros" data-target="filtrosRec"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg> Filtros y orden</button>
       <div class="filters" id="filtrosRec" style="display:none;">
         <label>Buscar por fecha <input type="date" id="filtroRecFecha" /></label>
         <label>Buscar por servicio <input type="text" id="filtroRecServicio" placeholder="Servicio..." /></label>
@@ -974,11 +1124,11 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
           <label>Importe (€) <input type="number" id="liqImporte" step="0.01" value="0" required /></label>
         </div>
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary">💾 Guardar</button>
-          <button type="button" id="btnCancelarLiq" class="btn btn-secondary">✖ Cancelar</button>
+          <button type="submit" class="btn btn-primary"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h6V4M8 20v-5h8v5"/></svg> Guardar</button>
+          <button type="button" id="btnCancelarLiq" class="btn btn-secondary"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg> Cancelar</button>
         </div>
       </form>
-      <button type="button" class="btn btn-secondary btn-toggle-filtros" data-target="filtrosLiq">🔍 Filtros y orden</button>
+      <button type="button" class="btn btn-secondary btn-toggle-filtros" data-target="filtrosLiq"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg> Filtros y orden</button>
       <div class="filters" id="filtrosLiq" style="display:none;">
         <label>Buscar (recibo, máquina o fecha) <input type="text" id="filtroLiq" placeholder="Buscar..." /></label>
         <label>Ordenar por
@@ -1006,8 +1156,8 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
       <p class="help-text">Pega el texto del correo de recaudación. La app detectará fecha, servicio e importe.</p>
       <textarea id="textoCorreo" rows="8" placeholder="Pega aquí el texto del correo..."></textarea>
       <div class="form-actions">
-        <button id="btnAnalizarCorreo" class="btn btn-primary">🔍 Analizar Correo</button>
-        <button id="btnLimpiarCorreo" class="btn btn-secondary">🗑 Limpiar</button>
+        <button id="btnAnalizarCorreo" class="btn btn-primary"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg> Analizar correo</button>
+        <button id="btnLimpiarCorreo" class="btn btn-secondary"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg> Limpiar</button>
       </div>
       <div id="resultadoAnalisis" class="form-card" style="display:none;">
         <h3>Datos detectados</h3>
@@ -1030,15 +1180,15 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
           </label>
         </div>
         <div class="form-actions">
-          <button id="btnGuardarImportado" class="btn btn-primary">✅ Guardar Recaudación</button>
-          <button id="btnCancelarImportado" class="btn btn-secondary">✖ Cancelar</button>
+          <button id="btnGuardarImportado" class="btn btn-primary"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg> Guardar recaudación</button>
+          <button id="btnCancelarImportado" class="btn btn-secondary"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg> Cancelar</button>
         </div>
       </div>
       <div id="impPreguntaMas" class="form-card" style="display:none; text-align:center;">
         <p style="font-size:1rem; font-weight:600; margin-bottom:14px;">¿Tienes más recaudaciones para importar?</p>
         <div class="form-actions" style="justify-content:center;">
-          <button id="btnImpMas" class="btn btn-primary">📥 Sí, importar otra</button>
-          <button id="btnImpFin" class="btn btn-secondary">🏠 No, volver al inicio</button>
+          <button id="btnImpMas" class="btn btn-primary"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M4 7l8 6 8-6"/></svg> Sí, importar otra</button>
+          <button id="btnImpFin" class="btn btn-secondary"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11 12 3.5l8.5 7.5"/><path d="M5.5 9.7V20h13V9.7"/></svg> No, volver al inicio</button>
         </div>
       </div>
     </section>
@@ -1068,7 +1218,7 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
     <section id="tab-historial" class="tab-content">
       <h2>📜 Historial de Movimientos</h2>
       <p class="help-text">Todas las recaudaciones y liquidaciones en orden cronológico.</p>
-      <button type="button" class="btn btn-secondary btn-toggle-filtros" data-target="filtrosHistorial">🔍 Filtros y orden</button>
+      <button type="button" class="btn btn-secondary btn-toggle-filtros" data-target="filtrosHistorial"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg> Filtros y orden</button>
       <div class="filters" id="filtrosHistorial" style="display:none;">
         <label>Tipo
           <select id="filtroHistorialTipo">
@@ -1123,7 +1273,7 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
         <div class="tc-hdr">
           <div class="tc-hdr-row">
             <div class="tc-hdr-left">
-              <div class="tc-bus">&#128652;</div>
+              <div class="tc-bus"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="13" rx="2"/><path d="M4 11h16M8 17v2M16 17v2"/><circle cx="8.5" cy="14" r="0.7"/><circle cx="15.5" cy="14" r="0.7"/></svg></div>
               <div>
                 <div class="tc-hdr-title">Diario del Conductor</div>
                 <div class="tc-hdr-sub">Registro de jornadas</div>
@@ -1151,8 +1301,8 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
 
         <!-- TOGGLE VISTA -->
         <div class="tc-view-toggle">
-          <button class="tc-vt-btn active" id="tc-btn-mes" onclick="tcSetVista('mes')">📅 Mensual</button>
-          <button class="tc-vt-btn" id="tc-btn-anual" onclick="tcSetVista('anual')">🗓️ Anual</button>
+          <button class="tc-vt-btn active" id="tc-btn-mes" onclick="tcSetVista('mes')"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg> Mensual</button>
+          <button class="tc-vt-btn" id="tc-btn-anual" onclick="tcSetVista('anual')"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5M7 13h2M11 13h2M15 13h2M7 16.5h2M11 16.5h2"/></svg> Anual</button>
         </div>
 
         <!-- LEYENDA FLOTANTE -->
@@ -1196,8 +1346,8 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
             <input type="file" id="dia-hoja-file" accept="application/pdf" onchange="tcDiaHojaPdf(this)" style="display:none">
             <div class="tc-view-extra" id="vw-extra"></div>
             <div class="tc-day-actions">
-              <button class="tc-btn tc-btn-ghost" onclick="tcToEdit()">&#9999;&#65039; Editar</button>
-              <button class="tc-btn tc-btn-danger" id="tc-btn-borrar-dia" onclick="tcDeleteDay()">&#128465;&#65039; Eliminar día completo</button>
+              <button class="tc-btn tc-btn-ghost" onclick="tcToEdit()"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L18 10l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg> Editar</button>
+              <button class="tc-btn tc-btn-danger" id="tc-btn-borrar-dia" onclick="tcDeleteDay()"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg> Eliminar día completo</button>
             </div>
             <div class="tc-day-actions" id="vw-jornada-actions"></div>
           </div>
@@ -1380,11 +1530,11 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
         <!-- PANEL JORNADA (DEV-004 — control de jornada por dos partes, sin cálculos económicos) -->
         <div id="pnl-jornada" style="display:none">
           <div class="tc-sh-hd">
-            <div><div class="tc-sh-title">&#128337; Jornada</div><div class="tc-sh-sub">Datos te&#243;ricos de la jornada, en dos partes</div></div>
+            <div><div class="tc-sh-title"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg> Jornada</div><div class="tc-sh-sub">Datos te&#243;ricos de la jornada, en dos partes</div></div>
             <button class="tc-xbtn" onclick="tcVolverVistaDia()">&#10005;</button>
           </div>
           <div class="tc-form">
-            <div class="tc-cambio-info">&#8505;&#65039; Estos datos son la base para detectar ampliaciones y preparar la futura n&#243;mina. No se calcula ning&#250;n importe todav&#237;a.</div>
+            <div class="tc-cambio-info">&#8505;&#65039; Estos datos son la base para detectar ampliaciones y preparar la futura n&#243;mina. Esta pantalla registra los tiempos de la jornada. Los conceptos econ&#243;micos enlazados se calculan en N&#243;mina provisional.</div>
             <div class="tc-fg"><label class="tc-lbl">Tipo de turno</label>
               <select class="tc-sel" id="jr-tipo" onchange="tcJornadaTipoChange()">
                 <option value="">&#8212; Sin determinar &#8212;</option>
@@ -1699,11 +1849,26 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
         #tab-nomina .nom-recibo-scroll{ overflow:visible; }
         #tab-nomina .nom-recibo-grid{ min-width:0; }
       }
+      /* NEXO-003R1 (tarea 6) — Resumen MENSUAL (tabla de 3 columnas) siempre
+         completo y sin scroll horizontal. El ancho se reparte con table-layout
+         fijo y los conceptos pueden ocupar varias líneas. Solo presentación: no
+         cambia números, textos ni cálculos. La tabla anual (12 meses) conserva
+         .nom-scroll y su desplazamiento horizontal. */
+      #tab-nomina .nom-scroll.nom-scroll-mes{ overflow-x:visible; }
+      #tab-nomina .nom-scroll.nom-scroll-mes table.nom-tabla{ table-layout:fixed; width:100%; max-width:100%; min-width:0; }
+      #tab-nomina .nom-scroll.nom-scroll-mes table.nom-tabla th,
+      #tab-nomina .nom-scroll.nom-scroll-mes table.nom-tabla td{ white-space:normal; overflow-wrap:anywhere; word-break:break-word; }
+      #tab-nomina .nom-scroll.nom-scroll-mes table.nom-tabla th:first-child,
+      #tab-nomina .nom-scroll.nom-scroll-mes table.nom-tabla td:first-child{ width:44%; }
+      #tab-nomina .nom-scroll.nom-scroll-mes table.nom-tabla th:nth-child(2),
+      #tab-nomina .nom-scroll.nom-scroll-mes table.nom-tabla td:nth-child(2),
+      #tab-nomina .nom-scroll.nom-scroll-mes table.nom-tabla th:nth-child(3),
+      #tab-nomina .nom-scroll.nom-scroll-mes table.nom-tabla td:nth-child(3){ width:28%; }
     </style>
     <section id="tab-nomina" class="tab-content">
       <h2>💶 Nómina</h2>
       <div class="info-box" style="margin-bottom:14px;">
-        ℹ️ Cálculo provisional, recalculado desde las jornadas registradas. Los importes conectados proceden de la tabla salarial del mismo año. Los conceptos todavía no conectados, las deducciones, el IRPF, la Seguridad Social y el líquido permanecen pendientes.
+        ℹ️ Estimación recalculada desde las jornadas registradas.<br>Los importes proceden exclusivamente de la tabla salarial activa, con independencia del año seleccionado.<br>IRPF, cotizaciones y líquido se calculan cuando están configurados; los conceptos no conectados permanecen pendientes.
       </div>
       <div class="form-card" style="margin-bottom:14px;">
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
@@ -1723,6 +1888,65 @@ body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65
         <button type="button" class="nom-tabbtn" data-nomtab="comparacion">Comparación</button>
       </div>
       <div id="nomContenido"></div>
+    </section>
+
+    <!-- ===================== CENTRO DE RECAUDACIÓN (NEXO-003) ===================== -->
+    <section id="tab-recaudacion" class="tab-content">
+      <h2>💰 Recaudación</h2>
+
+      <div class="nexo-card nexo-rec-saldo">
+        <span class="nexo-rec-saldo-lbl">Saldo pendiente de liquidar</span>
+        <span class="nexo-rec-saldo-val" id="nexoRecSaldo">0,00 €</span>
+      </div>
+
+      <div class="nexo-rec-acciones">
+        <button type="button" class="btn btn-primary" id="nexoRecNueva"><span class="nexo-inline-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> Nueva recaudación</button>
+        <button type="button" class="btn btn-secondary" id="nexoRecImportar"><span class="nexo-inline-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M4 7l8 6 8-6"/></svg></span> Importar correo</button>
+      </div>
+
+      <h3 class="nexo-sub">Gestión</h3>
+      <div class="menu-grid">
+        <button class="nexo-acc-btn" id="nexoRecLiquidaciones">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3h11v18l-2.75-1.6L12 21l-2.75-1.6L6.5 21z"/><path d="M9.5 8h5M9.5 12h5"/></svg></span><span class="menu-label">Liquidaciones</span>
+        </button>
+        <button class="nexo-acc-btn" id="nexoRecEstadillo">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 4.5v15"/></svg></span><span class="menu-label">Estadillo</span>
+        </button>
+        <button class="nexo-acc-btn" id="nexoRecHistorial">
+          <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 1 2.7 6.2"/><path d="M3.3 18.5 3.5 14l4.4.6"/><path d="M12 7.8V12l3 1.8"/></svg></span><span class="menu-label">Historial</span>
+        </button>
+      </div>
+
+      <h3 class="nexo-sub">Últimos movimientos</h3>
+      <div id="nexoRecMovs" class="nexo-movs"></div>
+      <p class="empty-msg" id="nexoRecMovsVacio" style="display:none;">No hay movimientos registrados todavía.</p>
+    </section>
+
+    <!-- ===================== MÁS (NEXO-003, pantalla completa) ===================== -->
+    <section id="tab-mas" class="tab-content">
+      <h2>⋯ Más</h2>
+
+      <div class="nexo-card nexo-mas-perfil">
+        <span class="nexo-mas-perfil-av" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg></span>
+        <div>
+          <div class="nexo-mas-perfil-nom" id="nexoMasPerfilNombre">Perfil sin configurar</div>
+          <div class="nexo-mas-perfil-cat" id="nexoMasPerfilCat">Configura tu perfil laboral</div>
+        </div>
+      </div>
+
+      <h3 class="nexo-sub">Personalización</h3>
+      <div class="nexo-mas-lista">
+        <button type="button" class="nexo-mas-item" id="nexoMasPerfil"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg></span><span class="nexo-mas-tx">Perfil laboral</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+        <button type="button" class="nexo-mas-item" id="nexoMasDescuentos"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 9.2A4 4 0 0 0 9 12a4 4 0 0 0 6.5 2.8"/><path d="M7 11h5.5M7 13h4.5"/></svg></span><span class="nexo-mas-tx">Descuentos e IRPF</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+        <button type="button" class="nexo-mas-item" id="nexoMasMensajes"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 4.5 1.8 5.6 2 5.8H4c.2-.2 2-1.3 2-5.8z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span><span class="nexo-mas-tx">Centro de mensajes</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+      </div>
+
+      <h3 class="nexo-sub">Datos y aplicación</h3>
+      <div class="nexo-mas-lista">
+        <button type="button" class="nexo-mas-item" id="nexoMasBackup"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 5.5A1.5 1.5 0 0 1 6 4h9.5L20 8.5v10A1.5 1.5 0 0 1 18.5 20h-13A1.5 1.5 0 0 1 4.5 18.5z"/><path d="M8 4v5h6.5"/><path d="M8 20v-5.5h8V20"/></svg></span><span class="nexo-mas-tx">Copias de seguridad</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+        <button type="button" class="nexo-mas-item" id="nexoMasAdmin"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.3a3.6 3.6 0 0 0-4.7 4.4l-4.9 4.9a1.7 1.7 0 0 0 2.4 2.4l4.9-4.9a3.6 3.6 0 0 0 4.4-4.7l-2.3 2.3-1.8-.3-.3-1.8z"/></svg></span><span class="nexo-mas-tx">Administración</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+        <button type="button" class="nexo-mas-item" id="nexoMasAjustes"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg></span><span class="nexo-mas-tx">Información y ajustes</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+      </div>
     </section>
 
   </main>
@@ -2269,10 +2493,11 @@ function abrirSeccion(tabId) {
   document.querySelectorAll(".tab-content").forEach(function (s) { s.style.display = "none"; });
   document.getElementById("tab-" + tabId).style.display = "block";
   var titulos = {
-    recaudaciones: "💰 Recaudaciones", liquidaciones: "🧾 Liquidaciones",
-    importar: "📥 Importar Correo", estadillo: "🪙 Estadillo",
-    historial: "📜 Historial", backup: "💾 Copias de Seguridad",
-    calendario: "📅 Diario del Conductor", nomina: "💶 Nómina"
+    recaudaciones: "Nueva recaudación", liquidaciones: "Liquidaciones",
+    importar: "Importar correo", estadillo: "Estadillo",
+    historial: "Historial", backup: "Copias de seguridad",
+    calendario: "Calendario", nomina: "Nómina",
+    recaudacion: "Recaudación", mas: "Más"
   };
   document.getElementById("headerTitle").textContent = titulos[tabId] || "Registro del Conductor";
   document.getElementById("headerIcon").style.display = "none";
@@ -2281,6 +2506,9 @@ function abrirSeccion(tabId) {
   if (tabId === "historial") renderizarHistorial();
   if (tabId === "calendario") { cargarPDFjsSiNecesario(); if (typeof window.tcCalReabrir === "function") window.tcCalReabrir(); }
   if (tabId === "nomina" && typeof window.tcRenderNomina === "function") window.tcRenderNomina();
+  if (tabId === "recaudacion" && typeof window.nexoRenderRecaudacionHub === "function") window.nexoRenderRecaudacionHub();
+  if (tabId === "mas" && typeof window.nexoRenderMas === "function") window.nexoRenderMas();
+  if (typeof window.nexoActualizarNav === "function") window.nexoActualizarNav(tabId); // NEXO: estado visual barra inferior
 }
 
 /* DEV-007R9 (tarea 10) — Estado de carga de PDF.js para garantizar UNA sola
@@ -2323,20 +2551,23 @@ function cargarPDFjsSiNecesario() {
 function volverAlMenu() {
   document.getElementById("contenidoSecciones").style.display = "none";
   document.getElementById("menuPrincipal").style.display = "flex";
-  document.getElementById("headerTitle").textContent = "Registro del Conductor";
+  document.getElementById("headerTitle").textContent = "NEXO";
   document.getElementById("headerIcon").style.display = "inline";
   document.getElementById("btnVolver").style.display = "none";
   actualizarResumen();
+  if (typeof window.nexoActualizarNav === "function") window.nexoActualizarNav("inicio"); // NEXO: estado visual barra inferior
 }
 
 function inicializarTema() {
+  var TEMA_ICONO_LUNA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A7.5 7.5 0 0 1 9.5 4a7.5 7.5 0 1 0 10.5 10.5z"/></svg>';
+  var TEMA_ICONO_SOL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/></svg>';
   var temaGuardado = localStorage.getItem("tussam_tema");
-  if (temaGuardado === "dark") { document.body.classList.add("dark"); document.getElementById("btnTheme").textContent = "☀️"; }
+  if (temaGuardado === "dark") { document.body.classList.add("dark"); document.getElementById("btnTheme").innerHTML = TEMA_ICONO_SOL; }
   document.getElementById("btnTheme").addEventListener("click", function () {
     document.body.classList.toggle("dark");
     var esOscuro = document.body.classList.contains("dark");
     localStorage.setItem("tussam_tema", esOscuro ? "dark" : "light");
-    document.getElementById("btnTheme").textContent = esOscuro ? "☀️" : "🌙";
+    document.getElementById("btnTheme").innerHTML = esOscuro ? TEMA_ICONO_SOL : TEMA_ICONO_LUNA;
   });
 
   var modalSettings = document.getElementById("modalSettings");
@@ -4528,7 +4759,7 @@ function inicializarCamaraOCR() {
     var lectura=tcPerfilLeer();
     var esEditar = (modo==='editar');
 
-    document.getElementById('perfilTitulo').textContent = esEditar ? '👤 Perfil laboral' : '👤 Configura tu perfil laboral';
+    document.getElementById('perfilTitulo').innerHTML = '<svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>' + (esEditar ? 'Perfil laboral' : 'Configura tu perfil laboral');
     document.getElementById('perfilIntro').textContent = esEditar
       ? 'Consulta o modifica tu perfil laboral. Se guarda solo en este dispositivo y todavía no cambia ningún importe de la Nómina.'
       : 'Puedes configurar tu perfil laboral ahora o más tarde desde Ajustes. Es opcional y no cambia ningún importe de la Nómina.';
@@ -6075,6 +6306,45 @@ window.tcCalReabrir=function(){
   if(tcVista==='anual') tcAnualActivarLayout(true,true);
 };
 
+/* NEXO-003 — Accesores de solo lectura y navegación (no alteran datos ni
+   cálculos). Exponen `dias`/`TURNO`/aperturas ya existentes para que la
+   pantalla Inicio y el centro de Recaudación reutilicen los flujos reales. */
+/* NEXO-003R1 (tarea 7) — Lector de solo lectura para Inicio: NO devuelve la
+   referencia interna de `dias[key]`, sino una COPIA defensiva con únicamente los
+   datos que Inicio necesita (turno, servicio, jornada). La jornada se clona en
+   profundidad y el objeto se congela, de modo que el consumidor no puede alterar
+   accidentalmente el almacén interno. No cambia el contenido ni el almacenamiento
+   de `dias`. */
+window.tcGetRegistroDia=function(key){
+  try{
+    var r=dias[key];
+    if(!r||typeof r!=='object') return null;
+    var jornada=null;
+    if(r.jornada&&typeof r.jornada==='object'){
+      try{ jornada=JSON.parse(JSON.stringify(r.jornada)); }catch(_e){ jornada=null; }
+      if(jornada){ try{ Object.freeze(jornada); }catch(_e2){} }
+    }
+    var copia={ turno:(r.turno!=null?r.turno:''), servicio:(r.servicio!=null?r.servicio:''), jornada:jornada };
+    try{ Object.freeze(copia); }catch(_e3){}
+    return copia;
+  }catch(e){ return null; }
+};
+window.tcTurnoTag=function(t){ try{ return (t&&TURNO[t])?TURNO[t].tag:''; }catch(e){ return ''; } };
+window.tcTurnoNombre=function(t){ try{ return (t&&TURNO[t])?(TURNO[t].nombre||TURNO[t].tag||t):''; }catch(e){ return ''; } };
+window.tcAbrirDiaPorFecha=function(key){ try{ tcOpenDay(key, dias[key]); return true; }catch(e){ return false; } };
+/* NEXO-003R1 (tarea 1) — Puente público seguro para abrir DIRECTAMENTE el editor
+   del día (pnl-edit) por fecha, incluso si aún no existe registro. Reutiliza
+   tcOpenDay() (fija activeDate y renderiza la ficha) y luego window.tcToEdit()
+   (conmuta a pnl-edit). No duplica el editor ni altera su guardado. */
+window.tcEditarDiaPorFecha=function(key){
+  try{
+    tcOpenDay(key, dias[key]||{});
+    if(typeof window.tcToEdit==='function'){ window.tcToEdit(); return true; }
+  }catch(e){}
+  return false;
+};
+window.tcAbrirSubirHojas=function(){ try{ if(typeof tcOpenImport==='function'){ tcOpenImport(); return true; } }catch(e){} return false; };
+
 function tcRenderAnual(scrollToActual){
   var contenedor=document.getElementById('tc-anual');
   /* DEV-007R7 — En re-renderizados incidentales (cambios de datos, abrir/cerrar
@@ -6313,16 +6583,16 @@ function tcRenderView(key,reg){
       +'<span>🗂️</span><p style="margin:0;">Imagen de la hoja no guardada · datos conservados</p>'
       +'<p style="margin:6px 0 0;font-size:12px;color:var(--color-text-secondary);line-height:1.4;">Se conservaron jornada, servicio, incidencias y acumulados. Vuelve a importar el PDF para recuperar la imagen.</p></div>';
   } else {
-    rw.innerHTML='<div class="tc-ruta-empty"><span>📋</span><p>Sin hoja de ruta</p></div>';
+    rw.innerHTML='<div class="tc-ruta-empty"><span><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V8H18"/><path d="M9 12h6M9 15.5h6"/></svg></span><p>Sin hoja de ruta</p></div>';
   }
   var raw=document.getElementById('vw-ruta-actions');
   if(reg.imgData){
-    raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)">🔁 Reemplazar hoja</button>'
-      +'<button class="tc-btn tc-btn-danger" onclick="tcDiaHojaDelete()">🗑️ Eliminar hoja</button>';
+    raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 16M4 20v-4h4"/></svg> Reemplazar hoja</button>'
+      +'<button class="tc-btn tc-btn-danger" onclick="tcDiaHojaDelete()"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg> Eliminar hoja</button>';
   } else if(reg.hojaArchivada){
-    raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)">➕ Volver a añadir hoja de ruta</button>';
+    raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Volver a añadir hoja de ruta</button>';
   } else {
-    raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)">➕ Añadir hoja de ruta</button>';
+    raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Añadir hoja de ruta</button>';
   }
   var html='';
   if(reg.cambioTurnoPendiente){
@@ -6345,9 +6615,9 @@ function tcRenderView(key,reg){
         if(a&&a.estado!=='descartada'&&a.estado!=='anulada'){ nAmp++; if(a.estado==='pendiente_documento') pendDoc=true; }
       });
     }
-    jaw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcOpenJornada()">🕐 Jornada</button>'
-      +'<button class="tc-btn tc-btn-ghost" style="'+(pendDoc?'border-color:#E6A817;color:#92400E;font-weight:700;':'')+'" onclick="tcOpenAmpliaciones()">⏱️ Ampliaciones'+(nAmp?' ('+nAmp+')':'')+'</button>'
-      +'<button class="tc-btn tc-btn-ghost" onclick="tcOpenComputos()">🚌 T.D. y deje</button>';
+    jaw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcOpenJornada()"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg> Jornada</button>'
+      +'<button class="tc-btn tc-btn-ghost" style="'+(pendDoc?'border-color:#E6A817;color:#92400E;font-weight:700;':'')+'" onclick="tcOpenAmpliaciones()"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 13V9M9.5 2.5h5"/></svg> Ampliaciones'+(nAmp?' ('+nAmp+')':'')+'</button>'
+      +'<button class="tc-btn tc-btn-ghost" onclick="tcOpenComputos()"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="13" rx="2"/><path d="M4 11h16M8 17v2M16 17v2"/></svg> T.D. y deje</button>';
   }
 }
 
@@ -7322,10 +7592,15 @@ function tcResumenLaboralMes(anio,mes){
     ampliacionesConfirmadas:0, ampliacionesPendientes:0,
     horasExtraordinarias:0,
     nocturnidadGeneral:0, nocturnidadSemanaSanta:0, nocturnidadFeria:0,
-    solapeFeria:0, solapeSemanaSanta:0,
-    excesoFisico:0, excesoEquivalente:0,
+    solapeFeria:0, solapeSemanaSanta:0, solapePendienteDias:0, /* DEV-010R15 */
+    excesoFisico:0, excesoEquivalente:0, excesoPendienteDias:0, /* DEV-010R16 */
     td:0, dejeNormal:0, extraCalle7:0,
     partidoDias:0, tpHasta2h:0, tpMas2h:0, tpPendiente:0,
+    /* DEV-010R14 — Subtipos de TP por duración del descanso × clasificación del
+       día (Laborable/Sábado/Festivo). tpHasta2h*=4A4E, tpMas2h*=4A4F. La suma de
+       los tres subtipos de cada grupo coincide siempre con tpHasta2h/tpMas2h. */
+    tpHasta2hLaborables:0, tpHasta2hSabados:0, tpHasta2hFestivos:0,
+    tpMas2hLaborables:0, tpMas2hSabados:0, tpMas2hFestivos:0,
     primaTardeDias:0, plusSabadoDias:0, plusDomingoDias:0, /* DEV-008R2 */
     tpMensualCompleto:false, tpMensualUnidades:0, tpDiarioUnidades:0, /* DEV-008R3 */
     festivoTrabajadoDias:0, festivoEspecialDias:0, domingoRamosDias:0, festivoDesplazadoDias:0, /* DEV-008R10 */
@@ -7415,9 +7690,38 @@ function tcResumenLaboralMes(anio,mes){
     if(jr.tipoTurno==='partido'){
       R.partidoDias++;
       var gap=tcNominaGapPartido(jr);
-      if(gap==null){ R.tpPendiente++; pendDia=true; }
-      else if(gap<=120) R.tpHasta2h++;
-      else R.tpMas2h++;
+      /* DEV-010R14 (corrección) — La clasificación 4A4E/4A4F exige un turno final
+         realmente partido (PM/PT/PN). esFestivoHoy y dowFinal SOLO reciben valor en
+         el bloque de turno laboral de arriba, que únicamente se ejecuta para esos
+         códigos; si jr.tipoTurno==='partido' pero reg.turno está vacío, es
+         desconocido o es D/V/CM/CT/CN, esas variables no son fiables para este día.
+         En ese caso —igual que con gap==null— el día NO se clasifica: se cuenta como
+         pendiente (incrementa tpPendiente, marca pendDia, no toca tpHasta2h/tpMas2h
+         ni ningún subtipo y no consulta ningún ID salarial). No se duplica ni se
+         altera la lógica de calendario/festivos existente. */
+      var turnoPartidoOk=(turnoFinal==='PM'||turnoFinal==='PT'||turnoFinal==='PN');
+      if(gap==null||!turnoPartidoOk){ R.tpPendiente++; pendDia=true; }
+      else if(gap<=120){
+        R.tpHasta2h++;
+        /* DEV-010R14 — Subtipo 4A4E por clasificación del día. Se REUTILIZA la
+           clasificación festiva ya calculada por la app (esFestivoHoy) y el día
+           de la semana (dowFinal, 5=sáb 6=dom) obtenidos de la fecha real en el
+           bloque de turno laborable de arriba —un día partido es siempre
+           PM/PT/PN, así que ese bloque ya se ha ejecutado para este día—. No se
+           crea una segunda lógica de calendario. Precedencia EXACTA: festivo o
+           domingo → Festivos; sábado (no festivo) → Sábados; resto → Laborables.
+           Ramas mutuamente excluyentes: cada día suma exactamente un subtipo. */
+        if(esFestivoHoy===true||dowFinal===6) R.tpHasta2hFestivos++;
+        else if(dowFinal===5) R.tpHasta2hSabados++;
+        else R.tpHasta2hLaborables++;
+      }
+      else {
+        R.tpMas2h++;
+        /* DEV-010R14 — Subtipo 4A4F, misma clasificación y precedencia. */
+        if(esFestivoHoy===true||dowFinal===6) R.tpMas2hFestivos++;
+        else if(dowFinal===5) R.tpMas2hSabados++;
+        else R.tpMas2hLaborables++;
+      }
     }
     var ce=tcComputosEspecificosNormalizar(jr.computosEspecificos); /* reutiliza el saldo existente */
     if(ce.tiempoDesplazamiento.minutos!=null) R.td+=ce.tiempoDesplazamiento.minutos;
@@ -7432,12 +7736,12 @@ function tcResumenLaboralMes(anio,mes){
     if(s.estado==='computable'){
       if(s.tipo==='feria') R.solapeFeria+=s.minutosSolape;
       else if(s.tipo==='semana_santa') R.solapeSemanaSanta+=s.minutosSolape;
-    } else if(s.estado==='pendiente_revision') pendDia=true;
+    } else if(s.estado==='pendiente_revision'){ R.solapePendienteDias++; pendDia=true; } /* DEV-010R15 — un día pendiente cuenta una sola vez */
     var ex=tcCalcularExcesoConduccion(jr);
     if(ex.estado==='computable'){
       R.excesoFisico+=ex.minutosExcesoFisico;
       R.excesoEquivalente+=ex.minutosEquivalentesHoraExtra;
-    } else if(ex.estado==='pendiente_revision') pendDia=true;
+    } else if(ex.estado==='pendiente_revision'){ R.excesoPendienteDias++; pendDia=true; } /* DEV-010R16 — un día pendiente cuenta una sola vez; NO suma minutos a excesoEquivalente */
     if(tcComputosRevisionPendiente(jr.computosEspecificos)) pendDia=true;
     if(jr.requiereRevision) pendDia=true;
     if(pendDia) R.diasPendientesRevision++;
@@ -7461,9 +7765,11 @@ function tcResumenLaboral(anio,mes){
   var a=parseInt(anio,10);
   var meses=[]; for(var m=1;m<=12;m++) meses.push(tcResumenLaboralMes(a,m));
   var claves=['computoOficialMinutos','ampliacionesConfirmadas','ampliacionesPendientes','horasExtraordinarias',
-    'nocturnidadGeneral','nocturnidadSemanaSanta','nocturnidadFeria','solapeFeria','solapeSemanaSanta',
-    'excesoFisico','excesoEquivalente','td','dejeNormal','extraCalle7',
+    'nocturnidadGeneral','nocturnidadSemanaSanta','nocturnidadFeria','solapeFeria','solapeSemanaSanta','solapePendienteDias', /* DEV-010R15 */
+    'excesoFisico','excesoEquivalente','excesoPendienteDias','td','dejeNormal','extraCalle7', /* DEV-010R16 */
     'partidoDias','tpHasta2h','tpMas2h','tpPendiente',
+    'tpHasta2hLaborables','tpHasta2hSabados','tpHasta2hFestivos', /* DEV-010R14 */
+    'tpMas2hLaborables','tpMas2hSabados','tpMas2hFestivos', /* DEV-010R14 */
     'primaTardeDias','plusSabadoDias','plusDomingoDias', /* DEV-008R2 */
     'tpMensualUnidades','tpDiarioUnidades', /* DEV-008R3 */
     'festivoTrabajadoDias','festivoEspecialDias','domingoRamosDias','festivoDesplazadoDias', /* DEV-008R10 */
@@ -7696,6 +8002,24 @@ function tcNomRenderProvisional(data){
   }
   var NOM_AUTORIZADO=(NOM_ECON==='autorizado');
 
+  /* ===================== DEV-010R13 — TRAMO ÚNICO PARA ANTIGÜEDAD Y 4A31
+     El tramo de antigüedad vigente (tcPerfilCalcularTramo, ya resuelto y guardado
+     en _perfilNom.tramo por tcPerfilInfoNomina) se lee UNA SOLA VEZ y se reutiliza
+     para dos cosas: la fila de antigüedad (devengo) y las HORAS EXTRAORDINARIAS
+     (4A31). Solo tiene valor útil en vista mensual y con perfil AUTORIZADO
+     (Conductor-Perceptor); en cualquier otro caso queda null y no se consulta ningún
+     ID salarial de horas extra. Correspondencia EXACTA tramo → ID de la tabla activa
+     (un único ID por tramo; jamás se suman tramos ni se usan búsquedas aproximadas):
+       MENOS2 → 4A31_HE_MENOS2   2 → 4A31_HE_2   4 → 4A31_HE_4   9 → 4A31_HE_9
+       14 → 4A31_HE_14   19 → 4A31_HE_19   24 → 4A31_HE_24
+     INVALIDO / NO_APLICABLE (o tramo no económico) → sin ID: cero consultas. */
+  var _tramoNom=(NOM_AUTORIZADO && esMes && _perfilNom && _perfilNom.estado==='ok')
+    ? _perfilNom.tramo : null;
+  var HE_ID={ 'MENOS2':'4A31_HE_MENOS2', '2':'4A31_HE_2', '4':'4A31_HE_4',
+              '9':'4A31_HE_9', '14':'4A31_HE_14', '19':'4A31_HE_19', '24':'4A31_HE_24' };
+  var _heIdSal=(_tramoNom && Object.prototype.hasOwnProperty.call(HE_ID,_tramoNom))
+    ? HE_ID[_tramoNom] : null;
+
   /* Periodo de liquidación (dato fiable a partir del mes/año seleccionado).
      DEV-007R8 — El nº de días naturales del mes NO se usa como cantidad del
      salario base; solo se emplea para el rango de fechas del periodo. */
@@ -7748,15 +8072,80 @@ function tcNomRenderProvisional(data){
      la fila cuyo valor sea 0, así que nunca se muestran ambas a la vez. */
   add('4A10','Turno partido','unid',R.tpMensualUnidades,'días','4A10_PARTIDO_MES','once',true);
   add('4A41','Turno partido diario','unid',R.tpDiarioUnidades,'días','4A41_PARTIDO_DIA','dias',true);
-  add('4A4E','TP hasta 2 horas','unid',R.tpHasta2h,'ud.');
-  add('4A4F','TP mayor de 2 horas','unid',R.tpMas2h,'ud.');
-  add('4A31','Horas extraordinarias','minutos',R.horasExtraordinarias);
+  /* DEV-010R14 — Compensación diaria por turno partido según la duración del
+     descanso intermedio, desglosada por clasificación del día (Laborable/Sábado/
+     Festivo). Sustituye a las dos filas genéricas pendientes anteriores (4A4E/4A4F
+     sin ID). Cada fila: solo aparece si su cantidad > 0 (add() oculta el 0);
+     consulta ÚNICAMENTE su ID EXACTO por resolverImporte(); modo 'dias' (unidades ×
+     importe unitario); cotiza=true (Base CC ordinaria → participa en Base CC/CP,
+     IRPF, cotizaciones y líquido). No se hardcodea ningún importe ni se busca por
+     código/nombre/aproximación. AVISO: el último ID contiene 'MAYOT' (no 'MAYOR')
+     de forma intencionada; debe coincidir literalmente con la tabla salarial. */
+  add('4A4E','TP hasta 2 horas - Laborable','unid',R.tpHasta2hLaborables,'días','4A4E_TP_HASTA_2H_LABORABLES','dias',true);
+  add('4A4E','TP hasta 2 horas - Sábado','unid',R.tpHasta2hSabados,'días','4A4E_TP_HASTA_2H_SABADOS','dias',true);
+  add('4A4E','TP hasta 2 horas - Festivo','unid',R.tpHasta2hFestivos,'días','4A4E_TP_HASTA_2H_FESTIVOS','dias',true);
+  add('4A4F','TP mayor de 2 horas - Laborable','unid',R.tpMas2hLaborables,'días','4A4F_TP_MAYOR_2H_LABORABLES','dias',true);
+  add('4A4F','TP mayor de 2 horas - Sábado','unid',R.tpMas2hSabados,'días','4A4F_TP_MAYOR_2H_SABADOS','dias',true);
+  add('4A4F','TP mayor de 2 horas - Festivo','unid',R.tpMas2hFestivos,'días','4A4F_TP_MAYOT_2H_FESTIVOS','dias',true);
+  /* DEV-010R14 — Turno partido cuyo descanso intermedio NO se conoce (gap==null):
+     una SOLA fila informativa. cod/idSal null → resolverImporte devuelve «Pdte.»
+     SIN consultar la tabla salarial (la guarda !idSal retorna antes de leerla) y
+     fija todosImportes=false, arrastrando total devengado, deducciones y líquido a
+     «Pdte.». Nunca se calcula una nómina parcial omitiendo un partido sin clasificar. */
+  add(null,'Turno partido pendiente de clasificar','unid',R.tpPendiente,'días');
+  /* DEV-010R13 — HORAS EXTRAORDINARIAS conectadas. R.horasExtraordinarias llega en
+     MINUTOS; se resuelve por hora con el ID EXACTO del tramo (_heIdSal) y modo
+     'horas': (minutos/60)×importe_hora, sin redondear minutos ni horas (solo el
+     importe final a céntimos). cotiza=false: NO forma parte de la Base CC ordinaria
+     (se acumula aparte en horasExtraCent). Si R.horasExtraordinarias===0, add() no
+     crea fila ni se consulta ningún ID. Con tramo INVALIDO/NO_APLICABLE (o sin
+     autorizar) _heIdSal es null: resolverImporte devuelve «Pdte.» sin consultar. */
+  add('4A31','Horas extraordinarias','minutos',R.horasExtraordinarias,null,_heIdSal,'horas',false);
   add('4A33','Horas nocturnas','minutos',R.nocturnidadGeneral,null,'4A33_NOCTURNIDAD_GENERAL','horas',true);
   add('4B25','Horas nocturnas Semana Santa','minutos',R.nocturnidadSemanaSanta,null,'4B25_NOCT_SS','horas',true);
   add('4B25','Horas nocturnas Feria','minutos',R.nocturnidadFeria,null,'4B25_NOCT_FERIA','horas',true);
-  add('4A58','Solape Semana Santa','minutos',R.solapeSemanaSanta); /* DEV-007R8 */
-  add('4A59','Solape Feria','minutos',R.solapeFeria);
-  add('4A82','Aplicación Artículo 20 d)','minutos',R.excesoEquivalente);
+  /* DEV-010R15 — Solapes de fiestas primaverales conectados económicamente con la
+     tabla salarial ACTIVA por ID EXACTO y modo 'horas'. R.solapeSemanaSanta y
+     R.solapeFeria llegan en MINUTOS (el formato visible HH.MM NO es decimal):
+     fórmula (minutos/60)×importe_hora, sin redondear minutos ni horas antes de
+     multiplicar; solo el importe final se redondea a céntimos con los helpers
+     existentes (resolverImporte → tcNomEuroACentimos). cotiza=true → cotizable
+     ordinario: participa en Base CC, Base CP, IRPF, cotizaciones y líquido, y se
+     suma una sola vez a totalCent y cotizableOrdinarioCent. Cada concepto se
+     resuelve exclusivamente por su único ID; la etiqueta «€/servicio» del PDF es
+     errónea y no interviene. Sin minutos, add() no crea fila ni consulta la tabla. */
+  add('4A58','Solape Semana Santa','minutos',R.solapeSemanaSanta,null,'4A58_SOLAPE_FFPP_SEMANA_SANTA','horas',true);
+  add('4A59','Solape Feria','minutos',R.solapeFeria,null,'4A59_SOLAPE_FFPP_FERIA','horas',true);
+  /* DEV-010R15 — Solapes de fiestas PENDIENTES de revisión: una SOLA fila
+     informativa cuando R.solapePendienteDias>0. cod/idSal null → resolverImporte
+     devuelve «Pdte.» SIN consultar la tabla salarial y fija todosImportes=false,
+     bloqueando total devengado, total a deducir y líquido provisional. Nunca se
+     calcula una nómina parcial omitiendo un posible solape. La cantidad es el
+     número de días pendientes. */
+  add(null,'Solape pendiente de revisión','unid',R.solapePendienteDias,'días');
+  /* DEV-010R16/R17 — Aplicación Artículo 20 d) (4A82) conectada económicamente con la
+     tabla salarial ACTIVA usando el MISMO ID EXACTO de hora extraordinaria que las
+     horas extraordinarias según el tramo de antigüedad (_heIdSal, 4A31_HE_*). No se
+     crea ningún ID 4A82 ni se busca por código/nombre/aproximación. R.excesoEquivalente
+     ya llega con los minutos DOBLES calculados por tcCalcularExcesoConduccion (exceso
+     físico ×2): NO se vuelve a multiplicar. Modo 'horas': (R.excesoEquivalente/60)×
+     importe_hora, sin redondear minutos ni horas; solo el importe final se redondea a
+     céntimos con los helpers monetarios existentes. DEV-010R17 — cotiza=true: aunque el
+     PRECIO por hora es el de la hora extraordinaria (_heIdSal), 4A82 NO es remuneración
+     de horas extraordinarias: es un concepto COTIZABLE ORDINARIO. Por eso entra una sola
+     vez en cotizableOrdinarioCent (Base CC → Base CP) y en el IRPF vía totalCent, pero
+     NO se acumula en horasExtraCent ni genera la deducción /390 (la nómina oficial de
+     abril lo confirma: B. H.Extras y /390 se calculan solo sobre 4A31). Sin minutos,
+     add() no crea fila ni consulta la tabla; con _heIdSal null (no autorizado/tramo no
+     económico) resolverImporte devuelve «Pdte.» sin consultar. */
+  add('4A82','Aplicación Artículo 20 d)','minutos',R.excesoEquivalente,null,_heIdSal,'horas',true);
+  /* DEV-010R16 — Exceso de conducción PENDIENTE de revisión: una SOLA fila informativa
+     cuando R.excesoPendienteDias>0. cod/idSal null → resolverImporte devuelve «Pdte.»
+     SIN consultar la tabla salarial y fija todosImportes=false, bloqueando total
+     devengado, deducciones y líquido. Si coexisten excesos computables y días
+     pendientes, la fila 4A82 muestra el importe computable y esta fila bloquea los
+     totales. La cantidad es el número de días pendientes. */
+  add(null,'Exceso de conducción pendiente de revisión','unid',R.excesoPendienteDias,'días');
   /* DEV-010R9 — Cómputo mensual de tiempo de desplazamiento (T.D.). Se conecta
      AQUÍ con la tabla salarial activa mediante el ID salarial EXACTO
      49A6_DESPLAZAMIENTO y modo 'horas'. R.td llega en MINUTOS acumulados del mes
@@ -7902,12 +8291,25 @@ function tcNomRenderProvisional(data){
   var cotizableOrdinarioCent=(sbRes.cent!=null)?sbRes.cent:0;
   var salarioBaseCent=(sbRes.cent!=null)?sbRes.cent:null; /* referencia para prorrata/tope */
   var antiguedadCent=0; /* MENOS2 (o sin fila de antigüedad): 0 */
+  /* DEV-010R13/R17 — Importe de HORAS EXTRAORDINARIAS (4A31) en CÉNTIMOS, acumulado de
+     forma INDEPENDIENTE: NO entra en cotizableOrdinarioCent (no es Base CC ordinaria).
+     Sí se suma una sola vez a totalCent en el bucle de conceptos (la fila 4A31 va en
+     'filas' con cotiza=false), por lo que el IRPF ya lo incluye. Es la base ÚNICA de la
+     deducción /390. 4A82 NO participa aquí (es cotizable ordinario). Permanece 0 si no
+     hay horas extraordinarias o si su importe queda pendiente. */
+  var horasExtraCent=0;
 
   /* Resto de conceptos (solo los de cantidad ≠ 0). Importe € por ID exacto. */
   filas.forEach(function(f){
     var res=resolverImporte(f.idSal,f.modo,f.dias);
     if(res.cent==null){ todosImportes=false; }
     else { totalCent+=res.cent; if(f.cotiza) cotizableOrdinarioCent+=res.cent; }
+    /* DEV-010R13/R17 — SOLO la fila 4A31 alimenta el acumulador de horas extraordinarias
+       horasExtraCent (una sola vez, ya sumado a totalCent por el bloque anterior; nunca a
+       cotizableOrdinarioCent). 4A82 NO se acumula aquí: es cotizable ordinario, no
+       remuneración de horas extraordinarias. Si su importe está pendiente, res.cent==null
+       ya ha fijado todosImportes=false y horasExtraCent permanece 0. */
+    if(f.cod==='4A31' && res.cent!=null){ horasExtraCent=res.cent; }
     h+=descCelda(f.cod,f.desc)
       +'<div class="n">'+tcEsc(f.cant)+'</div>'
       +'<div class="n">'+res.inner+'</div>'
@@ -7931,7 +8333,11 @@ function tcNomRenderProvisional(data){
      Las categorías NO autorizadas no entran aquí: cero consultas ANTIGUEDAD_CP_*. */
   var avisoAntTramo=null;
   if(NOM_AUTORIZADO && esMes){
-    var _tramoAnt=(_perfilNom && _perfilNom.estado==='ok') ? _perfilNom.tramo : null;
+    /* DEV-010R13 — Reutiliza el MISMO tramo ya calculado para las horas
+       extraordinarias (una sola resolución del tramo para ambos conceptos). Dentro
+       de este bloque NOM_AUTORIZADO && esMes son ciertos, por lo que _tramoNom
+       equivale exactamente al valor histórico _perfilNom.tramo. */
+    var _tramoAnt=_tramoNom;
     /* Correspondencia EXACTA tramo → ID (sin fallback ni aproximación). */
     var ANT_ID={ '2':'ANTIGUEDAD_CP_2', '4':'ANTIGUEDAD_CP_4', '9':'ANTIGUEDAD_CP_9',
                  '14':'ANTIGUEDAD_CP_14', '19':'ANTIGUEDAD_CP_19', '24':'ANTIGUEDAD_CP_24' };
@@ -7953,13 +8359,14 @@ function tcNomRenderProvisional(data){
     /* MENOS2 (o cualquier valor no económico): sin fila y aporta cero. */
   }
 
-  /* ===================== DEV-010R12 — II · DEDUCCIONES: IRPF (/401) + COTIZACIONES
-     SOCIALES DEL TRABAJADOR (/350, /370, /380)
-     Conecta con la Nómina Provisional mensual el IRPF (formula de R11, INALTERADA)
-     y las tres cotizaciones sociales del trabajador. Todos los porcentajes se leen
-     EXCLUSIVAMENTE de la configuración ya guardada mediante window.tcDescuentosLeer()
-     (config.irpf, config.contingenciasComunes, config.desempleo,
-     config.formacionProfesional). NUNCA se hardcodean.
+  /* ===================== DEV-010R12/R13 — II · DEDUCCIONES: IRPF (/401) + COTIZACIONES
+     SOCIALES DEL TRABAJADOR (/350, /370, /380) + HORAS EXTRAORDINARIAS (/390)
+     Conecta con la Nómina Provisional mensual el IRPF (formula de R11, INALTERADA),
+     las tres cotizaciones sociales del trabajador y (DEV-010R13) la deducción de
+     horas extraordinarias /390. Todos los porcentajes se leen EXCLUSIVAMENTE de la
+     configuración ya guardada mediante window.tcDescuentosLeer() (config.irpf,
+     config.contingenciasComunes, config.desempleo, config.formacionProfesional y
+     config.horasExtraordinarias). NUNCA se hardcodean.
 
      El apartado solo se muestra en vista mensual y con perfil AUTORIZADO
      (Conductor-Perceptor). Los importes SOLO se calculan sobre un total devengado
@@ -7975,25 +8382,32 @@ function tcNomRenderProvisional(data){
        baseCCBruta     = cotizableOrdinarioCent + prorrataEstCent
        topeEstCent     = Math.round(476112 × salarioBaseCent / 219653)
        baseCCCent      = Math.min(baseCCBruta, topeEstCent)
-       baseCPCent      = baseCCCent   (en R12 las horas extras aún no tienen importe
-                         conectado, por eso la base de desempleo/formación coincide
-                         con la de contingencias comunes; /390 NO se muestra)
+       baseCPCent      = baseCCCent + horasExtraCent   (DEV-010R13: cuando hay un
+                         importe válido de horas extraordinarias se suma a la Base
+                         Profesional; sin horas extras horasExtraCent=0 y baseCP=baseCC)
      Se comprueba Number.isSafeInteger antes y después de cada operación; si algún
      producto no es seguro o algún importe está pendiente, NO se calculan cotizaciones.
 
-     Las HORAS EXTRAORDINARIAS (4A31) no se conectan aún: no forman parte de la base
-     de contingencias comunes y solo se sumarán a la base de desempleo/formación
-     cuando exista un importe devengado válido en una versión futura. La línea /390
-     no se muestra en R12. */
+     DEV-010R13 — Las HORAS EXTRAORDINARIAS (4A31) NO forman parte de la Base CC
+     ordinaria (/350 sigue sobre baseCC), pero SÍ se suman a la Base Profesional
+     (baseCP) sobre la que se calculan desempleo /370 y formación /380. La deducción
+     del trabajador por horas extraordinarias /390 se muestra y calcula más abajo. */
   var irpfCalculado=false;         /* true solo si se resolvió un importe de IRPF real */
   var cotizacionesCalculadas=false;/* true solo si /350, /370 y /380 se resolvieron */
   var irpfCent=null, contingenciasCent=null, desempleoCent=null, formacionCent=null;
   var avisoDescuentos=null;        /* 'sinConfig' | 'noVerificable' (solo con total válido) */
+  /* DEV-010R13 — Deducción de horas extraordinarias /390. hayHE decide si la fila
+     debe existir (solo cuando R.horasExtraordinarias>0). heDescuentoCalculado sólo
+     es true si se resolvió un importe de /390 seguro; en ese caso participa una única
+     vez en el total a deducir y en el líquido. */
+  var hayHE=(R.horasExtraordinarias>0); /* DEV-010R17 — SOLO 4A31; 4A82 no genera /390 */
+  var heDescuentoCalculado=false, heDescuentoCent=null;
   if(NOM_AUTORIZADO && esMes){
     var irpfPctInner=celdaPend, irpfImpInner=celdaPend;
     var ccPctInner=celdaPend,  ccImpInner=celdaPend;   /* /350 contingencias comunes */
     var duPctInner=celdaPend,  duImpInner=celdaPend;   /* /370 desempleo */
     var fpPctInner=celdaPend,  fpImpInner=celdaPend;   /* /380 formación profesional */
+    var hePctInner=celdaPend,  heImpInner=celdaPend;   /* /390 horas extraordinarias */
     /* Solo se calcula sobre un total devengado COMPLETO y válido. */
     if(todosImportes && Number.isSafeInteger(totalCent)){
       /* Lectura protegida de la configuración (nunca lanza). Estados:
@@ -8056,7 +8470,17 @@ function tcNomRenderProvisional(data){
           if(!Number.isSafeInteger(_tope)) return;
           var _baseCC=Math.min(_bruta,_tope);
           if(!Number.isSafeInteger(_baseCC)) return;
-          _bases={ baseCC:_baseCC, baseCP:_baseCC }; /* R12: baseCP = baseCC (sin horas extras) */
+          /* DEV-010R13 — Base Profesional (baseCP) = Base CC + horas extraordinarias.
+             La suma se hace ÚNICAMENTE con enteros seguros. Sin horas extraordinarias
+             (o con importe pendiente, que aquí ya no llegaría por todosImportes),
+             horasExtraCent=0 y baseCP=baseCC. La Base CC (para /350) queda intacta. */
+          if(!Number.isSafeInteger(horasExtraCent)) return;
+          var _baseCP=_baseCC;
+          if(horasExtraCent>0){
+            _baseCP=_baseCC+horasExtraCent;
+            if(!Number.isSafeInteger(_baseCP)) return;
+          }
+          _bases={ baseCC:_baseCC, baseCP:_baseCP };
         })();
 
         /* --- COTIZACIONES (/350, /370, /380) con el helper seguro único. --- */
@@ -8073,6 +8497,26 @@ function tcNomRenderProvisional(data){
           } else { avisoDescuentos='noVerificable'; }
         } else if(_pCC==null || _pDU==null || _pFP==null){
           avisoDescuentos='noVerificable'; /* algún porcentaje social inválido */
+        }
+
+        /* --- DEV-010R13 — DEDUCCIÓN /390 (horas extraordinarias del trabajador).
+           Solo cuando hay horas extraordinarias (R.horasExtraordinarias>0). El
+           porcentaje se lee EXCLUSIVAMENTE de config.horasExtraordinarias y el
+           importe se obtiene con el helper seguro único aplicado a horasExtraCent.
+           Con porcentaje 0 el helper devuelve 0 → la fila se muestra a 0,00 % y
+           0,00 €. Si el porcentaje es inválido o el cálculo no es seguro, la fila
+           queda «Pdte.» y el total a deducir/líquido no se calculan. --- */
+        if(hayHE){
+          var _pHE=_pctVal(_cfg.horasExtraordinarias);
+          if(_pHE!=null && Number.isSafeInteger(horasExtraCent)){
+            var _he=tcNomAplicarPorcentaje(horasExtraCent, _pHE);
+            if(_he!=null){
+              heDescuentoCent=_he;
+              hePctInner=tcEsc(tcNomFmtPct(_pHE));
+              heImpInner=tcEsc(tcNomFmtCentimos(_he));
+              heDescuentoCalculado=true;
+            } else { avisoDescuentos='noVerificable'; }
+          } else { avisoDescuentos='noVerificable'; }
         }
         /* _bases==null (importe pendiente o producto no seguro): filas «Pdte.» sin
            calcular; con total válido esto solo ocurriría por desbordamiento. */
@@ -8099,10 +8543,17 @@ function tcNomRenderProvisional(data){
       +'<div class="n">'+fpPctInner+'</div>'
       +'<div class="n"></div>'
       +'<div class="n">'+fpImpInner+'</div>';
+    /* DEV-010R13 — /390 solo aparece cuando hay horas extraordinarias. */
+    if(hayHE){
+      h+=descCelda('/390','Trabajador horas extraordinarias')
+        +'<div class="n">'+hePctInner+'</div>'
+        +'<div class="n"></div>'
+        +'<div class="n">'+heImpInner+'</div>';
+    }
   }
   h+='</div></div>';
-  /* IRPF + cotizaciones sociales conectados en R12. Las horas extraordinarias (/390)
-     no se muestran: aún no existe un importe devengado conectado. */
+  /* IRPF + cotizaciones sociales conectados en R12; DEV-010R13 añade la deducción
+     de horas extraordinarias /390 (solo cuando R.horasExtraordinarias>0). */
 
   /* --- Totales. Devengado real solo cuando todo tiene importe. DEV-010R12 — El
      total a deducir y el líquido provisional SOLO se calculan cuando IRPF,
@@ -8112,12 +8563,17 @@ function tcNomRenderProvisional(data){
        totalDeduccionesCent = irpfCent + contingenciasCent + desempleoCent + formacionCent
        liquidoCent          = totalCent − totalDeduccionesCent --- */
   var mostrarTotal=(esMes&&todosImportes&&Number.isSafeInteger(totalCent));
+  /* DEV-010R13 — Cuando hay horas extraordinarias, la deducción /390 DEBE estar
+     calculada de forma segura para completar el total; si falta, todo queda «Pdte.»
+     (nunca un líquido parcial). Sin horas extraordinarias no interviene. */
   var _dedC=(irpfCalculado && cotizacionesCalculadas &&
              Number.isSafeInteger(irpfCent) && Number.isSafeInteger(contingenciasCent) &&
-             Number.isSafeInteger(desempleoCent) && Number.isSafeInteger(formacionCent));
+             Number.isSafeInteger(desempleoCent) && Number.isSafeInteger(formacionCent) &&
+             (!hayHE || (heDescuentoCalculado && Number.isSafeInteger(heDescuentoCent))));
   var totalDeduccionesCent=null, liquidoCent=null, calculoCompleto=false;
   if(mostrarTotal && _dedC){
-    var _td=irpfCent+contingenciasCent+desempleoCent+formacionCent;
+    /* /390 se suma EXACTAMENTE una vez y solo si hay horas extraordinarias. */
+    var _td=irpfCent+contingenciasCent+desempleoCent+formacionCent+(hayHE?heDescuentoCent:0);
     if(Number.isSafeInteger(_td)){
       var _liq=totalCent-_td;
       if(Number.isSafeInteger(_liq)){
@@ -8199,6 +8655,16 @@ window.tcRenderNomina=function(){
   if(NOM_TAB==='comparacion'){ cont.innerHTML=tcNomRenderComparacion(); return; }
   var data=tcResumenLaboral(NOM_ANIO,NOM_MES);
   cont.innerHTML=(NOM_TAB==='provisional')?tcNomRenderProvisional(data):tcNomRenderResumen(data);
+  /* NEXO-003R1 (tarea 6) — Marcado SOLO visual, después del render: distingue el
+     resumen MENSUAL (primera tabla de 3 columnas) para que en móvil se vea
+     completo sin scroll horizontal. La tabla anual (12 meses) conserva su
+     .nom-scroll y su desplazamiento. No se tocan números ni cálculos. */
+  if(NOM_TAB==='resumen'){
+    try{
+      var _scrolls=cont.querySelectorAll('.nom-scroll');
+      if(_scrolls&&_scrolls[0]) _scrolls[0].classList.add('nom-scroll-mes');
+    }catch(_e){}
+  }
 };
 
 /* Delegación de eventos de la pantalla Nómina (aditivo, sin tocar otras). */
@@ -15023,10 +15489,11 @@ window.tcMsgAbrirDia=function(fecha){
       if(pantalla==='main'){
         body.innerHTML=
           '<div class="menu-grid">'+
+          /* NEXO-003R1 (tarea 5) — Menú principal de Administración sin accesos
+             duplicados: se retiran "Copias de Seguridad" (vive en Más → Copias de
+             seguridad) y "Configuración". Las funciones internas se conservan. */
           '<button class="menu-btn" onclick="window.adminIrAPublic(\'datosOficiales\')"><span class="menu-icon">📂</span><span class="menu-label">Datos Oficiales</span></button>'+
           '<button class="menu-btn" onclick="window.adminIrAPublic(\'estadoSistema\')"><span class="menu-icon">🗄</span><span class="menu-label">Estado del Sistema</span></button>'+
-          '<button class="menu-btn" onclick="window.adminAccionCopias()"><span class="menu-icon">💾</span><span class="menu-label">Copias de Seguridad</span></button>'+
-          '<button class="menu-btn" onclick="window.adminAccionConfiguracion()"><span class="menu-icon">⚙</span><span class="menu-label">Configuración</span></button>'+
           '<button class="menu-btn" onclick="window.adminCerrarTodo()"><span class="menu-icon">🚪</span><span class="menu-label">Salir</span></button>'+
           '</div>';
       } else if(pantalla==='datosOficiales'){
@@ -15185,6 +15652,462 @@ window.tcMsgAbrirDia=function(fecha){
       if(bt&&!bt._msgWired){ bt._msgWired=true; bt.addEventListener('click',marcarTodos); }
     }
     function init(){ wire(); if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  })();
+  </script>
+
+  <!-- ===================== NEXO FASE 1 — NAV INFERIOR + PANEL «MÁS» ===================== -->
+  <nav id="nexoBottomNav" class="nexo-bottom-nav" aria-label="Navegación principal NEXO">
+    <button type="button" class="nexo-nav-btn" data-nav="inicio">
+      <span class="nexo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11 12 3.5l8.5 7.5"/><path d="M5.5 9.7V20h13V9.7"/></svg></span><span class="nexo-nav-text">Inicio</span>
+    </button>
+    <button type="button" class="nexo-nav-btn" data-nav="calendario">
+      <span class="nexo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg></span><span class="nexo-nav-text">Calendario</span>
+    </button>
+    <button type="button" class="nexo-nav-btn" data-nav="recaudaciones">
+      <span class="nexo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></span><span class="nexo-nav-text">Recaudación</span>
+    </button>
+    <button type="button" class="nexo-nav-btn" data-nav="nomina">
+      <span class="nexo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H18"/><rect x="3" y="8" width="18" height="12" rx="2.5"/><path d="M16 12.5h5v3h-5a1.5 1.5 0 0 1 0-3z"/></svg></span><span class="nexo-nav-text">Nómina</span>
+    </button>
+    <button type="button" class="nexo-nav-btn" data-nav="mas">
+      <span class="nexo-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/></svg></span><span class="nexo-nav-text">Más</span>
+    </button>
+  </nav>
+
+  <script>
+  /* ============================================================
+     NEXO FASE 1 — Cableado visual (aislado, sin lógica económica)
+     Solo navega/abre modales ya existentes reutilizando sus APIs.
+     ============================================================ */
+  (function(){
+    'use strict';
+    var nav   = document.getElementById('nexoBottomNav');
+    if(!nav) return;
+
+    document.body.classList.add('nexo-has-nav');
+
+    /* --- Estado activo de la barra inferior --- */
+    // Mapa tabId -> botón de navegación destacado
+    var MAP = {
+      inicio:'inicio',
+      calendario:'calendario',
+      recaudacion:'recaudaciones', recaudaciones:'recaudaciones', liquidaciones:'recaudaciones',
+      importar:'recaudaciones', estadillo:'recaudaciones', historial:'recaudaciones',
+      nomina:'nomina',
+      backup:'mas', mas:'mas'
+    };
+    function nexoActualizarNav(tabId){
+      var destino = MAP[tabId] || 'inicio';
+      nav.querySelectorAll('.nexo-nav-btn').forEach(function(b){
+        var activo = b.getAttribute('data-nav') === destino;
+        b.classList.toggle('activo', activo);
+        if(activo){ b.setAttribute('aria-current','page'); }
+        else { b.removeAttribute('aria-current'); }
+      });
+    }
+    window.nexoActualizarNav = nexoActualizarNav;
+
+    /* --- Botones de la barra inferior (NEXO-003) ---
+       Recaudación y Más abren ahora sus pantallas completas reutilizando
+       abrirSeccion(); ya no existe el panel inferior tipo hoja. */
+    nav.querySelectorAll('.nexo-nav-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var destino = btn.getAttribute('data-nav');
+        if(destino === 'inicio'){ volverAlMenu(); }
+        else if(destino === 'recaudaciones'){ abrirSeccion('recaudacion'); }
+        else if(destino === 'mas'){ abrirSeccion('mas'); }
+        else { abrirSeccion(destino); }   // calendario | nomina
+      });
+    });
+
+    /* Estado inicial coherente con la pantalla Inicio */
+    function nexoInit(){ nexoActualizarNav('inicio'); }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', nexoInit);
+    else nexoInit();
+  })();
+  </script>
+
+  <!-- =========================================================
+       NEXO-002 — CAPA DE CONSOLIDACIÓN VISUAL (última: gana la cascada)
+       Solo estilos. No altera lógica, cálculos ni datos.
+       Unifica cabecera, tarjetas, formularios, tablas, modales,
+       pestañas, iconografía SVG y modo oscuro en TODAS las pantallas.
+       ========================================================= -->
+  <style id="nexo002-consolidacion">
+  /* --- Lienzo global: blanco roto unificado --- */
+  html, body { background: var(--nexo-bg); }
+  body { -webkit-text-size-adjust:100%; }
+  /* Modo oscuro real del lienzo (valores literales: el <body>/<html> no
+     resuelven var() con el contexto oscuro por la propagación al canvas).
+     Los textos de contenido usan sus propias reglas var(--color-text*). */
+  body.dark { background:#171313; color:#f1efef; }
+
+  /* --- Cabecera granate limpia + iconografía SVG --- */
+  .app-header { padding:12px 16px; }
+  .icon-btn { display:inline-flex; align-items:center; justify-content:center; padding:8px; width:40px; height:40px; }
+  .icon-btn svg { width:22px; height:22px; display:block; }
+  #headerIcon { display:inline-flex; align-items:center; }
+  #headerIcon svg { width:24px; height:24px; display:block; }
+  #btnMensajes { position:relative; }
+  .volver-btn { width:40px; height:40px; padding:8px; }
+  .volver-btn svg { width:22px; height:22px; }
+  @media (max-width:600px){
+    .icon-btn { width:38px; height:38px; padding:7px; }
+    .icon-btn svg { width:21px; height:21px; }
+  }
+
+  /* --- Iconos SVG en tarjetas de Inicio y navegación --- */
+  .menu-icon { display:flex; align-items:center; justify-content:center; line-height:0; }
+  .menu-icon svg { width:26px; height:26px; color:var(--color-primary); }
+  .nexo-nav-icon { display:flex; align-items:center; justify-content:center; height:24px; line-height:0; }
+  .nexo-nav-icon svg { width:24px; height:24px; }
+  .nexo-mas-ic { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; flex:0 0 auto; color:var(--color-primary); line-height:0; }
+  .nexo-mas-ic svg { width:22px; height:22px; }
+
+  /* --- Inicio compacto: menos altura, menos scroll --- */
+  .menu-principal { gap:12px; padding:12px 12px 0; min-height:auto; }
+  .nexo-inicio { padding-bottom:calc(16px + var(--nexo-nav-h) + env(safe-area-inset-bottom)); }
+  .nexo-bloque { gap:8px; }
+  .nexo-bloque-titulo { font-size:.72rem; }
+  .nexo-card { padding:12px 14px; border-radius:14px; }
+  .menu-grid { gap:10px; }
+  .menu-btn { padding:14px 8px; border-radius:14px; border-width:1px; gap:8px; min-width:0; }
+  .menu-label { font-size:.82rem; line-height:1.15; overflow-wrap:anywhere; hyphens:auto; }
+  .menu-resumen { gap:8px; }
+  .resumen-item { padding:9px 6px; border-radius:12px; }
+  .resumen-label { font-size:.68rem; margin-bottom:2px; }
+  .resumen-valor { font-size:1rem; }
+  .watermark { opacity:.045; }
+  @media (min-width:600px){ .menu-btn { padding:18px 12px; } }
+
+  /* --- Sistema de tarjetas / formularios / tablas compacto y uniforme --- */
+  .card, .form-card, .filters, .info-box, .table-wrapper, .chart-container, .camara-card { border-radius:14px; }
+  .card { padding:16px; }
+  .form-card { padding:14px 16px; }
+  .form-row { gap:10px; margin-bottom:8px; }
+
+  /* --- Inputs y botones: altura táctil 44-48px, radios uniformes --- */
+  input, select, textarea { min-height:44px; border-radius:10px; }
+  textarea { min-height:88px; }
+  .btn { min-height:44px; border-radius:10px; padding:11px 18px; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+  .btn-sm { min-height:34px; border-radius:8px; }
+  input[type="checkbox"], input[type="radio"] { min-height:auto; }
+
+  /* --- Estados semánticos: verde ok, naranja pendiente, azul info --- */
+  .btn-secondary { background:var(--color-border); }
+
+  /* --- Encabezados de sección compactos; sin título duplicado en móvil --- */
+  #contenidoSecciones h2 {
+    font-size:1.15rem; font-weight:700; color:var(--color-primary);
+    border-bottom:none; padding-bottom:0; margin:2px 0 12px;
+  }
+  #contenidoSecciones { overflow-x:hidden; }
+  @media (max-width:600px){
+    /* El título ya aparece en la cabecera granate: se evita la duplicación
+       manteniéndolo accesible para lectores de pantalla. */
+    #contenidoSecciones > .tab-content > h2:first-child {
+      position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+      overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+    }
+  }
+
+  /* --- Tablas: cabecera granate coherente --- */
+  thead { background:var(--color-primary); }
+  tbody tr:hover { background:rgba(122,31,43,.06); }
+  body.dark tbody tr:hover { background:rgba(177,65,79,.14); }
+
+  /* --- Modales genéricos: compatibilidad real con modo oscuro --- */
+  body.dark #modalSettings > div,
+  body.dark #modalJornadaPrompt > div {
+    background:var(--color-surface) !important;
+    color:var(--color-text) !important;
+  }
+  body.dark #modalSettings h2 { color:var(--color-text) !important; }
+
+  /* --- Calendario / Jornada (#tc): remapeo a granate + modo oscuro --- */
+  #tc {
+    --brand: var(--color-primary);
+    --brand-light: #f4e8ea;
+    --bg: var(--nexo-bg);
+  }
+  body.dark #tc {
+    --bg:#171313; --surface:#241e1e; --surface2:#2d2525;
+    --text:#f1efef; --text2:#c3bbbb; --text3:#8f8686;
+    --border:#3a3232; --brand:var(--color-primary); --brand-light:#3a2226;
+  }
+  body.dark #tc .tc-ruta-wrap { background:#1f1a1a; }
+  body.dark #tc .tc-xbtn { color:var(--text2); }
+
+  /* --- Escritorio centrado (max 1000px) --- */
+  @media (min-width:900px){
+    .nexo-inicio { max-width:1000px; margin-left:auto; margin-right:auto; }
+  }
+
+  /* --- Barra inferior: área táctil e iconos homogéneos --- */
+  .nexo-nav-btn { min-height:56px; }
+  .nexo-nav-text { margin-top:2px; }
+  </style>
+
+  <!-- =========================================================
+       NEXO-003 — CAPA DE INTERFAZ (Inicio, Recaudación, Más)
+       Solo presentación y navegación. Reutiliza APIs existentes.
+       No toca cálculos, datos, almacenamiento ni fórmulas.
+       ========================================================= -->
+  <style id="nexo003-ui">
+  /* Iconos en línea dentro de botones */
+  .nexo-inline-ic{ display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; }
+  .nexo-inline-ic svg{ width:18px; height:18px; }
+  /* Icono SVG alineado con el texto (sustituye emojis decorativos) */
+  svg.nexo-ic{ width:1.05em; height:1.05em; vertical-align:-0.15em; flex:0 0 auto; display:inline-block; }
+  h2 svg.nexo-ic, h3 svg.nexo-ic{ margin-right:.35em; }
+  .banner-icono svg{ width:26px; height:26px; display:block; }
+
+  /* A. Saludo */
+  .nexo-saludo{ display:flex; align-items:center; gap:14px; }
+  .nexo-saludo-txt{ flex:1 1 auto; min-width:0; }
+  .nexo-saludo-hola{ font-size:1.15rem; font-weight:700; color:var(--color-text); line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .nexo-saludo-fecha{ font-size:.82rem; color:var(--color-text-secondary); margin-top:3px; }
+  .nexo-saludo-avatar{ flex:0 0 auto; width:44px; height:44px; border-radius:50%; background:var(--color-primary); color:#fff; display:flex; align-items:center; justify-content:center; }
+  .nexo-saludo-avatar svg{ width:26px; height:26px; }
+
+  /* B. Resumen del día */
+  .nexo-dia-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; }
+  .nexo-dia-item{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .nexo-dia-item .k{ font-size:.68rem; font-weight:600; color:var(--color-text-secondary); text-transform:uppercase; letter-spacing:.03em; }
+  .nexo-dia-item .v{ font-size:.98rem; font-weight:700; color:var(--color-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .nexo-dia-estado{ display:flex; align-items:center; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--color-border); font-size:.86rem; color:var(--color-text-secondary); font-weight:600; }
+  .nexo-est-dot{ width:9px; height:9px; border-radius:50%; background:var(--color-text-secondary); flex:0 0 auto; }
+  .nexo-dia-estado.ok .nexo-est-dot{ background:var(--color-success); }
+  .nexo-dia-estado.pend .nexo-est-dot{ background:#e6820c; }
+  .nexo-dia-estado.ok{ color:var(--color-success); }
+  .nexo-dia-estado.pend{ color:#c9700a; }
+  body.dark .nexo-dia-estado.pend{ color:#f0a340; }
+  .nexo-dia-btns{ display:flex; gap:10px; margin-top:14px; }
+  .nexo-dia-btns .btn{ flex:1 1 0; font-size:.9rem; }
+
+  /* D. Accesos rápidos — botón tipo tarjeta (idéntico a .menu-btn) */
+  .nexo-acc-btn{
+    background-color:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:14px; padding:14px 8px;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    cursor:pointer; box-shadow:var(--shadow); min-width:0;
+    transition:transform .12s ease, border-color .2s ease, box-shadow .2s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .nexo-acc-btn:active{ transform:scale(0.96); }
+  .nexo-acc-btn:hover{ border-color:var(--color-primary); box-shadow:0 4px 14px rgba(122,31,43,.15); }
+  @media (min-width:600px){ .nexo-acc-btn{ padding:18px 12px; } }
+
+  /* C. Avisos vacío */
+  .nexo-avisos-vacio{ font-size:.86rem; color:var(--color-text-secondary); padding:10px 4px; }
+
+  /* Centro de Recaudación */
+  .nexo-rec-saldo{ display:flex; flex-direction:column; align-items:flex-start; gap:4px; margin-bottom:14px; border-left:4px solid var(--color-primary); }
+  .nexo-rec-saldo-lbl{ font-size:.74rem; font-weight:600; color:var(--color-text-secondary); text-transform:uppercase; letter-spacing:.03em; }
+  .nexo-rec-saldo-val{ font-size:1.7rem; font-weight:800; color:var(--color-primary); font-variant-numeric:tabular-nums; }
+  .nexo-rec-acciones{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .nexo-rec-acciones .btn{ flex:1 1 46%; min-width:140px; }
+  .nexo-sub{ font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--color-text-secondary); margin:18px 0 10px; }
+
+  .nexo-movs{ display:flex; flex-direction:column; gap:8px; }
+  .nexo-mov{ display:flex; align-items:center; gap:12px; background:var(--color-surface); border:1px solid var(--color-border); border-radius:12px; padding:11px 13px; box-shadow:var(--shadow); }
+  .nexo-mov-ic{ flex:0 0 auto; width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; }
+  .nexo-mov-ic svg{ width:19px; height:19px; }
+  .nexo-mov-ic.rec{ background:var(--color-success-bg); color:var(--color-success); }
+  .nexo-mov-ic.liq{ background:rgba(122,31,43,.10); color:var(--color-primary); }
+  body.dark .nexo-mov-ic.liq{ background:rgba(177,65,79,.20); }
+  .nexo-mov-body{ flex:1 1 auto; min-width:0; }
+  .nexo-mov-tipo{ font-size:.92rem; font-weight:700; color:var(--color-text); }
+  .nexo-mov-fecha{ font-size:.76rem; color:var(--color-text-secondary); margin-top:1px; }
+  .nexo-mov-imp{ flex:0 0 auto; font-size:1rem; font-weight:700; font-variant-numeric:tabular-nums; }
+  .nexo-mov-imp.rec{ color:var(--color-success); }
+  .nexo-mov-imp.liq{ color:var(--color-primary); }
+
+  /* Pantalla Más */
+  .nexo-mas-perfil{ display:flex; align-items:center; gap:14px; margin-bottom:6px; }
+  .nexo-mas-perfil-av{ flex:0 0 auto; width:48px; height:48px; border-radius:50%; background:var(--color-primary); color:#fff; display:flex; align-items:center; justify-content:center; }
+  .nexo-mas-perfil-av svg{ width:28px; height:28px; }
+  .nexo-mas-perfil-nom{ font-size:1.05rem; font-weight:700; color:var(--color-text); }
+  .nexo-mas-perfil-cat{ font-size:.82rem; color:var(--color-text-secondary); margin-top:2px; }
+  .nexo-mas-lista{ display:flex; flex-direction:column; gap:8px; }
+  .nexo-mas-item{
+    display:flex; align-items:center; gap:14px; width:100%;
+    background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:12px; padding:13px 14px; min-height:52px; cursor:pointer;
+    box-shadow:var(--shadow); text-align:left; color:var(--color-text);
+    -webkit-tap-highlight-color:transparent; transition:border-color .18s ease, transform .12s ease;
+  }
+  .nexo-mas-item:active{ transform:scale(0.99); }
+  .nexo-mas-item:hover{ border-color:var(--color-primary); }
+  .nexo-mas-tx{ flex:1 1 auto; font-size:.96rem; font-weight:600; }
+  .nexo-mas-arrow{ flex:0 0 auto; color:var(--color-text-secondary); display:flex; }
+  .nexo-mas-arrow svg{ width:18px; height:18px; }
+  </style>
+
+  <script>
+  /* ============================================================
+     NEXO-003 — Interfaz Inicio / Recaudación / Más
+     Reutiliza funciones y datos globales ya existentes. Solo lee y navega.
+     ============================================================ */
+  (function(){
+    'use strict';
+    var DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+    var MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    function $(id){ return document.getElementById(id); }
+    function hoyKey(){ var d=new Date(); return (typeof tcFk==='function')?tcFk(d.getFullYear(),d.getMonth(),d.getDate()):(d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)); }
+    function perfilNombre(){
+      try{ var raw=localStorage.getItem('tc_v1_perfil_laboral'); if(!raw) return ''; var p=JSON.parse(raw); return (p&&typeof p.nombre==='string')?p.nombre.trim():''; }catch(e){ return ''; }
+    }
+    function perfilCatTexto(){
+      try{ var raw=localStorage.getItem('tc_v1_perfil_laboral'); if(!raw) return ''; var p=JSON.parse(raw);
+        if(p&&p.categoriaId){ return String(p.categoriaId).replace(/_/g,' ').toLowerCase().replace(/(^|\s)\S/g,function(c){return c.toUpperCase();}); }
+      }catch(e){}
+      return '';
+    }
+    function euro(n){ return (typeof formatearMoneda==='function')?formatearMoneda(n):((n||0).toFixed(2)+' €'); }
+
+    /* ---------- A/B: Saludo + Resumen del día ---------- */
+    function refrescarInicio(){
+      var d=new Date();
+      var nom=perfilNombre();
+      if($('nexoSaludoNombre')) $('nexoSaludoNombre').textContent = nom ? ('Hola, '+nom) : 'Hola';
+      // NEXO-003R1 (tarea 3) — Fecha en español: día de la semana con solo la
+      // primera letra en mayúscula (el resto ya va en minúsculas). El CSS ya no
+      // aplica text-transform:capitalize, para no capitalizar "de" ni el mes.
+      if($('nexoSaludoFecha')){
+        var dw=DIAS[d.getDay()]; dw=dw.charAt(0).toUpperCase()+dw.slice(1);
+        $('nexoSaludoFecha').textContent = dw+', '+d.getDate()+' de '+MES[d.getMonth()]+' de '+d.getFullYear();
+      }
+
+      // NEXO-003R1 (tarea 2 y 7) — El resumen de Inicio SOLO lee el registro del
+      // Diario (copia de solo lectura): turno y servicio del registro, inicio/fin
+      // de su jornada. No se infiere el servicio desde listaRecaudaciones.
+      var reg = (typeof window.tcGetRegistroDia==='function') ? window.tcGetRegistroDia(hoyKey()) : null;
+      var turnoTxt='—', servicioTxt='—', iniTxt='—', finTxt='—';
+      var estado='Sin datos de la jornada de hoy', estadoCls='';
+
+      if(reg){
+        if(reg.turno && typeof window.tcTurnoTag==='function'){ var t=window.tcTurnoTag(reg.turno); if(t) turnoTxt=t; }
+        else if(reg.turno) turnoTxt=String(reg.turno);
+        var jr=reg.jornada||{};
+        var ini = jr.inicioTeorico || (jr.parte1&&jr.parte1.inicioTeorico) || '';
+        var fin = jr.finTeorico || (jr.parte2&&jr.parte2.finTeorico) || (jr.parte1&&jr.parte1.finTeorico) || '';
+        if(ini) iniTxt=ini;
+        if(fin) finTxt=fin;
+        if(reg.servicio) servicioTxt=String(reg.servicio);
+        var real = (jr.horaFinRealParte2||jr.horaFinRealParte1);
+        if(real){ estado='Jornada registrada'; estadoCls='ok'; }
+        else if(reg.turno){ estado='Jornada programada'; estadoCls='pend'; }
+        else { estado='Día registrado'; estadoCls=''; }
+      }
+      if($('nexoDiaTurno')) $('nexoDiaTurno').textContent=turnoTxt;
+      if($('nexoDiaServicio')) $('nexoDiaServicio').textContent=servicioTxt;
+      if($('nexoDiaInicio')) $('nexoDiaInicio').textContent=iniTxt;
+      if($('nexoDiaFin')) $('nexoDiaFin').textContent=finTxt;
+      var est=$('nexoDiaEstado');
+      if(est){ est.className='nexo-dia-estado'+(estadoCls?(' '+estadoCls):''); if($('nexoDiaEstadoTxt')) $('nexoDiaEstadoTxt').textContent=estado; }
+
+      // C. Avisos: mostrar "sin avisos" solo si ambos banners están ocultos
+      var b1=$('bannerAviso'), b2=$('bannerBackupPendiente'), vac=$('nexoAvisosVacio');
+      if(vac){
+        var hayAviso = (b1&&b1.style.display!=='none'&&b1.textContent.trim()!=='') || (b2&&b2.style.display!=='none');
+        vac.style.display = hayAviso ? 'none' : 'block';
+      }
+    }
+    window.nexoRefrescarInicio=refrescarInicio;
+
+    function irADiaHoy(){
+      abrirSeccion('calendario');
+      setTimeout(function(){ if(typeof window.tcAbrirDiaPorFecha==='function') window.tcAbrirDiaPorFecha(hoyKey()); }, 60);
+    }
+    // NEXO-003R1 (tarea 1) — "Editar hoy" abre DIRECTAMENTE el editor del día
+    // actual (pnl-edit), exista o no registro, mediante el puente público seguro.
+    function irAEditarHoy(){
+      abrirSeccion('calendario');
+      setTimeout(function(){ if(typeof window.tcEditarDiaPorFecha==='function') window.tcEditarDiaPorFecha(hoyKey()); }, 60);
+    }
+
+    /* ---------- Recaudación (centro) ---------- */
+    function renderRecaudacionHub(){
+      // Saldo: reutiliza el valor ya calculado en Inicio (mismo cálculo, sin recalcular fórmulas)
+      var sp=$('saldoPendiente');
+      if($('nexoRecSaldo')) $('nexoRecSaldo').textContent = sp ? sp.textContent : euro(0);
+
+      // Últimos movimientos (sin línea ni servicio)
+      var movs=[];
+      try{
+        if(typeof listaRecaudaciones!=='undefined' && listaRecaudaciones){
+          listaRecaudaciones.forEach(function(r){ if(!r) return; movs.push({tipo:'Recaudación', clase:'rec', fecha:r.fecha||'', hora:(r.hora||r.horaParte1||r.horaParte2||''), importe:(parseFloat(r.total)||0)}); });
+        }
+        if(typeof listaLiquidaciones!=='undefined' && listaLiquidaciones){
+          listaLiquidaciones.forEach(function(l){ if(!l) return; movs.push({tipo:'Liquidación', clase:'liq', fecha:l.fecha||'', hora:(l.hora||''), importe:(parseFloat(l.importe)||0)}); });
+        }
+      }catch(e){}
+      movs.sort(function(a,b){ var ka=(a.fecha||'')+(a.hora||''), kb=(b.fecha||'')+(b.hora||''); return ka<kb?1:(ka>kb?-1:0); });
+      var top=movs.slice(0,8);
+      var cont=$('nexoRecMovs'), vac=$('nexoRecMovsVacio');
+      if(!cont) return;
+      cont.innerHTML='';
+      if(!top.length){ if(vac) vac.style.display='block'; return; }
+      if(vac) vac.style.display='none';
+      var svgRec='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>';
+      var svgLiq='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>';
+      top.forEach(function(m){
+        var f = (typeof formatearFecha==='function' && m.fecha) ? formatearFecha(m.fecha) : (m.fecha||'—');
+        var fh = f + (m.hora?(' · '+m.hora):'');
+        var row=document.createElement('div'); row.className='nexo-mov';
+        row.innerHTML='<span class="nexo-mov-ic '+m.clase+'">'+(m.clase==='rec'?svgRec:svgLiq)+'</span>'+
+          '<div class="nexo-mov-body"><div class="nexo-mov-tipo"></div><div class="nexo-mov-fecha"></div></div>'+
+          '<span class="nexo-mov-imp '+m.clase+'"></span>';
+        row.querySelector('.nexo-mov-tipo').textContent=m.tipo;
+        row.querySelector('.nexo-mov-fecha').textContent=fh;
+        row.querySelector('.nexo-mov-imp').textContent=(m.clase==='liq'?'−':'+')+' '+euro(m.importe);
+        cont.appendChild(row);
+      });
+    }
+    window.nexoRenderRecaudacionHub=renderRecaudacionHub;
+
+    /* ---------- Más ---------- */
+    function renderMas(){
+      var nom=perfilNombre(), cat=perfilCatTexto();
+      if($('nexoMasPerfilNombre')) $('nexoMasPerfilNombre').textContent = nom || 'Perfil sin configurar';
+      if($('nexoMasPerfilCat')) $('nexoMasPerfilCat').textContent = cat || (nom?'Perfil laboral':'Configura tu perfil laboral');
+    }
+    window.nexoRenderMas=renderMas;
+
+    /* ---------- Cableado ---------- */
+    function on(id,fn){ var el=$(id); if(el) el.addEventListener('click',fn); }
+
+    // B. Resumen del día
+    on('nexoBtnVerJornada', irADiaHoy);
+    on('nexoBtnEditarHoy', irAEditarHoy);
+    // D. Accesos rápidos
+    on('nexoAccHojaRuta', function(){ abrirSeccion('calendario'); setTimeout(function(){ if(typeof window.tcAbrirSubirHojas==='function') window.tcAbrirSubirHojas(); },60); });
+    on('nexoAccVerJornada', irADiaHoy);
+    on('nexoAccRecaudacion', function(){ abrirSeccion('recaudacion'); });
+    on('nexoAccNomina', function(){ abrirSeccion('nomina'); });
+
+    // Recaudación hub
+    on('nexoRecNueva', function(){ abrirSeccion('recaudaciones'); });
+    on('nexoRecImportar', function(){ abrirSeccion('importar'); });
+    on('nexoRecLiquidaciones', function(){ abrirSeccion('liquidaciones'); });
+    on('nexoRecEstadillo', function(){ abrirSeccion('estadillo'); });
+    on('nexoRecHistorial', function(){ abrirSeccion('historial'); });
+
+    // Más
+    on('nexoMasPerfil', function(){ if(typeof window.tcPerfilAbrirModal==='function') window.tcPerfilAbrirModal(); });
+    on('nexoMasDescuentos', function(){ if(typeof window.tcDescuentosAbrirModal==='function') window.tcDescuentosAbrirModal(); });
+    on('nexoMasMensajes', function(){ var b=$('btnMensajes'); if(b) b.click(); });
+    on('nexoMasBackup', function(){ abrirSeccion('backup'); });
+    on('nexoMasAdmin', function(){ var a=$('btnAdminAcceso'); if(a) a.click(); });
+    on('nexoMasAjustes', function(){ var ms=$('modalSettings'); if(ms) ms.style.display='flex'; });
+
+    // Refrescar Inicio al volver a él desde la barra inferior
+    var navEl=$('nexoBottomNav');
+    if(navEl){ navEl.querySelectorAll('.nexo-nav-btn').forEach(function(b){ if(b.getAttribute('data-nav')==='inicio') b.addEventListener('click',function(){ setTimeout(refrescarInicio,0); }); }); }
+
+    function init(){ refrescarInicio(); setTimeout(refrescarInicio, 400); }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   })();
   </script>
