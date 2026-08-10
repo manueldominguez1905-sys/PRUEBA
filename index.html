@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#7a1f2b" />
-  <title>NEXO</title>
+  <title>NEXUM</title>
 
   <style>
 /* =========================================================
@@ -196,8 +196,13 @@ textarea { width: 100%; resize: vertical; font-family: monospace; }
 /* ===== DEV-010R5 — Perfil laboral (modal) ===== */
 .perfil-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 10000; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
 .perfil-overlay[data-abierto="1"] { display: flex; }
-.perfil-box { box-sizing: border-box; background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 16px; padding: 22px 20px; width: 100%; max-width: 440px; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; box-shadow: 0 4px 28px rgba(0,0,0,0.3); }
-.perfil-titulo { margin: 0 0 6px; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; }
+.perfil-box { position: relative; box-sizing: border-box; background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 16px; padding: 22px 20px; width: 100%; max-width: 440px; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; box-shadow: 0 4px 28px rgba(0,0,0,0.3); }
+.perfil-titulo { margin: 0 0 6px; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; padding-right: 40px; }
+/* R5 — Botón X (cerrar) superior derecho de los modales Perfil y Descuentos.
+   Área táctil >=44x44, SVG (sin emoji), compatible claro/oscuro. */
+.perfil-cerrar-x { position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0; margin: 0; background: transparent; border: none; border-radius: 10px; color: var(--color-text-secondary); cursor: pointer; -webkit-tap-highlight-color: transparent; z-index: 2; }
+.perfil-cerrar-x svg { width: 22px; height: 22px; display: block; pointer-events: none; }
+.perfil-cerrar-x:hover, .perfil-cerrar-x:focus-visible { color: var(--color-text); background: var(--color-bg); }
 .perfil-intro { margin: 0 0 14px; font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5; }
 .perfil-campo { margin-bottom: 14px; display: flex; flex-direction: column; gap: 5px; }
 .perfil-campo label { font-size: 0.9rem; font-weight: 600; color: var(--color-text); }
@@ -253,11 +258,11 @@ tbody tr:hover { background-color: rgba(21, 101, 192, 0.06); }
   overflow: hidden; display: flex; flex-direction: column; gap: 16px;
 }
 .watermark {
-  position: fixed; top: 50%; left: 50%;
-  transform: translate(-50%, -50%) rotate(-30deg);
-  font-size: clamp(3rem, 18vw, 9rem); font-weight: 900;
-  color: var(--color-primary); opacity: 0.06;
-  pointer-events: none; white-space: nowrap; letter-spacing: 0.05em;
+  position: fixed; top: 50%; left: 54%;
+  transform: translate(-50%, -50%);
+  width: min(66vw, 400px); height: auto; max-width: 88vw;
+  opacity: 0.035;
+  pointer-events: none;
   z-index: 0; user-select: none;
 }
 .menu-resumen { display: flex; gap: 10px; z-index: 1; }
@@ -386,14 +391,11 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 
 /* MENÚ DESPLEGABLE TC */
 #tc .tc-menu-wrap{position:relative;display:flex;justify-content:flex-end;padding:0;}
-#tc .tc-menu-btn{background:rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:7px 14px;font-size:14px;font-weight:700;letter-spacing:.2px;border:1.5px solid rgba(255,255,255,.3);-webkit-tap-highlight-color:transparent;line-height:1.3;}
+#tc .tc-menu-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:7px 12px;font-size:14px;font-weight:700;letter-spacing:.2px;border:1.5px solid rgba(255,255,255,.3);-webkit-tap-highlight-color:transparent;line-height:1.3;}
 #tc .tc-menu-btn:active{background:rgba(255,255,255,.28);}
-#tc .tc-dropdown{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border-radius:var(--r-m);box-shadow:0 8px 32px rgba(0,0,0,.18);min-width:210px;z-index:200;overflow:hidden;animation:tcFadeIn .18s ease;}
-#tc .tc-dropdown.open{display:block;}
-#tc .tc-dd-item{display:flex;align-items:center;gap:10px;padding:13px 16px;font-size:14px;font-weight:600;color:var(--text);width:100%;text-align:left;border-bottom:1px solid var(--border);-webkit-tap-highlight-color:transparent;}
-#tc .tc-dd-item:last-child{border-bottom:none;}
-#tc .tc-dd-item:active{background:var(--bg);}
-#tc .tc-dd-item.danger{color:var(--danger);}
+/* NEXO-003R3 (tarea 2) — Botones directos de cabecera del Calendario */
+#tc .tc-hdr-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
+#tc .tc-hdr-ic{width:16px;height:16px;flex:0 0 auto;}
 
 /* LEYENDA TC */
 #tc .tc-ley-panel{margin:0 4px 8px;background:var(--surface);border-radius:var(--r-m);box-shadow:var(--sh-m);padding:16px 18px;animation:tcFadeIn .2s ease;}
@@ -749,8 +751,8 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
   <header class="app-header">
     <div class="header-left">
       <button id="btnVolver" class="icon-btn volver-btn" style="display:none;" aria-label="Volver al menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <span class="material-icon" id="headerIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6.6" r="2.4"/><path d="M6.5 20c0-4 2.6-6.6 5.5-6.6"/><path d="M8.5 20.2A8.2 8.2 0 0 0 18.6 10"/></svg></span>
-      <h1 id="headerTitle">NEXO</h1>
+      <span class="material-icon" id="headerIcon"><img src="nexum-logo.png" alt="NEXUM" style="max-height:34px; width:auto; display:block;" /></span>
+      <h1 id="headerTitle"></h1>
     </div>
     <div class="header-right">
       <button id="btnMensajes" class="icon-btn" title="Centro de mensajes" aria-label="Centro de mensajes" style="position:relative;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 4.5 1.8 5.6 2 5.8H4c.2-.2 2-1.3 2-5.8z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span id="msgBadge" aria-hidden="true">0</span></button>
@@ -764,9 +766,9 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
     <div style="box-sizing:border-box; background:#ffffff; color:#1a1a1a; border-radius:16px; padding:28px 24px; max-width:320px; width:90%; max-height:calc(100vh - 24px); max-height:calc(100dvh - 24px); overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; box-shadow:0 4px 24px rgba(0,0,0,0.25); position:relative;">
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
-        <div><strong>Aplicación:</strong> NEXO</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXO-003R2</span></div>
-        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXO-003R2 móvil, compacta y consistente.<br>Perfil y Descuentos se abren desde «Más»; ajustes solo muestran información.<br>Cálculos y datos DEV-010R17 sin cambios.</div>
+        <div><strong>Aplicación:</strong> NEXUM</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-003R5</span></div>
+        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM-003R5 móvil, compacta y consistente.<br>Administración y gestión del calendario rediseñadas a pantalla completa NEXUM.<br>Cálculos y datos DEV-010R17 sin cambios.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
@@ -790,6 +792,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
        <select> cerrado siguiente (sin input, texto libre ni datalist). -->
   <div id="modalPerfil" class="perfil-overlay" data-abierto="0" role="dialog" aria-modal="true" aria-labelledby="perfilTitulo" aria-describedby="perfilIntro">
     <div class="perfil-box">
+      <button type="button" id="tcPerfilXBtn" class="perfil-cerrar-x" aria-label="Cerrar perfil laboral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       <h2 id="perfilTitulo" class="perfil-titulo"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>Perfil laboral</h2>
       <p id="perfilIntro" class="perfil-intro">Configura tu perfil laboral. Estos datos se guardan solo en este dispositivo y todavía no modifican ningún importe de la Nómina.</p>
       <div id="perfilAvisoCorrupto" class="perfil-aviso-corrupto" role="alert" style="display:none;"></div>
@@ -882,6 +885,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
        ni mezcla su clave con tc_v1_perfil_laboral. -->
   <div id="modalDescuentos" class="perfil-overlay" data-abierto="0" role="dialog" aria-modal="true" aria-labelledby="descTitulo" aria-describedby="descIntro">
     <div class="perfil-box">
+      <button type="button" id="tcDescXBtn" class="perfil-cerrar-x" aria-label="Cerrar descuentos e IRPF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       <h2 id="descTitulo" class="perfil-titulo"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 9.2A4 4 0 0 0 9 12a4 4 0 0 0 6.5 2.8"/><path d="M7 11h5.5M7 13h4.5"/></svg>Descuentos e IRPF</h2>
       <p id="descIntro" class="perfil-intro">Estos porcentajes se guardan para una futura estimación de descuentos. Todavía no se aplican a la nómina porque las bases de cotización están pendientes de configuración.</p>
       <div id="descAvisoCorrupto" class="perfil-aviso-corrupto" role="alert" style="display:none;"></div>
@@ -954,7 +958,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
 
   <!-- ===================== PANTALLA: MENÚ PRINCIPAL ===================== -->
   <div id="menuPrincipal" class="menu-principal nexo-inicio">
-    <div class="watermark">NEXO</div>
+    <img class="watermark" src="nexum-simbolo.png" alt="" aria-hidden="true" />
 
     <!-- NEXO-003 — Resumen económico conservado OCULTO en Inicio: sus IDs siguen
          siendo actualizados por actualizarResumen(); los valores se reutilizan en
@@ -1279,17 +1283,13 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
                 <div class="tc-hdr-sub">Registro de jornadas</div>
               </div>
             </div>
-            <div class="tc-menu-wrap">
-              <button class="tc-menu-btn" onclick="tcToggleMenu()">&#9776; Acciones</button>
-              <div class="tc-dropdown" id="tc-dropdown">
-                <button class="tc-dd-item" onclick="tcMenuAction(tcOpenImport)">&#128196; Subir hojas de ruta</button>
-                <button class="tc-dd-item" onclick="tcMenuAction(tcOpenAsignar)">&#128295; Asignar turnos</button>
-                <button class="tc-dd-item" onclick="tcMenuAction(tcOpenGestorCambios)">&#128260; Gestionar cambios</button>
-                <button class="tc-dd-item" onclick="tcMenuAction(tcLeyenda)">&#127912; Tipos de turnos</button>
-                <button class="tc-dd-item" onclick="tcMenuAction(tcOpenCal)">&#128197; Importar Calendario de Turnos</button>
-                <button class="tc-dd-item" onclick="tcMenuAction(tcOpenEventos)">&#127881; Importar Calendario de Eventos Laborales</button>
-                <button class="tc-dd-item danger" onclick="tcMenuAction(tcOpenBorrar)">&#128465;&#65039; Borrar datos</button>
-              </div>
+            <!-- NEXO-003R3 (tarea 2) — Eliminado el desplegable «Acciones» (#tc-dropdown).
+                 En su lugar, dos botones directos en la cabecera: «Hoja de ruta»
+                 (abre directamente tcOpenImport) y «Gestionar» (abre la pantalla
+                 completa «Gestión del calendario» con las siete acciones agrupadas). -->
+            <div class="tc-hdr-actions">
+              <button class="tc-menu-btn" onclick="tcOpenImport()"><svg class="tc-hdr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>Hoja de ruta</button>
+              <button class="tc-menu-btn" onclick="window.tcAbrirGestion()"><svg class="tc-hdr-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="14" cy="18" r="2"/><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h8M16 18h4"/></svg>Gestionar</button>
             </div>
           </div>
           <div class="tc-mnav">
@@ -2484,10 +2484,20 @@ function inicializarTabs() {
   document.querySelectorAll(".menu-btn").forEach(function (btn) {
     btn.addEventListener("click", function () { abrirSeccion(btn.getAttribute("data-tab")); });
   });
-  document.getElementById("btnVolver").addEventListener("click", function () { volverAlMenu(); });
+  document.getElementById("btnVolver").addEventListener("click", function () { nexumVolver(); });
 }
 
-function abrirSeccion(tabId) {
+/* R5 — Pila de navegación jerárquica mínima (sin historial del navegador).
+   nexumPantallaActual = pantalla visible; nexumPadre = pantalla a la que debe
+   volver la flecha superior (solo 1 nivel: hijos de Recaudación → 'recaudacion').
+   El segundo argumento `padre` registra el padre al abrir; si se omite, se limpia
+   el contexto (comportamiento de la navegación inferior y de Inicio). */
+var nexumPantallaActual = "inicio";
+var nexumPadre = null;
+
+function abrirSeccion(tabId, padre) {
+  nexumPantallaActual = tabId;
+  nexumPadre = padre || null;
   document.getElementById("menuPrincipal").style.display = "none";
   document.getElementById("contenidoSecciones").style.display = "block";
   document.querySelectorAll(".tab-content").forEach(function (s) { s.style.display = "none"; });
@@ -2509,6 +2519,7 @@ function abrirSeccion(tabId) {
   if (tabId === "recaudacion" && typeof window.nexoRenderRecaudacionHub === "function") window.nexoRenderRecaudacionHub();
   if (tabId === "mas" && typeof window.nexoRenderMas === "function") window.nexoRenderMas();
   if (typeof window.nexoActualizarNav === "function") window.nexoActualizarNav(tabId); // NEXO: estado visual barra inferior
+  if (typeof window.nexumRecuperarViewport === "function") window.nexumRecuperarViewport(); // R5: recuperación de viewport al navegar (coalescida a 1 rAF)
 }
 
 /* DEV-007R9 (tarea 10) — Estado de carga de PDF.js para garantizar UNA sola
@@ -2549,14 +2560,47 @@ function cargarPDFjsSiNecesario() {
 }
 
 function volverAlMenu() {
+  nexumPantallaActual = "inicio";
+  nexumPadre = null; // Inicio: sin padre; limpia el contexto de navegación
   document.getElementById("contenidoSecciones").style.display = "none";
   document.getElementById("menuPrincipal").style.display = "flex";
-  document.getElementById("headerTitle").textContent = "NEXO";
+  document.getElementById("headerTitle").textContent = ""; // Inicio: la marca la aporta el logo NEXUM del headerIcon
   document.getElementById("headerIcon").style.display = "inline";
   document.getElementById("btnVolver").style.display = "none";
   actualizarResumen();
   if (typeof window.nexoActualizarNav === "function") window.nexoActualizarNav("inicio"); // NEXO: estado visual barra inferior
+  /* NEXO-003R3 — Punto ÚNICO y central para sincronizar «Resumen del día» al
+     regresar a Inicio desde cualquier pantalla (flecha superior o barra inferior).
+     Se ejecuta tras actualizarResumen(); protegido con try/catch para que un fallo
+     visual nunca impida volver a Inicio. Solo lee (tcGetRegistroDia/tcTurnoNombre);
+     no toca persistencia ni cálculos. */
+  try {
+    if (typeof window.nexoRefrescarInicio === "function") {
+      window.nexoRefrescarInicio();
+    }
+  } catch (e) {}
+  if (typeof window.nexumRecuperarViewport === "function") window.nexumRecuperarViewport(); // R5
 }
+
+/* R5 — Función central de «atrás» de la flecha superior. Decide, según la pila
+   mínima, entre volver a la pantalla padre (p. ej. un hijo de Recaudación →
+   Recaudación) o salir a Inicio con volverAlMenu(). No usa el historial del
+   navegador. No crea listeners ni temporizadores. Recupera el viewport una vez.
+   Los overlays/modales tienen su propia X/Escape y NO tocan esta pila. */
+function nexumVolver() {
+  if (nexumPadre) {
+    var padre = nexumPadre;
+    nexumPadre = null; // se consume el contexto antes de navegar
+    /* Volver a la pantalla padre (Recaudación): abrirSeccion actualiza cabecera,
+       mantiene la pestaña inferior activa y refresca saldo/últimos movimientos.
+       Se abre SIN padre, de modo que una segunda pulsación irá a Inicio. */
+    abrirSeccion(padre);
+  } else {
+    volverAlMenu();
+  }
+  if (typeof window.nexumRecuperarViewport === "function") window.nexumRecuperarViewport();
+}
+window.nexumVolver = nexumVolver;
 
 function inicializarTema() {
   var TEMA_ICONO_LUNA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A7.5 7.5 0 0 1 9.5 4a7.5 7.5 0 1 0 10.5 10.5z"/></svg>';
@@ -4799,6 +4843,7 @@ function inicializarCamaraOCR() {
     btnEliminar.removeAttribute('data-confirmando'); btnEliminar.textContent='Eliminar perfil';
 
     overlay.setAttribute('data-abierto','1');
+    if(typeof window.nexumRecuperarViewport==='function') window.nexumRecuperarViewport();
     /* Foco inicial en el primer campo. */
     setTimeout(function(){ try{ inNombre.focus(); }catch(e){} }, 0);
   }
@@ -4806,10 +4851,14 @@ function inicializarCamaraOCR() {
   function tcPerfilCerrarModal(){
     var overlay=document.getElementById('modalPerfil');
     if(!overlay) return;
+    /* Cierre puro: NO guarda ni elimina; descarta los cambios no guardados sin
+       tocar tc_v1_perfil_laboral. Restaura el foco al abridor y recupera el
+       viewport móvil una sola vez. */
     overlay.setAttribute('data-abierto','0');
     _perfilGuardando=false;
     try { if(_perfilPrevFocus && typeof _perfilPrevFocus.focus==='function') _perfilPrevFocus.focus(); } catch(e){}
     _perfilPrevFocus=null;
+    if(typeof window.nexumRecuperarViewport==='function') window.nexumRecuperarViewport();
   }
 
   function _perfilGuardarDesdeUI(){
@@ -4862,6 +4911,8 @@ function inicializarCamaraOCR() {
     if(btnDespues) btnDespues.addEventListener('click', function(){ tcPerfilCerrarModal(); });
     var btnCerrar=document.getElementById('tcPerfilCerrarBtn');
     if(btnCerrar) btnCerrar.addEventListener('click', function(){ tcPerfilCerrarModal(); });
+    var btnX=document.getElementById('tcPerfilXBtn');
+    if(btnX) btnX.addEventListener('click', function(){ tcPerfilCerrarModal(); });
     var btnEliminar=document.getElementById('tcPerfilEliminarBtn');
     if(btnEliminar) btnEliminar.addEventListener('click', function(){ _perfilEliminarDesdeUI(btnEliminar); });
     overlay.addEventListener('keydown', _perfilKeydown);
@@ -5147,6 +5198,7 @@ function inicializarCamaraOCR() {
       }
 
       overlay.setAttribute('data-abierto','1');
+      if(typeof window.nexumRecuperarViewport==='function') window.nexumRecuperarViewport();
       var primero=document.getElementById(TC_DESC_CAMPOS[0].input);
       setTimeout(function(){ try{ if(primero) primero.focus(); }catch(e){} }, 0);
     } catch(e){}
@@ -5156,9 +5208,13 @@ function inicializarCamaraOCR() {
     try {
       var overlay=document.getElementById('modalDescuentos');
       if(!overlay) return;
+      /* Cierre puro: NO guarda ni elimina; descarta los cambios no guardados sin
+         tocar tc_v1_config_descuentos. Restaura el foco al abridor y recupera el
+         viewport móvil una sola vez. No refresca la Nómina (no se guardó nada). */
       overlay.setAttribute('data-abierto','0');
       try { if(_descPrevFocus && typeof _descPrevFocus.focus==='function') _descPrevFocus.focus(); } catch(e){}
       _descPrevFocus=null;
+      if(typeof window.nexumRecuperarViewport==='function') window.nexumRecuperarViewport();
     } catch(e){}
   }
 
@@ -5238,6 +5294,8 @@ function inicializarCamaraOCR() {
     });
     var btnCancelar=document.getElementById('tcDescCancelarBtn');
     if(btnCancelar) btnCancelar.addEventListener('click', function(){ tcDescuentosCerrarModal(); });
+    var btnX=document.getElementById('tcDescXBtn');
+    if(btnX) btnX.addEventListener('click', function(){ tcDescuentosCerrarModal(); });
     var btnEliminar=document.getElementById('tcDescEliminarBtn');
     if(btnEliminar) btnEliminar.addEventListener('click', function(){ _descEliminarDesdeUI(btnEliminar); });
     overlay.addEventListener('keydown', _descKeydown);
@@ -6330,7 +6388,11 @@ window.tcGetRegistroDia=function(key){
   }catch(e){ return null; }
 };
 window.tcTurnoTag=function(t){ try{ return (t&&TURNO[t])?TURNO[t].tag:''; }catch(e){ return ''; } };
-window.tcTurnoNombre=function(t){ try{ return (t&&TURNO[t])?(TURNO[t].nombre||TURNO[t].tag||t):''; }catch(e){ return ''; } };
+/* NEXO-003R3 — Accesor de solo lectura del nombre del turno. Los tipos de turno
+   guardan su nombre visible en `label` (p.ej. CM→"Corrido Mañana", V→"Vacaciones");
+   al editar el nombre de un tipo, cambia `label`. Se prioriza `label` y se mantiene
+   el fallback a `nombre`/`tag`/clave. Solo lee TURNO; no altera datos ni persistencia. */
+window.tcTurnoNombre=function(t){ try{ return (t&&TURNO[t])?(TURNO[t].label||TURNO[t].nombre||TURNO[t].tag||t):''; }catch(e){ return ''; } };
 window.tcAbrirDiaPorFecha=function(key){ try{ tcOpenDay(key, dias[key]); return true; }catch(e){ return false; } };
 /* NEXO-003R1 (tarea 1) — Puente público seguro para abrir DIRECTAMENTE el editor
    del día (pnl-edit) por fecha, incluso si aún no existe registro. Reutiliza
@@ -12408,18 +12470,10 @@ function tcToast(msg){
   t._to=setTimeout(function(){t.classList.remove('show');},2600);
 }
 
-window.tcToggleMenu=function(){
-  var dd=document.getElementById('tc-dropdown'); dd.classList.toggle('open');
-};
-window.tcMenuAction=function(fn){
-  document.getElementById('tc-dropdown').classList.remove('open'); fn();
-};
-document.addEventListener('click',function(e){
-  if(!e.target.closest('.tc-menu-wrap')){
-    var dd=document.getElementById('tc-dropdown');
-    if(dd) dd.classList.remove('open');
-  }
-});
+/* NEXO-003R4 (tarea 3) — El antiguo desplegable «Acciones» (#tc-dropdown) fue
+   sustituido por botones directos de cabecera + «Gestión del calendario». Su CSS
+   y sus funciones puente (tcToggleMenu/tcMenuAction) eran código muerto sin
+   referencias funcionales y se han eliminado. */
 
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',tcInit); else tcInit();
 
@@ -13398,6 +13452,135 @@ window.tcMsgAbrirDia=function(fecha){
   })();
   </script>
 
+  <!-- ===================== NEXO-003R3 — PANTALLA COMPLETA NEXO (compartida) =====================
+       Estilos de panel a pantalla completa con cabecera de navegación, reutilizados
+       por el Centro de Administración (rediseño) y por «Gestión del calendario».
+       100% presentacional: no altera ninguna lógica, cálculo ni almacenamiento.
+       Theme-aware por variables (--color-*); modo oscuro automático. -->
+  <style>
+  .nexo-fs-overlay{ display:none; position:fixed; inset:0; z-index:10000; background:var(--color-bg); flex-direction:column; }
+  .nexo-fs-header{ display:flex; align-items:center; gap:10px; padding:14px 14px; padding-top:calc(14px + env(safe-area-inset-top,0px)); background:var(--color-primary); color:#fff; box-shadow:0 2px 12px rgba(0,0,0,.18); position:sticky; top:0; z-index:2; }
+  .nexo-fs-ic{ flex:0 0 auto; width:28px; height:28px; display:flex; align-items:center; justify-content:center; }
+  .nexo-fs-ic svg{ width:26px; height:26px; }
+  .nexo-fs-title{ flex:1 1 auto; margin:0; font-size:1.12rem; font-weight:700; line-height:1.2; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .nexo-fs-navbtn{ flex:0 0 auto; width:40px; height:40px; display:none; align-items:center; justify-content:center; border-radius:11px; background:rgba(255,255,255,.16); color:#fff; -webkit-tap-highlight-color:transparent; transition:background .15s ease; }
+  .nexo-fs-navbtn.show{ display:flex; }
+  .nexo-fs-navbtn:active{ background:rgba(255,255,255,.30); }
+  .nexo-fs-navbtn svg{ width:22px; height:22px; }
+  .nexo-fs-close{ display:flex; }
+  .nexo-fs-body{ flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:16px; padding-bottom:calc(24px + env(safe-area-inset-bottom,0px)); }
+  .nexo-fs-body > *{ max-width:720px; margin-left:auto; margin-right:auto; }
+  .nexo-fs-group{ margin:0 auto 22px; }
+  .nexo-fs-group-title{ font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--color-text-secondary); margin:0 2px 10px; }
+  /* Tarjeta NEXO peligrosa (Borrar datos / Salir) reutilizando .menu-btn */
+  .nexo-fs-body .menu-btn.danger, #adminScreenBody .menu-btn.danger{ border-color:rgba(177,65,79,.55); }
+  .nexo-fs-body .menu-btn.danger .menu-icon svg, #adminScreenBody .menu-btn.danger .menu-icon svg{ color:var(--color-danger); }
+  .nexo-fs-body .menu-btn.danger .menu-label, #adminScreenBody .menu-btn.danger .menu-label{ color:var(--color-danger); }
+  /* Botón «← Volver» heredado que algunos sub-render inyectan en el cuerpo: se
+     mantiene funcional pero discreto (la navegación principal es la cabecera). */
+  #adminScreenBody .btn.btn-secondary[onclick*="adminVolverPublic"]{ display:none; }
+  </style>
+
+  <!-- ===================== NEXO-003R3 (tarea 2) — GESTIÓN DEL CALENDARIO (pantalla completa) =====================
+       Sustituye al desplegable «Acciones». Agrupa las SIETE acciones existentes y
+       las conecta a sus funciones originales (tcOpenImport, tcOpenAsignar,
+       tcOpenGestorCambios, tcLeyenda, tcOpenCal, tcOpenEventos, tcOpenBorrar).
+       No duplica ni altera esas funciones. -->
+  <div id="tcGestionOverlay" class="nexo-fs-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="tcGestionTitle">
+    <div class="nexo-fs-header">
+      <span class="nexo-fs-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/><circle cx="12" cy="15" r="2.1"/><path d="M12 12.4v.7M12 16.9v.7M14.2 15h-.7M10.5 15h-.7"/></svg></span>
+      <h2 class="nexo-fs-title" id="tcGestionTitle">Gestión del calendario</h2>
+      <button class="nexo-fs-navbtn nexo-fs-close show" type="button" onclick="window.tcCerrarGestion()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="nexo-fs-body">
+      <div class="nexo-fs-group">
+        <div class="nexo-fs-group-title">Turnos y jornada</div>
+        <div class="menu-grid">
+          <button class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcOpenImport)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 18v-5M9.6 15.4 12 13l2.4 2.4"/></svg></span><span class="menu-label">Subir hojas de ruta</span></button>
+          <button class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcOpenAsignar)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="M8 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M9 13.5l2 2 4-4"/></svg></span><span class="menu-label">Asignar turnos</span></button>
+          <button class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcOpenGestorCambios)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></span><span class="menu-label">Gestionar cambios</span></button>
+          <button class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcLeyenda)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.3 13 20.8a1.5 1.5 0 0 1-2.1 0L4 13.9V4h9.9l6.6 6.6a1.6 1.6 0 0 1 0 2.7z"/><circle cx="9" cy="9" r="1.4"/></svg></span><span class="menu-label">Tipos de turnos</span></button>
+        </div>
+      </div>
+      <div class="nexo-fs-group">
+        <div class="nexo-fs-group-title">Importar calendarios</div>
+        <div class="menu-grid">
+          <button class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcOpenCal)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5M8 14h3M8 17h5"/></svg></span><span class="menu-label">Importar Calendario de Turnos</span></button>
+          <button class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcOpenEventos)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/><path d="M12 12.6l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z"/></svg></span><span class="menu-label">Importar Calendario de Eventos Laborales</span></button>
+        </div>
+      </div>
+      <div class="nexo-fs-group">
+        <div class="nexo-fs-group-title">Datos</div>
+        <div class="menu-grid">
+          <button class="menu-btn danger" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcOpenBorrar)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/></svg></span><span class="menu-label">Borrar datos</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  /* NEXO-003R3 (tarea 2) — Apertura/cierre de «Gestión del calendario» y puente de
+     acciones. Las funciones originales (tcOpenImport, tcOpenAsignar, …) se ejecutan
+     tras cerrar la pantalla para no solapar sus overlays. No se duplica ni modifica
+     ninguna de ellas. */
+  (function(){
+    'use strict';
+    function ov(){ return document.getElementById('tcGestionOverlay'); }
+    function fsBody(){ var o=ov(); return o ? o.querySelector('.nexo-fs-body') : null; }
+    function focusables(o){
+      return Array.prototype.slice.call(o.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )).filter(function(el){ return !el.disabled && el.offsetParent!==null; });
+    }
+    var _opener=null;        // botón «Gestionar» que abrió la pantalla (restauración de foco)
+    var _prevOverflow='';    // overflow previo del body (bloqueo de fondo)
+    window.tcAbrirGestion=function(){
+      var o=ov(); if(!o) return;
+      _opener=document.activeElement;
+      o.style.display='flex';
+      o.setAttribute('aria-hidden','false');
+      var b=fsBody(); if(b) b.scrollTop=0;              // reinicio del scroll del cuerpo
+      _prevOverflow=document.body.style.overflow;
+      document.body.style.overflow='hidden';            // bloqueo del fondo
+      var cerrar=o.querySelector('.nexo-fs-close');
+      if(cerrar) cerrar.focus();                        // foco inicial en Cerrar
+    };
+    window.tcCerrarGestion=function(){
+      var o=ov(); if(!o) return;
+      o.style.display='none';
+      o.setAttribute('aria-hidden','true');
+      document.body.style.overflow=_prevOverflow;       // libera el bloqueo del fondo
+      if(_opener && typeof _opener.focus==='function') _opener.focus(); // restaura el foco
+      _opener=null;
+    };
+    window.tcGestionAction=function(fn){
+      window.tcCerrarGestion();                         // cerrar antes de ejecutar
+      if(typeof fn==='function'){
+        try{ fn(); }                                    // llamada única a la función original
+        catch(e){
+          console.error(e);
+          if(typeof mostrarToast==='function') mostrarToast('No se pudo abrir esta opción.', 'error');
+        }
+      }
+    };
+    (function(){
+      var o=ov(); if(!o) return;
+      o.addEventListener('keydown',function(e){
+        if(o.style.display!=='flex') return;
+        if(e.key==='Escape'){ e.preventDefault(); window.tcCerrarGestion(); return; }
+        if(e.key==='Tab'){                              // trampa de Tab / Shift+Tab
+          var f=focusables(o); if(!f.length) return;
+          var first=f[0], last=f[f.length-1];
+          if(e.shiftKey){
+            if(document.activeElement===first || !o.contains(document.activeElement)){ e.preventDefault(); last.focus(); }
+          } else {
+            if(document.activeElement===last || !o.contains(document.activeElement)){ e.preventDefault(); first.focus(); }
+          }
+        }
+      });
+    })();
+  })();
+  </script>
+
   <!-- ===================== CENTRO DE ADMINISTRACIÓN (módulo aditivo) ===================== -->
   <!-- No modifica autenticación existente (no había ninguna), no toca la base de datos,
        no reutiliza ni altera lógica de negocio. Reutiliza únicamente clases visuales
@@ -13407,7 +13590,7 @@ window.tcMsgAbrirDia=function(fecha){
   <!-- Modal de contraseña -->
   <div id="adminPassModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center; padding:16px;">
     <div class="card" style="max-width:320px; width:100%;">
-      <h2 id="adminPassTitulo" style="margin:0 0 16px; font-size:1.1rem;">🔒 Acceso administrador</h2>
+      <h2 id="adminPassTitulo" style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="adminPassTituloTexto">Acceso administrador</span></h2>
       <p class="help-text" style="margin:0 0 12px; font-size:0.8rem;">Bloqueo local para evitar cambios accidentales en este dispositivo. No es una medida de seguridad real: no cifra los datos ni protege frente a quien tenga acceso al dispositivo o al navegador.</p>
       <input type="password" id="adminPassInput" placeholder="Contraseña" autocomplete="off"
         style="width:100%; box-sizing:border-box; padding:10px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text); margin-bottom:16px; font-size:0.95rem;">
@@ -13418,13 +13601,20 @@ window.tcMsgAbrirDia=function(fecha){
     </div>
   </div>
 
-  <!-- Centro de Administración -->
-  <div id="adminOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; align-items:center; justify-content:center; padding:16px;">
-    <div class="card" style="max-width:420px; width:100%; max-height:85vh; overflow-y:auto;">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-        <h2 id="adminScreenTitle" style="margin:0; font-size:1.1rem;">🛠️ Centro de Administración</h2>
-        <button class="btn btn-secondary" id="adminBtnCerrar" style="padding:6px 12px;">✕</button>
-      </div>
+  <!-- Centro de Administración — NEXO-003R3 (tarea 1): rediseño a PANTALLA COMPLETA
+       con cabecera de navegación (volver + cerrar), icono SVG, tarjetas NEXO, modo
+       oscuro (por variables) y adaptación móvil. Se conservan TODOS los IDs
+       (adminOverlay, adminScreenTitle, adminBtnCerrar, adminScreenBody) y la lógica
+       de navegación/datos permanece intacta. El overlay se sigue mostrando/ocultando
+       por style.display desde el JS existente. -->
+  <div id="adminOverlay" class="nexo-fs-overlay" style="display:none;">
+    <div class="nexo-fs-header">
+      <button class="nexo-fs-navbtn nexo-fs-back" id="adminBtnVolver" type="button" onclick="window.adminVolverPublic()" aria-label="Volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <span class="nexo-fs-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg></span>
+      <h2 id="adminScreenTitle" class="nexo-fs-title">Centro de Administración</h2>
+      <button class="nexo-fs-navbtn nexo-fs-close show" id="adminBtnCerrar" type="button" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="nexo-fs-body">
       <div id="adminScreenBody"></div>
     </div>
   </div>
@@ -13463,16 +13653,18 @@ window.tcMsgAbrirDia=function(fecha){
       return !!localStorage.getItem(ADMIN_PASS_STORAGE);
     }
 
+    /* NEXO-003R3 (tarea 1) — Títulos sin emoji: el icono de la cabecera NEXO es
+       ahora un SVG. Solo cambia el texto visible del título; ninguna lógica. */
     var ADMIN_TITULOS={
-      main:'🛠️ Centro de Administración',
-      datosOficiales:'📂 Datos Oficiales',
-      calendarioLaboral:'📅 Calendario Laboral',
-      calendariosInstalados:'📋 Calendarios instalados',
-      eliminarCalendario:'🗑️ Eliminar calendario',
-      estadoSistema:'🗄 Estado del Sistema',
-      tablasSalariales:'💶 Tablas Salariales',
-      tablasSalarialesEditor:'💶 Revisión de tabla salarial',
-      tablasSalarialesConfirmar:'⚠️ Confirmar sustitución'
+      main:'Centro de Administración',
+      datosOficiales:'Datos Oficiales',
+      calendarioLaboral:'Calendario Laboral',
+      calendariosInstalados:'Calendarios instalados',
+      eliminarCalendario:'Eliminar calendario',
+      estadoSistema:'Estado del Sistema',
+      tablasSalariales:'Tablas Salariales',
+      tablasSalarialesEditor:'Revisión de tabla salarial',
+      tablasSalarialesConfirmar:'Confirmar sustitución'
     };
 
     /* ---------- Acceso: botón "Administrador" en el modal de ajustes ---------- */
@@ -13489,17 +13681,17 @@ window.tcMsgAbrirDia=function(fecha){
     function adminSolicitarPassword(){
       var modal=document.getElementById('adminPassModal');
       var input=document.getElementById('adminPassInput');
-      var titulo=document.getElementById('adminPassTitulo');
+      var titulo=document.getElementById('adminPassTituloTexto');
       var boton=document.getElementById('adminPassEntrar');
       input.value='';
       if(adminHayPasswordGuardada()){
         adminPassModo='verificar';
-        if(titulo) titulo.textContent='🔒 Acceso administrador';
+        if(titulo) titulo.textContent='Acceso administrador';
         input.placeholder='Contraseña';
         if(boton) boton.textContent='Entrar';
       } else {
         adminPassModo='crear';
-        if(titulo) titulo.textContent='🔒 Crear contraseña de administrador';
+        if(titulo) titulo.textContent='Crear contraseña de administrador';
         input.placeholder='Nueva contraseña (mín. 4 caracteres)';
         if(boton) boton.textContent='Crear';
       }
@@ -15063,7 +15255,7 @@ window.tcMsgAbrirDia=function(fecha){
         var numPendientes=filas.filter(function(f){ return f.importe==null; }).length;
         var esActiva=(activaId===anio);
         html+='<div class="card" style="margin-bottom:10px;'+(esActiva?'border:1px solid var(--color-primary);':'')+'">'
-          +'<div style="font-weight:700;margin-bottom:6px;">💶 Año '+escaparHTML(anio)
+          +'<div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 9.2A4 4 0 0 0 9 12a4 4 0 0 0 6.5 2.8"/><path d="M7 11h5.5M7 13h4.5"/></svg><span>Año '+escaparHTML(anio)+'</span>'
           +(esActiva?' <span style="font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--color-primary);color:#fff;vertical-align:middle;">TABLA ACTIVA</span>':'')
           +'</div>'
           +'<div style="font-size:0.85rem;color:var(--color-text-secondary);line-height:1.6;">'
@@ -15343,7 +15535,7 @@ window.tcMsgAbrirDia=function(fecha){
         var m=meta[anio]||{};
         var n=Object.keys(eventos[anio]).length;
         html+='<div class="card" style="margin-bottom:10px;">'+
-          '<div style="font-weight:700;margin-bottom:6px;">📅 Año '+escaparHTML(anio)+'</div>'+
+          '<div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg><span>Año '+escaparHTML(anio)+'</span></div>'+
           '<div style="font-size:0.85rem;color:var(--color-text-secondary);line-height:1.6;">'+
           (m.nombre?('Nombre: '+escaparHTML(m.nombre)+'<br>'):'')+
           'Eventos guardados: '+n+'<br>'+
@@ -15466,7 +15658,11 @@ window.tcMsgAbrirDia=function(fecha){
         ]
       });
 
-      var ICONOS={ok:'🟢 Correcto',pendiente:'🟡 Pendiente',error:'🔴 Error'};
+      var ICONOS={
+        ok:'<span style="display:inline-flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><circle cx="12" cy="12" r="8" style="fill:var(--color-success)"/></svg>Correcto</span>',
+        pendiente:'<span style="display:inline-flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><circle cx="12" cy="12" r="8" style="fill:#E6A817"/></svg>Pendiente</span>',
+        error:'<span style="display:inline-flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><circle cx="12" cy="12" r="8" style="fill:var(--color-danger)"/></svg>Error</span>'
+      };
       var html='';
       bloques.forEach(function(b){
         html+='<div class="card" style="margin-bottom:10px;padding:14px 16px;">'+
@@ -15483,6 +15679,11 @@ window.tcMsgAbrirDia=function(fecha){
 
     function adminRenderPantalla(pantalla){
       document.getElementById('adminScreenTitle').textContent=ADMIN_TITULOS[pantalla]||ADMIN_TITULOS.main;
+      /* NEXO-003R3 (tarea 1) — Navegación por cabecera: el botón «Volver» del header
+         se muestra en cualquier pantalla que no sea la principal. La lógica sigue
+         siendo window.adminVolverPublic(); no cambia el flujo de navegación. */
+      var _hb=document.getElementById('adminBtnVolver');
+      if(_hb){ if(pantalla==='main') _hb.classList.remove('show'); else _hb.classList.add('show'); }
       var body=document.getElementById('adminScreenBody');
       var volverBtn=pantalla!=='main' ? '<button class="btn btn-secondary" onclick="window.adminVolverPublic()" style="margin-bottom:14px;width:100%;">← Volver</button>' : '';
 
@@ -15492,23 +15693,23 @@ window.tcMsgAbrirDia=function(fecha){
           /* NEXO-003R1 (tarea 5) — Menú principal de Administración sin accesos
              duplicados: se retiran "Copias de Seguridad" (vive en Más → Copias de
              seguridad) y "Configuración". Las funciones internas se conservan. */
-          '<button class="menu-btn" onclick="window.adminIrAPublic(\'datosOficiales\')"><span class="menu-icon">📂</span><span class="menu-label">Datos Oficiales</span></button>'+
-          '<button class="menu-btn" onclick="window.adminIrAPublic(\'estadoSistema\')"><span class="menu-icon">🗄</span><span class="menu-label">Estado del Sistema</span></button>'+
-          '<button class="menu-btn" onclick="window.adminCerrarTodo()"><span class="menu-icon">🚪</span><span class="menu-label">Salir</span></button>'+
+          '<button class="menu-btn" onclick="window.adminIrAPublic(\'datosOficiales\')"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><span class="menu-label">Datos Oficiales</span></button>'+
+          '<button class="menu-btn" onclick="window.adminIrAPublic(\'estadoSistema\')"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="6" rx="1.5"/><rect x="4" y="14" width="16" height="6" rx="1.5"/><path d="M7.5 7h.01M7.5 17h.01"/></svg></span><span class="menu-label">Estado del Sistema</span></button>'+
+          '<button class="menu-btn" onclick="window.adminCerrarTodo()"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12H4M11 8l-4 4 4 4"/><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/></svg></span><span class="menu-label">Salir</span></button>'+
           '</div>';
       } else if(pantalla==='datosOficiales'){
         body.innerHTML=volverBtn+
           '<div class="menu-grid">'+
-          '<button class="menu-btn" onclick="window.adminIrAPublic(\'calendarioLaboral\')"><span class="menu-icon">📅</span><span class="menu-label">Calendario Laboral</span></button>'+
-          '<button class="menu-btn" onclick="window.adminProximamente()"><span class="menu-icon">📄</span><span class="menu-label">Convenios</span></button>'+
-          '<button class="menu-btn" onclick="window.adminIrAPublic(\'tablasSalariales\')"><span class="menu-icon">💶</span><span class="menu-label">Tablas Salariales</span></button>'+
+          '<button class="menu-btn" onclick="window.adminIrAPublic(\'calendarioLaboral\')"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg></span><span class="menu-label">Calendario Laboral</span></button>'+
+          '<button class="menu-btn" onclick="window.adminProximamente()"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span><span class="menu-label">Convenios</span></button>'+
+          '<button class="menu-btn" onclick="window.adminIrAPublic(\'tablasSalariales\')"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 9.2A4 4 0 0 0 9 12a4 4 0 0 0 6.5 2.8"/><path d="M7 11h5.5M7 13h4.5"/></svg></span><span class="menu-label">Tablas Salariales</span></button>'+
           '</div>';
       } else if(pantalla==='calendarioLaboral'){
         body.innerHTML=volverBtn+
           '<div class="menu-grid">'+
-          '<button class="menu-btn" onclick="window.adminAccionActualizarCalendario()"><span class="menu-icon">⬆️</span><span class="menu-label">Actualizar Calendario</span></button>'+
-          '<button class="menu-btn" onclick="window.adminIrAPublic(\'calendariosInstalados\')"><span class="menu-icon">📋</span><span class="menu-label">Calendarios Instalados</span></button>'+
-          '<button class="menu-btn" onclick="window.adminIrAPublic(\'eliminarCalendario\')"><span class="menu-icon">🗑️</span><span class="menu-label">Eliminar Calendario</span></button>'+
+          '<button class="menu-btn" onclick="window.adminAccionActualizarCalendario()"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V6M8 10l4-4 4 4"/><path d="M5 18h14"/></svg></span><span class="menu-label">Actualizar Calendario</span></button>'+
+          '<button class="menu-btn" onclick="window.adminIrAPublic(\'calendariosInstalados\')"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></span><span class="menu-label">Calendarios Instalados</span></button>'+
+          '<button class="menu-btn" onclick="window.adminIrAPublic(\'eliminarCalendario\')"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/></svg></span><span class="menu-label">Eliminar Calendario</span></button>'+
           '</div>';
       } else if(pantalla==='calendariosInstalados'){
         body.innerHTML=volverBtn+adminListaCalendariosHTML(false);
@@ -15778,7 +15979,8 @@ window.tcMsgAbrirDia=function(fecha){
   .resumen-item { padding:9px 6px; border-radius:12px; }
   .resumen-label { font-size:.68rem; margin-bottom:2px; }
   .resumen-valor { font-size:1rem; }
-  .watermark { opacity:.045; }
+  .watermark { opacity:.035; }
+  body.dark .watermark { opacity:.025; }
   @media (min-width:600px){ .menu-btn { padding:18px 12px; } }
 
   /* --- Sistema de tarjetas / formularios / tablas compacto y uniforme --- */
@@ -15988,8 +16190,19 @@ window.tcMsgAbrirDia=function(fecha){
       var estado='Sin datos de la jornada de hoy', estadoCls='';
 
       if(reg){
-        if(reg.turno && typeof window.tcTurnoTag==='function'){ var t=window.tcTurnoTag(reg.turno); if(t) turnoTxt=t; }
-        else if(reg.turno) turnoTxt=String(reg.turno);
+        // NEXO-003R3 — Turno del día en formato «TAG · Nombre» (p.ej. «V · Vacaciones»,
+        // «CM · Corrido Mañana», «XX · [label]»). Se lee SIEMPRE del registro
+        // (tcGetRegistroDia) y de los accesores tcTurnoTag/tcTurnoNombre; nunca de
+        // localStorage. Al editar el nombre de un tipo de turno, tcTurnoNombre
+        // devuelve el nuevo nombre y Inicio lo refleja al volver.
+        if(reg.turno){
+          var _tag    = (typeof window.tcTurnoTag==='function')    ? (window.tcTurnoTag(reg.turno)||'')    : '';
+          var _nombre = (typeof window.tcTurnoNombre==='function') ? (window.tcTurnoNombre(reg.turno)||'') : '';
+          if(_tag && _nombre && _nombre!==_tag) turnoTxt=_tag+' · '+_nombre;
+          else if(_tag)    turnoTxt=_tag;
+          else if(_nombre) turnoTxt=_nombre;
+          else             turnoTxt=String(reg.turno);
+        }
         var jr=reg.jornada||{};
         var ini = jr.inicioTeorico || (jr.parte1&&jr.parte1.inicioTeorico) || '';
         var fin = jr.finTeorico || (jr.parte2&&jr.parte2.finTeorico) || (jr.parte1&&jr.parte1.finTeorico) || '';
@@ -16088,12 +16301,13 @@ window.tcMsgAbrirDia=function(fecha){
     on('nexoAccRecaudacion', function(){ abrirSeccion('recaudacion'); });
     on('nexoAccNomina', function(){ abrirSeccion('nomina'); });
 
-    // Recaudación hub
-    on('nexoRecNueva', function(){ abrirSeccion('recaudaciones'); });
-    on('nexoRecImportar', function(){ abrirSeccion('importar'); });
-    on('nexoRecLiquidaciones', function(){ abrirSeccion('liquidaciones'); });
-    on('nexoRecEstadillo', function(){ abrirSeccion('estadillo'); });
-    on('nexoRecHistorial', function(){ abrirSeccion('historial'); });
+    // Recaudación hub — R5: al abrir un hijo desde aquí, se registra 'recaudacion'
+    // como pantalla padre para que la flecha superior vuelva primero a Recaudación.
+    on('nexoRecNueva', function(){ abrirSeccion('recaudaciones','recaudacion'); });
+    on('nexoRecImportar', function(){ abrirSeccion('importar','recaudacion'); });
+    on('nexoRecLiquidaciones', function(){ abrirSeccion('liquidaciones','recaudacion'); });
+    on('nexoRecEstadillo', function(){ abrirSeccion('estadillo','recaudacion'); });
+    on('nexoRecHistorial', function(){ abrirSeccion('historial','recaudacion'); });
 
     // Más
     on('nexoMasPerfil', function(){ if(typeof window.tcPerfilAbrirModal==='function') window.tcPerfilAbrirModal(); });
@@ -16103,12 +16317,115 @@ window.tcMsgAbrirDia=function(fecha){
     on('nexoMasAdmin', function(){ var a=$('btnAdminAcceso'); if(a) a.click(); });
     on('nexoMasAjustes', function(){ var ms=$('modalSettings'); if(ms) ms.style.display='flex'; });
 
-    // Refrescar Inicio al volver a él desde la barra inferior
-    var navEl=$('nexoBottomNav');
-    if(navEl){ navEl.querySelectorAll('.nexo-nav-btn').forEach(function(b){ if(b.getAttribute('data-nav')==='inicio') b.addEventListener('click',function(){ setTimeout(refrescarInicio,0); }); }); }
+    /* NEXO-003R3 — Eliminado el listener duplicado de la barra inferior que hacía
+       setTimeout(refrescarInicio,0). El refresco al regresar a Inicio (flecha
+       superior o barra inferior) es ahora responsabilidad ÚNICA de volverAlMenu(),
+       que llama a window.nexoRefrescarInicio() tras el guardado. Sin temporizadores,
+       observadores ni sondeos para navegar. */
 
     function init(){ refrescarInicio(); setTimeout(refrescarInicio, 400); }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  })();
+  </script>
+
+  <!-- =========================================================
+       NEXUM-003R5 — Contención de anchura móvil (sin bloquear zoom)
+       Solo estilos. Última en la cascada: gana. No corta contenido:
+       las tablas anchas conservan su scroll interno propio.
+       ========================================================= -->
+  <style id="nexum-r5-viewport">
+  /* El documento nunca desborda horizontalmente a 360/390/430 px. */
+  html, body { max-width: 100%; overflow-x: hidden; }
+  /* Pantallas y overlays dentro de 100vw. */
+  #contenidoSecciones, #menuPrincipal { max-width: 100vw; }
+  .perfil-overlay { max-width: 100vw; }
+  .perfil-box { max-width: min(440px, calc(100vw - 24px)); }
+  /* Flex/grid pueden encogerse (evita desbordes por contenido rígido). */
+  .menu-grid, .menu-btn, .form-row, .filters, .nexo-card, .perfil-campo,
+  .nexo-saludo, .nexo-mov, .nexo-bloque { min-width: 0; }
+  .menu-grid > *, .form-row > *, .filters > *, .nexo-mov > * { min-width: 0; }
+  /* Imágenes y SVG responsivos (los iconos con tamaño propio mandan por
+     especificidad y no se ven afectados). */
+  img { max-width: 100%; height: auto; }
+  svg { max-width: 100%; }
+  /* Las tablas anchas mantienen su scroll interno, no el del documento. */
+  .table-wrapper { max-width: 100%; overflow-x: auto; }
+  </style>
+
+  <!-- =========================================================
+       NEXUM-003R5 — Recuperación de viewport móvil
+       Corrige desplazamiento horizontal residual a escala normal sin
+       bloquear el zoom del usuario. Una sola ejecución por rAF; sin
+       intervalos, sondeos ni intercepción de gestos.
+       ========================================================= -->
+  <script id="nexum-r5-viewport-js">
+  (function(){
+    var _vpPend = false;
+
+    function ejecutar(){
+      try {
+        var vv = window.visualViewport;
+        /* Usuario con zoom activo (pellizco): NO intervenir. */
+        if(vv && vv.scale > 1.01) return;
+
+        /* Eliminar desplazamiento horizontal residual del documento,
+           conservando la posición vertical exacta. */
+        var y = window.pageYOffset || (document.documentElement && document.documentElement.scrollTop) || 0;
+        var x = window.pageXOffset || (document.documentElement && document.documentElement.scrollLeft) || 0;
+        if(x !== 0){ window.scrollTo(0, y); }
+
+        /* Corregir el cuerpo de cualquier overlay activo (Perfil, Descuentos,
+           Centro de mensajes). Solo su desplazamiento horizontal; no toca datos. */
+        var overlays = document.querySelectorAll('[data-abierto="1"]');
+        for(var i=0;i<overlays.length;i++){
+          var ov = overlays[i];
+          if(ov.scrollLeft){ ov.scrollLeft = 0; }
+          var box = ov.querySelector('.perfil-box, .msg-box');
+          if(box && box.scrollLeft){ box.scrollLeft = 0; }
+        }
+
+        /* Si el elemento enfocado quedó fuera de la vista por teclado u
+           orientación, traerlo a la vista sin alterar el zoom. */
+        var ae = document.activeElement;
+        if(ae && ae !== document.body && typeof ae.getBoundingClientRect === 'function'){
+          var tag = (ae.tagName || '').toLowerCase();
+          if(tag === 'input' || tag === 'select' || tag === 'textarea' || ae.isContentEditable){
+            var r = ae.getBoundingClientRect();
+            var top  = vv ? vv.offsetTop  : 0;
+            var left = vv ? vv.offsetLeft : 0;
+            var h = vv ? vv.height : (window.innerHeight || document.documentElement.clientHeight);
+            var w = vv ? vv.width  : (window.innerWidth  || document.documentElement.clientWidth);
+            if(r.bottom < top || r.top > top + h || r.right < left || r.left > left + w){
+              try { ae.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch(e){}
+            }
+          }
+        }
+      } catch(e){}
+    }
+
+    /* Una sola ejecución coalescida por requestAnimationFrame. Llamadas
+       repetidas dentro del mismo frame se funden en una. */
+    function nexumRecuperarViewport(){
+      if(_vpPend) return;
+      _vpPend = true;
+      requestAnimationFrame(function(){
+        _vpPend = false;
+        ejecutar();
+      });
+    }
+    window.nexumRecuperarViewport = nexumRecuperarViewport;
+
+    /* Conexión a los eventos de reflow del viewport. Pasivos: no se
+       interceptan gestos ni se llama a preventDefault. */
+    function disparar(){ nexumRecuperarViewport(); }
+    if(window.visualViewport && window.visualViewport.addEventListener){
+      window.visualViewport.addEventListener('resize', disparar, { passive: true });
+    }
+    window.addEventListener('resize', disparar, { passive: true });
+    window.addEventListener('orientationchange', disparar, { passive: true });
+    window.addEventListener('pageshow', disparar, { passive: true });
+    /* La navegación (abrirSeccion/volverAlMenu/nexumVolver) y la apertura/cierre
+       de overlays invocan nexumRecuperarViewport() directamente desde su código. */
   })();
   </script>
 
