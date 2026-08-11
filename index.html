@@ -365,34 +365,37 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-mnav button:active{color:#fff;}
 #tc .tc-mlbl{font-size:15px;font-weight:700;min-width:150px;text-align:center;}
 
-/* R6R4 — Cabecera interna AMPLIADA: «Diario del Conductor» + selector Mensual/Anual
-   agrupados en UN solo contenedor (.tc-fixed-block). En vista anual ese bloque
-   COMPLETO es position:sticky, inmediatamente bajo .app-header, con fondo sólido y
-   anchura completa, desplazándose como UNA única cabecera (sin dos sticky
-   independientes ni contenido asomando por debajo). --tc-anual-hdr-top = altura real
-   de .app-header (calculada en JS). z-index por debajo de .app-header (100). Sin la
-   clase (vista mensual) el bloque es flujo normal: aspecto idéntico al anterior. */
+/* R6R5 — Cabecera interna AMPLIADA (.tc-fixed-block) = «Diario del Conductor» +
+   selector Mensual/Anual en UN solo contenedor. En vista anual el bloque completo es
+   position:FIXED (NO sticky: position:sticky falló en iPhone real), anclado al
+   viewport bajo .app-header. Toda la geometría se MIDE en JS y se expone en variables
+   CSS (sin valores horizontales hardcodeados): top = altura real de .app-header;
+   left/width = posición y anchura reales de #tc; --tc-anual-fixed-h = altura real del
+   bloque, que se RESERVA con padding-top en #tc para que el primer mes nunca quede
+   oculto (el bloque sale del flujo). z-index por debajo de .app-header (100). Sin la
+   clase (mensual) el bloque es flujo normal: aspecto idéntico. */
 #tc.tc-anual-activa .tc-fixed-block{
-  position:-webkit-sticky;position:sticky;
-  top:var(--tc-anual-hdr-top,0px);
+  position:fixed;
+  top:var(--tc-anual-fixed-top,0px);
+  left:var(--tc-anual-fixed-left,0px);
+  width:var(--tc-anual-fixed-width,100%);
   z-index:90;
   background:var(--surface);
-  width:100%;
 }
+/* Reserva EXACTA de la altura del bloque fixed en anual (el bloque no ocupa flujo). */
+#tc.tc-anual-activa{ padding-top:var(--tc-anual-fixed-h,0px); }
 /* En anual el selector va a ancho completo dentro del bloque (el fondo lo aporta el
-   contenedor). El antiguo desplegable «Acciones» ya no existe: «Gestionar» vive en
-   la cabecera principal. No afecta a la vista mensual. */
+   contenedor). No afecta a la vista mensual. */
 #tc.tc-anual-activa .tc-view-toggle{
   margin:0;
   padding:8px 6px;
   background:transparent;
 }
-/* R6R4 — CAUSA del fallo del sticky: #contenidoSecciones (overflow-x:hidden) se
-   convertía en contenedor de scroll y anulaba position:sticky. SOLO mientras la
-   vista anual está activa se usa overflow-x:clip (no crea contexto de scroll y no
-   fuerza overflow-y:auto), de modo que el bloque se ancla al viewport. Al pasar a
-   Mensual o salir del Calendario se retira la clase y se restaura overflow-x:hidden. */
-body.tc-anual-scrollfix #contenidoSecciones{ overflow-x:clip; overflow-y:visible; }
+/* R6R5 — El bloque es position:fixed y DEBE anclarse al viewport. Una animación o
+   transform en un ancestro (.tab-content usa @keyframes fadeIn con translateY)
+   convertiría #tab-calendario en su containing block y el fixed pasaría a ser
+   relativo a él. Se neutraliza siempre en el calendario. */
+#tab-calendario{ animation:none !important; transform:none !important; }
 
 /* R6 (tarea 4) — Eliminado el CSS muerto de la cabecera interna del Calendario
    (.tc-menu-wrap, .tc-menu-btn, .tc-hdr-actions, .tc-hdr-ic): sus únicos usuarios
@@ -771,8 +774,8 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-003R6R4</span></div>
-        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM-003R6R4 móvil, autónoma, compacta y consistente.<br>Cabecera de la vista anual del calendario fija (sticky) durante el desplazamiento.<br>Cálculos y datos DEV-010R17 sin cambios.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-003R6R5</span></div>
+        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM-003R6R5 móvil, autónoma, compacta y consistente.<br>Cabecera de la vista anual del calendario fija (position:fixed) durante el desplazamiento.<br>Cálculos y datos DEV-010R17 sin cambios.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
@@ -2559,7 +2562,6 @@ function abrirSeccion(tabId, opts) {
   if (tabId === "estadillo") renderizarEstadillo();
   if (tabId === "historial") renderizarHistorial();
   if (tabId === "calendario") { cargarPDFjsSiNecesario(); if (typeof window.tcCalReabrir === "function") window.tcCalReabrir(); }
-  else { document.body.classList.remove("tc-anual-scrollfix"); } // R6R4: al salir del Calendario se restaura el overflow normal de #contenidoSecciones
   if (tabId === "nomina" && typeof window.tcRenderNomina === "function") window.tcRenderNomina();
   if (tabId === "recaudacion" && typeof window.nexoRenderRecaudacionHub === "function") window.nexoRenderRecaudacionHub();
   if (tabId === "mas" && typeof window.nexoRenderMas === "function") window.nexoRenderMas();
@@ -2610,7 +2612,6 @@ function volverAlMenu() {
   document.getElementById("contenidoSecciones").style.display = "none";
   document.getElementById("menuPrincipal").style.display = "flex";
   document.getElementById("btnVolver").style.display = "none";
-  document.body.classList.remove("tc-anual-scrollfix"); // R6R4: fuera del Calendario, overflow normal
   var _bg = document.getElementById("btnGestionarCal"); if (_bg) _bg.style.display = "none";
   actualizarResumen();
   if (typeof window.nexoActualizarNav === "function") window.nexoActualizarNav("inicio"); // NEXO: estado visual barra inferior
@@ -6414,20 +6415,39 @@ function tcAnualActivarLayout(measurar,scroll){
   if(cal) cal.style.display='none';
   anual.style.display='';
   if(mnav) mnav.style.display='none';
-  /* R6R4 — Cabecera interna AMPLIADA (.tc-fixed-block) fija (sticky) solo en anual. */
+  /* R6R5 — Cabecera interna AMPLIADA (.tc-fixed-block) FIJA (position:fixed) solo en anual. */
   tcEl.classList.add('tc-anual-activa');
-  /* R6R4 — Solo en anual: #contenidoSecciones deja de ser contenedor de scroll
-     (overflow-x:clip) para que el bloque sticky se ancle al viewport. */
-  document.body.classList.add('tc-anual-scrollfix');
   if(measurar){
-    /* R6R4 — El bloque completo se ancla justo bajo .app-header: top = altura REAL
-       de la cabecera principal. Un solo desplazamiento (ya no dos sticky). */
-    var ahR10=document.querySelector('.app-header');
-    var ahH=ahR10?ahR10.offsetHeight:0;
-    tcEl.style.setProperty('--tc-anual-hdr-top',ahH+'px');
+    /* R6R5 — Medir toda la geometría del bloque fixed y exponerla en variables CSS. */
+    tcMedirAnualFixed();
   }
   tcRenderAnual(!!scroll); /* el mes actual siempre se destaca; solo se desplaza si scroll=true */
 }
+
+/* R6R5 — Mide la geometría REAL para el bloque position:fixed y la expone en
+   variables CSS (sin valores hardcodeados):
+     · --tc-anual-fixed-top   = altura real de .app-header (el bloque va justo debajo);
+     · --tc-anual-fixed-left  = posición horizontal real de #tc;
+     · --tc-anual-fixed-width = anchura real de #tc;
+     · --tc-anual-fixed-h     = altura real del bloque (se reserva con padding-top).
+   Solo actúa con la vista anual activa y el calendario visible. No desplaza el scroll. */
+function tcMedirAnualFixed(){
+  var tcEl=document.getElementById('tc');
+  var cal=document.getElementById('tab-calendario');
+  if(!tcEl||!cal) return;
+  if(tcVista!=='anual') return;
+  if(getComputedStyle(cal).display==='none') return;
+  var ah=document.querySelector('.app-header');
+  var fb=tcEl.querySelector('.tc-fixed-block');
+  if(!ah||!fb) return;
+  var tcRect=tcEl.getBoundingClientRect();
+  tcEl.style.setProperty('--tc-anual-fixed-top', Math.round(ah.getBoundingClientRect().height)+'px');
+  tcEl.style.setProperty('--tc-anual-fixed-left', Math.round(tcRect.left)+'px');
+  tcEl.style.setProperty('--tc-anual-fixed-width', Math.round(tcRect.width)+'px');
+  /* La altura se mide con el ancho ya aplicado (getBoundingClientRect fuerza reflujo). */
+  tcEl.style.setProperty('--tc-anual-fixed-h', Math.round(fb.getBoundingClientRect().height)+'px');
+}
+window.tcMedirAnualFixed=tcMedirAnualFixed;
 
 window.tcSetVista=function(v){
   tcVista=v;
@@ -6441,8 +6461,9 @@ window.tcSetVista=function(v){
   if(v==='mes'){
     btnMes.classList.add('active'); btnAnual.classList.remove('active');
     cal.style.display=''; anual.style.display='none'; mnav.style.display='';
-    tcEl.classList.remove('tc-anual-activa'); /* R6R4 — cabecera fija solo en la vista anual */
-    document.body.classList.remove('tc-anual-scrollfix'); /* R6R4 — restaurar overflow normal */
+    /* R6R5 — Quitar la clase retira position:fixed y el padding-top de reserva:
+       se restaura el flujo y el aspecto mensual exactos. */
+    tcEl.classList.remove('tc-anual-activa');
     tcRenderCal();
   } else {
     /* DEV-006R8/R9 — al ENTRAR expresamente se mide y se posiciona en el mes actual */
@@ -6458,24 +6479,20 @@ window.tcCalReabrir=function(){
   if(tcVista==='anual') tcAnualActivarLayout(true,true);
 };
 
-/* R6R4 — Recalcular el top del bloque fijo con la altura REAL de .app-header ante
-   cambios de tamaño/orientación, SOLO si la vista anual está activa y el calendario
-   visible. Coalescido con un ÚNICO requestAnimationFrame (sin intervalos, sondeos
-   ni MutationObserver). No reposiciona el scroll: solo actualiza --tc-anual-hdr-top. */
+/* R6R5 — Recalcular TODA la geometría del bloque fixed ante cambios de tamaño u
+   orientación, SOLO si la vista anual está activa y el calendario visible. Coalescido
+   con un ÚNICO requestAnimationFrame (sin intervalos, sondeos ni MutationObserver).
+   Se expone window.tcRemedirAnual para invocarlo también tras recuperar el viewport. */
 (function(){
   var pend=false;
   function tcRemedirAnual(){
     if(pend) return; pend=true;
     requestAnimationFrame(function(){
       pend=false;
-      if(tcVista!=='anual') return;
-      var tcEl=document.getElementById('tc');
-      var cal=document.getElementById('tab-calendario');
-      if(!tcEl||!cal||getComputedStyle(cal).display==='none') return;
-      var ah=document.querySelector('.app-header');
-      tcEl.style.setProperty('--tc-anual-hdr-top',(ah?ah.offsetHeight:0)+'px');
+      if(typeof window.tcMedirAnualFixed==='function') window.tcMedirAnualFixed();
     });
   }
+  window.tcRemedirAnual=tcRemedirAnual;
   window.addEventListener('resize', tcRemedirAnual, { passive:true });
   window.addEventListener('orientationchange', tcRemedirAnual, { passive:true });
 })();
@@ -16584,6 +16601,10 @@ window.tcMsgAbrirDia=function(fecha){
             }
           }
         }
+        /* R6R5 — Tras recuperar el viewport, recalcular la geometría del bloque fixed
+           de la vista anual (la barra del navegador o la orientación pudieron cambiar
+           la altura de .app-header). Coalescido en su propio rAF; solo actúa en anual. */
+        if(typeof window.tcRemedirAnual === 'function') window.tcRemedirAnual();
       } catch(e){}
     }
 
