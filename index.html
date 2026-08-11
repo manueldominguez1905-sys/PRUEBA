@@ -774,8 +774,8 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-003R6R6</span></div>
-        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM-003R6R6 móvil, autónoma, compacta y consistente.<br>Gestor de cambios a pantalla completa NEXUM e información unificada del cambio en la ficha del día.<br>Cálculos y datos DEV-010R17 sin cambios.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-003R6R7</span></div>
+        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM-003R6R7 móvil, autónoma, compacta y consistente.<br>Cabecera de «Gestionar cambios» reparada con título dinámico por vista.<br>Cálculos y datos DEV-010R17 sin cambios.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
@@ -11119,6 +11119,12 @@ function tcCambioPersistir(){
 var TC_CG_VISTAS=['cg-menu','cg-md','cg-fx','cg-dc','cg-sem','cg-lista','cg-edit','cg-asig','cg-tur'];
 var TC_CG_ATRAS={ 'cg-md':'cg-menu','cg-fx':'cg-menu','cg-dc':'cg-menu','cg-sem':'cg-menu',
                   'cg-lista':'cg-menu','cg-edit':'cg-lista','cg-asig':'cg-lista','cg-tur':'cg-lista' };
+/* NEXUM-003R6R7 — Título de la cabecera por vista (mapa CERRADO; nunca acepta
+   títulos externos ni HTML: se aplica con textContent). */
+var TC_CG_TITULOS={ 'cg-menu':'Gestionar cambios','cg-md':'Cambio en el mismo día',
+                    'cg-fx':'Cambio entre días','cg-dc':'Día a convenir','cg-sem':'Cambio de semana',
+                    'cg-lista':'Cambios registrados','cg-edit':'Editar cambio',
+                    'cg-asig':'Asignar día acordado','cg-tur':'Asignar turno' };
 var tcCgAsigId=null;
 /* DEV-006R4 — contexto de asignación manual de turno al día trabajado. */
 var tcCgTurCtx=null;
@@ -11136,6 +11142,12 @@ window.tcCgVista=function(id){
   /* Flecha atrás visible en todas las vistas internas; oculta en el menú. */
   var back=document.getElementById('cg-back');
   if(back) back.classList[(id==='cg-menu')?'remove':'add']('show');
+  /* NEXUM-003R6R7 — Título dinámico de la cabecera (solo textContent, mapa cerrado)
+     e icono decorativo únicamente en el menú (oculto en vistas internas). */
+  var titEl=document.getElementById('cg-screen-title');
+  if(titEl) titEl.textContent=TC_CG_TITULOS[id]||'Gestionar cambios';
+  var scr=document.getElementById('cg-screen');
+  if(scr) scr.classList[(id==='cg-menu')?'remove':'add']('cg-internal');
   var body=document.getElementById('cg-body');
   if(body) body.scrollTop=0;
 };
@@ -16537,6 +16549,36 @@ window.tcMsgAbrirDia=function(fecha){
   #tc .cg-screen .nexo-fs-body,
   #tc .cg-screen .nexo-fs-body *{ max-width:100%; }
   #tc .cg-screen .nexo-fs-body > *{ max-width:720px; }
+
+  /* ===================================================================
+     NEXUM-003R6R7 — REPARACIÓN DE LA CABECERA DE «GESTIONAR CAMBIOS»
+     -------------------------------------------------------------------
+     #cg-screen vive dentro de #contenidoSecciones, así que la regla general
+     `#contenidoSecciones h2` (color-primary, borde inferior, márgenes,
+     padding) ganaba a .nexo-fs-title y rompía el título (color, margen,
+     alineación). Esta regla específica (2 IDs + 2 clases > 1 ID + 1 elemento)
+     restaura la apariencia NEXUM SIN !important, igual que «Gestión del
+     calendario». La cabecera conserva el fondo granate, el área segura
+     superior (padding-top de .nexo-fs-header) y el modo oscuro. #cg-screen
+     no se mueve de sitio. =============================================== */
+  #contenidoSecciones #cg-screen .nexo-fs-header{ background:var(--color-primary); }
+  #contenidoSecciones #cg-screen .nexo-fs-header .nexo-fs-title{
+    flex:1 1 auto;
+    min-width:0;
+    margin:0;
+    padding:0;
+    border:0;
+    color:#fff;
+    font-size:1.12rem;
+    font-weight:700;
+    line-height:1.2;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  /* En las vistas internas se oculta el icono decorativo para ganar espacio;
+     el título dinámico, la X y la flecha Atrás permanecen. */
+  #contenidoSecciones #cg-screen.cg-internal .nexo-fs-ic{ display:none; }
   </style>
 
   <!-- =========================================================
