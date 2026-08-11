@@ -774,8 +774,8 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-003R6R5</span></div>
-        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM-003R6R5 móvil, autónoma, compacta y consistente.<br>Cabecera de la vista anual del calendario fija (position:fixed) durante el desplazamiento.<br>Cálculos y datos DEV-010R17 sin cambios.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-003R6R6</span></div>
+        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM-003R6R6 móvil, autónoma, compacta y consistente.<br>Gestor de cambios a pantalla completa NEXUM e información unificada del cambio en la ficha del día.<br>Cálculos y datos DEV-010R17 sin cambios.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
@@ -995,8 +995,9 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
           <div class="nexo-dia-item"><span class="k">Turno</span><span class="v" id="nexoDiaTurno">—</span></div>
           <div class="nexo-dia-item"><span class="k">Servicio</span><span class="v" id="nexoDiaServicio">—</span></div>
           <div class="nexo-dia-item"><span class="k">Inicio servicio</span><span class="v" id="nexoDiaInicio">—</span></div>
+          <div class="nexo-dia-item"><span class="k">Fin 1.ª parte</span><span class="v" id="nexoDiaFin1">—</span></div>
           <div class="nexo-dia-item"><span class="k">Inicio 2.ª parte</span><span class="v" id="nexoDiaInicio2">—</span></div>
-          <div class="nexo-dia-item"><span class="k">Fin teórico</span><span class="v" id="nexoDiaFin">—</span></div>
+          <div class="nexo-dia-item"><span class="k">Fin del servicio</span><span class="v" id="nexoDiaFin">—</span></div>
         </div>
         <div class="nexo-dia-estado" id="nexoDiaEstado"><span class="nexo-est-dot" aria-hidden="true"></span><span id="nexoDiaEstadoTxt">Sin datos de la jornada de hoy</span></div>
         <div class="nexo-dia-btns">
@@ -1377,103 +1378,9 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
           </div>
         </div>
 
-        <!-- PANEL GESTOR DE CAMBIOS (DEV-005) — reutiliza y adapta el antiguo diálogo de cambio -->
-        <div id="pnl-cambio" style="display:none">
-          <div class="tc-sh-hd">
-            <div><div class="tc-sh-title">&#128260; Gestionar cambios</div><div class="tc-sh-sub" id="cambio-date">Cambios de turno</div></div>
-            <button class="tc-xbtn" onclick="tcClose()">&#10005;</button>
-          </div>
-          <div class="tc-form">
-
-            <!-- MENÚ DEL GESTOR -->
-            <div id="cg-menu">
-              <div class="tc-cambio-info">&#8505;&#65039; Los cambios gestionan <strong>turnos</strong>. Las hojas de ruta y los servicios nunca se intercambian.</div>
-              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCgVista('cg-md')">&#128260; Cambio de servicio en el mismo día</button>
-              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCgVista('cg-fx')">&#128197; Cambio entre días diferentes</button>
-              <button class="tc-save-btn" style="background:#B45309;" onclick="tcCgVista('cg-dc')">&#9203; Cambio por día a convenir</button>
-              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCgVista('cg-sem')">&#128198; Cambio de semana completa</button>
-              <button class="tc-save-btn" style="background:var(--surface2);color:var(--text2);" onclick="tcCgVista('cg-lista')">&#128203; Cambios pendientes y registrados</button>
-            </div>
-
-            <!-- 1. MISMO DÍA -->
-            <div id="cg-md" style="display:none">
-              <div class="tc-cambio-info">&#8505;&#65039; Cambio de servicio dentro del mismo día. El servicio real llegará después con la hoja de ruta.</div>
-              <div class="tc-fg"><label class="tc-lbl">&#128197; Fecha</label><input class="tc-inp" id="cg-md-fecha" type="date" onchange="tcCgRefrescarMd()"></div>
-              <div class="tc-cg-turnos" id="cg-md-info">Selecciona una fecha.</div>
-              <div class="tc-fg"><label class="tc-lbl">Turno tras el cambio</label><select class="tc-sel" id="cg-md-turno"></select></div>
-              <div class="tc-fg"><label class="tc-lbl">Compañero <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label><input class="tc-inp" id="cg-md-comp" type="text" placeholder="Nombre del compañero"></div>
-              <div class="tc-fg"><label class="tc-lbl">&#128203; Notas</label><textarea class="tc-ta" id="cg-md-notas" rows="2" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
-              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCambioGuardarMismoDia()">Guardar cambio</button>
-              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-menu')">&#8592; Volver</button>
-            </div>
-
-            <!-- 2. DÍAS DIFERENTES -->
-            <div id="cg-fx" style="display:none">
-              <div class="tc-cambio-info">&#8505;&#65039; Se intercambian únicamente los <strong>códigos de turno</strong> de ambos días. Pueden ser de meses distintos.</div>
-              <div class="tc-frow">
-                <div class="tc-fg"><label class="tc-lbl">Día A</label><input class="tc-inp" id="cg-fx-f1" type="date" onchange="tcCgRefrescarFx()"></div>
-                <div class="tc-fg"><label class="tc-lbl">Día B</label><input class="tc-inp" id="cg-fx-f2" type="date" onchange="tcCgRefrescarFx()"></div>
-              </div>
-              <div class="tc-cg-turnos" id="cg-fx-info">Selecciona las dos fechas.</div>
-              <div class="tc-fg"><label class="tc-lbl">Compañero <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label><input class="tc-inp" id="cg-fx-comp" type="text" placeholder="Nombre del compañero"></div>
-              <div class="tc-fg"><label class="tc-lbl">&#128203; Notas</label><textarea class="tc-ta" id="cg-fx-notas" rows="2" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
-              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCambioGuardarFechas()">Intercambiar turnos</button>
-              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-menu')">&#8592; Volver</button>
-            </div>
-
-            <!-- 3. DÍA A CONVENIR -->
-            <div id="cg-dc" style="display:none">
-              <div class="tc-cambio-info">&#8505;&#65039; Queda registrado como <strong>pendiente</strong> hasta que se acuerde el día de devolución.</div>
-              <div class="tc-fg"><label class="tc-lbl">&#128197; Fecha trabajada</label><input class="tc-inp" id="cg-dc-fecha" type="date" onchange="tcCgRefrescarDc()"></div>
-              <div class="tc-cg-turnos" id="cg-dc-info">Selecciona una fecha.</div>
-              <div class="tc-fg"><label class="tc-lbl">Turno realizado</label><select class="tc-sel" id="cg-dc-turno"></select></div>
-              <div class="tc-fg"><label class="tc-lbl">Compañero <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label><input class="tc-inp" id="cg-dc-comp" type="text" placeholder="Nombre del compañero"></div>
-              <div class="tc-fg"><label class="tc-lbl">&#128203; Notas</label><textarea class="tc-ta" id="cg-dc-notas" rows="2" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
-              <button class="tc-save-btn" style="background:#B45309;" onclick="tcCambioGuardarConvenir()">Guardar como pendiente</button>
-              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-menu')">&#8592; Volver</button>
-            </div>
-
-            <!-- 4. SEMANA COMPLETA (DEV-005R2) -->
-            <div id="cg-sem" style="display:none">
-              <div class="tc-cambio-info">&#8505;&#65039; Cambia de una vez el turno de todos los <strong>días laborables</strong> de la semana. Descansos, vacaciones y días no laborables se conservan. No se tocan hojas, servicios, jornadas ni ampliaciones.</div>
-              <div class="tc-frow">
-                <div class="tc-fg"><label class="tc-lbl">A&#241;o</label><select class="tc-sel" id="cg-sem-anio" onchange="tcCgSemAnioCambiado()"></select></div>
-                <div class="tc-fg"><label class="tc-lbl">Semana</label><select class="tc-sel" id="cg-sem-num" onchange="tcCgRefrescarSem()"></select></div>
-              </div>
-              <div class="tc-cg-turnos" id="cg-sem-info">Selecciona el a&#241;o y la semana.</div>
-              <div class="tc-fg"><label class="tc-lbl">Turno recibido</label><select class="tc-sel" id="cg-sem-turno" onchange="tcCgRefrescarSem()"></select></div>
-              <div class="tc-fg"><label class="tc-lbl">Compa&#241;ero <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label><input class="tc-inp" id="cg-sem-comp" type="text" placeholder="Nombre del compañero"></div>
-              <div class="tc-fg"><label class="tc-lbl">&#128203; Notas</label><textarea class="tc-ta" id="cg-sem-notas" rows="2" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
-              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCambioGuardarSemana()">Guardar cambio de semana</button>
-              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-menu')">&#8592; Volver</button>
-            </div>
-
-            <!-- 5. LISTA DE CAMBIOS / 6. DESHACER -->
-            <div id="cg-lista" style="display:none">
-              <div id="cg-lista-body"></div>
-              <button class="tc-btn tc-btn-ghost" style="width:100%;margin-top:6px;" onclick="tcCgVista('cg-menu')">&#8592; Volver</button>
-            </div>
-
-            <!-- ASIGNAR DÍA A UN CAMBIO PENDIENTE -->
-            <div id="cg-asig" style="display:none">
-              <div class="tc-cambio-info" id="cg-asig-head">&#8505;&#65039;</div>
-              <div class="tc-fg"><label class="tc-lbl">&#128197; Día acordado</label><input class="tc-inp" id="cg-asig-fecha" type="date" onchange="tcCgRefrescarAsig()"></div>
-              <div class="tc-cg-turnos" id="cg-asig-info">Selecciona la fecha acordada.</div>
-              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCambioConfirmarAsignacion()">Asignar y resolver</button>
-              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-lista')">&#8592; Volver</button>
-            </div>
-
-            <!-- DEV-006R4 — ASIGNAR TURNO AL DÍA TRABAJADO (cambio laborable/no laborable) -->
-            <div id="cg-tur" style="display:none">
-              <div class="tc-cambio-info" id="cg-tur-head">&#8505;&#65039;</div>
-              <div class="tc-fg"><label class="tc-lbl">Turno realizado (día trabajado)</label><select class="tc-sel" id="cg-tur-turno"></select></div>
-              <div class="tc-cg-turnos" id="cg-tur-info">Selecciona el turno realizado (debe ser laborable).</div>
-              <button class="tc-save-btn" style="background:#E65100;" onclick="tcCambioTurnoManualAplicar()">Aplicar turno y resolver</button>
-              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-lista')">&#8592; Volver</button>
-            </div>
-
-          </div>
-        </div>
+        <!-- PANEL GESTOR DE CAMBIOS (DEV-005) — NEXUM-003R6R6: reubicado fuera de la
+             hoja inferior a una pantalla completa NEXUM (#cg-screen, más abajo).
+             No se duplican formularios ni IDs; se conservan los mismos controles. -->
 
         <!-- PANEL SUBIR HOJAS DE RUTA -->
         <div id="pnl-import" style="display:none">
@@ -1778,6 +1685,135 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
 
         </div><!-- /tc-sh -->
         </div><!-- /tc-ov -->
+
+        <!-- ================= NEXUM-003R6R6 — GESTOR DE CAMBIOS (pantalla completa NEXUM) =================
+             Reubicación del antiguo #pnl-cambio. Cabecera granate fija, cuerpo desplazable
+             independiente, flecha atrás en vistas internas y X para cerrar. Reutiliza los IDs,
+             validaciones y funciones existentes (cg-menu, cg-md, cg-fx, cg-dc, cg-sem, cg-lista,
+             cg-asig, cg-tur) y añade cg-edit para editar solo compañero y notas. -->
+        <div id="cg-screen" class="nexo-fs-overlay cg-screen" role="dialog" aria-modal="true" aria-labelledby="cg-screen-title" aria-hidden="true">
+          <div class="nexo-fs-header">
+            <button class="nexo-fs-navbtn" id="cg-back" type="button" onclick="tcCgAtras()" aria-label="Atrás"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+            <span class="nexo-fs-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></span>
+            <h2 class="nexo-fs-title" id="cg-screen-title">Gestionar cambios</h2>
+            <button class="nexo-fs-navbtn nexo-fs-close" id="cg-close" type="button" onclick="tcCgCerrar()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+          <div class="nexo-fs-body" id="cg-body">
+
+            <!-- MENÚ DEL GESTOR (tarjetas NEXUM) -->
+            <div id="cg-menu">
+              <div class="tc-cambio-info">&#8505;&#65039; Los cambios gestionan <strong>turnos</strong>. Las hojas de ruta y los servicios nunca se intercambian.</div>
+              <div class="cg-menu-list">
+                <button class="cg-opt" type="button" onclick="tcCgVista('cg-md')">
+                  <span class="cg-opt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 16M4 20v-4h4"/></svg></span>
+                  <span class="cg-opt-tx"><span class="cg-opt-tt">Cambio en el mismo día</span><span class="cg-opt-sb">Cambia el turno de un mismo día</span></span>
+                  <span class="cg-opt-ar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+                </button>
+                <button class="cg-opt" type="button" onclick="tcCgVista('cg-fx')">
+                  <span class="cg-opt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/><path d="M8.5 14h5l-1.5-1.5M15.5 17h-5l1.5 1.5"/></svg></span>
+                  <span class="cg-opt-tx"><span class="cg-opt-tt">Cambio entre días diferentes</span><span class="cg-opt-sb">Intercambia los turnos de dos fechas</span></span>
+                  <span class="cg-opt-ar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+                </button>
+                <button class="cg-opt" type="button" onclick="tcCgVista('cg-dc')">
+                  <span class="cg-opt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg></span>
+                  <span class="cg-opt-tx"><span class="cg-opt-tt">Cambio por día a convenir</span><span class="cg-opt-sb">Queda pendiente hasta acordar el día</span></span>
+                  <span class="cg-opt-ar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+                </button>
+                <button class="cg-opt" type="button" onclick="tcCgVista('cg-sem')">
+                  <span class="cg-opt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5M7 13h10M7 16.5h6"/></svg></span>
+                  <span class="cg-opt-tx"><span class="cg-opt-tt">Cambio de semana completa</span><span class="cg-opt-sb">Aplica un turno a la semana laborable</span></span>
+                  <span class="cg-opt-ar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+                </button>
+                <button class="cg-opt cg-opt-alt" type="button" onclick="tcCgVista('cg-lista')">
+                  <span class="cg-opt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></span>
+                  <span class="cg-opt-tx"><span class="cg-opt-tt">Cambios pendientes y registrados</span><span class="cg-opt-sb">Consulta, edita, asigna o deshaz</span></span>
+                  <span class="cg-opt-ar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 1. MISMO DÍA -->
+            <div id="cg-md" style="display:none">
+              <div class="tc-cambio-info">&#8505;&#65039; Cambio de servicio dentro del mismo día. El servicio real llegará después con la hoja de ruta.</div>
+              <div class="tc-fg"><label class="tc-lbl">Fecha</label><input class="tc-inp" id="cg-md-fecha" type="date" onchange="tcCgRefrescarMd()"></div>
+              <div class="tc-cg-turnos" id="cg-md-info">Selecciona una fecha.</div>
+              <div class="tc-fg"><label class="tc-lbl">Turno tras el cambio</label><select class="tc-sel" id="cg-md-turno"></select></div>
+              <div class="tc-fg"><label class="tc-lbl">Compañero <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label><input class="tc-inp" id="cg-md-comp" type="text" maxlength="500" placeholder="Nombre del compañero"></div>
+              <div class="tc-fg"><label class="tc-lbl">Notas</label><textarea class="tc-ta" id="cg-md-notas" rows="2" maxlength="10000" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
+              <button class="tc-save-btn" onclick="tcCambioGuardarMismoDia()">Guardar cambio</button>
+            </div>
+
+            <!-- 2. DÍAS DIFERENTES -->
+            <div id="cg-fx" style="display:none">
+              <div class="tc-cambio-info">&#8505;&#65039; Se intercambian únicamente los <strong>códigos de turno</strong> de ambos días. Pueden ser de meses distintos.</div>
+              <div class="tc-frow">
+                <div class="tc-fg"><label class="tc-lbl">Día A</label><input class="tc-inp" id="cg-fx-f1" type="date" onchange="tcCgRefrescarFx()"></div>
+                <div class="tc-fg"><label class="tc-lbl">Día B</label><input class="tc-inp" id="cg-fx-f2" type="date" onchange="tcCgRefrescarFx()"></div>
+              </div>
+              <div class="tc-cg-turnos" id="cg-fx-info">Selecciona las dos fechas.</div>
+              <div class="tc-fg"><label class="tc-lbl">Compañero <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label><input class="tc-inp" id="cg-fx-comp" type="text" maxlength="500" placeholder="Nombre del compañero"></div>
+              <div class="tc-fg"><label class="tc-lbl">Notas</label><textarea class="tc-ta" id="cg-fx-notas" rows="2" maxlength="10000" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
+              <button class="tc-save-btn" onclick="tcCambioGuardarFechas()">Intercambiar turnos</button>
+            </div>
+
+            <!-- 3. DÍA A CONVENIR -->
+            <div id="cg-dc" style="display:none">
+              <div class="tc-cambio-info">&#8505;&#65039; Queda registrado como <strong>pendiente</strong> hasta que se acuerde el día de devolución.</div>
+              <div class="tc-fg"><label class="tc-lbl">Fecha trabajada</label><input class="tc-inp" id="cg-dc-fecha" type="date" onchange="tcCgRefrescarDc()"></div>
+              <div class="tc-cg-turnos" id="cg-dc-info">Selecciona una fecha.</div>
+              <div class="tc-fg"><label class="tc-lbl">Turno realizado</label><select class="tc-sel" id="cg-dc-turno"></select></div>
+              <div class="tc-fg"><label class="tc-lbl">Compañero <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label><input class="tc-inp" id="cg-dc-comp" type="text" maxlength="500" placeholder="Nombre del compañero"></div>
+              <div class="tc-fg"><label class="tc-lbl">Notas</label><textarea class="tc-ta" id="cg-dc-notas" rows="2" maxlength="10000" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
+              <button class="tc-save-btn" onclick="tcCambioGuardarConvenir()">Guardar como pendiente</button>
+            </div>
+
+            <!-- 4. SEMANA COMPLETA (DEV-005R2) -->
+            <div id="cg-sem" style="display:none">
+              <div class="tc-cambio-info">&#8505;&#65039; Cambia de una vez el turno de todos los <strong>días laborables</strong> de la semana. Descansos, vacaciones y días no laborables se conservan. No se tocan hojas, servicios, jornadas ni ampliaciones.</div>
+              <div class="tc-frow">
+                <div class="tc-fg"><label class="tc-lbl">A&#241;o</label><select class="tc-sel" id="cg-sem-anio" onchange="tcCgSemAnioCambiado()"></select></div>
+                <div class="tc-fg"><label class="tc-lbl">Semana</label><select class="tc-sel" id="cg-sem-num" onchange="tcCgRefrescarSem()"></select></div>
+              </div>
+              <div class="tc-cg-turnos" id="cg-sem-info">Selecciona el a&#241;o y la semana.</div>
+              <div class="tc-fg"><label class="tc-lbl">Turno recibido</label><select class="tc-sel" id="cg-sem-turno" onchange="tcCgRefrescarSem()"></select></div>
+              <div class="tc-fg"><label class="tc-lbl">Compa&#241;ero <span style="font-weight:400;text-transform:none;letter-spacing:0">opcional</span></label><input class="tc-inp" id="cg-sem-comp" type="text" maxlength="500" placeholder="Nombre del compañero"></div>
+              <div class="tc-fg"><label class="tc-lbl">Notas</label><textarea class="tc-ta" id="cg-sem-notas" rows="2" maxlength="10000" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
+              <button class="tc-save-btn" onclick="tcCambioGuardarSemana()">Guardar cambio de semana</button>
+            </div>
+
+            <!-- 5. LISTA DE CAMBIOS / 6. DESHACER -->
+            <div id="cg-lista" style="display:none">
+              <div id="cg-lista-body"></div>
+            </div>
+
+            <!-- EDITAR CAMBIO (NEXUM-003R6R6) — solo compañero y notas -->
+            <div id="cg-edit" style="display:none">
+              <div class="tc-cambio-info">&#8505;&#65039; Solo puedes editar el <strong>compañero</strong> y las <strong>notas</strong>. El tipo, las fechas, los turnos y el estado se conservan. Para cambiarlos, usa &#171;Deshacer&#187; y crea un cambio nuevo.</div>
+              <div class="tc-cg-item" id="cg-edit-resumen"></div>
+              <div class="tc-fg"><label class="tc-lbl">Compañero</label><input class="tc-inp" id="cg-edit-comp" type="text" maxlength="500" placeholder="Nombre del compañero"></div>
+              <div class="tc-fg"><label class="tc-lbl">Notas</label><textarea class="tc-ta" id="cg-edit-notas" rows="3" maxlength="10000" placeholder="Motivo, acuerdo&#8230;"></textarea></div>
+              <button class="tc-save-btn" onclick="tcCambioEditarGuardar()">Guardar</button>
+              <button class="tc-btn tc-btn-ghost" style="width:100%" onclick="tcCgVista('cg-lista')">Cancelar</button>
+            </div>
+
+            <!-- ASIGNAR DÍA A UN CAMBIO PENDIENTE -->
+            <div id="cg-asig" style="display:none">
+              <div class="tc-cambio-info" id="cg-asig-head">&#8505;&#65039;</div>
+              <div class="tc-fg"><label class="tc-lbl">Día acordado</label><input class="tc-inp" id="cg-asig-fecha" type="date" onchange="tcCgRefrescarAsig()"></div>
+              <div class="tc-cg-turnos" id="cg-asig-info">Selecciona la fecha acordada.</div>
+              <button class="tc-save-btn" onclick="tcCambioConfirmarAsignacion()">Asignar y resolver</button>
+            </div>
+
+            <!-- DEV-006R4 — ASIGNAR TURNO AL DÍA TRABAJADO (cambio laborable/no laborable) -->
+            <div id="cg-tur" style="display:none">
+              <div class="tc-cambio-info" id="cg-tur-head">&#8505;&#65039;</div>
+              <div class="tc-fg"><label class="tc-lbl">Turno realizado (día trabajado)</label><select class="tc-sel" id="cg-tur-turno"></select></div>
+              <div class="tc-cg-turnos" id="cg-tur-info">Selecciona el turno realizado (debe ser laborable).</div>
+              <button class="tc-save-btn" onclick="tcCambioTurnoManualAplicar()">Aplicar turno y resolver</button>
+            </div>
+
+          </div>
+        </div>
 
         <div class="tc-toast" id="tc-toast"></div>
       </div><!-- /tc -->
@@ -6705,7 +6741,9 @@ window.tcClose=function(){
 };
 window.tcCloseOnBg=function(e){if(e.target===document.getElementById('tc-ov'))tcClose();};
 window.showPanel=function(id){
-  var panels=['pnl-view','pnl-edit','pnl-cambio','pnl-import','pnl-cal','pnl-borrar','pnl-ajustes','pnl-edit-turno','pnl-asignar','pnl-eventos','pnl-jornada','pnl-ampliaciones','pnl-computos'];
+  /* NEXUM-003R6R6 — 'pnl-cambio' ya no vive en la hoja inferior: el gestor de
+     cambios es una pantalla completa NEXUM independiente (#cg-screen). */
+  var panels=['pnl-view','pnl-edit','pnl-import','pnl-cal','pnl-borrar','pnl-ajustes','pnl-edit-turno','pnl-asignar','pnl-eventos','pnl-jornada','pnl-ampliaciones','pnl-computos'];
   panels.forEach(function(x){document.getElementById(x).style.display=(x===id)?'':'none';});
 };
 function tcShowPanel(id){window.showPanel(id);}
@@ -6804,12 +6842,13 @@ function tcRenderView(key,reg){
     raw.innerHTML='<button class="tc-btn tc-btn-ghost" onclick="tcPdfPick(\'dia-hoja-file\',tcDiaHojaPdf)"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Añadir hoja de ruta</button>';
   }
   var html='';
-  if(reg.cambioTurnoPendiente){
-    html+='<div class="tc-cambio-pend-box">⚠️ Cambio pendiente · Turno pendiente de hoja</div>'; /* DEV-006R4 */
-  } else if(reg.cambioPendiente){
-    html+='<div class="tc-cambio-pend-box">⚠️ Cambio pendiente · Día por convenir</div>';
+  /* NEXUM-003R6R6 — Tarjeta única y completa del cambio (mismo renderizador que la
+     lista). Incluye el estado exacto y el aviso de turno pendiente, por lo que ya
+     no se pintan las antiguas cajas tc-cambio-pend-box (se evita el doble aviso). */
+  if(reg.cambio){
+    var _gDia=tcCambioGrupoPorFecha(key);
+    if(_gDia) html+='<div class="tc-cambio-badge-link">'+tcCambioDetalleHtml(_gDia,{fecha:key})+'</div>';
   }
-  if(reg.cambio) html+=tcCambioBadgeHtml(reg);
   if(reg.servicio) html+='<div class="tc-serv-card"><div class="tc-serv-lbl">Servicio</div><div class="tc-serv-val">'+tcEsc(reg.servicio)+'</div></div>';
   html+=tcJornadaCardHtml(reg);
   if(reg.incidencia) html+='<div class="tc-inc-box">⚠️ '+tcEsc(reg.incidencia)+'</div>';
@@ -7058,6 +7097,78 @@ function tcJornadaFinTeoricoOficialParte(jr,parte){
   if(baseMin==null) return tcMinAHHMMExt(incFinMin);
   return (incFinMin>baseMin)?tcMinAHHMMExt(incFinMin):tcMinAHHMMExt(baseMin);
 }
+
+/* ==================================================================
+   NEXUM-003R6R6 — RESUMEN DEL DÍA (Inicio): CUATRO HORARIOS DE LA HOJA
+   ------------------------------------------------------------------
+   ÚNICO helper puro y de SOLO LECTURA para resolver los cuatro horarios
+   del «Resumen del día» a partir de la jornada del registro. No modifica
+   jornada, INC, descanso ni el registro; no toca OCR, nómina ni cálculos
+   laborales. Reutiliza los helpers existentes de tiempo/INC. Devuelve
+   siempre cadenas listas para mostrar: "HH:MM" (extendida cuando cruza
+   medianoche), "—" o "Revisar".
+
+   · Inicio servicio  = jornada.inicioTeorico | parte1.inicioTeorico.
+   · Fin 1.ª parte    = parte1.finTeorico (crudo de la hoja; NUNCA el fin
+                        oficial con INC, para no sumar la INC dos veces).
+   · Inicio 2.ª parte = finParte1 + descanso.duracionMinutos + duraciónINC
+                        (INC normalizada y sumada UNA sola vez). Sin INC
+                        válida: finParte1 + descanso. Si falta fin o
+                        descanso: fallback parte2.inicioTeorico. Si la INC
+                        es contradictoria, pendiente de ubicar o requiere
+                        revisión (y participaría en la suma): "Revisar".
+   · Fin del servicio = jornada.finTeorico | parte2.finTeorico |
+                        parte1.finTeorico (continua).
+   Jornada continua (sin división): Fin 1.ª parte e Inicio 2.ª parte = "—".
+   Sin jornada: los cuatro = "—". Todo el cálculo en minutos. */
+window.nexoResumenHorarios=function(reg){
+  var out={inicio:'—', fin1:'—', inicio2:'—', fin:'—'};
+  var jr=reg&&reg.jornada;
+  if(!jr) return out;
+  var iniJor=tcJornadaInicioMin(jr); /* referencia para cruce de medianoche */
+  /* Formatea una hora cruda situándola en la línea temporal de la jornada. */
+  function fmt(hRaw){
+    if(!hRaw) return null;
+    var mm=tcMinEnJornada(hRaw,iniJor);
+    return (mm==null)?null:tcMinAHHMMExt(mm);
+  }
+  /* 1) Inicio servicio */
+  var iniTxt=fmt(jr.inicioTeorico||(jr.parte1&&jr.parte1.inicioTeorico)||null);
+  if(iniTxt) out.inicio=iniTxt;
+  /* ¿Jornada partida? Hay fin de 1.ª parte o inicio de 2.ª parte. */
+  var fin1Raw=(jr.parte1&&jr.parte1.finTeorico)||null;
+  var ini2Raw=(jr.parte2&&jr.parte2.inicioTeorico)||null;
+  var hayDivision=!!(fin1Raw||ini2Raw);
+  /* 2) Fin 1.ª parte (crudo de la hoja) */
+  if(hayDivision){ out.fin1=fmt(fin1Raw)||'—'; }
+  /* 3) Inicio 2.ª parte */
+  if(hayDivision){
+    var f1min=fin1Raw?tcMinEnJornada(fin1Raw,iniJor):null;
+    var descMin=(jr.descanso&&jr.descanso.duracionMinutos!=null&&!isNaN(jr.descanso.duracionMinutos))
+      ?parseInt(jr.descanso.duracionMinutos,10):null;
+    if(f1min!=null&&descMin!=null){
+      /* Ruta aditiva: la INC participa. Duración por la normalización existente,
+         sumada EXACTAMENTE una vez. Si la INC no es fiable → "Revisar". */
+      var inc=jr.inc, incDur=0, incRevisar=false;
+      if(tcIncTieneDatos(inc)){
+        var incN=tcIncNormalizar(inc);
+        var contra=tcIncContradictoria(incN.incInicio,incN.incFin,incN.incProgramadaMinutos);
+        var pend=tcIncPendienteUbicar(inc);
+        if(incN.requiereRevision||contra||pend) incRevisar=true;
+        else if(incN.incProgramadaMinutos!=null&&incN.incProgramadaMinutos>0) incDur=incN.incProgramadaMinutos;
+      }
+      if(incRevisar) out.inicio2='Revisar';
+      else out.inicio2=tcMinAHHMMExt(f1min+descMin+incDur)||'—';
+    } else {
+      /* Falta fin o descanso: fallback al inicio teórico de la 2.ª parte. */
+      out.inicio2=fmt(ini2Raw)||'—';
+    }
+  }
+  /* 4) Fin del servicio */
+  var finTxt=fmt(jr.finTeorico||(jr.parte2&&jr.parte2.finTeorico)||(jr.parte1&&jr.parte1.finTeorico)||null);
+  if(finTxt) out.fin=finTxt;
+  return out;
+};
 
 /* FUNCIÓN PURA — Inicio REAL de la segunda parte, según cómo se gestionó el
    descanso tras una ampliación real de la primera parte:
@@ -10910,20 +11021,80 @@ function tcCambioRestaurarDia(r){
   }
 }
 
-function tcCambioBadgeHtml(reg){
-  var html='<div class="tc-cambio-badge-link"><strong>🔄 '+tcEsc(tcCambioTipoLabel(reg.tipoCambio))+'</strong><br>';
-  if(reg.cambioTurnoOriginal!=null&&reg.cambioTurnoFinal!=null&&(reg.cambioTurnoOriginal||reg.cambioTurnoFinal)){
-    html+='Turno original: <strong>'+tcEsc(tcCambioTurnoLabel(reg.cambioTurnoOriginal))+'</strong><br>';
-    html+='Turno actual del cambio: <strong>'+tcEsc(tcCambioTurnoLabel(reg.cambioTurnoFinal))+'</strong><br>';
+/* ==================================================================
+   NEXUM-003R6R6 — RENDERIZADOR UNIFICADO DE GRUPOS DE CAMBIO
+   ------------------------------------------------------------------
+   Un único origen de textos para la ficha del día y para la lista de
+   «Cambios pendientes y registrados». No duplica la agrupación:
+   reutiliza tcCambioAgrupar() (hoisted). tcCambioDetalleHtml() genera
+   SOLO el detalle (sin contenedor ni botones); cada llamante lo envuelve
+   en su tarjeta (badge del día / item de la lista). Puramente de lectura:
+   nunca modifica dias, turnos, fechas, estados ni snapshots.
+   ================================================================== */
+
+/* ¿Algún día del grupo tiene el turno pendiente de hoja de ruta? */
+function tcCambioGrupoTurnoPendiente(g){
+  return !!(g&&g.fechas&&g.fechas.some(function(f){ return dias[f]&&dias[f].cambioTurnoPendiente; }));
+}
+
+/* Estado exacto del grupo: registrado, resuelto, pendiente de día o
+   pendiente de turno. Misma clasificación que usaba la lista. */
+function tcCambioEstadoTexto(g){
+  if(tcCambioGrupoTurnoPendiente(g)) return 'Pendiente · Turno pendiente de hoja';
+  if(g.pendiente) return 'Pendiente · Día por convenir';
+  if(g.tipo==='cambio_semana') return 'Registrado';
+  if(g.legacy) return 'Registrado (formato anterior)';
+  return (g.tipo==='servicio_mismo_dia') ? 'Registrado' : 'Resuelto';
+}
+
+/* Devuelve el grupo de cambio al que pertenece una fecha (o null). Agrupa
+   con tcCambioAgrupar() para que, desde cualquiera de sus días, se obtenga
+   el grupo COMPLETO (las dos fechas de un intercambio, toda la semana…). */
+function tcCambioGrupoPorFecha(fecha){
+  var r=dias[fecha];
+  if(!r||!r.cambio) return null;
+  var grupos=tcCambioAgrupar();
+  for(var i=0;i<grupos.length;i++){
+    if(grupos[i].fechas.indexOf(fecha)!==-1) return grupos[i];
   }
-  if(reg.tipoCambio==='cambio_semana'&&reg.cambioSemanaNum!=null)
-    html+='Semana: <strong>'+tcEsc(String(reg.cambioSemanaNum))+'</strong> de <strong>'+tcEsc(String(reg.cambioSemanaAnio||''))+'</strong><br>';
-  if(reg.cambioTurnoPendiente) html+='<span style="color:#C05621">⏳ Turno pendiente de hoja de ruta</span><br>'; /* DEV-006R4 */
-  var vinc=reg.cambioFechaVinculada||reg.cambioFechaDestino;
-  if(vinc) html+='Día vinculado: <strong>'+tcFmtF(vinc)+'</strong><br>';
-  if(reg.cambioCompanero) html+='Compañero: <strong>'+tcEsc(reg.cambioCompanero)+'</strong><br>';
-  if(reg.cambioNotas) html+='<span style="font-size:12px;color:var(--text2)">'+tcEsc(reg.cambioNotas)+'</span>';
-  return html+'</div>';
+  return null;
+}
+
+/* Devuelve el grupo por su id (para editar/asignar/deshacer). */
+function tcCambioGrupoPorId(id){
+  var grupos=tcCambioAgrupar();
+  for(var i=0;i<grupos.length;i++){ if(grupos[i].id===id) return grupos[i]; }
+  return null;
+}
+
+/* Detalle completo y homogéneo de un grupo de cambio. opts.fecha resalta la
+   fila de esa fecha (útil en la ficha del día). Devuelve solo el contenido
+   interior (el llamante aporta el contenedor). */
+function tcCambioDetalleHtml(grupo,opts){
+  opts=opts||{};
+  var g=grupo, r=g.reg||{};
+  var sep=(g.tipo==='cambio_semana')?' · ':' ↔ ';
+  var h='';
+  h+='<div class="cg-tit">'+tcEsc(tcCambioTipoLabel(g.tipo))+'</div>';
+  h+='<div class="cg-row">Estado: <strong>'+tcEsc(tcCambioEstadoTexto(g))+'</strong></div>';
+  if(g.tipo==='cambio_semana'&&r.cambioSemanaNum!=null)
+    h+='<div class="cg-row">Semana: <strong>'+tcEsc(String(r.cambioSemanaNum))+'</strong> de <strong>'+tcEsc(String(r.cambioSemanaAnio||''))+'</strong></div>';
+  h+='<div class="cg-row">Fechas: <strong>'+g.fechas.map(tcFmtF).join(sep)+'</strong></div>';
+  /* Por fecha: turno original → turno final, con nombre completo. */
+  g.fechas.forEach(function(f){
+    var rr=dias[f]||{};
+    if(rr.cambioTurnoOriginal!=null||rr.cambioTurnoFinal!=null){
+      var hoy=(opts.fecha&&opts.fecha===f)?' cg-hoy':'';
+      h+='<div class="cg-fecha'+hoy+'">'+tcFmtF(f)+': '+tcEsc(tcCambioTurnoLabel(rr.cambioTurnoOriginal))+' → '+tcEsc(tcCambioTurnoLabel(rr.cambioTurnoFinal))+'</div>';
+    }
+  });
+  if(tcCambioGrupoTurnoPendiente(g)) h+='<div class="cg-aviso">⏳ Turno pendiente de hoja de ruta</div>';
+  /* Día vinculado solo si no está ya listado entre las fechas del grupo. */
+  var vinc=r.cambioFechaVinculada||r.cambioFechaDestino;
+  if(vinc&&g.fechas.indexOf(vinc)===-1) h+='<div class="cg-row">Día vinculado: <strong>'+tcFmtF(vinc)+'</strong></div>';
+  if(r.cambioCompanero) h+='<div class="cg-row">Compañero: <strong>'+tcEsc(r.cambioCompanero)+'</strong></div>';
+  if(r.cambioNotas) h+='<div class="cg-notas">'+tcEsc(r.cambioNotas)+'</div>';
+  return h;
 }
 
 /* ---------------- Persistencia y refresco común ---------------- */
@@ -10938,26 +11109,58 @@ function tcCambioPersistir(){
   return true;
 }
 
-/* ---------------- Navegación del gestor ---------------- */
-var TC_CG_VISTAS=['cg-menu','cg-md','cg-fx','cg-dc','cg-sem','cg-lista','cg-asig','cg-tur'];
+/* ---------------- Navegación del gestor (NEXUM-003R6R6 · pantalla completa) ----------------
+   El gestor es ahora #cg-screen, una pantalla NEXUM independiente de la hoja del
+   día. Jerarquía de retroceso: los formularios y la lista vuelven al menú; editar,
+   asignar día y asignar turno vuelven a la lista; el menú cierra. La flecha atrás y
+   Escape siguen esta jerarquía; solo se cierra en el menú principal. Al abrir/cerrar
+   se llama una sola vez a nexumRecuperarViewport() y se restaura el foco. No usa
+   temporizadores, sondeos ni MutationObserver. */
+var TC_CG_VISTAS=['cg-menu','cg-md','cg-fx','cg-dc','cg-sem','cg-lista','cg-edit','cg-asig','cg-tur'];
+var TC_CG_ATRAS={ 'cg-md':'cg-menu','cg-fx':'cg-menu','cg-dc':'cg-menu','cg-sem':'cg-menu',
+                  'cg-lista':'cg-menu','cg-edit':'cg-lista','cg-asig':'cg-lista','cg-tur':'cg-lista' };
 var tcCgAsigId=null;
 /* DEV-006R4 — contexto de asignación manual de turno al día trabajado. */
 var tcCgTurCtx=null;
+var tcCgEditId=null;   /* NEXUM-003R6R6 — grupo en edición (compañero/notas). */
+var tcCgActual='cg-menu';
+var tcCgOpener=null;   /* botón que abrió el gestor (restauración de foco). */
 
 window.tcCgVista=function(id){
   TC_CG_VISTAS.forEach(function(v){
     var el=document.getElementById(v);
     if(el) el.style.display=(v===id)?'':'none';
   });
+  tcCgActual=id;
   if(id==='cg-lista') tcCgRenderLista();
-  var sh=document.querySelector('#tc-ov .tc-sh');
-  if(sh) sh.scrollTop=0;
+  /* Flecha atrás visible en todas las vistas internas; oculta en el menú. */
+  var back=document.getElementById('cg-back');
+  if(back) back.classList[(id==='cg-menu')?'remove':'add']('show');
+  var body=document.getElementById('cg-body');
+  if(body) body.scrollTop=0;
+};
+
+/* Retroceso jerárquico (flecha atrás y Escape). */
+window.tcCgAtras=function(){
+  var dest=TC_CG_ATRAS[tcCgActual];
+  if(dest) tcCgVista(dest);
+  else tcCgCerrar();
+};
+
+/* Cierre del gestor: vuelve al Calendario, restaura el foco y recupera viewport. */
+window.tcCgCerrar=function(){
+  var o=document.getElementById('cg-screen');
+  if(o){ o.style.display='none'; o.setAttribute('aria-hidden','true'); }
+  if(tcCgOpener&&typeof tcCgOpener.focus==='function'){ try{ tcCgOpener.focus(); }catch(e){} }
+  tcCgOpener=null;
+  if(typeof window.nexumRecuperarViewport==='function') window.nexumRecuperarViewport();
 };
 
 window.tcOpenGestorCambios=function(){
   tcBuildTurnoSelects();
   ['cg-md-fecha','cg-md-comp','cg-md-notas','cg-fx-f1','cg-fx-f2','cg-fx-comp','cg-fx-notas',
-   'cg-dc-fecha','cg-dc-comp','cg-dc-notas','cg-asig-fecha','cg-sem-comp','cg-sem-notas'].forEach(function(i){
+   'cg-dc-fecha','cg-dc-comp','cg-dc-notas','cg-asig-fecha','cg-sem-comp','cg-sem-notas',
+   'cg-edit-comp','cg-edit-notas'].forEach(function(i){
     var el=document.getElementById(i); if(el) el.value='';
   });
   document.getElementById('cg-md-turno').value='';
@@ -10969,10 +11172,79 @@ window.tcOpenGestorCambios=function(){
   document.getElementById('cg-asig-info').textContent='Selecciona la fecha acordada.';
   tcCgAsigId=null;
   tcCgTurCtx=null; /* DEV-006R4 */
+  tcCgEditId=null; /* NEXUM-003R6R6 */
+  tcCgOpener=document.activeElement; /* botón «Gestionar cambios» que abre la pantalla */
+  var o=document.getElementById('cg-screen');
+  if(o){ o.style.display='flex'; o.setAttribute('aria-hidden','false'); }
   tcCgVista('cg-menu');
-  tcShowPanel('pnl-cambio');
-  tcOpenOv();
+  var cerrar=document.getElementById('cg-close'); if(cerrar) cerrar.focus();
+  if(typeof window.nexumRecuperarViewport==='function') window.nexumRecuperarViewport();
 };
+
+/* ---------------- Edición segura del cambio (solo compañero y notas) ---------------- */
+window.tcCambioEditar=function(id){
+  var g=tcCambioGrupoPorId(id);
+  if(!g){ tcToast('⚠️ Cambio no encontrado'); tcCgRenderLista(); return; }
+  tcCgEditId=id;
+  var res=document.getElementById('cg-edit-resumen');
+  if(res) res.innerHTML=tcCambioDetalleHtml(g,{}); /* resumen NO editable */
+  document.getElementById('cg-edit-comp').value=(g.reg&&g.reg.cambioCompanero)||'';
+  document.getElementById('cg-edit-notas').value=(g.reg&&g.reg.cambioNotas)||'';
+  tcCgVista('cg-edit');
+};
+
+window.tcCambioEditarGuardar=function(){
+  if(!tcCgEditId) return;
+  var fechas=tcCambioFechasDeGrupo(tcCgEditId);
+  if(!fechas.length){ tcToast('⚠️ Cambio no encontrado'); tcCgVista('cg-lista'); return; }
+  var comp=(document.getElementById('cg-edit-comp').value||'').slice(0,500);
+  var notas=(document.getElementById('cg-edit-notas').value||'').slice(0,10000);
+  /* Snapshot exacto de los valores anteriores de TODOS los días del grupo, para
+     restaurarlos sin pérdida si la persistencia falla. */
+  var prev=fechas.map(function(f){ var r=dias[f]||{}; return {f:f, comp:r.cambioCompanero, notas:r.cambioNotas}; });
+  /* Solo se tocan compañero y notas. Nunca tipo, estado, fechas, turnos, snapshots
+     (cambioEstadoAnterior) ni vínculos. */
+  fechas.forEach(function(f){ var r=dias[f]; if(r){ r.cambioCompanero=comp; r.cambioNotas=notas; } });
+  if(!saveDias()){
+    /* Persistencia fallida: se restauran exactamente los valores anteriores y NO se
+       declara éxito ni se cierra la edición (saveDias ya avisó). */
+    prev.forEach(function(p){ var r=dias[p.f]; if(r){ r.cambioCompanero=p.comp; r.cambioNotas=p.notas; } });
+    return;
+  }
+  tcRenderCal();
+  tcCgEditId=null;
+  tcCgVista('cg-lista');
+  /* Actualizar también la ficha diaria abierta, si corresponde. */
+  if(activeDate&&dias[activeDate]) tcRenderView(activeDate,dias[activeDate]);
+  tcToast('✔ Cambio actualizado');
+};
+
+/* Escape y trampa de foco dentro del gestor (sin temporizadores ni observadores). */
+(function(){
+  var o=document.getElementById('cg-screen');
+  if(!o) return;
+  function visibles(){
+    return Array.prototype.slice.call(o.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )).filter(function(el){ return !el.disabled && el.offsetParent!==null; });
+  }
+  o.addEventListener('keydown',function(e){
+    if(o.style.display!=='flex') return;
+    /* Si hay un modal de confirmación encima, dejar que lo gestione él. */
+    var mp=document.getElementById('modalJornadaPrompt');
+    if(mp&&mp.style.display==='flex') return;
+    if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); tcCgAtras(); return; }
+    if(e.key==='Tab'){
+      var f=visibles(); if(!f.length) return;
+      var first=f[0], last=f[f.length-1];
+      if(e.shiftKey){
+        if(document.activeElement===first||!o.contains(document.activeElement)){ e.preventDefault(); last.focus(); }
+      }else{
+        if(document.activeElement===last||!o.contains(document.activeElement)){ e.preventDefault(); first.focus(); }
+      }
+    }
+  });
+})();
 
 /* ---------------- Refrescos de información ---------------- */
 function tcCgTextoDia(fecha){
@@ -11612,6 +11884,14 @@ function tcCambioAgrupar(){
   return grupos;
 }
 
+/* Iconos SVG homogéneos para las acciones de la lista (sin emojis). */
+var TC_CG_IC={
+  editar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18 10l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+  turno:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>',
+  dia:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 10h16M8 3v4M16 3v4M8.5 15l2.2 2.2L15.5 13"/></svg>',
+  deshacer:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 0 1 0 10h-3"/></svg>'
+};
+
 window.tcCgRenderLista=function(){
   var cont=document.getElementById('cg-lista-body');
   if(!cont) return;
@@ -11619,39 +11899,18 @@ window.tcCgRenderLista=function(){
   if(!grupos.length){ cont.innerHTML='<div class="tc-cg-empty">No hay cambios registrados.</div>'; return; }
   var html='';
   grupos.forEach(function(g){
-    var r=g.reg;
     html+='<div class="tc-cg-item'+(g.pendiente?' pend':'')+'">';
-    if(g.tipo==='cambio_semana'){
-      /* DEV-005R2 — Un solo registro para toda la semana. */
-      html+='<strong>📆 '+tcEsc(tcCambioResumenSemana(g))+'</strong><br>';
-      html+='Semana <strong>'+tcEsc(String(r.cambioSemanaNum!=null?r.cambioSemanaNum:'?'))+'</strong> de <strong>'+tcEsc(String(r.cambioSemanaAnio||''))+'</strong> · '+tcFmtF(g.fechas[0])+' → '+tcFmtF(g.fechas[g.fechas.length-1])+'<br>';
-      html+='Estado: <strong>Registrado</strong><br>';
-    }else{
-    /* DEV-006R4 — Un cambio mixto puede quedar con el turno del día trabajado
-       pendiente de hoja de ruta. */
-    var turnoPend=g.fechas.some(function(f){ return dias[f]&&dias[f].cambioTurnoPendiente; });
-    html+='<strong>'+(g.pendiente?'⚠️ ':'🔄 ')+tcEsc(tcCambioTipoLabel(g.tipo))+'</strong><br>';
-    html+='Fechas: <strong>'+g.fechas.map(tcFmtF).join(' ↔ ')+'</strong><br>';
-    if(turnoPend) html+='Estado: <strong>Pendiente · Turno pendiente de hoja</strong><br>';
-    else if(g.pendiente) html+='Estado: <strong>Pendiente · Día por convenir</strong><br>';
-    else if(g.legacy) html+='Estado: <strong>Registrado (formato anterior)</strong><br>';
-    else html+='Estado: <strong>'+(g.tipo==='servicio_mismo_dia'?'Registrado':'Resuelto')+'</strong><br>';
-    }
-    g.fechas.forEach(function(f){
-      var rr=dias[f]||{};
-      if(rr.cambioTurnoOriginal!=null||rr.cambioTurnoFinal!=null){
-        html+='<span style="font-size:12px">'+tcFmtF(f)+': '+tcEsc(tcCambioTurnoLabel(rr.cambioTurnoOriginal))+' → '+tcEsc(tcCambioTurnoLabel(rr.cambioTurnoFinal))+'</span><br>';
-      }
-    });
-    if(r.cambioCompanero) html+='Compañero: <strong>'+tcEsc(r.cambioCompanero)+'</strong><br>';
-    if(r.cambioNotas) html+='<span style="font-size:12px;color:var(--text3)">'+tcEsc(r.cambioNotas)+'</span><br>';
-    html+='<div class="tc-cg-acts">';
+    /* NEXUM-003R6R6 — Mismo renderizador que la ficha del día. */
+    html+=tcCambioDetalleHtml(g,{});
+    html+='<div class="cg-acts">';
+    /* Editar: solo compañero y notas (nunca tipo/estado/fechas/turnos). */
+    html+='<button class="tc-btn tc-btn-ghost" onclick="tcCambioEditar(\''+g.id+'\')">'+TC_CG_IC.editar+'Editar</button>';
     /* DEV-006R4 — El pendiente de turno se resuelve asignando el turno del día
        trabajado (o cargando su hoja de ruta); el de día por convenir, con la fecha. */
-    if(g.fechas.some(function(f){ return dias[f]&&dias[f].cambioTurnoPendiente; }))
-      html+='<button class="tc-btn tc-btn-primary" onclick="tcCambioAsignarTurnoManual(\''+g.id+'\')">🎯 Asignar turno</button>';
-    else if(g.pendiente) html+='<button class="tc-btn tc-btn-primary" onclick="tcCambioAbrirAsignar(\''+g.id+'\')">📅 Asignar día</button>';
-    html+='<button class="tc-btn tc-btn-danger" onclick="tcCambioDeshacer(\''+g.id+'\')">↩️ Deshacer</button>';
+    if(tcCambioGrupoTurnoPendiente(g))
+      html+='<button class="tc-btn tc-btn-primary" onclick="tcCambioAsignarTurnoManual(\''+g.id+'\')">'+TC_CG_IC.turno+'Asignar turno</button>';
+    else if(g.pendiente) html+='<button class="tc-btn tc-btn-primary" onclick="tcCambioAbrirAsignar(\''+g.id+'\')">'+TC_CG_IC.dia+'Asignar día</button>';
+    html+='<button class="tc-btn tc-btn-danger" onclick="tcCambioDeshacer(\''+g.id+'\')">'+TC_CG_IC.deshacer+'Deshacer</button>';
     html+='</div></div>';
   });
   cont.innerHTML=html;
@@ -16224,6 +16483,60 @@ window.tcMsgAbrirDia=function(fecha){
   /* --- Barra inferior: área táctil e iconos homogéneos --- */
   .nexo-nav-btn { min-height:56px; }
   .nexo-nav-text { margin-top:2px; }
+
+  /* ===================================================================
+     NEXUM-003R6R6 — GESTOR DE CAMBIOS A PANTALLA COMPLETA (rediseño)
+     Reutiliza el patrón NEXUM (.nexo-fs-*) y los tokens de #tc (granate).
+     z-index 500: por encima del calendario y de la hoja del día (300),
+     por debajo del toast (#tc-toast 600) y de los modales (9999). No crea
+     un segundo gestor: reubica el mismo #pnl-cambio (sus IDs y forms).
+     =================================================================== */
+  #tc .cg-screen{ z-index:500; }
+  #tc .cg-screen .nexo-fs-header{ background:var(--brand); }
+  #tc .cg-screen .nexo-fs-navbtn{ width:44px; height:44px; border-radius:12px; }
+  #tc .cg-screen .nexo-fs-body{ background:var(--bg); }
+  #tc .cg-screen .nexo-fs-body > *{ max-width:720px; }
+
+  /* Menú principal: tarjetas NEXUM en columna (sin emojis, SVG homogéneo) */
+  #tc .cg-menu-list{ display:flex; flex-direction:column; gap:12px; }
+  #tc .cg-opt{ display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+    background:var(--surface); border:2px solid var(--border); border-radius:16px;
+    padding:14px 15px; min-height:64px; box-shadow:var(--sh-s); color:var(--text);
+    transition:border-color .2s ease, box-shadow .2s ease, transform .12s ease;
+    -webkit-tap-highlight-color:transparent; }
+  #tc .cg-opt:active{ transform:scale(.985); }
+  #tc .cg-opt:hover{ border-color:var(--brand); box-shadow:var(--sh-m); }
+  #tc .cg-opt-ic{ flex:0 0 auto; width:44px; height:44px; border-radius:12px; display:flex;
+    align-items:center; justify-content:center; background:var(--brand-light); color:var(--brand); }
+  #tc .cg-opt-ic svg{ width:24px; height:24px; }
+  #tc .cg-opt-tx{ flex:1 1 auto; min-width:0; }
+  #tc .cg-opt-tt{ font-size:15px; font-weight:700; line-height:1.25; }
+  #tc .cg-opt-sb{ font-size:12.5px; color:var(--text2); margin-top:2px; line-height:1.3; }
+  #tc .cg-opt-ar{ flex:0 0 auto; color:var(--text3); display:flex; align-items:center; }
+  #tc .cg-opt-ar svg{ width:18px; height:18px; }
+  #tc .cg-opt.cg-opt-alt .cg-opt-ic{ background:var(--surface2); color:var(--text2); }
+
+  /* Tarjeta de detalle unificada (misma info en la ficha del día y en la lista) */
+  #tc .cg-tit{ font-size:14.5px; font-weight:800; color:var(--text); margin-bottom:2px; }
+  #tc .cg-row{ font-size:13px; }
+  #tc .cg-row strong{ color:var(--text); }
+  #tc .cg-fecha{ font-size:12.5px; color:var(--text2); }
+  #tc .cg-fecha.cg-hoy{ font-weight:800; color:var(--text); }
+  #tc .cg-aviso{ font-size:12.5px; font-weight:700; color:#C05621; }
+  body.dark #tc .cg-aviso{ color:#F0A868; }
+  #tc .cg-notas{ font-size:12px; color:var(--text3); margin-top:3px; white-space:pre-wrap; word-break:break-word; }
+
+  /* Botones de acción de la lista: SVG homogéneo, área táctil 44px */
+  #tc .cg-acts{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  #tc .cg-acts .tc-btn{ display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    min-height:44px; padding:9px 10px; font-size:13px; }
+  #tc .cg-acts .tc-btn svg{ width:17px; height:17px; flex:0 0 auto; }
+  #tc #cg-edit-resumen{ margin-bottom:14px; }
+
+  /* Sin scroll horizontal a 360/390/430 px */
+  #tc .cg-screen .nexo-fs-body,
+  #tc .cg-screen .nexo-fs-body *{ max-width:100%; }
+  #tc .cg-screen .nexo-fs-body > *{ max-width:720px; }
   </style>
 
   <!-- =========================================================
@@ -16361,7 +16674,7 @@ window.tcMsgAbrirDia=function(fecha){
       // Diario (copia de solo lectura): turno y servicio del registro, inicio/fin
       // de su jornada. No se infiere el servicio desde listaRecaudaciones.
       var reg = (typeof window.tcGetRegistroDia==='function') ? window.tcGetRegistroDia(hoyKey()) : null;
-      var turnoTxt='—', servicioTxt='—', iniTxt='—', ini2Txt='—', finTxt='—';
+      var turnoTxt='—', servicioTxt='—', iniTxt='—', fin1Txt='—', ini2Txt='—', finTxt='—';
       var estado='Sin datos de la jornada de hoy', estadoCls='';
 
       if(reg){
@@ -16379,17 +16692,19 @@ window.tcMsgAbrirDia=function(fecha){
           else             turnoTxt=String(reg.turno);
         }
         var jr=reg.jornada||{};
-        // R6R1 (tarea 1) — Resumen del día con inicio de cada parte:
-        //   · «Inicio servicio»  = inicio teórico de la jornada / 1.ª parte.
-        //   · «Inicio 2.ª parte» = inicio teórico de la 2.ª parte (solo jornada partida).
-        //   · «Fin teórico»      = fin teórico de la jornada / 2.ª parte / 1.ª parte.
-        // Solo lectura de la copia defensiva de la jornada; sin cálculos económicos.
-        var ini  = jr.inicioTeorico || (jr.parte1&&jr.parte1.inicioTeorico) || '';
-        var ini2 = (jr.parte2&&jr.parte2.inicioTeorico) || '';
-        var fin  = jr.finTeorico || (jr.parte2&&jr.parte2.finTeorico) || (jr.parte1&&jr.parte1.finTeorico) || '';
-        if(ini)  iniTxt=ini;
-        if(ini2) ini2Txt=ini2;
-        if(fin)  finTxt=fin;
+        // NEXUM-003R6R6 — Resumen del día con los CUATRO horarios de la jornada de la
+        // hoja de ruta (Inicio servicio · Fin 1.ª parte · Inicio 2.ª parte · Fin del
+        // servicio). Todo el cálculo lo resuelve el helper puro y de solo lectura
+        // window.nexoResumenHorarios(reg): admite horas extendidas/cruce de medianoche,
+        // suma la INC una sola vez y muestra «Revisar»/«—» cuando corresponde. No toca
+        // jornada, INC, descanso, OCR, nómina ni persistencia.
+        var _h = (typeof window.nexoResumenHorarios==='function')
+          ? window.nexoResumenHorarios(reg)
+          : {inicio:'—',fin1:'—',inicio2:'—',fin:'—'};
+        iniTxt  = _h.inicio;
+        fin1Txt = _h.fin1;
+        ini2Txt = _h.inicio2;
+        finTxt  = _h.fin;
         if(reg.servicio) servicioTxt=String(reg.servicio);
         var real = (jr.horaFinRealParte2||jr.horaFinRealParte1);
         if(real){ estado='Jornada registrada'; estadoCls='ok'; }
@@ -16399,7 +16714,8 @@ window.tcMsgAbrirDia=function(fecha){
       if($('nexoDiaTurno')) $('nexoDiaTurno').textContent=turnoTxt;
       if($('nexoDiaServicio')) $('nexoDiaServicio').textContent=servicioTxt;
       if($('nexoDiaInicio')) $('nexoDiaInicio').textContent=iniTxt;
-      if($('nexoDiaInicio2')) $('nexoDiaInicio2').textContent=ini2Txt; // R6R1 (tarea 1)
+      if($('nexoDiaFin1')) $('nexoDiaFin1').textContent=fin1Txt;   // NEXUM-003R6R6 (4.ª casilla)
+      if($('nexoDiaInicio2')) $('nexoDiaInicio2').textContent=ini2Txt;
       if($('nexoDiaFin')) $('nexoDiaFin').textContent=finTxt;
       var est=$('nexoDiaEstado');
       if(est){ est.className='nexo-dia-estado'+(estadoCls?(' '+estadoCls):''); if($('nexoDiaEstadoTxt')) $('nexoDiaEstadoTxt').textContent=estado; }
