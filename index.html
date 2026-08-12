@@ -781,8 +781,8 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-004</span></div>
-        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM-003R6R7 móvil, autónoma, compacta y consistente.<br>Cabecera de «Gestionar cambios» reparada con título dinámico por vista.<br>Cálculos y datos DEV-010R17 sin cambios.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM004R2</span></div>
+        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Importador de recaudación: fecha e inicio/fin del servicio blindados frente al DOM.<br>Cálculos y datos DEV-010R17 sin cambios.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
@@ -1183,6 +1183,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
         <h3>Datos detectados</h3>
         <p class="help-text">Revisa y completa los campos no detectados.</p>
         <div id="impInfoExistente" class="info-box" style="display:none; margin-bottom:10px;"></div>
+        <div id="impResumenServicio" class="info-box" style="display:none; margin-bottom:10px;"></div>
         <div class="form-row">
           <label>Fecha <input type="date" id="impFecha" /></label>
           <label>Hora <input type="time" id="impHora" /></label>
@@ -1537,42 +1538,23 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
         <!-- PANEL EVENTOS LABORALES (aditivo — Calendario de Eventos Laborales) -->
         <div id="pnl-eventos" style="display:none">
           <div class="tc-sh-hd">
-            <div><div class="tc-sh-title">&#127881; Eventos laborales</div><div class="tc-sh-sub">Festivos, Feria, Semana Santa, Roc&#237;o&#8230;</div></div>
+            <div><div class="tc-sh-title">Importar calendario de eventos</div><div class="tc-sh-sub">PDF digital NEXUM de eventos laborales</div></div>
             <button class="tc-xbtn" onclick="tcClose()">&#10005;</button>
           </div>
           <div class="tc-imp-panel">
             <div id="ev-zone-wrap">
               <div class="tc-zone" onclick="document.getElementById('ev-file').click()">
-                <div class="tc-zone-icon">&#127881;</div>
-                <div class="tc-zone-title">Seleccionar calendario de eventos (PDF o imagen)</div>
-                <div class="tc-zone-sub">Festivos &middot; Semana Santa &middot; Feria &middot; Roc&#237;o &middot; Marat&#243;n &middot; Aperturas</div>
-                <input type="file" id="ev-file" accept="application/pdf,image/jpeg,image/jpg,image/png,image/webp" onchange="tcEventosLoad(this)" style="display:none">
+                <div class="tc-zone-icon">&#128196;</div>
+                <div class="tc-zone-title">Seleccionar PDF de eventos laborales</div>
+                <input type="file" id="ev-file" accept="application/pdf,.pdf" onchange="tcEventosLoad(this)" style="display:none">
               </div>
-              <div class="tc-tip">&#128161; Se detecta autom&#225;ticamente si es PDF o imagen, y el a&#241;o de cada evento.</div>
+              <div class="tc-tip">&#128196; PDF digital NEXUM con las columnas FECHA, TIPO y NOMBRE.</div>
             </div>
             <div id="ev-prog" style="display:none">
               <div class="tc-prog-wrap">
-                <div class="tc-prog-title" id="ev-prog-txt">Leyendo archivo&#8230;</div>
+                <div class="tc-prog-title" id="ev-prog-txt">Leyendo PDF&#8230;</div>
                 <div class="tc-prog-bg"><div class="tc-prog-bar" id="ev-bar" style="width:0%"></div></div>
                 <div id="ev-editor-wrap"></div>
-                <div id="ev-bulk-wrap" style="margin-top:14px;padding-top:14px;border-top:1px solid #E2E8F0;">
-                  <div class="tc-cal-resumen-title" style="margin-bottom:6px;">Pegado masivo</div>
-                  <div class="tc-tip">Una línea por evento: <code>DD/MM/AAAA | Tipo | Nombre</code> (también admite <code>AAAA-MM-DD | Tipo | Nombre</code>).</div>
-                  <textarea id="ev-bulk-text" class="tc-inp" rows="5" style="width:100%;margin-top:6px;font-family:monospace;" placeholder="25/12/2026 | Festivo | Navidad"></textarea>
-                  <button class="tc-btn tc-btn-ghost" style="margin-top:6px;" onclick="tcEventosPegadoMasivo()">&#128203; Añadir pegado</button>
-                  <div id="ev-bulk-error"></div>
-                </div>
-                <div id="ev-periodo-wrap" style="margin-top:14px;padding-top:14px;border-top:1px solid #E2E8F0;">
-                  <div class="tc-cal-resumen-title" style="margin-bottom:6px;">Añadir periodo</div>
-                  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                    <input class="tc-inp" type="date" id="ev-per-ini" style="flex:0 0 150px;" title="Fecha inicial">
-                    <input class="tc-inp" type="date" id="ev-per-fin" style="flex:0 0 150px;" title="Fecha final">
-                    <select class="tc-sel" id="ev-per-tipo" style="flex:1 1 170px;"></select>
-                    <input class="tc-inp" type="text" id="ev-per-nombre" placeholder="Nombre del evento" style="flex:2 1 200px;">
-                  </div>
-                  <button class="tc-btn tc-btn-ghost" style="margin-top:6px;" onclick="tcEventosAnadirPeriodo()">&#128197; Añadir periodo</button>
-                  <div id="ev-per-error"></div>
-                </div>
                 <div id="ev-error-wrap"></div>
                 <div id="ev-conflicto-wrap"></div>
               </div>
@@ -3102,8 +3084,38 @@ function extraerCamposTUSSAM(texto) {
        Fecha:    25/06/26
        Total:    EUR 57,40
      Mantiene compatibilidad con formato correo (Inicio servicio, TOT. A INGRESAR). */
-  var resultado = { fecha: "", hora: "", recibo: "", maquina: "", servicio: "", importe: "" };
+  var resultado = { fecha: "", hora: "", recibo: "", maquina: "", servicio: "", importe: "",
+                    inicioServicio: "", finServicio: "", esCorreoRecaudacion: false, finServicioFaltante: false };
   var t = texto.replace(/\r/g, "\n").replace(/[ \t]+/g, " ");
+
+  // ── CORRECCIÓN QUIRÚRGICA · Correo "RESUMEN DE RECAUDACIÓN" ──────────────────
+  // La hora real de finalización de la parte es SIEMPRE "Fin servicio",
+  // nunca "Informe emitido" (esa hora no pertenece a la jornada).
+  //   · fecha            ← "Inicio servicio"
+  //   · inicioServicio   ← hora de "Inicio servicio"  (HH:MM, sin redondear)
+  //   · finServicio      ← hora de "Fin servicio"     (HH:MM, sin redondear)
+  //   · hora             ← finServicio  (final real que se guarda)
+  // Los segundos se leen para interpretar bien la hora, pero se guarda HH:MM.
+  var esRecaudacion = /RESUMEN\s+DE\s+RECAUDACI[OÓ]N/i.test(t);
+  if (esRecaudacion) {
+    resultado.esCorreoRecaudacion = true;
+    // "Inicio servicio: DD/MM/YYYY HH:MM:SS" → fecha + hora de inicio
+    var mIni = t.match(/[Ii]nicio\s+servicio\s*:\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})\s+(\d{1,2}):(\d{2})(?::\d{2})?/);
+    if (mIni) {
+      resultado.fecha = (mIni[3].length === 2 ? "20" + mIni[3] : mIni[3]) + "-" + mIni[2].padStart(2, "0") + "-" + mIni[1].padStart(2, "0");
+      resultado.inicioServicio = mIni[4].padStart(2, "0") + ":" + mIni[5];
+    }
+    // "Fin servicio: DD/MM/YYYY HH:MM:SS" → hora final real (con o sin fecha delante)
+    var mFin = t.match(/[Ff]in\s+servicio\s*:\s*(?:\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}\s+)?(\d{1,2}):(\d{2})(?::\d{2})?/);
+    if (mFin) {
+      resultado.finServicio = mFin[1].padStart(2, "0") + ":" + mFin[2];
+      resultado.hora = resultado.finServicio;   // "hora" = EXCLUSIVAMENTE el fin del servicio
+    } else {
+      resultado.finServicioFaltante = true;     // sin fin de servicio no se puede guardar
+    }
+    // "Informe emitido" queda IGNORADO por completo: ni fecha, ni hora, ni fallback.
+  }
+  // ────────────────────────────────────────────────────────────────────────────
 
   // RECIBO: "Recibo: 149726" / "Recibo : 149726"
   var mRecibo = t.match(/[Rr]ecibo\s*[:\s]\s*(\d{4,10})/);
@@ -3113,29 +3125,34 @@ function extraerCamposTUSSAM(texto) {
   var mMaquina = t.match(/[Mm][aá]quina\s*[:\s]\s*([\w\-]{4,20})/);
   if (mMaquina) resultado.maquina = mMaquina[1].trim();
 
-  // FECHA ticket: "Fecha: 25/06/26" (DD/MM/YY o DD/MM/YYYY)
-  var mFecha = t.match(/[Ff]echa\s*[:\s]\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
-  if (mFecha) {
-    var d1=mFecha[1].padStart(2,"0"), m1=mFecha[2].padStart(2,"0");
-    var a1=mFecha[3].length===2?"20"+mFecha[3]:mFecha[3];
-    resultado.fecha = a1+"-"+m1+"-"+d1;
-  } else {
-    // FECHA correo: "Inicio servicio: DD/MM/YYYY"
-    var mFI = t.match(/[Ii]nicio\s+servicio\s*:\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
-    if (mFI) {
-      resultado.fecha=(mFI[3].length===2?"20"+mFI[3]:mFI[3])+"-"+mFI[2].padStart(2,"0")+"-"+mFI[1].padStart(2,"0");
+  // FECHA/HORA genéricas (tickets físicos y otros correos). En los correos de
+  // recaudación NO se ejecutan: la fecha ya viene de "Inicio servicio" y la hora
+  // de "Fin servicio"; así "Informe emitido" nunca puede filtrarse como fallback.
+  if (!esRecaudacion) {
+    // FECHA ticket: "Fecha: 25/06/26" (DD/MM/YY o DD/MM/YYYY)
+    var mFecha = t.match(/[Ff]echa\s*[:\s]\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
+    if (mFecha) {
+      var d1=mFecha[1].padStart(2,"0"), m1=mFecha[2].padStart(2,"0");
+      var a1=mFecha[3].length===2?"20"+mFecha[3]:mFecha[3];
+      resultado.fecha = a1+"-"+m1+"-"+d1;
     } else {
-      var mFE = t.match(/[Ii]nforme\s+emitido\s*:\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
-      if (mFE) {
-        resultado.fecha=(mFE[3].length===2?"20"+mFE[3]:mFE[3])+"-"+mFE[2].padStart(2,"0")+"-"+mFE[1].padStart(2,"0");
+      // FECHA correo: "Inicio servicio: DD/MM/YYYY"
+      var mFI = t.match(/[Ii]nicio\s+servicio\s*:\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
+      if (mFI) {
+        resultado.fecha=(mFI[3].length===2?"20"+mFI[3]:mFI[3])+"-"+mFI[2].padStart(2,"0")+"-"+mFI[1].padStart(2,"0");
+      } else {
+        var mFE = t.match(/[Ii]nforme\s+emitido\s*:\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
+        if (mFE) {
+          resultado.fecha=(mFE[3].length===2?"20"+mFE[3]:mFE[3])+"-"+mFE[2].padStart(2,"0")+"-"+mFE[1].padStart(2,"0");
+        }
       }
     }
-  }
 
-  // HORA: "Hora: 10:32" / junto a la fecha "25/06/26 10:32" / "10:32:05"
-  var mHora = t.match(/[Hh]ora\s*[:\s]\s*(\d{1,2}):(\d{2})/);
-  if (!mHora) mHora = t.match(/\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}\D{1,5}(\d{1,2}):(\d{2})/);
-  if (mHora) resultado.hora = mHora[1].padStart(2, "0") + ":" + mHora[2];
+    // HORA: "Hora: 10:32" / junto a la fecha "25/06/26 10:32" / "10:32:05"
+    var mHora = t.match(/[Hh]ora\s*[:\s]\s*(\d{1,2}):(\d{2})/);
+    if (!mHora) mHora = t.match(/\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}\D{1,5}(\d{1,2}):(\d{2})/);
+    if (mHora) resultado.hora = mHora[1].padStart(2, "0") + ":" + mHora[2];
+  }
 
   // SERVICIO (solo correos): "Servicio: XXXX" (admite letras+números: C218, TB21, TB302, A105, N17)
   // Debe coincidir al inicio del texto o de una línea (con posibles espacios previos),
@@ -3175,6 +3192,31 @@ function normalizarImporte(texto) {
 
 function inicializarImportarCorreo() {
   var impRecExistente = null;
+  var ultimoAnalisis = null;   // últimos datos analizados (para la revisión del servicio)
+  // Revisión previa al guardado: muestra sin ambigüedad inicio, fin, parte y final real.
+  function renderResumenServicio() {
+    var caja = document.getElementById("impResumenServicio");
+    if (!caja) return;
+    var d = ultimoAnalisis;
+    if (!d || !d.esCorreoRecaudacion) { caja.style.display = "none"; caja.innerHTML = ""; return; }
+    var parteSel = document.getElementById("impParte").value === "2" ? "2ª Parte" : "1ª Parte";
+    var finReal = document.getElementById("impHora").value || d.finServicio || "";
+    caja.style.display = "block";
+    if (d.finServicioFaltante) {
+      caja.style.borderColor = "var(--color-danger)"; caja.style.color = "var(--color-danger)";
+      caja.innerHTML = "&#9888; <strong>No se ha encontrado el fin del servicio.</strong><br>" +
+        "Inicio del servicio: <strong>" + (d.inicioServicio || "—") + "</strong><br>" +
+        "Fin del servicio: <strong>— (pendiente)</strong><br>" +
+        "Parte de la jornada: <strong>" + parteSel + "</strong><br>" +
+        "Final real que se guardará: <strong>—</strong>";
+    } else {
+      caja.style.borderColor = "var(--color-success)"; caja.style.color = "";
+      caja.innerHTML = "Inicio del servicio: <strong>" + (d.inicioServicio || "—") + "</strong><br>" +
+        "Fin del servicio: <strong>" + (d.finServicio || "—") + "</strong><br>" +
+        "Parte de la jornada: <strong>" + parteSel + "</strong><br>" +
+        "Final real que se guardará: <strong>" + (finReal || "—") + "</strong>";
+    }
+  }
   function comprobarRecExistenteImportado(fecha, servicio) {
     impRecExistente = null;
     if (fecha && servicio) {
@@ -3203,39 +3245,73 @@ function inicializarImportarCorreo() {
     var servicio = document.getElementById("impServicio").value.trim();
     comprobarRecExistenteImportado(fecha, servicio);
   });
+  document.getElementById("impParte").addEventListener("change", renderResumenServicio);
+  document.getElementById("impHora").addEventListener("change", renderResumenServicio);
   document.getElementById("btnAnalizarCorreo").addEventListener("click", function () {
     var texto = document.getElementById("textoCorreo").value.trim();
     if (!texto) { mostrarToast("Pega primero el texto del correo.", "error"); return; }
     var datos = analizarTextoCorreo(texto);
-    var fecha = datos.fecha || fechaHoyISO();
+    ultimoAnalisis = datos;
+    // Correo de recaudación: la fecha es EXCLUSIVAMENTE "Inicio servicio". Si falta,
+    // se deja vacía (nunca la fecha actual ni "Informe emitido").
+    var fecha = datos.esCorreoRecaudacion ? (datos.fecha || "") : (datos.fecha || fechaHoyISO());
     var servicio = datos.servicio || "";
     document.getElementById("impFecha").value = fecha;
-    document.getElementById("impHora").value = datos.hora || horaAhoraHM();
+    // Correo de recaudación: la hora es EXCLUSIVAMENTE "Fin servicio". Si falta,
+    // se deja pendiente (nunca la hora actual ni "Informe emitido").
+    if (datos.esCorreoRecaudacion) {
+      document.getElementById("impHora").value = datos.hora || "";
+    } else {
+      document.getElementById("impHora").value = datos.hora || horaAhoraHM();
+    }
     document.getElementById("impServicio").value = servicio;
     document.getElementById("impImporte").value = datos.importe || "";
     document.getElementById("impParte").value = "1";
+    // Correo reconocido: fecha/hora quedan de solo lectura (los datos reales se
+    // toman de ultimoAnalisis al guardar). #impParte permanece editable.
+    var esRec = !!datos.esCorreoRecaudacion;
+    document.getElementById("impFecha").readOnly = esRec;
+    document.getElementById("impHora").readOnly = esRec;
     comprobarRecExistenteImportado(fecha, servicio);
+    renderResumenServicio();
     document.getElementById("impPreguntaMas").style.display = "none";
     document.getElementById("resultadoAnalisis").style.display = "block";
-    var faltantes = [];
-    if (!datos.fecha) faltantes.push("fecha"); if (!datos.servicio) faltantes.push("servicio"); if (!datos.importe) faltantes.push("importe");
-    if (faltantes.length > 0) mostrarToast("No se detect\u00f3: " + faltantes.join(", "), "error");
-    else mostrarToast("Datos detectados. Revisa antes de guardar.", "success");
+    if (esRec) {
+      // Aviso espec\u00edfico del correo de recaudaci\u00f3n: inicio/fin del servicio.
+      var faltaRec = [];
+      if (!datos.fecha) faltaRec.push("inicio del servicio");
+      if (datos.finServicioFaltante) faltaRec.push("fin del servicio");
+      if (!datos.servicio) faltaRec.push("servicio");
+      if (!datos.importe) faltaRec.push("importe");
+      if (faltaRec.length > 0) mostrarToast("No se detect\u00f3: " + faltaRec.join(", "), "error");
+      else mostrarToast("Datos detectados. Revisa antes de guardar.", "success");
+    } else {
+      var faltantes = [];
+      if (!datos.fecha) faltantes.push("fecha"); if (!datos.servicio) faltantes.push("servicio"); if (!datos.importe) faltantes.push("importe");
+      if (faltantes.length > 0) mostrarToast("No se detect\u00f3: " + faltantes.join(", "), "error");
+      else mostrarToast("Datos detectados. Revisa antes de guardar.", "success");
+    }
     document.getElementById("resultadoAnalisis").scrollIntoView({ behavior: "smooth" });
   });
   document.getElementById("btnLimpiarCorreo").addEventListener("click", function () {
     document.getElementById("textoCorreo").value = "";
     document.getElementById("resultadoAnalisis").style.display = "none";
     document.getElementById("impInfoExistente").style.display = "none";
+    document.getElementById("impResumenServicio").style.display = "none";
     document.getElementById("impPreguntaMas").style.display = "none";
-    impRecExistente = null;
+    document.getElementById("impFecha").readOnly = false;
+    document.getElementById("impHora").readOnly = false;
+    impRecExistente = null; ultimoAnalisis = null;
   });
   document.getElementById("btnCancelarImportado").addEventListener("click", function () {
     document.getElementById("resultadoAnalisis").style.display = "none";
     document.getElementById("textoCorreo").value = "";
     document.getElementById("impInfoExistente").style.display = "none";
+    document.getElementById("impResumenServicio").style.display = "none";
     document.getElementById("impPreguntaMas").style.display = "none";
-    impRecExistente = null;
+    document.getElementById("impFecha").readOnly = false;
+    document.getElementById("impHora").readOnly = false;
+    impRecExistente = null; ultimoAnalisis = null;
   });
   document.getElementById("btnGuardarImportado").addEventListener("click", function () {
     var fecha = document.getElementById("impFecha").value;
@@ -3243,6 +3319,21 @@ function inicializarImportarCorreo() {
     var servicio = document.getElementById("impServicio").value.trim();
     var importe = parseFloat(document.getElementById("impImporte").value);
     var parte = document.getElementById("impParte").value;
+    // Correo de recaudación: fecha SOLO de "Inicio servicio" y hora SOLO de "Fin
+    // servicio". Nunca se usa fecha actual, hora actual ni "Informe emitido".
+    if (ultimoAnalisis && ultimoAnalisis.esCorreoRecaudacion) {
+      if (!ultimoAnalisis.fecha) {
+        mostrarToast("No se ha encontrado el inicio del servicio.", "error"); return;
+      }
+      // Sin "Fin servicio" se bloquea SIEMPRE, aunque el usuario escriba una hora a mano.
+      if (ultimoAnalisis.finServicioFaltante || !ultimoAnalisis.finServicio) {
+        mostrarToast("No se ha encontrado el fin del servicio.", "error"); return;
+      }
+      // Datos BLINDADOS: se ignoran #impFecha/#impHora aunque el usuario o el DOM
+      // los hayan cambiado. La verdad es siempre lo extraído del correo.
+      fecha = ultimoAnalisis.fecha;
+      hora = ultimoAnalisis.finServicio;
+    }
     if (!fecha || !servicio || isNaN(importe)) { mostrarToast("Completa todos los campos.", "error"); return; }
     var registro;
     if (impRecExistente) {
@@ -12939,105 +13030,23 @@ function saveEventos(datos){
   catch(e){ return false; }
 }
 
-/* Diccionario de clasificación por palabra clave (sin acentos, minúsculas) */
-var EV_TIPOS=[
-  {re:/semana\s*santa/, tipo:'Semana Santa'},
-  {re:/feria/, tipo:'Feria'},
-  {re:/rocio/, tipo:'Rocío'},
-  {re:/marat[oó]n/, tipo:'Maratón'},
-  {re:/apertura/, tipo:'Apertura comercial'},
-  {re:/vispera/, tipo:'Víspera de festivo'},
-  {re:/domingo\s*de\s*ramos/, tipo:'Domingo de Ramos'},
-  {re:/festivo\s*especial/, tipo:'Festivo especial'},
-  {re:/festivo\s*(desplazado|traslad)/, tipo:'Festivo desplazado'},
-  {re:/festivo\s*local|local/, tipo:'Festivo local'},
-  {re:/festivo\s*nacional|nacional/, tipo:'Festivo nacional'},
-  {re:/festivo/, tipo:'Festivo'}
-];
-function evNormaliza(s){
-  return String(s||'').toLowerCase()
-    .replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i')
-    .replace(/[óòö]/g,'o').replace(/[úùü]/g,'u');
-}
-function evClasificarTipo(texto){
-  var n=evNormaliza(texto);
-  for(var i=0;i<EV_TIPOS.length;i++){ if(EV_TIPOS[i].re.test(n)) return EV_TIPOS[i].tipo; }
-  return 'Evento especial';
-}
+/* NEXUM004R1 — La clasificación por palabras clave y el parser genérico de
+   texto libre (que servían a la antigua entrada OCR/imágenes) se han retirado.
+   La importación de eventos ahora exige un PDF digital NEXUM con tabla
+   estricta (FECHA | TIPO | NOMBRE) leída por coordenadas X/Y de PDF.js.
+   No se infieren años, fechas, tipos ni nombres. Ver tcEvParsearPDF. */
 
-var EV_MESES={enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,
-  septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12};
-
-/* Parser genérico de texto (extraído de PDF u OCR de imagen) a eventos.
-   Reconoce: DD/MM/AAAA, DD-MM-AAAA, DD.MM.AAAA, DD/MM, "DD de MES [de AAAA]".
-   Devuelve { "<año>": { "YYYY-MM-DD": {tipo, nombre} } } */
-function tcParsearEventos(texto){
-  var porAnio={};
-  var anioGlobal=null;
-  var mAnio=texto.match(/\b(20\d{2})\b/);
-  if(mAnio) anioGlobal=parseInt(mAnio[1],10);
-  if(!anioGlobal) anioGlobal=vY||new Date().getFullYear();
-
-  var reNum=/(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?/;
-  var reTexto=/(\d{1,2})\s+de\s+([a-záéíóúñ]+)(?:\s+de\s+(\d{4}))?/i;
-
-  var lineas=texto.split(/\r?\n/);
-  for(var i=0;i<lineas.length;i++){
-    var linea=lineas[i].trim();
-    if(!linea) continue;
-    var d=null,m=null,a=null,resto=null,match=null;
-    match=reNum.exec(linea);
-    if(match){
-      d=parseInt(match[1],10); m=parseInt(match[2],10);
-      a=match[3]?parseInt(match[3].length===2?('20'+match[3]):match[3],10):null;
-      resto=(linea.slice(0,match.index)+' '+linea.slice(match.index+match[0].length)).trim();
-    } else {
-      match=reTexto.exec(linea);
-      if(match){
-        d=parseInt(match[1],10); m=EV_MESES[evNormaliza(match[2])]||null;
-        a=match[3]?parseInt(match[3],10):null;
-        resto=(linea.slice(0,match.index)+' '+linea.slice(match.index+match[0].length)).trim();
-      }
-    }
-    if(!d||!m||m<1||m>12||d<1||d>31) continue;
-    var anio=a||anioGlobal;
-    var nombre=resto.replace(/^[\s:.\-–,]+|[\s:.\-–,]+$/g,'');
-    if(!nombre) nombre='Evento';
-    var tipo=evClasificarTipo(nombre);
-    var key=anio+'-'+tcPad(m)+'-'+tcPad(d);
-    if(!porAnio[anio]) porAnio[anio]={};
-    porAnio[anio][key]={tipo:tipo,nombre:nombre};
-  }
-  return porAnio;
-}
-
-/* Tipos permitidos en la revisión editable (independiente de la propuesta
-   automática de evClasificarTipo, que puede sugerir otras etiquetas). */
+/* Tipos permitidos. El PDF debe traer el tipo EXACTAMENTE igual a uno de
+   estos valores; en la revisión editable el usuario elige entre ellos. */
 var EV_TIPOS_PERMITIDOS=['Festivo','Festivo local','Festivo nacional','Festivo especial',
   'Domingo de Ramos','Festivo desplazado','Semana Santa','Feria','Rocío','Maratón',
   'Apertura comercial','Víspera de festivo','Evento especial'];
 
-/* Filas en edición tras el parseo OCR/PDF (revisión antes de guardar).
-   Cada fila: {id, fecha:'YYYY-MM-DD', tipo, nombre}. El OCR/PDF solo propone:
+/* Filas en edición tras leer el PDF (revisión antes de guardar).
+   Cada fila: {id, fecha:'YYYY-MM-DD', tipo, nombre}. El PDF solo propone:
    nada se escribe en EVENTOS hasta que el usuario valida y confirma. */
 var evEventosFilas=[];
 var evEventosSeq=0;
-
-function tcEventosTipoPermitido(tipo){
-  return EV_TIPOS_PERMITIDOS.indexOf(tipo)>=0?tipo:'Evento especial';
-}
-
-/* Convierte el resultado agrupado por año del parser en una lista plana editable. */
-function tcEventosFilasDesdeParseo(porAnio){
-  var filas=[];
-  Object.keys(porAnio).sort().forEach(function(anio){
-    Object.keys(porAnio[anio]).sort().forEach(function(k){
-      var ev=porAnio[anio][k];
-      filas.push({id:++evEventosSeq, fecha:k, tipo:tcEventosTipoPermitido(ev.tipo), nombre:ev.nombre||''});
-    });
-  });
-  return filas;
-}
 
 window.tcOpenEventos=function(){
   tcEnsureEventosLoaded();
@@ -13055,34 +13064,51 @@ window.tcEventosReset=function(){
   document.getElementById('ev-editor-wrap').innerHTML='';
   document.getElementById('ev-error-wrap').innerHTML='';
   document.getElementById('ev-conflicto-wrap').innerHTML='';
-  var bulkTa=document.getElementById('ev-bulk-text'); if(bulkTa) bulkTa.value='';
-  var bulkErr=document.getElementById('ev-bulk-error'); if(bulkErr) bulkErr.innerHTML='';
-  var perIni=document.getElementById('ev-per-ini'); if(perIni) perIni.value='';
-  var perFin=document.getElementById('ev-per-fin'); if(perFin) perFin.value='';
-  var perNom=document.getElementById('ev-per-nombre'); if(perNom) perNom.value='';
-  var perErr=document.getElementById('ev-per-error'); if(perErr) perErr.innerHTML='';
+  var btnGuardar=document.getElementById('ev-btn-guardar'); if(btnGuardar) btnGuardar.style.display='';
+  tcEventosBar(0);
 };
 
+function tcEventosBar(p){ var b=document.getElementById('ev-bar'); if(b) b.style.width=p+'%'; }
+
+/* Importación de eventos (NEXUM004R1): SOLO PDF digital NEXUM.
+   Se rechaza cualquier archivo que no sea PDF, sin OCR ni imágenes. */
 window.tcEventosLoad=function(input){
   var file=input.files&&input.files[0]; if(!file) return;
+  var esPDF=(file.type==='application/pdf')||/\.pdf$/i.test(file.name);
+  if(!esPDF){
+    if(input) input.value='';
+    tcEventosMostrarError('Formato no válido. Selecciona un PDF digital de eventos laborales (.pdf).');
+    return;
+  }
   document.getElementById('ev-zone-wrap').style.display='none';
   document.getElementById('ev-prog').style.display='';
-  document.getElementById('ev-prog-txt').textContent='Detectando formato…';
-  document.getElementById('ev-bar').style.width='10%';
-
-  var esPDF=(file.type==='application/pdf')||/\.pdf$/i.test(file.name);
-  var esImagen=/^image\//.test(file.type)||/\.(jpe?g|png|webp)$/i.test(file.name);
-
-  if(esPDF){
-    tcEventosLeerPDF(file);
-  } else if(esImagen){
-    tcEventosLeerImagen(file);
-  } else {
-    tcToast('Formato no soportado. Usa PDF o imagen (JPG, PNG, WEBP).');
-    tcEventosReset();
-  }
+  document.getElementById('ev-error-wrap').innerHTML='';
+  document.getElementById('ev-conflicto-wrap').innerHTML='';
+  document.getElementById('ev-editor-wrap').innerHTML='';
+  document.getElementById('ev-actions').style.display='none';
+  document.getElementById('ev-prog-txt').textContent='Leyendo PDF…';
+  tcEventosBar(10);
+  tcEventosLeerPDF(file);
 };
 
+/* Muestra el motivo de rechazo SIN tocar EVENTOS, localStorage ni metadatos.
+   Deja visible el botón Descartar para volver a la zona de selección. */
+function tcEventosMostrarError(motivo){
+  document.getElementById('ev-zone-wrap').style.display='none';
+  document.getElementById('ev-prog').style.display='';
+  document.getElementById('ev-prog-txt').textContent='No se pudo importar el PDF';
+  tcEventosBar(0);
+  document.getElementById('ev-editor-wrap').innerHTML='';
+  document.getElementById('ev-error-wrap').innerHTML='<div class="tc-aviso tc-aviso-red">⚠️ '+tcEsc(motivo)
+    +'<br><span style="opacity:.85;">No se ha modificado ningún dato guardado.</span></div>';
+  document.getElementById('ev-conflicto-wrap').innerHTML='';
+  var acts=document.getElementById('ev-actions'); if(acts) acts.style.display='flex';
+  var btnGuardar=document.getElementById('ev-btn-guardar'); if(btnGuardar) btnGuardar.style.display='none';
+}
+
+/* Lee el PDF EXCLUSIVAMENTE por texto digital (getTextContent de PDF.js).
+   No renderiza páginas ni usa OCR como fallback. Extrae la tabla por
+   coordenadas X/Y y valida estrictamente antes de proponer nada. */
 function tcEventosLeerPDF(file){
   if(typeof pdfjsLib==='undefined'){
     if(typeof cargarPDFjsSiNecesario==='function'){
@@ -13090,77 +13116,165 @@ function tcEventosLeerPDF(file){
       setTimeout(function(){ tcEventosLeerPDF(file); },400);
       return;
     }
-    tcToast('Error cargando PDF.js'); tcEventosReset(); return;
+    tcEventosMostrarError('No se pudo cargar el lector de PDF (PDF.js).'); return;
   }
   document.getElementById('ev-prog-txt').textContent='Leyendo PDF…';
   var reader=new FileReader();
+  reader.onerror=function(){ tcEventosMostrarError('No se pudo leer el archivo.'); };
   reader.onload=function(ev){
-    pdfjsLib.getDocument({data:new Uint8Array(ev.target.result)}).promise.then(function(pdf){
-      var total=pdf.numPages,texto='',done=0;
+    var task;
+    try{ task=pdfjsLib.getDocument({data:new Uint8Array(ev.target.result)}); }
+    catch(e){ tcEventosMostrarError('No se pudo abrir el PDF.'); return; }
+    task.promise.then(function(pdf){
+      var total=pdf.numPages, paginas=[];
       function leerPag(n){
         if(n>total){
-          document.getElementById('ev-bar').style.width='80%';
-          tcEventosProcesarTexto(texto);
+          tcEventosBar(85);
+          var res=tcEvParsearPDF(paginas);
+          if(!res.ok){ tcEventosMostrarError(res.motivo); return; }
+          tcEventosProcesarFilas(res.filas);
           return;
         }
         pdf.getPage(n).then(function(page){
           page.getTextContent().then(function(tc2){
-            var items=tc2.items.filter(function(it){return it.str&&it.str.trim();});
-            texto+=items.map(function(it){return it.str;}).join(' ')+'\n';
-            done++; document.getElementById('ev-bar').style.width=Math.round(done/total*70)+'%';
+            var items=[];
+            tc2.items.forEach(function(it){
+              if(!it.str) return;
+              items.push({x:it.transform[4], y:it.transform[5], w:it.width||0, s:it.str});
+            });
+            paginas.push(items);
+            tcEventosBar(Math.round(n/total*70));
             leerPag(n+1);
-          });
-        });
+          }, function(){ tcEventosMostrarError('No se pudo leer el texto del PDF.'); });
+        }, function(){ tcEventosMostrarError('No se pudo leer una página del PDF.'); });
       }
       leerPag(1);
-    }).catch(function(){ tcToast('Error leyendo PDF'); tcEventosReset(); });
+    }, function(){ tcEventosMostrarError('No se pudo abrir el PDF (¿archivo dañado?).'); });
   };
   reader.readAsArrayBuffer(file);
 }
 
-function tcEventosLeerImagen(file){
-  var apiKey=(typeof obtenerApiKeyOCR==='function')?obtenerApiKeyOCR():null;
-  if(!apiKey){
-    tcToast('⚠️ Configura primero tu clave OCR.space en Liquidaciones.');
-    tcEventosReset(); return;
+/* --- Extracción tabular estricta por coordenadas X/Y --------------------
+   Divide cada elemento de texto en celdas (separadores '|' o 2+ espacios),
+   estimando la X de cada celda por su posición dentro del elemento. Agrupa
+   por línea según Y y ordena por X. */
+function tcEvExplotar(item){
+  var s=item.s, n=s.length||1, startX=item.x, w=item.w||0, out=[];
+  function push(str,idx){
+    var t=str.replace(/\|/g,' ').replace(/\s+/g,' ').trim();
+    if(t==='') return;
+    out.push({x:startX+(idx/n)*w, s:t});
   }
-  document.getElementById('ev-prog-txt').textContent='Leyendo imagen…';
-  var reader=new FileReader();
-  reader.onload=function(ev){
-    var dataURL=ev.target.result;
-    document.getElementById('ev-bar').style.width='30%';
-    comprimirImagen(dataURL).then(function(comprimida){
-      document.getElementById('ev-bar').style.width='55%';
-      document.getElementById('ev-prog-txt').textContent='Extrayendo texto (OCR)…';
-      return leerTicketConOCRSpace(comprimida,apiKey);
-    }).then(function(textoOCR){
-      document.getElementById('ev-bar').style.width='80%';
-      tcEventosProcesarTexto(textoOCR||'');
-    }).catch(function(){
-      tcToast('Error leyendo la imagen con OCR'); tcEventosReset();
-    });
-  };
-  reader.readAsDataURL(file);
+  var re=/\||\s{2,}/g, m, last=0;
+  while((m=re.exec(s))!==null){ push(s.slice(last,m.index), last); last=m.index+m[0].length; }
+  push(s.slice(last), last);
+  return out;
+}
+function tcEvLineas(items){
+  var subs=[];
+  items.forEach(function(it){ tcEvExplotar(it).forEach(function(su){ subs.push({x:su.x,y:it.y,s:su.s}); }); });
+  subs.sort(function(a,b){ return (b.y-a.y)||(a.x-b.x); });
+  var lineas=[], cur=null, TOL=3.5;
+  subs.forEach(function(su){
+    if(cur && Math.abs(cur.y-su.y)<=TOL){ cur.items.push(su); }
+    else { cur={y:su.y, items:[su]}; lineas.push(cur); }
+  });
+  lineas.forEach(function(l){
+    l.items.sort(function(a,b){ return a.x-b.x; });
+    l.text=l.items.map(function(i){ return i.s; }).join(' ').replace(/\s+/g,' ').trim();
+  });
+  return lineas;
+}
+function tcEvDetectarHeader(items){
+  var xF=null,xT=null,xN=null;
+  items.forEach(function(it){
+    var u=it.s.toUpperCase();
+    if(u==='FECHA'&&xF===null) xF=it.x;
+    else if(u==='TIPO'&&xT===null) xT=it.x;
+    else if(u==='NOMBRE'&&xN===null) xN=it.x;
+  });
+  if(xF!==null&&xT!==null&&xN!==null&&xF<xT&&xT<xN) return {xF:xF,xT:xT,xN:xN};
+  return null;
+}
+function tcEvCeldas(items,an){
+  var b1=(an.xF+an.xT)/2, b2=(an.xT+an.xN)/2, colF=[],colT=[],colN=[];
+  items.forEach(function(it){
+    if(it.x<b1) colF.push(it); else if(it.x<b2) colT.push(it); else colN.push(it);
+  });
+  function join(a){ return a.map(function(i){ return i.s; }).join(' ').replace(/\s+/g,' ').trim(); }
+  return {fecha:join(colF), tipo:join(colT), nombre:join(colN)};
+}
+function tcEvFechaReal(iso){
+  var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso); if(!m) return false;
+  var y=+m[1],mo=+m[2],d=+m[3];
+  if(mo<1||mo>12||d<1||d>31) return false;
+  var dt=new Date(y,mo-1,d);
+  return dt.getFullYear()===y&&dt.getMonth()===mo-1&&dt.getDate()===d;
 }
 
-/* El PDF/OCR solo propone datos: el resultado se vuelca en una lista editable
-   (evEventosFilas) para que el usuario la revise, corrija o complete antes de
-   confirmar. Si no se detecta nada, la lista se abre vacía para introducirlo
-   a mano — nunca se guarda ni se inventa nada sin confirmación explícita. */
-function tcEventosProcesarTexto(texto){
-  var porAnio=tcParsearEventos(texto);
-  var anios=Object.keys(porAnio);
-  var totalEventos=0; anios.forEach(function(a){ totalEventos+=Object.keys(porAnio[a]).length; });
-  evEventosFilas=tcEventosFilasDesdeParseo(porAnio);
-  document.getElementById('ev-bar').style.width='100%';
-  document.getElementById('ev-prog-txt').textContent=totalEventos>0
-    ? ('✔ '+totalEventos+' eventos detectados · revisa y confirma antes de guardar')
-    : 'No se ha detectado ningún evento automáticamente. Añádelos manualmente abajo.';
+/* Parseo estricto del PDF ya leído. Devuelve {ok:true, filas:[...]} o
+   {ok:false, motivo:'...'}. Rechaza por completo ante cualquier anomalía.
+   No infiere años, fechas, tipos ni nombres. */
+function tcEvParsearPDF(paginas){
+  var RE_TITULO=/^NEXUM\s*[—–-]\s*CALENDARIO DE EVENTOS LABORALES$/;
+  var RE_ANIO=/^AÑO:\s*(20\d{2})$/;
+  var RE_FOOTER=/^P[áa]gina\s+\d+(?:\s+de\s+\d+)?$/i;
+  var RE_FECHA=/^\d{4}-\d{2}-\d{2}$/;
+  var hayTexto=false, titulo=false, anio=null, multiAnio=false, headerVisto=false;
+  var anchors=null, firstAnchors=null, bodyLines=[];
+  for(var p=0;p<paginas.length;p++){
+    if(paginas[p].length>0) hayTexto=true;
+    var lineas=tcEvLineas(paginas[p]);
+    for(var li=0;li<lineas.length;li++){
+      var L=lineas[li], txt=L.text;
+      if(!txt) continue;
+      if(RE_FOOTER.test(txt)) continue;
+      if(RE_TITULO.test(txt)){ titulo=true; continue; }
+      var ma=RE_ANIO.exec(txt);
+      if(ma){ var y=parseInt(ma[1],10); if(anio===null) anio=y; else if(anio!==y) multiAnio=true; continue; }
+      var hdr=tcEvDetectarHeader(L.items);
+      if(hdr){ headerVisto=true; anchors=hdr; if(!firstAnchors) firstAnchors=hdr; continue; }
+      bodyLines.push({items:L.items, text:txt, anchors:anchors});
+    }
+  }
+  if(!hayTexto) return {ok:false, motivo:'El PDF no contiene texto digital (parece escaneado). Importa un PDF digital de NEXUM.'};
+  if(!titulo) return {ok:false, motivo:'Falta el título «NEXUM — CALENDARIO DE EVENTOS LABORALES».'};
+  if(anio===null) return {ok:false, motivo:'Falta la línea «AÑO: 20XX».'};
+  if(multiAnio) return {ok:false, motivo:'El PDF declara más de un año. Cada archivo debe contener un solo año.'};
+  if(!headerVisto) return {ok:false, motivo:'Faltan las columnas FECHA, TIPO o NOMBRE.'};
+  if(bodyLines.length===0) return {ok:false, motivo:'El PDF no contiene ningún evento.'};
+  var filas=[], vistos={};
+  for(var b=0;b<bodyLines.length;b++){
+    var BL=bodyLines[b], an=BL.anchors||firstAnchors;
+    var c=tcEvCeldas(BL.items, an);
+    var fecha=c.fecha, tipo=c.tipo, nombre=c.nombre;
+    if(!fecha&&!tipo&&!nombre) return {ok:false, motivo:'Hay una fila no interpretable: «'+BL.text+'».'};
+    if(!RE_FECHA.test(fecha)) return {ok:false, motivo:'Una fecha no usa el formato AAAA-MM-DD: «'+(fecha||BL.text)+'».'};
+    if(!tcEvFechaReal(fecha)) return {ok:false, motivo:'La fecha '+fecha+' no existe.'};
+    if(parseInt(fecha.slice(0,4),10)!==anio) return {ok:false, motivo:'La fecha '+fecha+' no pertenece al año declarado ('+anio+').'};
+    if(!tipo) return {ok:false, motivo:'Falta el tipo en la fila del '+fecha+'.'};
+    if(!nombre) return {ok:false, motivo:'Falta el nombre en la fila del '+fecha+'.'};
+    if(EV_TIPOS_PERMITIDOS.indexOf(tipo)<0) return {ok:false, motivo:'El tipo «'+tipo+'» no coincide con ningún tipo permitido ('+fecha+').'};
+    var clave=fecha+'||'+tipo;
+    if(vistos[clave]) return {ok:false, motivo:'Duplicado de fecha y tipo: '+fecha+' («'+tipo+'»).'};
+    vistos[clave]=true;
+    filas.push({fecha:fecha, tipo:tipo, nombre:nombre});
+  }
+  if(filas.length===0) return {ok:false, motivo:'El PDF no contiene ningún evento.'};
+  return {ok:true, filas:filas};
+}
+
+/* Lectura válida: vuelca las filas propuestas en la lista editable y abre el
+   editor existente. El PDF solo propone: NADA se guarda hasta que el usuario
+   pulse «Guardar eventos». */
+function tcEventosProcesarFilas(filas){
+  evEventosFilas=filas.map(function(f){ return {id:++evEventosSeq, fecha:f.fecha, tipo:f.tipo, nombre:f.nombre}; });
+  tcEventosBar(100);
+  document.getElementById('ev-prog-txt').textContent='✔ '+evEventosFilas.length+' evento(s) leídos · revisa y confirma antes de guardar';
   document.getElementById('ev-error-wrap').innerHTML='';
+  document.getElementById('ev-conflicto-wrap').innerHTML='';
   tcRenderEventosEditor();
-  var perTipoEl=document.getElementById('ev-per-tipo');
-  if(perTipoEl) perTipoEl.innerHTML=EV_TIPOS_PERMITIDOS.map(function(t){ return '<option value="'+tcEsc(t)+'">'+tcEsc(t)+'</option>'; }).join('');
-  document.getElementById('ev-btn-guardar').style.display='';
+  var btnGuardar=document.getElementById('ev-btn-guardar'); if(btnGuardar) btnGuardar.style.display='';
   document.getElementById('ev-actions').style.display='flex';
 }
 
@@ -13189,137 +13303,10 @@ function tcRenderEventosEditor(){
   wrap.innerHTML=html;
 }
 
-/* DEV-008R14 — Pegado masivo: una línea por evento "DD/MM/AAAA | Tipo | Nombre"
-   (también acepta "AAAA-MM-DD | Tipo | Nombre"). Se valida TODO el lote antes
-   de tocar evEventosFilas: si una sola línea es inválida no se añade nada y
-   se listan los errores. Las líneas válidas cuya fecha+tipo ya exista en
-   evEventosFilas (propuestas OCR o filas ya añadidas) se omiten y se informa
-   cuántas. Reutiliza tcCambioFechaValida y el mismo modelo de fila. */
-window.tcEventosPegadoMasivo=function(){
-  var ta=document.getElementById('ev-bulk-text');
-  var errWrap=document.getElementById('ev-bulk-error');
-  var texto=(ta&&ta.value)||'';
-  var lineas=texto.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(function(l){ return l.length>0; });
-  if(lineas.length===0){
-    errWrap.innerHTML='<div class="tc-aviso tc-aviso-red">⚠️ Pega al menos una línea con el formato DD/MM/AAAA | Tipo | Nombre.</div>';
-    return;
-  }
-  var anioEdit=vY;
-  var reDMY=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-  var reYMD=/^(\d{4})-(\d{1,2})-(\d{1,2})$/;
-  var errores=[], parseadas=[];
-  lineas.forEach(function(linea,idx){
-    var etiqueta='Línea '+(idx+1);
-    var partes=linea.split('|');
-    if(partes.length!==3){
-      errores.push(etiqueta+': formato inválido, usa DD/MM/AAAA | Tipo | Nombre.');
-      return;
-    }
-    var fParte=partes[0].trim(), tipo=partes[1].trim(), nombre=partes[2].trim();
-    var iso=null, m;
-    if((m=reDMY.exec(fParte))){
-      iso=m[3]+'-'+tcPad(parseInt(m[2],10))+'-'+tcPad(parseInt(m[1],10));
-    } else if((m=reYMD.exec(fParte))){
-      iso=m[1]+'-'+tcPad(parseInt(m[2],10))+'-'+tcPad(parseInt(m[3],10));
-    } else {
-      errores.push(etiqueta+': fecha con formato no reconocido ("'+fParte+'").');
-      return;
-    }
-    if(!tcCambioFechaValida(iso)){
-      errores.push(etiqueta+': la fecha "'+fParte+'" no existe.');
-      return;
-    }
-    if(parseInt(iso.slice(0,4),10)!==anioEdit){
-      errores.push(etiqueta+' ('+tcFmtF(iso)+'): la fecha no pertenece al año que se está editando ('+anioEdit+').');
-      return;
-    }
-    if(EV_TIPOS_PERMITIDOS.indexOf(tipo)<0){
-      errores.push(etiqueta+' ('+tcFmtF(iso)+'): el tipo "'+tipo+'" no está permitido.');
-      return;
-    }
-    if(!nombre){
-      errores.push(etiqueta+' ('+tcFmtF(iso)+'): falta el nombre.');
-      return;
-    }
-    parseadas.push({fecha:iso,tipo:tipo,nombre:nombre});
-  });
-  if(errores.length>0){
-    errWrap.innerHTML='<div class="tc-aviso tc-aviso-red">⚠️ Revisa el pegado masivo antes de añadir:<br>'
-      +errores.map(function(e){ return '· '+tcEsc(e); }).join('<br>')+'</div>';
-    return;
-  }
-  var vistos={};
-  evEventosFilas.forEach(function(f){ vistos[f.fecha+'||'+f.tipo]=true; });
-  var omitidas=0;
-  parseadas.forEach(function(p){
-    var clave=p.fecha+'||'+p.tipo;
-    if(vistos[clave]){ omitidas++; return; }
-    vistos[clave]=true;
-    evEventosFilas.push({id:++evEventosSeq, fecha:p.fecha, tipo:p.tipo, nombre:p.nombre});
-  });
-  if(ta) ta.value='';
-  document.getElementById('ev-error-wrap').innerHTML='';
-  tcRenderEventosEditor();
-  errWrap.innerHTML=omitidas>0
-    ? '<div class="tc-aviso">ℹ️ '+omitidas+' línea(s) omitida(s): la fecha y el tipo ya existían.</div>'
-    : '';
-};
-
-/* DEV-008R14 — Añadir periodo: genera una fila por cada día entre fecha
-   inicial y final (ambas incluidas), mismo tipo y nombre, máximo 366 días.
-   Se valida todo antes de tocar evEventosFilas (fechas reales del año que se
-   está editando, orden cronológico, tipo permitido, nombre obligatorio y
-   límite de 366 días); si algo falla no se añade ningún día. Los días cuya
-   fecha+tipo ya exista en evEventosFilas se omiten y se informa cuántos. */
-window.tcEventosAnadirPeriodo=function(){
-  var errWrap=document.getElementById('ev-per-error');
-  var iniEl=document.getElementById('ev-per-ini'), finEl=document.getElementById('ev-per-fin');
-  var tipoEl=document.getElementById('ev-per-tipo'), nombreEl=document.getElementById('ev-per-nombre');
-  var ini=(iniEl&&iniEl.value)||'', fin=(finEl&&finEl.value)||'';
-  var tipo=(tipoEl&&tipoEl.value)||'', nombre=((nombreEl&&nombreEl.value)||'').trim();
-  var anioEdit=vY;
-  var errores=[];
-  if(!ini||!tcCambioFechaValida(ini)) errores.push('La fecha inicial no es válida.');
-  if(!fin||!tcCambioFechaValida(fin)) errores.push('La fecha final no es válida.');
-  if(errores.length>0){
-    errWrap.innerHTML='<div class="tc-aviso tc-aviso-red">⚠️ Revisa el periodo antes de añadir:<br>'
-      +errores.map(function(e){ return '· '+tcEsc(e); }).join('<br>')+'</div>';
-    return;
-  }
-  if(parseInt(ini.slice(0,4),10)!==anioEdit) errores.push('La fecha inicial no pertenece al año que se está editando ('+anioEdit+').');
-  if(parseInt(fin.slice(0,4),10)!==anioEdit) errores.push('La fecha final no pertenece al año que se está editando ('+anioEdit+').');
-  if(ini>fin) errores.push('La fecha inicial debe ser anterior o igual a la fecha final.');
-  if(EV_TIPOS_PERMITIDOS.indexOf(tipo)<0) errores.push('El tipo no está permitido.');
-  if(!nombre) errores.push('Falta el nombre del evento.');
-  var dIni=new Date(parseInt(ini.slice(0,4),10),parseInt(ini.slice(5,7),10)-1,parseInt(ini.slice(8,10),10));
-  var dFin=new Date(parseInt(fin.slice(0,4),10),parseInt(fin.slice(5,7),10)-1,parseInt(fin.slice(8,10),10));
-  if(errores.length===0){
-    var dias=Math.round((dFin-dIni)/86400000)+1;
-    if(dias>366) errores.push('El periodo no puede superar 366 días (tiene '+dias+').');
-  }
-  if(errores.length>0){
-    errWrap.innerHTML='<div class="tc-aviso tc-aviso-red">⚠️ Revisa el periodo antes de añadir:<br>'
-      +errores.map(function(e){ return '· '+tcEsc(e); }).join('<br>')+'</div>';
-    return;
-  }
-  var vistos={};
-  evEventosFilas.forEach(function(f){ vistos[f.fecha+'||'+f.tipo]=true; });
-  var omitidas=0;
-  var cursor=new Date(dIni.getTime());
-  while(cursor<=dFin){
-    var key=cursor.getFullYear()+'-'+tcPad(cursor.getMonth()+1)+'-'+tcPad(cursor.getDate());
-    var clave=key+'||'+tipo;
-    if(vistos[clave]){ omitidas++; }
-    else { vistos[clave]=true; evEventosFilas.push({id:++evEventosSeq, fecha:key, tipo:tipo, nombre:nombre}); }
-    cursor.setDate(cursor.getDate()+1);
-  }
-  iniEl.value=''; finEl.value=''; nombreEl.value='';
-  document.getElementById('ev-error-wrap').innerHTML='';
-  tcRenderEventosEditor();
-  errWrap.innerHTML=omitidas>0
-    ? '<div class="tc-aviso">ℹ️ '+omitidas+' día(s) omitido(s): la fecha y el tipo ya existían.</div>'
-    : '';
-};
+/* NEXUM004R1 — El pegado masivo y el «Añadir periodo» se han retirado de esta
+   pantalla: la única entrada es el PDF digital NEXUM. La revisión editable
+   posterior (modificar, añadir o eliminar filas) se conserva íntegra en
+   tcEventosAnadirFila / tcEventosFilaCampo / tcEventosEliminarFila. */
 
 window.tcEventosFilaCampo=function(id,campo,valor){
   for(var i=0;i<evEventosFilas.length;i++){
@@ -16590,7 +16577,16 @@ window.tcMsgAbrirDia=function(fecha){
      calendario». La cabecera conserva el fondo granate, el área segura
      superior (padding-top de .nexo-fs-header) y el modo oscuro. #cg-screen
      no se mueve de sitio. =============================================== */
-  #contenidoSecciones #cg-screen .nexo-fs-header{ background:var(--color-primary); }
+  #contenidoSecciones #cg-screen .nexo-fs-header{ background:var(--color-primary);
+    /* NEXUM004R1 — Subcabecera de «Gestionar cambios»: la barra es un hermano NO
+       desplazable situado encima del cuerpo (que scrollea aparte), así que el
+       position:sticky de .nexo-fs-header sobra aquí. Dentro del overlay fixed,
+       en iPhone ese sticky desplazaba la barra hacia abajo (hueco vacío encima)
+       y solapaba la primera tarjeta. Se ancla arriba con position:relative y se
+       anulan top/margin/transform heredados. Sigue visible al desplazar (el
+       cuerpo scrollea solo), con fondo granate sólido y respetando la zona
+       segura (padding-top de la barra). Solo afecta a #cg-screen. */
+    position:relative; top:auto; margin-top:0; transform:none; }
   #contenidoSecciones #cg-screen .nexo-fs-header .nexo-fs-title{
     display:block;            /* NEXUM-003R6R7 — anula `#tab-calendario h2{display:none}` que ocultaba el título */
     flex:1 1 auto;
