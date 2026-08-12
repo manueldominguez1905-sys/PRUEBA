@@ -259,6 +259,7 @@ tbody tr:hover { background-color: rgba(21, 101, 192, 0.06); }
   box-shadow: var(--shadow); opacity: 0;
   transition: opacity 0.3s ease, transform 0.3s ease;
   z-index: 999; max-width: 90%; text-align: center;
+  pointer-events: none;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.error { background-color: var(--color-danger); }
@@ -781,7 +782,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-007R1</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-007R2</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
