@@ -781,7 +781,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-007</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-007R1</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -6007,7 +6007,7 @@ function tcValidarJornadaImportada(jr){
 }
 function tcValidarDiaImportado(reg){
   if(!tcEsObjPlano(reg)||!tcValidarJSONSeguro(reg)) return false;
-  if('turno' in reg&&reg.turno!=null&&!tcCodigoTurnoSeguro(reg.turno)) return false;
+  if('turno' in reg&&reg.turno!=null&&reg.turno!==''&&!tcCodigoTurnoSeguro(reg.turno)) return false;
   var textos=['servicio','incidencia','notas','cambioCompanero','cambioNotas','tipoCambio','estadoCambio',
     'cambioTurnoOriginal','cambioTurnoFinal','cambioTurnoRecibido','cambioTurnoRealizado','cambioModoTurno'];
   for(var i=0;i<textos.length;i++){
@@ -13898,7 +13898,15 @@ window.tcMsgAbrirDia=function(fecha){
   (function () {
     'use strict';
 
-    var VC_KEY = 'ultimaVersionVista';
+    /* NEXUM-007R1 — Actualizador corregido. La decisión «Al día» / «Nueva versión»
+       se toma SIEMPRE comparando la versión remota (version.json) con la versión
+       REAL del código embebido en esta página, nunca con un valor recordado en
+       localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
+       antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
+       actualización; jamás afirma falsamente «Al día». */
+    var VC_VERSION_ACTUAL = 'NEXUM-007R1';
+
+    var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
 
     function vcMostrarDialogo(info) {
       var overlay = document.getElementById('vc-overlay');
@@ -13909,19 +13917,19 @@ window.tcMsgAbrirDia=function(fecha){
       overlay.classList.add('vc-visible');
 
       document.getElementById('vc-btn-mas-tarde').onclick = function () {
-        try { localStorage.setItem(VC_KEY, info.version); } catch (e) {}
+        /* «Más tarde» solo cierra el aviso; NO marca la versión remota como
+           instalada. En la próxima comprobación se volverá a ofrecer. */
         overlay.classList.remove('vc-visible');
       };
 
       document.getElementById('vc-btn-actualizar').onclick = function () {
         overlay.classList.remove('vc-visible');
-        vcActualizarAhora(info.version);
+        vcActualizarAhora();
       };
     }
 
-    function vcActualizarAhora(version) {
-      try { localStorage.setItem(VC_KEY, version); } catch (e) {}
-
+    function vcActualizarAhora() {
+      /* «Actualizar ahora» NO escribe la versión remota en localStorage. */
       var limpiarCaches = function () {
         if (window.caches && caches.keys) {
           return caches.keys().then(function (nombres) {
@@ -13934,8 +13942,16 @@ window.tcMsgAbrirDia=function(fecha){
       };
 
       limpiarCaches().then(function () {
-        var url = window.location.pathname + '?_v=' + Date.now();
-        window.location.replace(url);
+        /* Recargar usando la URL actual COMPLETA, conservando la ruta de GitHub
+           Pages, y añadiendo/reemplazando el parámetro anticaché _v. */
+        var u;
+        try {
+          u = new URL(window.location.href);
+          u.searchParams.set('_v', String(Date.now()));
+          window.location.replace(u.href);
+        } catch (e) {
+          window.location.replace(window.location.pathname + '?_v=' + Date.now());
+        }
       });
     }
 
@@ -13948,17 +13964,31 @@ window.tcMsgAbrirDia=function(fecha){
       if (el) el.textContent = txt;
     }
     function vcComprobarVersion() {
+      if (vcEnCurso) return; /* guarda contra comprobaciones simultáneas */
+      vcEnCurso = true;
       vcEstado('Comprobando…');
-      fetch('version.json', { cache: 'no-store' })
+      /* Consultar version.json con URL basada en document.baseURI (conserva la
+         ruta de GitHub Pages), parámetro anticaché y cache:'no-store'. */
+      var vjurl;
+      try {
+        var vu = new URL('version.json', document.baseURI);
+        vu.searchParams.set('_ant', String(Date.now()));
+        vjurl = vu.href;
+      } catch (e) {
+        vjurl = 'version.json?_ant=' + Date.now();
+      }
+      fetch(vjurl, { cache: 'no-store' })
         .then(function (resp) {
           if (!resp.ok) throw new Error('no-disponible');
           return resp.json();
         })
         .then(function (info) {
           if (!info || !info.version) { vcEstado('No disponible (version.json sin datos)'); return; }
-          var vista = null;
-          try { vista = localStorage.getItem(VC_KEY); } catch (e) {}
-          if (vista === info.version) { vcEstado('Al día (' + info.version + ')'); return; }
+          /* Comparación inequívoca contra la versión real del código. */
+          if (info.version === VC_VERSION_ACTUAL) {
+            vcEstado('Al día (' + VC_VERSION_ACTUAL + ')');
+            return;
+          }
           vcEstado('Nueva versión disponible: ' + info.version);
           vcMostrarDialogo(info);
         })
@@ -13966,11 +13996,20 @@ window.tcMsgAbrirDia=function(fecha){
           // Estado controlado (no silencioso): falta version.json, sin conexión o
           // error de red. No se hace nada disruptivo; solo se informa.
           vcEstado('No se pudo comprobar (sin conexión o sin version.json)');
-        });
+        })
+        .then(function () { vcEnCurso = false; });
     }
 
+    /* Comprobar al cargar y también al volver a primer plano (pageshow /
+       visibilitychange). Sin intervalos ni sondeos. */
     window.addEventListener('load', function () {
       setTimeout(vcComprobarVersion, 800);
+    });
+    window.addEventListener('pageshow', function () {
+      vcComprobarVersion();
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') vcComprobarVersion();
     });
   })();
   </script>
