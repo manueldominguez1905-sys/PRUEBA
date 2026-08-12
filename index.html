@@ -781,8 +781,8 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM004R2</span></div>
-        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Importador de recaudación: fecha e inicio/fin del servicio blindados frente al DOM.<br>Cálculos y datos DEV-010R17 sin cambios.</div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-007</span></div>
+        <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
@@ -8019,7 +8019,9 @@ function tcResumenLaboralMes(anio,mes){
        los tres subtipos de cada grupo coincide siempre con tpHasta2h/tpMas2h. */
     tpHasta2hLaborables:0, tpHasta2hSabados:0, tpHasta2hFestivos:0,
     tpMas2hLaborables:0, tpMas2hSabados:0, tpMas2hFestivos:0,
-    primaTardeDias:0, plusSabadoDias:0, plusDomingoDias:0, /* DEV-008R2 */
+    primaTardeDias:0, primaNocheDias:0, plusSabadoDias:0, plusDomingoDias:0, /* DEV-008R2 */
+    jornadaTardeNocheEspecialDias:0, /* NEXUM-006 (4A0N) — adicional a las primas */
+    jornadaTardeNocheEspecialPendiente:0, /* NEXUM-006R1 (4A0N) — 0/1: falta 'Domingo de Ramos' en el año */
     tpMensualCompleto:false, tpMensualUnidades:0, tpDiarioUnidades:0, /* DEV-008R3 */
     festivoTrabajadoDias:0, festivoEspecialDias:0, domingoRamosDias:0, festivoDesplazadoDias:0, /* DEV-008R10 */
     diasPendientesRevision:0, diasConDatos:0
@@ -8035,6 +8037,23 @@ function tcResumenLaboralMes(anio,mes){
      no está relleno para todo el mes, se acumula por días sueltos en 4A41; los
      dos conceptos son mutuamente excluyentes (nunca ambos > 0 el mismo mes). */
   var mesTurnoTotalDias=0, mesTurnoPartidoDias=0, mesTurnoRectoPresente=false;
+  /* NEXUM-006R1 (4A0N) — ¿El AÑO consultado contiene algún evento con el tipo
+     exacto 'Domingo de Ramos'? Se determina una sola vez reutilizando el
+     almacenamiento de eventos existente (EVENTOS[anio]) y el helper
+     tcEventoTieneTipo(); no se inventa la fecha de Semana Santa ni se hardcodea
+     el año. Si no hay calendario cargado o el año no lo contiene, queda false y
+     el Viernes de Dolores no se paga (puede marcarse pendiente más abajo). */
+  var anioTieneRamos_4A0N=false;
+  try{
+    if(typeof tcEnsureEventosLoaded==='function') tcEnsureEventosLoaded();
+    var evAnio_4A0N=(typeof EVENTOS!=='undefined'&&EVENTOS)?EVENTOS[String(a)]:null;
+    if(evAnio_4A0N){
+      for(var kEv_4A0N in evAnio_4A0N){
+        if(Object.prototype.hasOwnProperty.call(evAnio_4A0N,kEv_4A0N)&&
+           tcEventoTieneTipo(evAnio_4A0N[kEv_4A0N],'Domingo de Ramos')){ anioTieneRamos_4A0N=true; break; }
+      }
+    }
+  }catch(_e4A0N){ anioTieneRamos_4A0N=false; }
   for(var d=1;d<=ndias;d++){
     var key=a+'-'+tcPad(m)+'-'+tcPad(d);
     var reg=dias[key]; if(!reg) continue;
@@ -8044,6 +8063,13 @@ function tcResumenLaboralMes(anio,mes){
        no cuentan. */
     var turnoFinal=reg.turno||'';
     if(turnoFinal==='CT'||turnoFinal==='PT') R.primaTardeDias++;
+    /* NEXUM-005 — Prima diaria de noche: SOLO turno final CN (Corrido Noche) o
+       PN (Partido Noche). Mismo origen persistente (reg.turno) y misma
+       precedencia que primaTardeDias: se calcula antes del "if(!jr) continue;",
+       sin exigir jornada. D, V, CM, CT, PM, PT, vacío o desconocido no cuentan.
+       Mutuamente excluyente con la tarde: CT/PT nunca suma noche; CN/PN nunca
+       suma tarde. */
+    if(turnoFinal==='CN'||turnoFinal==='PN') R.primaNocheDias++;
     if(turnoFinal==='CM'||turnoFinal==='CT'||turnoFinal==='CN'||
        turnoFinal==='PM'||turnoFinal==='PT'||turnoFinal==='PN'){
       var dowFinal=(new Date(a,m-1,d).getDay()+6)%7; /* 0=lun...5=sáb,6=dom */
@@ -8098,6 +8124,35 @@ function tcResumenLaboralMes(anio,mes){
     }
     var jr=reg.jornada; if(!jr) continue;
     R.diasConDatos++;
+    /* NEXUM-006R1 (4A0N) — Jornada tarde-noche especial. ADICIONAL a
+       primaTardeDias/primaNocheDias (que permanecen intactas y en su sitio, ANTES
+       de este punto). AHORA exige jornada REAL registrada: por eso vive después de
+       "var jr=reg.jornada; if(!jr) continue;" y de "R.diasConDatos++;". Un día solo
+       programado en el calendario (turno asignado pero sin reg.jornada) aporta CERO
+       unidades. Cuenta UNA sola unidad cuando coinciden: (a) turno final CT, PT, CN
+       o PN; y (b) la fecha es una de estas alternativas —nunca dos a la vez—:
+       5-ene, 24-dic, 31-dic o el Viernes de Dolores. Las fechas fijas 5-ene/24-dic/
+       31-dic NO dependen del calendario de eventos. El Viernes de Dolores se
+       resuelve dinámicamente (sin hardcodear año) como el día cuya fecha +2 tiene un
+       evento con el tipo exacto 'Domingo de Ramos' (tcEventoDia/tcEventoTieneTipo).
+       CM, PM, D, V, vacío o desconocido no cuentan. Único incremento en OR: un día
+       jamás suma dos unidades. */
+    if(turnoFinal==='CT'||turnoFinal==='PT'||turnoFinal==='CN'||turnoFinal==='PN'){
+      var esEne05_4A0N=(m===1&&d===5);
+      var esDic24_4A0N=(m===12&&d===24);
+      var esDic31_4A0N=(m===12&&d===31);
+      var dRamos_4A0N=new Date(a,m-1,d); dRamos_4A0N.setDate(dRamos_4A0N.getDate()+2);
+      var keyRamos_4A0N=dRamos_4A0N.getFullYear()+'-'+tcPad(dRamos_4A0N.getMonth()+1)+'-'+tcPad(dRamos_4A0N.getDate());
+      var esViernesDolores_4A0N=anioTieneRamos_4A0N&&tcEventoTieneTipo(tcEventoDia(keyRamos_4A0N),'Domingo de Ramos');
+      if(esEne05_4A0N||esDic24_4A0N||esDic31_4A0N||esViernesDolores_4A0N) R.jornadaTardeNocheEspecialDias++;
+      /* Fallo NO silencioso: si el año NO contiene ningún 'Domingo de Ramos' y este
+         día es un VIERNES de marzo o abril con turno CT/PT/CN/PN y jornada
+         registrada, se marca pendiente (booleano 0/1, asignación —nunca >1—) SIN
+         sumar unidad pagable. No se inventa la fecha del Viernes de Dolores. */
+      if(!anioTieneRamos_4A0N&&(m===3||m===4)){
+        if(new Date(a,m-1,d).getDay()===5) R.jornadaTardeNocheEspecialPendiente=1;
+      }
+    }
     var pendDia=false;
     if(jr.computoOficialMinutos!=null) R.computoOficialMinutos+=jr.computoOficialMinutos;
     var amp=tcNominaAmpliacionesDia(jr);
@@ -8188,7 +8243,8 @@ function tcResumenLaboral(anio,mes){
     'partidoDias','tpHasta2h','tpMas2h','tpPendiente',
     'tpHasta2hLaborables','tpHasta2hSabados','tpHasta2hFestivos', /* DEV-010R14 */
     'tpMas2hLaborables','tpMas2hSabados','tpMas2hFestivos', /* DEV-010R14 */
-    'primaTardeDias','plusSabadoDias','plusDomingoDias', /* DEV-008R2 */
+    'primaTardeDias','primaNocheDias','plusSabadoDias','plusDomingoDias', /* DEV-008R2 / NEXUM-005 */
+    'jornadaTardeNocheEspecialDias','jornadaTardeNocheEspecialPendiente', /* NEXUM-006 / NEXUM-006R1 (4A0N) */
     'tpMensualUnidades','tpDiarioUnidades', /* DEV-008R3 */
     'festivoTrabajadoDias','festivoEspecialDias','domingoRamosDias','festivoDesplazadoDias', /* DEV-008R10 */
     'diasPendientesRevision','diasConDatos'];
@@ -8472,17 +8528,22 @@ function tcNomRenderProvisional(data){
      4A66_COMIENZO_FINAL_BARQ_MACAR) ni se hardcodea importe alguno. El resto de
      conceptos no enlazados (deje, TP 2h…) sigue «Pdte.». La cantidad mostrada
      (cant) no se altera nunca. */
-  function add(cod,desc,tipo,val,unidad,idSal,modo,cotiza){
+  function add(cod,desc,tipo,val,unidad,idSal,modo,cotiza,idSalFallback){
     if(!val) return; /* 0, null o undefined: no se muestra */
     var cant = (tipo==='minutos') ? tcMinANominaHHMM(val)
              : (String(val)+(unidad?(' '+unidad):''));
     /* DEV-010R12 — 'cotiza' es un METADATO INTERNO EXPLÍCITO: marca la fila como
        concepto cotizable ordinario para la base de contingencias comunes. NO se
-       deduce de tener idSal (hay conceptos con importe que no cotizan aquí). */
+       deduce de tener idSal (hay conceptos con importe que no cotizan aquí).
+       NEXUM-007 — 'idSalFallback' es un METADATO INTERNO OPCIONAL de compatibilidad:
+       ID salarial ANTIGUO que solo se consulta si el ID principal (idSal) devuelve
+       EXACTAMENTE 'sinConcepto'. Únicamente el concepto 4A4F festivos lo declara;
+       el resto de filas lo dejan null y su resolución no cambia. */
     filas.push({ cod:cod, desc:desc, cant:cant,
                  idSal:idSal||null, modo:modo||null,
                  dias:(typeof val==='number'?val:0),
-                 cotiza:(cotiza===true) });
+                 cotiza:(cotiza===true),
+                 idSalFallback:idSalFallback||null });
   }
   /* DEV-008R3 — Mutuamente excluyentes (ver tcResumenLaboralMes): 4A10 cuando
      el mes está completo y asignado oficialmente a turno partido (cantidad
@@ -8497,14 +8558,17 @@ function tcNomRenderProvisional(data){
      consulta ÚNICAMENTE su ID EXACTO por resolverImporte(); modo 'dias' (unidades ×
      importe unitario); cotiza=true (Base CC ordinaria → participa en Base CC/CP,
      IRPF, cotizaciones y líquido). No se hardcodea ningún importe ni se busca por
-     código/nombre/aproximación. AVISO: el último ID contiene 'MAYOT' (no 'MAYOR')
-     de forma intencionada; debe coincidir literalmente con la tabla salarial. */
+     código/nombre/aproximación. NEXUM-007 — MIGRACIÓN del concepto festivo al ID
+     CANÓNICO '4A4F_TP_MAYOR_2H_FESTIVOS'. El ID histórico erróneo
+     '4A4F_TP_MAYOT_2H_FESTIVOS' se admite TEMPORALMENTE como compatibilidad
+     (9.º argumento de add): solo se consulta si el ID canónico devuelve
+     EXACTAMENTE 'sinConcepto'. Ver resolverImporte(). */
   add('4A4E','TP hasta 2 horas - Laborable','unid',R.tpHasta2hLaborables,'días','4A4E_TP_HASTA_2H_LABORABLES','dias',true);
   add('4A4E','TP hasta 2 horas - Sábado','unid',R.tpHasta2hSabados,'días','4A4E_TP_HASTA_2H_SABADOS','dias',true);
   add('4A4E','TP hasta 2 horas - Festivo','unid',R.tpHasta2hFestivos,'días','4A4E_TP_HASTA_2H_FESTIVOS','dias',true);
   add('4A4F','TP mayor de 2 horas - Laborable','unid',R.tpMas2hLaborables,'días','4A4F_TP_MAYOR_2H_LABORABLES','dias',true);
   add('4A4F','TP mayor de 2 horas - Sábado','unid',R.tpMas2hSabados,'días','4A4F_TP_MAYOR_2H_SABADOS','dias',true);
-  add('4A4F','TP mayor de 2 horas - Festivo','unid',R.tpMas2hFestivos,'días','4A4F_TP_MAYOT_2H_FESTIVOS','dias',true);
+  add('4A4F','TP mayor de 2 horas - Festivo','unid',R.tpMas2hFestivos,'días','4A4F_TP_MAYOR_2H_FESTIVOS','dias',true,'4A4F_TP_MAYOT_2H_FESTIVOS');
   /* DEV-010R14 — Turno partido cuyo descanso intermedio NO se conoce (gap==null):
      una SOLA fila informativa. cod/idSal null → resolverImporte devuelve «Pdte.»
      SIN consultar la tabla salarial (la guarda !idSal retorna antes de leerla) y
@@ -8580,6 +8644,34 @@ function tcNomRenderProvisional(data){
   add(null,'Deje · Extra Calle 7','minutos',R.extraCalle7);
   /* DEV-008R2 — Desde el turno final (reg.turno); ver tcResumenLaboralMes(). */
   add('4A0I','Prima diaria tarde','unid',R.primaTardeDias,'días','4A0I_TARDE','dias',true);
+  /* NEXUM-005 — Prima diaria de noche (CN/PN). Mismo patrón que la de tarde:
+     días × importe diario del ID EXACTO 4A0J_PRIMA_DIARIA_NOCHE de la tabla
+     salarial ACTIVA (sin importe hardcodeado). cotiza=true. Con 0 días add() no
+     crea fila ni consulta el ID. ID ausente/pendiente/corrupto → «Pdte.» por
+     resolverImporte(), bloqueando los totales con el mecanismo existente. */
+  add('4A0J','Prima diaria noche','unid',R.primaNocheDias,'días','4A0J_PRIMA_DIARIA_NOCHE','dias',true);
+  /* NEXUM-006 (4A0N) — Jornada tarde-noche especial. Mismo patrón que las primas
+     diarias: días × importe diario del ID EXACTO de la tabla salarial ACTIVA
+     (sin importe hardcodeado, sin búsqueda por nombre/código/aproximación).
+     Modo 'dias', cotiza=true. Con 0 días add() no crea fila ni consulta el ID.
+     ID ausente/pendiente/no numérico/almacén corrupto → «Pdte.» por
+     resolverImporte(), bloqueando los totales con el mecanismo existente; las
+     guardas de vista anual / perfil ausente-corrupto / categoría no autorizada
+     son las ya presentes. */
+  add('4A0N','Jornada tarde-noche especial','unid',R.jornadaTardeNocheEspecialDias,'días','4A0N_JORNADA_TARDE_NOCHE_VIERNES_DOLORES_24_Y_3','dias',true);
+  /* NEXUM-006R1 (4A0N) — Fila INFORMATIVA bloqueante: solo aparece cuando el
+     indicador vale 1 (add() oculta la fila con 0). NO consulta ningún ID salarial
+     (cod/idSal null), por lo que resolverImporte() devuelve «Pdte.» y fija
+     todosImportes=false, arrastrando total devengado, deducciones y líquido a
+     «Pdte.» con el mecanismo bloqueante existente. Señala que falta 'Domingo de
+     Ramos' en el calendario del año y hay un viernes candidato trabajado. */
+  add(
+    null,
+    'Jornada tarde-noche especial pendiente de calendario',
+    'unid',
+    R.jornadaTardeNocheEspecialPendiente,
+    'días'
+  );
   add('4A30','Plus por sábado trabajado','unid',R.plusSabadoDias,'días','4A30_SABADO_VIGENCIA','dias',true);
   add('4A27','Plus por domingo trabajado','unid',R.plusDomingoDias,'días','4A27_DOMINGO_VIGENCIA','dias',true);
   /* DEV-008R10 — Festivo trabajado desde reg.turno + tcEventoDia(fecha real);
@@ -8658,7 +8750,7 @@ function tcNomRenderProvisional(data){
      ni por año de nómina. */
   var estadoAlmacenCorrupto=(infoActiva.estado==='corrupto'); /* almacén dañado detectado al leer */
   var faltaAlgunImporte=false;       /* algún concepto conectado sin importe utilizable en la tabla activa */
-  function resolverImporte(idSal,modo,dias){
+  function resolverImporte(idSal,modo,dias,idSalFallback){
     /* DEV-010R6 — GUARDA CENTRAL: si la decisión económica no es 'autorizado'
        (sin perfil, perfil corrupto/API no disponible o categoría distinta de
        CONDUCTOR_PERCEPTOR), la línea queda «Pdte.» SIN consultar la tabla activa:
@@ -8671,6 +8763,19 @@ function tcNomRenderProvisional(data){
     /* Sin tabla activa (o referencia inválida): el aviso global ya lo cubre a
        partir de infoActiva; aquí solo se deja la celda como «Pdte.». */
     if(r.estado==='sinTablaActiva'){ return { inner:celdaPend, cent:null }; }
+    /* NEXUM-007 — COMPATIBILIDAD acotada (solo si idSalFallback está declarado; hoy
+       únicamente el concepto 4A4F festivos lo usa). Segunda y ÚNICA consulta adicional
+       SOLO cuando el ID CANÓNICO devuelve EXACTAMENTE 'sinConcepto' (no está en la
+       tabla activa). No se activa si el ID nuevo está 'pendiente' (present but pending),
+       ni con 'corrupto' o 'sinTablaActiva' (ya retornados arriba → sin segunda consulta).
+       La consulta del ID antiguo es de nuevo por ID EXACTO: nunca por código, concepto,
+       texto parcial ni aproximación. El resto de conceptos (idSalFallback null) no
+       cambian su comportamiento. */
+    if(r.estado==='sinConcepto' && idSalFallback){
+      r=window.tsLeerImporteActivo(idSalFallback);
+      if(r.estado==='corrupto'){ estadoAlmacenCorrupto=true; return { inner:celdaPend, cent:null }; }
+      if(r.estado==='sinTablaActiva'){ return { inner:celdaPend, cent:null }; }
+    }
     if(r.estado!=='ok'){ faltaAlgunImporte=true; return { inner:celdaPend, cent:null }; }
     /* DEV-010R1 — Importe final de la línea (euros) → céntimos enteros con
        redondeo decimal. Si no es finito o no cabe como entero seguro, la línea
@@ -8719,7 +8824,7 @@ function tcNomRenderProvisional(data){
 
   /* Resto de conceptos (solo los de cantidad ≠ 0). Importe € por ID exacto. */
   filas.forEach(function(f){
-    var res=resolverImporte(f.idSal,f.modo,f.dias);
+    var res=resolverImporte(f.idSal,f.modo,f.dias,f.idSalFallback);
     if(res.cent==null){ todosImportes=false; }
     else { totalCent+=res.cent; if(f.cotiza) cotizableOrdinarioCent+=res.cent; }
     /* DEV-010R13/R17 — SOLO la fila 4A31 alimenta el acumulador de horas extraordinarias
@@ -14806,6 +14911,13 @@ window.tcMsgAbrirDia=function(fecha){
        anterior: una continuación es la segunda línea envuelta de una celda y
        queda MUY pegada a su fila; un pie o una nota queda mucho más abajo. */
     var TS_MAX_GAP_CONT=20;
+    /* NEXUM-006R2 — Separación vertical máxima para unir TROZOS del MISMO ID
+       largo partido en varias líneas (celda ID envuelta). Es ~1 altura de línea
+       (una banda contigua): el trozo inferior de un ID queda pegado a su banda
+       de datos (~4px) mientras que la banda de datos de la fila ANTERIOR queda a
+       ≥16px, de modo que este umbral estrecho impide capturar el trozo de otra
+       fila. Sólo aplica a la columna ID; el resto de columnas no se fusiona. */
+    var TS_MAX_GAP_ID_CONT=8;
     /* Agrupa los items de una página por fila (±4px, igual criterio que
        tsTextoPorLineas) conservando la X de cada celda Y la coordenada Y de la
        línea (necesaria para el control de proximidad de las continuaciones),
@@ -14957,6 +15069,7 @@ window.tcMsgAbrirDia=function(fecha){
         tsFinalizarFilaTabular(estado);
         estado.cols=cabecera;
         estado.huboCabecera=true;
+        estado.idPrefijoPend=null;
         return;
       }
       if(!estado.cols) return; /* todavía sin cabecera detectada: línea fuera de tabla, se ignora */
@@ -14965,12 +15078,14 @@ window.tcMsgAbrirDia=function(fecha){
          posterior vuelva a fusionarse con ella). */
       if(TS_RE_PIE.test(textoLinea)){
         tsFinalizarFilaTabular(estado); /* pie reconocido: cierra la fila anterior y se descarta el pie */
+        estado.idPrefijoPend=null; /* NEXUM-006R2R1 — interrupción: el prefijo no cruza un pie */
         return;
       }
       if(TS_RE_NOTA.test(textoLinea)){
         /* Nota/Observación/Advertencia/Página/Fuente/Vigencia: cierra la fila
            anterior, no crea propuesta y registra aviso. */
         tsFinalizarFilaTabular(estado);
+        estado.idPrefijoPend=null; /* NEXUM-006R2R1 — interrupción: el prefijo no cruza una nota/aviso */
         estado.errores.push('Línea de nota/aviso no fusionada ("'+textoLinea.slice(0,60)+'"): revísala manualmente.');
         return;
       }
@@ -14979,11 +15094,65 @@ window.tcMsgAbrirDia=function(fecha){
         /* Línea vacía asignable: interrupción; cierra la fila para bloquear
            una fusión posterior. */
         tsFinalizarFilaTabular(estado);
+        estado.idPrefijoPend=null; /* NEXUM-006R2R1 — interrupción: el prefijo no sobrevive a una línea sin columnas */
+        return;
+      }
+      /* NEXUM-006R2 — Reconstrucción de un ID largo partido en varias líneas del
+         PDF. En la tabla salarial un ID muy largo se envuelve dentro de la celda
+         ID y, al centrarse verticalmente la fila, sus trozos caen en bandas Y
+         propias: el TROZO SUPERIOR queda ~1 línea POR ENCIMA de la banda de datos
+         (código/concepto/importe) y el/los TROZO(S) INFERIOR(ES) ~1 línea POR
+         DEBAJO. Sólo se tratan aquí líneas que contienen EXCLUSIVAMENTE la columna
+         ID (sin artículo, código, concepto, importe, unidad ni fuente); ninguna
+         otra columna se fusiona y ninguna línea alejada participa. */
+      var soloId=asignado.id&&asignado.id.trim()
+         &&!(asignado.articulo&&asignado.articulo.trim())
+         &&!(asignado.codigo&&asignado.codigo.trim())
+         &&!(asignado.concepto&&asignado.concepto.trim())
+         &&!(asignado.importe&&asignado.importe.trim())
+         &&!(asignado.unidad&&asignado.unidad.trim())
+         &&!(asignado.fuente&&asignado.fuente.trim());
+      if(soloId){
+        var contId=asignado.id.trim();
+        /* TROZO INFERIOR: la fila de datos abierta está inmediatamente ENCIMA
+           (su banda de datos yDatos a distancia 0 < d ≤ TS_MAX_GAP_ID_CONT, es
+           decir la línea contigua) y "id + continuación" sigue siendo un ID
+           seguro. Se une SIN espacios ni separadores. La banda de datos de la
+           fila ANTERIOR queda a ≥16px, así que nunca captura el trozo superior
+           de la fila siguiente. */
+        if(estado.fila&&estado.fila.id&&estado.fila.id.trim()&&estado.fila.yDatos!=null
+           &&(estado.fila.yDatos-y)>0&&(estado.fila.yDatos-y)<=TS_MAX_GAP_ID_CONT
+           &&tsIdSeguro(estado.fila.id+contId)){
+          estado.fila.id=estado.fila.id+contId;
+          estado.ultimaY=y;
+          return;
+        }
+        /* TROZO SUPERIOR: aún no pertenece a ninguna fila de datos (ésta llega
+           justo debajo). Cierra la fila anterior —igual que haría un inicio— y
+           se recuerda como PREFIJO para que la fila de datos contigua de abajo lo
+           adopte como comienzo de su ID. Sólo si por sí solo ya es un ID seguro. */
+        tsFinalizarFilaTabular(estado);
+        estado.idPrefijoPend=tsIdSeguro(contId)?{id:contId,y:y}:null;
+        estado.ultimaY=y;
         return;
       }
       if(tsEsInicioFilaTabular(asignado)){
         tsFinalizarFilaTabular(estado);
-        estado.fila={id:asignado.id||'',articulo:asignado.articulo||'',codigo:asignado.codigo||'',concepto:asignado.concepto||'',importe:asignado.importe||'',unidad:asignado.unidad||'',fuente:asignado.fuente||''};
+        var idIni=asignado.id||'';
+        /* Adopta el TROZO SUPERIOR pendiente como prefijo del ID de esta fila de
+           datos SÓLO si: la fila no trae ID propio, el prefijo quedó inmediatamente
+           encima (0 < gap ≤ TS_MAX_GAP_CONT), empieza por el CÓDIGO de la fila
+           (convención ID = CÓDIGO_…, evita adopciones espurias) y sigue siendo un
+           ID seguro. Si no, comportamiento actual intacto. */
+        if(estado.idPrefijoPend&&!idIni.trim()
+           &&(estado.idPrefijoPend.y-y)>0&&(estado.idPrefijoPend.y-y)<=TS_MAX_GAP_CONT
+           &&asignado.codigo&&asignado.codigo.trim()
+           &&estado.idPrefijoPend.id.indexOf(asignado.codigo.trim())===0
+           &&tsIdSeguro(estado.idPrefijoPend.id)){
+          idIni=estado.idPrefijoPend.id;
+        }
+        estado.idPrefijoPend=null;
+        estado.fila={id:idIni,articulo:asignado.articulo||'',codigo:asignado.codigo||'',concepto:asignado.concepto||'',importe:asignado.importe||'',unidad:asignado.unidad||'',fuente:asignado.fuente||'',yDatos:y};
         estado.ultimaY=y;
         return;
       }
@@ -14991,6 +15160,10 @@ window.tcMsgAbrirDia=function(fecha){
          continuación multilínea real. Cualquier motivo de rechazo CIERRA la fila
          actual para impedir que una línea posterior vuelva a fusionarse con
          ella: solo se fusiona la línea INMEDIATAMENTE siguiente y válida. */
+      /* NEXUM-006R2R1 — Esta línea NO es la fila de datos que adopta el prefijo
+         (no fue inicio de fila): descarta cualquier prefijo pendiente para que
+         jamás lo reutilice una línea posterior. */
+      estado.idPrefijoPend=null;
       if(!estado.fila){
         /* Continuación en la parte superior de una página sin fila previa
            abierta (la fila anterior se cerró al terminar la página anterior):
@@ -15030,7 +15203,7 @@ window.tcMsgAbrirDia=function(fecha){
       estado.ultimaY=y;
     }
     function tsNuevoEstadoTabular(){
-      return {cols:null,huboCabecera:false,fila:null,ultimaY:null,propuestas:[],errores:[]};
+      return {cols:null,huboCabecera:false,fila:null,ultimaY:null,idPrefijoPend:null,propuestas:[],errores:[]};
     }
     /* Procesa una página SIN cerrar la fila (la continuidad de cabeceras se
        mantiene entre páginas); el llamador debe invocar tsFinalizarFilaTabular
@@ -15259,6 +15432,7 @@ window.tcMsgAbrirDia=function(fecha){
             textoAnio+=lineasPag+'\n';
             try{ tsProcesarPaginaTabular(estadoTab,tc.items); }catch(e){}
             tsFinalizarFilaTabular(estadoTab);    /* cierra la fila al terminar la página */
+            estadoTab.idPrefijoPend=null;         /* NEXUM-006R2R1 — el prefijo pendiente no cruza el borde de página */
             var filasPag=estadoTab.propuestas.slice(idxProp); idxProp=estadoTab.propuestas.length;
             var errsPag=estadoTab.errores.slice(idxErr); idxErr=estadoTab.errores.length;
             erroresAcum.push.apply(erroresAcum,errsPag);
