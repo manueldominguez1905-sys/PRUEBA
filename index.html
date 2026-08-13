@@ -782,7 +782,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-007R2</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-009R1</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -940,6 +940,41 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
           <button type="submit" id="tcDescGuardarBtn" class="btn btn-primary">Guardar</button>
           <button type="button" id="tcDescEliminarBtn" class="btn btn-danger" style="display:none;">Eliminar configuración</button>
           <button type="button" id="tcDescCancelarBtn" class="btn btn-secondary">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== NEXUM-009 — CONCEPTOS ANUALES (DGA) ===================== -->
+  <div id="modalConceptosAnuales" class="perfil-overlay" data-abierto="0" role="dialog" aria-modal="true" aria-labelledby="caTitulo" aria-describedby="caIntro">
+    <div class="perfil-box">
+      <button type="button" id="caXBtn" class="perfil-cerrar-x" aria-label="Cerrar conceptos anuales"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <h2 id="caTitulo" class="perfil-titulo"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4M9 14l2 2 4-4"/></svg>Conceptos anuales</h2>
+      <p id="caIntro" class="perfil-intro">Configura la opción económica anual DGA por año. El importe se cobra una sola vez en agosto y procede exclusivamente de la tabla salarial activa. Nada se activa ni se guarda automáticamente.</p>
+      <div id="caAvisoCorrupto" class="perfil-aviso-corrupto" role="alert" style="display:none;"></div>
+
+      <form id="conceptosAnualesForm" novalidate>
+        <div class="perfil-campo" id="caCampoAnio">
+          <label for="caAnio">Año</label>
+          <input type="number" id="caAnio" min="1900" max="9999" step="1" inputmode="numeric" autocomplete="off" aria-describedby="caAnioError" />
+          <div id="caAnioError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <div class="perfil-campo" id="caCampoDga">
+          <label for="caDga">DGA</label>
+          <select id="caDga" aria-describedby="caDgaError">
+            <option value="">No concedido</option>
+            <option value="B">Opción B</option>
+            <option value="C">Opción C</option>
+            <option value="D">Opción D</option>
+          </select>
+          <div id="caDgaError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <div class="perfil-botones">
+          <button type="submit" id="caGuardarBtn" class="btn btn-primary">Guardar</button>
+          <button type="button" id="caEliminarBtn" class="btn btn-danger" style="display:none;">Eliminar configuración del año</button>
+          <button type="button" id="caCancelarBtn" class="btn btn-secondary">Cancelar</button>
         </div>
       </form>
     </div>
@@ -1973,6 +2008,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <div class="nexo-mas-lista">
         <button type="button" class="nexo-mas-item" id="nexoMasPerfil"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg></span><span class="nexo-mas-tx">Perfil laboral</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
         <button type="button" class="nexo-mas-item" id="nexoMasDescuentos"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 9.2A4 4 0 0 0 9 12a4 4 0 0 0 6.5 2.8"/><path d="M7 11h5.5M7 13h4.5"/></svg></span><span class="nexo-mas-tx">Descuentos e IRPF</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+        <button type="button" class="nexo-mas-item" id="nexoMasConceptosAnuales"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4M9 14l2 2 4-4"/></svg></span><span class="nexo-mas-tx">Conceptos anuales</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
         <button type="button" class="nexo-mas-item" id="nexoMasMensajes"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 4.5 1.8 5.6 2 5.8H4c.2-.2 2-1.3 2-5.8z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span><span class="nexo-mas-tx">Centro de mensajes</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
       </div>
 
@@ -3608,6 +3644,33 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     return false;
   }
 
+  // NEXUM-009 — Conceptos anuales (DGA). Casos EXACTOS:
+  //   · Lector ausente (caLeer no es función) → error y se ABORTA (sin Blob ni descarga).
+  //   · estado 'ok' con configuración válida → objeto completo {version:1,anios:{…}}.
+  //   · estado 'sinConfig' → conceptosAnuales:null.
+  //   · 'corrupto', estado inesperado o excepción → se ABORTA. No se convierte una
+  //     configuración dañada en null en silencio. Siempre presente en el backup.
+  var conceptosAnualesParaGuardar = null;
+  if (typeof window.caLeer !== "function") {
+    if (mostrarAviso) mostrarToast("No se pudo acceder a los conceptos anuales. No se ha generado ninguna copia.", "error");
+    return false;
+  }
+  try {
+    var _caRead = window.caLeer();
+    if (_caRead && _caRead.estado === "ok" && _caRead.config) {
+      conceptosAnualesParaGuardar = JSON.parse(JSON.stringify(_caRead.config));
+    } else if (_caRead && _caRead.estado === "sinConfig") {
+      conceptosAnualesParaGuardar = null;
+    } else {
+      // 'corrupto', estado inesperado o resultado inválido: no se genera copia.
+      if (mostrarAviso) mostrarToast("No se pudo verificar los conceptos anuales (están dañados). No se ha generado ninguna copia.", "error");
+      return false;
+    }
+  } catch (e) {
+    if (mostrarAviso) mostrarToast("No se pudo verificar los conceptos anuales. No se ha generado ninguna copia.", "error");
+    return false;
+  }
+
   // Copia profunda verificable de todo lo que va a guardarse.
   var calendarioParaGuardar, recaudacionesParaGuardar, liquidacionesParaGuardar;
   try {
@@ -3640,7 +3703,8 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     tablaSalarialActiva: tablaSalarialActivaParaGuardar,
     tablaSalarialActivaIncluido: true,
     perfilLaboral: perfilLaboralParaGuardar,
-    configDescuentos: configDescuentosParaGuardar
+    configDescuentos: configDescuentosParaGuardar,
+    conceptosAnuales: conceptosAnualesParaGuardar
   };
   var json;
   try {
@@ -3789,6 +3853,25 @@ function importarDatos(archivo) {
         }
         descNuevoValidado = _cdVal.config;
       }
+      // NEXUM-009 — Conceptos anuales (DGA). Solo se procesa si el backup DECLARA
+      // la propiedad (los backups antiguos que NO la traen conservan la config
+      // actual). null → eliminar la clave al restaurar. Objeto → debe ser una
+      // configuración válida (version:1, anios como objeto, años "YYYY" y dga
+      // B/C/D/null, sin propiedades desconocidas); si no lo es, se rechaza TODO
+      // el backup aquí, antes de tocar nada.
+      var caSolicitado = Object.prototype.hasOwnProperty.call(datos, "conceptosAnuales");
+      var caEsNull = caSolicitado && datos.conceptosAnuales === null;
+      var caNuevoValidado = null;
+      if (caSolicitado && !caEsNull) {
+        var _caVal = (typeof window.caValidar === "function")
+          ? window.caValidar(datos.conceptosAnuales)
+          : { ok: false };
+        if (!_caVal.ok) {
+          mostrarToast("El backup incluye unos conceptos anuales no válidos. No se ha importado nada.", "error");
+          return;
+        }
+        caNuevoValidado = _caVal.config;
+      }
       // Compatible con backups version 1 (anteriores a DEV-004R1, sin bloque
       // de calendario) y version 2 (calendarioConductor podía ser directamente
       // el mapa de días, sin schema/turnos/datosCalendarioTurnos).
@@ -3932,6 +4015,14 @@ function importarDatos(archivo) {
         mostrarToast("No se puede asegurar la vuelta atrás de la configuración de descuentos. No se ha importado nada.", "error");
         return;
       }
+      // NEXUM-009 — Instantánea previa de CONCEPTOS ANUALES, para revertirla dentro
+      // del mismo rollback. Solo importa si el backup lo solicita.
+      var caPrevioRaw = null, caPrevioLegible = true;
+      try { caPrevioRaw = localStorage.getItem('nexum_v1_conceptos_anuales'); } catch (e) { caPrevioLegible = false; }
+      if (caSolicitado && !caPrevioLegible) {
+        mostrarToast("No se puede asegurar la vuelta atrás de los conceptos anuales. No se ha importado nada.", "error");
+        return;
+      }
 
       // ============================================================
       // 3) REVERSIÓN ÚNICA Y VERIFICADA
@@ -3991,6 +4082,16 @@ function importarDatos(archivo) {
             else { localStorage.removeItem('tc_v1_config_descuentos'); descRevertido = (localStorage.getItem('tc_v1_config_descuentos') == null); }
           } catch (e) { descRevertido = false; }
         }
+        // NEXUM-009 — Reversión de CONCEPTOS ANUALES al valor exacto anterior (o
+        // eliminación si antes no existía), con VERIFICACIÓN por relectura.
+        var caRevertido = true;
+        if (caSolicitado) {
+          caRevertido = false;
+          try {
+            if (caPrevioRaw != null) { localStorage.setItem('nexum_v1_conceptos_anuales', caPrevioRaw); caRevertido = (localStorage.getItem('nexum_v1_conceptos_anuales') === caPrevioRaw); }
+            else { localStorage.removeItem('nexum_v1_conceptos_anuales'); caRevertido = (localStorage.getItem('nexum_v1_conceptos_anuales') == null); }
+          } catch (e) { caRevertido = false; }
+        }
         return Promise.all([
           reemplazarTodos(STORE_RECAUDACIONES, recaudacionesPrevias),
           reemplazarTodos(STORE_LIQUIDACIONES, liquidacionesPrevias)
@@ -4001,9 +4102,9 @@ function importarDatos(archivo) {
             listaLiquidaciones = liquidacionesPrevias;
             try { actualizarResumen(); renderizarRecaudaciones(); renderizarLiquidaciones(); } catch (e) {}
           }
-          // Refresca la Nómina con el perfil revertido, si está abierta.
-          if (perfilSolicitado) { try { if (typeof window.tcRenderNomina === "function") { var _s = document.getElementById("tab-nomina"); if (_s && _s.style.display !== "none") window.tcRenderNomina(); } } catch (e) {} }
-          return datosRevertidos && calendarioRevertido && tsRevertido && tsActivaRevertido && perfilRevertido && descRevertido;
+          // Refresca la Nómina con el perfil/conceptos anuales revertidos, si está abierta.
+          if (perfilSolicitado || caSolicitado) { try { if (typeof window.tcRenderNomina === "function") { var _s = document.getElementById("tab-nomina"); if (_s && _s.style.display !== "none") window.tcRenderNomina(); } } catch (e) {} }
+          return datosRevertidos && calendarioRevertido && tsRevertido && tsActivaRevertido && perfilRevertido && descRevertido && caRevertido;
         }).catch(function () { return false; });
       }
       function avisarFalloImportacion(mensaje) {
@@ -4122,6 +4223,31 @@ function importarDatos(archivo) {
       }
 
       // ============================================================
+      // 4f) NEXUM-009 — CONCEPTOS ANUALES (DGA), con el mismo rollback. Objeto
+      //     validado → se escribe (y se verifica por relectura exacta); null →
+      //     se elimina la clave (y se verifica su ausencia). Cualquier fallo de
+      //     escritura activa el rollback completo (calendario, tablas, tabla
+      //     activa, perfil, descuentos y conceptos anuales).
+      // ============================================================
+      if (caSolicitado) {
+        var caAplicado = false;
+        try {
+          if (caEsNull) {
+            localStorage.removeItem('nexum_v1_conceptos_anuales');
+            caAplicado = (localStorage.getItem('nexum_v1_conceptos_anuales') == null);
+          } else {
+            var caNuevoSerializado = JSON.stringify(caNuevoValidado);
+            localStorage.setItem('nexum_v1_conceptos_anuales', caNuevoSerializado);
+            caAplicado = (localStorage.getItem('nexum_v1_conceptos_anuales') === caNuevoSerializado);
+          }
+        } catch (e) { caAplicado = false; }
+        if (!caAplicado) {
+          avisarFalloImportacion("No se pudo restaurar los conceptos anuales. No se ha importado nada.");
+          return;
+        }
+      }
+
+      // ============================================================
       // 5) Recaudaciones y liquidaciones. Se comprueban TODOS los resultados
       //    reales antes de mostrar mensajes o cambiar las listas en memoria:
       //    Promise.all no falla aunque reemplazarTodos resuelva false.
@@ -4132,8 +4258,9 @@ function importarDatos(archivo) {
           actualizarResumen();
           renderizarRecaudaciones(); renderizarLiquidaciones();
           try { if (typeof window.tcMsgRefrescar === "function") window.tcMsgRefrescar(); } catch (e) {} /* DEV-007R6 */
-          // DEV-010R5 — Refresca la Nómina si está abierta para reflejar el perfil restaurado.
-          if (perfilSolicitado) { try { if (typeof window.tcRenderNomina === "function") { var _sn = document.getElementById("tab-nomina"); if (_sn && _sn.style.display !== "none") window.tcRenderNomina(); } } catch (e) {} }
+          // DEV-010R5 / NEXUM-009 — Refresca la Nómina si está abierta para reflejar
+          // el perfil y/o los conceptos anuales restaurados.
+          if (perfilSolicitado || caSolicitado) { try { if (typeof window.tcRenderNomina === "function") { var _sn = document.getElementById("tab-nomina"); if (_sn && _sn.style.display !== "none") window.tcRenderNomina(); } } catch (e) {} }
           // DEV-010R3 — Aviso si el backup traía varias tablas sin activa
           // marcada: no se elige ninguna, debe seleccionarse a mano.
           var sufijoActiva = tsActivaManualPendiente
@@ -5547,10 +5674,413 @@ function inicializarCamaraOCR() {
 })();
 
 
+/* ==========================================================================
+   NEXUM-009 — CONCEPTOS ANUALES (opción económica DGA, cobrada en agosto)
+   Clave localStorage: nexum_v1_conceptos_anuales (INDEPENDIENTE de Perfil y de
+   Descuentos; nunca se mezclan).
+   Esquema ESTRICTO:
+     { version:1, anios:{ "YYYY": { dga:"B"|"C"|"D"|null } } }
+   · version obligatoria y exactamente el número 1.
+   · anios es un objeto (nunca array). Puede estar vacío ({}).
+   · Cada clave de anios es una cadena de 4 dígitos "YYYY".
+   · Cada valor es un objeto con UNA sola propiedad: dga.
+   · dga admite EXACTAMENTE "B", "C", "D" o null. dga:null = ese año no se cobra.
+   · Se rechazan propiedades desconocidas (raíz, año o valor), años inválidos,
+     valores ausentes, strings no permitidos y objetos corruptos. Nada se completa
+     en silencio.
+   ESTE MÓDULO SOLO GUARDA / VALIDA / MUESTRA / LEE / ELIMINA la configuración
+   anual. La conexión económica con la Nómina (fila 4A50, agosto) se resuelve en
+   tcNomRenderProvisional reutilizando las fórmulas existentes. NO toca Perfil,
+   Descuentos, tablas salariales, IndexedDB ni ninguna fórmula económica.
+   ========================================================================== */
+(function(){
+  'use strict';
+
+  var CA_KEY = 'nexum_v1_conceptos_anuales';
+  var CA_DGA_VALIDOS = { 'B':1, 'C':1, 'D':1 };
+
+  function _caAnioValido(y){ return typeof y==='string' && /^\d{4}$/.test(y); }
+  function _caDgaValido(v){ return v===null || (typeof v==='string' && !!CA_DGA_VALIDOS[v]); }
+
+  /* Validación PURA (no escribe, nunca lanza). Devuelve
+     {ok:true, config:{version:1, anios:{...}}} (objeto NUEVO reconstruido, sin
+     propiedades ajenas) o {ok:false, error, campo}. */
+  function caValidar(datos){
+    try {
+      if(!datos || typeof datos!=='object' || Array.isArray(datos))
+        return { ok:false, error:'La configuración no es un objeto válido.', campo:null };
+      /* Ninguna propiedad raíz desconocida. */
+      for(var k in datos){
+        if(Object.prototype.hasOwnProperty.call(datos,k) && k!=='version' && k!=='anios')
+          return { ok:false, error:'La configuración contiene propiedades no reconocidas.', campo:null };
+      }
+      if(datos.version!==1)
+        return { ok:false, error:'Versión de conceptos anuales no soportada.', campo:null };
+      if(!Object.prototype.hasOwnProperty.call(datos,'anios'))
+        return { ok:false, error:'Falta el bloque de años.', campo:null };
+      var anios=datos.anios;
+      if(!anios || typeof anios!=='object' || Array.isArray(anios))
+        return { ok:false, error:'El bloque de años no es válido.', campo:null };
+      var out={ version:1, anios:{} };
+      for(var y in anios){
+        if(!Object.prototype.hasOwnProperty.call(anios,y)) continue;
+        if(!_caAnioValido(y))
+          return { ok:false, error:'Año no válido: '+String(y)+'.', campo:'anio' };
+        var val=anios[y];
+        if(!val || typeof val!=='object' || Array.isArray(val))
+          return { ok:false, error:'La configuración del año '+y+' no es válida.', campo:'anio' };
+        /* Solo se admite la propiedad dga. */
+        for(var kk in val){
+          if(Object.prototype.hasOwnProperty.call(val,kk) && kk!=='dga')
+            return { ok:false, error:'El año '+y+' contiene propiedades no reconocidas.', campo:'anio' };
+        }
+        if(!Object.prototype.hasOwnProperty.call(val,'dga'))
+          return { ok:false, error:'Falta el valor de DGA del año '+y+'.', campo:'dga' };
+        if(!_caDgaValido(val.dga))
+          return { ok:false, error:'El valor de DGA del año '+y+' no es válido.', campo:'dga' };
+        out.anios[y]={ dga:val.dga };
+      }
+      return { ok:true, config:out };
+    } catch(e){
+      return { ok:false, error:'No se pudo validar la configuración.', campo:null };
+    }
+  }
+
+  /* Lectura pública (nunca lanza).
+     {estado:'ok', config:{...}} | {estado:'sinConfig'} | {estado:'corrupto'} */
+  function caLeer(){
+    var raw;
+    try { raw = localStorage.getItem(CA_KEY); }
+    catch(e){ return { estado:'corrupto' }; }
+    if(raw==null) return { estado:'sinConfig' };
+    var obj;
+    try { obj = JSON.parse(raw); } catch(e){ return { estado:'corrupto' }; }
+    var v = caValidar(obj);
+    if(!v.ok) return { estado:'corrupto' };
+    return { estado:'ok', config:v.config };
+  }
+
+  /* Lectura pública de UN año concreto, para la conexión con la Nómina.
+     {estado:'ok', dga:"B"|"C"|"D"|null} | {estado:'sinAnio'} |
+     {estado:'sinConfig'} | {estado:'corrupto'} */
+  function caLeerAnio(anio){
+    var lect=caLeer();
+    if(lect.estado==='corrupto') return { estado:'corrupto' };
+    if(lect.estado!=='ok') return { estado:'sinConfig' };
+    var y=String(anio==null?'':anio).trim();
+    if(!Object.prototype.hasOwnProperty.call(lect.config.anios, y)) return { estado:'sinAnio' };
+    return { estado:'ok', dga:lect.config.anios[y].dga };
+  }
+
+  /* Serializa + escribe + relee EXACTO; si falla restaura el valor previo exacto
+     (o lo elimina si no existía) y verifica la restauración. Helper común a
+     guardar/eliminar. previoRaw es la cadena leída ANTES de tocar nada.
+     Devuelve {ok:true} | {ok:false, error}. Con serialNuevo===null se ELIMINA. */
+  function _caEscribirTransaccional(serialNuevo, previoRaw){
+    var verificado=false;
+    try {
+      if(serialNuevo!=null){ localStorage.setItem(CA_KEY, serialNuevo); verificado=(localStorage.getItem(CA_KEY)===serialNuevo); }
+      else { localStorage.removeItem(CA_KEY); verificado=(localStorage.getItem(CA_KEY)==null); }
+    } catch(e){ verificado=false; }
+    if(verificado) return { ok:true };
+    var restaurado=false;
+    try {
+      if(previoRaw!=null){ localStorage.setItem(CA_KEY, previoRaw); restaurado=(localStorage.getItem(CA_KEY)===previoRaw); }
+      else { localStorage.removeItem(CA_KEY); restaurado=(localStorage.getItem(CA_KEY)==null); }
+    } catch(e){ restaurado=false; }
+    if(!restaurado)
+      return { ok:false, error:'No se pudo escribir y no se pudo asegurar el estado anterior. Revisa el almacenamiento.' };
+    return { ok:false, error:'No se pudo escribir la configuración (almacenamiento no disponible). Se ha conservado la anterior.' };
+  }
+
+  /* Guardado TRANSACCIONAL de UN año. Preserva los demás años válidos ya
+     guardados. 1) Valida año y dga. 2) Lee el valor anterior (raw) OBLIGATORIO;
+     si no se puede leer, aborta SIN escribir. 3) Construye y valida el objeto
+     completo. 4) Escribe. 5) Relee y compara EXACTO. 6) Rollback verificado si
+     algo falla. Nunca devuelve ok:true sin verificar la persistencia.
+     {ok:true, config} | {ok:false, error, campo}. */
+  function caGuardarAnio(anio, dga){
+    var y=String(anio==null?'':anio).trim();
+    if(!_caAnioValido(y)) return { ok:false, error:'El año debe tener el formato AAAA (cuatro dígitos).', campo:'anio' };
+    if(!_caDgaValido(dga)) return { ok:false, error:'La opción de DGA no es válida.', campo:'dga' };
+    /* Lectura obligatoria del valor anterior ANTES de escribir. */
+    var previoRaw, previoLegible=true;
+    try { previoRaw = localStorage.getItem(CA_KEY); } catch(e){ previoLegible=false; }
+    if(!previoLegible)
+      return { ok:false, error:'No se pudo leer el estado anterior de los conceptos anuales. No se ha guardado nada.', campo:null };
+    /* Objeto completo preservando años válidos existentes (si el almacén estaba
+       corrupto o vacío, se parte de un objeto nuevo con solo este año). */
+    var base={ version:1, anios:{} };
+    var lect=caLeer();
+    if(lect.estado==='ok'){
+      for(var k in lect.config.anios){
+        if(Object.prototype.hasOwnProperty.call(lect.config.anios,k)) base.anios[k]={ dga:lect.config.anios[k].dga };
+      }
+    }
+    base.anios[y]={ dga:dga };
+    var v=caValidar(base);
+    if(!v.ok) return { ok:false, error:v.error, campo:v.campo||null };
+    var serial;
+    try { serial=JSON.stringify(v.config); }
+    catch(e){ return { ok:false, error:'No se pudo serializar la configuración.', campo:null }; }
+    var res=_caEscribirTransaccional(serial, previoRaw);
+    if(res.ok) return { ok:true, config:v.config };
+    return { ok:false, error:res.error, campo:null };
+  }
+
+  /* Eliminación TRANSACCIONAL de la configuración de UN año, conservando el
+     resto. Si tras eliminar no queda ningún año, se elimina la clave completa
+     (queda «sin configuración»). 1) Lee el valor anterior (raw); si no se puede,
+     aborta. 2) Construye el objeto sin ese año. 3) Escribe/elimina y verifica.
+     4) Rollback verificado si falla.
+     {ok:true, estado:'ok'|'sinConfig'} | {ok:false, error}. */
+  function caEliminarAnio(anio){
+    var y=String(anio==null?'':anio).trim();
+    var previoRaw, previoLegible=true;
+    try { previoRaw = localStorage.getItem(CA_KEY); } catch(e){ previoLegible=false; }
+    if(!previoLegible)
+      return { ok:false, error:'No se pudo leer el estado anterior de los conceptos anuales. No se ha eliminado nada.' };
+    if(previoRaw==null) return { ok:true, estado:'sinConfig' };
+    var lect=caLeer();
+    var base={ version:1, anios:{} };
+    if(lect.estado==='ok'){
+      for(var k in lect.config.anios){
+        if(Object.prototype.hasOwnProperty.call(lect.config.anios,k) && k!==y) base.anios[k]={ dga:lect.config.anios[k].dga };
+      }
+    }
+    /* Almacén corrupto o config sin años: eliminar la clave por completo. */
+    var quedan=Object.keys(base.anios).length;
+    var serial=null;
+    if(quedan>0){
+      var v=caValidar(base);
+      if(!v.ok) return { ok:false, error:v.error };
+      try { serial=JSON.stringify(v.config); }
+      catch(e){ return { ok:false, error:'No se pudo serializar la configuración.' }; }
+    }
+    var res=_caEscribirTransaccional(serial, previoRaw);
+    if(res.ok) return { ok:true, estado:(quedan>0?'ok':'sinConfig') };
+    return { ok:false, error:res.error };
+  }
+
+  /* ---------- Interfaz (modal accesible propio) ---------- */
+  var _caPrevFocus = null;
+
+  function _caFocusables(){
+    var box=document.querySelector('#modalConceptosAnuales .perfil-box');
+    if(!box) return [];
+    var nodes=box.querySelectorAll('button, input, select, textarea, [href], [tabindex]');
+    return Array.prototype.filter.call(nodes, function(el){
+      if(el.disabled) return false;
+      if(el.getAttribute && el.getAttribute('tabindex')==='-1') return false;
+      return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+    });
+  }
+  function _caKeydown(e){
+    var key=e.key;
+    if(key==='Escape' || e.keyCode===27){ e.preventDefault(); caCerrarModal(); return; }
+    if(key==='Tab' || e.keyCode===9){
+      var f=_caFocusables();
+      if(!f.length) return;
+      var first=f[0], last=f[f.length-1], active=document.activeElement;
+      if(e.shiftKey && active===first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && active===last){ e.preventDefault(); first.focus(); }
+    }
+  }
+
+  function _caLimpiarErrores(){
+    ['caCampoAnio','caCampoDga'].forEach(function(id){ var d=document.getElementById(id); if(d) d.classList.remove('tiene-error'); });
+    ['caAnioError','caDgaError'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=''; });
+  }
+  function _caMostrarError(campo, mensaje){
+    var campoDiv=(campo==='dga')?'caCampoDga':'caCampoAnio';
+    var errDiv=(campo==='dga')?'caDgaError':'caAnioError';
+    var d=document.getElementById(campoDiv); if(d) d.classList.add('tiene-error');
+    var e=document.getElementById(errDiv); if(e) e.textContent=mensaje;
+  }
+
+  /* Convierte el texto del input de año en una cadena "YYYY" válida (a prueba de
+     manipulación del DOM: rechaza vacío, no numérico, longitud distinta de 4). */
+  function _caParseAnio(str){
+    if(typeof str!=='string') return { ok:false };
+    var s=str.trim();
+    if(!/^\d{4}$/.test(s)) return { ok:false };
+    return { ok:true, anio:s };
+  }
+  function _caParseDga(str){
+    if(str==='') return { ok:true, dga:null };
+    if(str==='B'||str==='C'||str==='D') return { ok:true, dga:str };
+    return { ok:false };
+  }
+
+  /* Refleja en el select el valor guardado para el año que hay en el input (o
+     «No concedido» si ese año no está configurado). Muestra/oculta «Eliminar».
+     No escribe nada. */
+  function _caReflejarAnio(){
+    var inp=document.getElementById('caAnio');
+    var sel=document.getElementById('caDga');
+    var btnEliminar=document.getElementById('caEliminarBtn');
+    var parsed=_caParseAnio(inp?inp.value:'');
+    var tieneAnioGuardado=false;
+    if(parsed.ok){
+      var lect=caLeerAnio(parsed.anio);
+      if(lect.estado==='ok'){
+        tieneAnioGuardado=true;
+        if(sel) sel.value=(lect.dga==null?'':lect.dga);
+      } else {
+        if(sel) sel.value='';
+      }
+    } else {
+      if(sel) sel.value='';
+    }
+    if(btnEliminar){
+      btnEliminar.style.display = tieneAnioGuardado ? '' : 'none';
+      btnEliminar.removeAttribute('data-confirmando');
+      btnEliminar.textContent='Eliminar configuración del año';
+    }
+  }
+
+  function caAbrirModal(){
+    try {
+      var overlay=document.getElementById('modalConceptosAnuales');
+      if(!overlay) return;
+      _caPrevFocus = document.activeElement;
+      var lectura=caLeer();
+
+      var avc=document.getElementById('caAvisoCorrupto');
+      if(avc){
+        if(lectura.estado==='corrupto'){
+          avc.style.display='';
+          avc.textContent='La configuración de conceptos anuales guardada está dañada o no es válida. Puedes sustituirla guardando de nuevo.';
+        } else { avc.style.display='none'; avc.textContent=''; }
+      }
+
+      /* Año inicial: el año natural actual (nunca se persiste automáticamente). */
+      var inp=document.getElementById('caAnio');
+      if(inp && (!inp.value || !/^\d{4}$/.test(inp.value.trim()))){
+        inp.value = String(new Date().getFullYear());
+      }
+      _caLimpiarErrores();
+      _caReflejarAnio();
+
+      overlay.setAttribute('data-abierto','1');
+      if(typeof window.nexumRecuperarViewport==='function') window.nexumRecuperarViewport();
+      setTimeout(function(){ try{ if(inp) inp.focus(); }catch(e){} }, 0);
+    } catch(e){}
+  }
+
+  function caCerrarModal(){
+    try {
+      var overlay=document.getElementById('modalConceptosAnuales');
+      if(!overlay) return;
+      /* Cierre puro: NO guarda ni elimina; descarta cambios sin tocar la clave.
+         Restaura el foco al abridor. No refresca importes (no se guardó nada). */
+      overlay.setAttribute('data-abierto','0');
+      try { if(_caPrevFocus && typeof _caPrevFocus.focus==='function') _caPrevFocus.focus(); } catch(e){}
+      _caPrevFocus=null;
+      if(typeof window.nexumRecuperarViewport==='function') window.nexumRecuperarViewport();
+    } catch(e){}
+  }
+
+  /* Refresca la Nómina SOLO si su pantalla está visible (fila 4A50 al instante).
+     No cambia año/mes seleccionados. Nunca lanza. */
+  function _caRefrescarNomina(){
+    try {
+      if(typeof window.tcRenderNomina!=='function') return;
+      var tab=document.getElementById('tab-nomina');
+      if(tab && tab.style.display!=='none') window.tcRenderNomina();
+    } catch(e){}
+  }
+
+  function _caGuardarDesdeUI(){
+    _caLimpiarErrores();
+    var inp=document.getElementById('caAnio');
+    var sel=document.getElementById('caDga');
+    var pa=_caParseAnio(inp?inp.value:'');
+    if(!pa.ok){
+      _caMostrarError('anio','Introduce un año válido de cuatro dígitos (AAAA).');
+      try{ if(inp) inp.focus(); }catch(e){}
+      return;
+    }
+    var pd=_caParseDga(sel?sel.value:'');
+    if(!pd.ok){
+      _caMostrarError('dga','Selecciona una opción de DGA válida.');
+      try{ if(sel) sel.focus(); }catch(e){}
+      return;
+    }
+    var res=caGuardarAnio(pa.anio, pd.dga);
+    if(!res.ok){
+      _caMostrarError(res.campo||'anio', res.error||'No se pudo guardar la configuración.');
+      return;
+    }
+    if(typeof mostrarToast==='function') mostrarToast('Conceptos anuales guardados para '+pa.anio+'.', 'success');
+    caCerrarModal();
+    _caRefrescarNomina();
+  }
+
+  function _caEliminarDesdeUI(btn){
+    var inp=document.getElementById('caAnio');
+    var pa=_caParseAnio(inp?inp.value:'');
+    if(!pa.ok){
+      _caMostrarError('anio','Introduce un año válido de cuatro dígitos (AAAA).');
+      try{ if(inp) inp.focus(); }catch(e){}
+      return;
+    }
+    confirmarAccion(btn, 'Eliminar configuración del año', function(){
+      var res=caEliminarAnio(pa.anio);
+      if(!res.ok){
+        if(typeof mostrarToast==='function') mostrarToast(res.error||'No se pudo eliminar la configuración.', 'error');
+        return;
+      }
+      if(typeof mostrarToast==='function') mostrarToast('Configuración del año '+pa.anio+' eliminada.', 'success');
+      caCerrarModal();
+      _caRefrescarNomina();
+    });
+  }
+
+  function caInit(){
+    var overlay=document.getElementById('modalConceptosAnuales');
+    if(!overlay) return;
+    var form=document.getElementById('conceptosAnualesForm');
+    if(form) form.addEventListener('submit', function(e){ e.preventDefault(); _caGuardarDesdeUI(); });
+    var inp=document.getElementById('caAnio');
+    if(inp){
+      inp.addEventListener('input', function(){
+        var d=document.getElementById('caCampoAnio'); if(d) d.classList.remove('tiene-error');
+        var e=document.getElementById('caAnioError'); if(e) e.textContent='';
+        _caReflejarAnio();
+      });
+    }
+    var sel=document.getElementById('caDga');
+    if(sel) sel.addEventListener('change', function(){
+      var d=document.getElementById('caCampoDga'); if(d) d.classList.remove('tiene-error');
+      var e=document.getElementById('caDgaError'); if(e) e.textContent='';
+    });
+    var btnCancelar=document.getElementById('caCancelarBtn');
+    if(btnCancelar) btnCancelar.addEventListener('click', function(){ caCerrarModal(); });
+    var btnX=document.getElementById('caXBtn');
+    if(btnX) btnX.addEventListener('click', function(){ caCerrarModal(); });
+    var btnEliminar=document.getElementById('caEliminarBtn');
+    if(btnEliminar) btnEliminar.addEventListener('click', function(){ _caEliminarDesdeUI(btnEliminar); });
+    overlay.addEventListener('keydown', _caKeydown);
+  }
+
+  /* Exposición pública (API independiente de Perfil y Descuentos). */
+  window.caLeer         = caLeer;
+  window.caLeerAnio     = caLeerAnio;
+  window.caValidar      = caValidar;
+  window.caGuardarAnio  = caGuardarAnio;
+  window.caEliminarAnio = caEliminarAnio;
+  window.caAbrirModal   = caAbrirModal;
+  window.caCerrarModal  = caCerrarModal;
+  window.caInit         = caInit;
+})();
+
+
 document.addEventListener("DOMContentLoaded", function () {
   inicializarTema(); inicializarTabs();
   if (typeof window.tcPerfilInit === "function") window.tcPerfilInit();
   if (typeof window.tcDescuentosInit === "function") window.tcDescuentosInit();
+  if (typeof window.caInit === "function") window.caInit();
   document.querySelectorAll(".btn-toggle-filtros").forEach(function (boton) {
     boton.addEventListener("click", function () {
       var panel = document.getElementById(boton.getAttribute("data-target"));
@@ -7033,7 +7563,7 @@ function tcComputosEspecificosCardHtml(jr){
   if(dj.minutos!=null){
     html+='Deje: <strong>'+dj.minutos+' min</strong>';
     if(dj.calle7) html+=' ('+dj.minutosBase+' + '+dj.extraCalle7Minutos+' Calle 7)';
-    html+=' · Pendiente de Condiciones Laborales<br>';
+    html+=' · Acumulado para regularización anual<br>';
   }
   var origenes=[];
   if(td.minutos!=null) origenes.push('T.D. '+tcComputosOrigenLabel(td.origen));
@@ -8380,8 +8910,8 @@ function tcNomRenderResumen(data){
     ['Exceso Art. 20.4 (físico)','dur','excesoFisico'],
     ['Exceso Art. 20.4 (equivalente ×2)','dur','excesoEquivalente'],
     ['T.D. (tiempo de desplazamiento)','dur','td'],
-    ['Deje normal','dur','dejeNormal'],
-    ['Extra Calle 7','dur','extraCalle7'],
+    ['Deje base para regularización anual','dur','dejeNormal'],
+    ['Suplemento Calle 7 para regularización anual','dur','extraCalle7'],
     ['Días pendientes de revisión','int','diasPendientesRevision']
   ];
   var h='<div class="form-card">';
@@ -8394,6 +8924,7 @@ function tcNomRenderResumen(data){
   });
   h+='</tbody></table></div>';
   h+='<div class="nom-nota">Los conceptos solapados (p.ej. horas extraordinarias y exceso Art. 20.4, que derivan del mismo tiempo) se muestran por separado y <strong>no se suman</strong> en un total general.</div>';
+  h+='<div class="nom-nota">El deje se acumula en minutos para la regularización anual del cómputo. No constituye un devengo mensual.</div>';
   h+='</div>';
 
   /* Desglose de los 12 meses */
@@ -8641,8 +9172,12 @@ function tcNomRenderProvisional(data){
      se aplica POR HORA (6 h 03 min × 21,09 €/h = 127,59 €); esa unidad textual no
      interviene en el cálculo. No se hardcodea ningún importe (21,09/127,59). */
   add('49A6','Cómputo desplazamiento mensual (T.D.)','minutos',R.td,null,'49A6_DESPLAZAMIENTO','horas',true);
-  add(null,'Deje normal','minutos',R.dejeNormal);
-  add(null,'Deje · Extra Calle 7','minutos',R.extraCalle7);
+  /* NEXUM-008 — El deje NO es un devengo mensual: sus minutos (base + Calle 7) se
+     acumulan para la regularización anual del cómputo de jornada. Por eso no se
+     añade aquí ninguna fila de deje: no aparece en la nómina provisional, no
+     muestra «Pdte.», no entra en totalCent ni en Base CC/CP, IRPF o cotizaciones,
+     y no consulta ningún ID de la tabla salarial. Los acumuladores R.dejeNormal /
+     R.extraCalle7 se conservan y solo se muestran en el Resumen de Nómina. */
   /* DEV-008R2 — Desde el turno final (reg.turno); ver tcResumenLaboralMes(). */
   add('4A0I','Prima diaria tarde','unid',R.primaTardeDias,'días','4A0I_TARDE','dias',true);
   /* NEXUM-005 — Prima diaria de noche (CN/PN). Mismo patrón que la de tarde:
@@ -8881,6 +9416,75 @@ function tcNomRenderProvisional(data){
         +'<div class="n"></div>';
     }
     /* MENOS2 (o cualquier valor no económico): sin fila y aporta cero. */
+  }
+
+  /* ===================== NEXUM-009 — DGA · OPCIÓN ECONÓMICA ANUAL (agosto)
+     La opción económica anual DGA se cobra UNA SOLA VEZ en agosto. Solo se
+     resuelve cuando se cumplen SIMULTÁNEAMENTE: vista mensual (esMes), categoría
+     Conductor-Perceptor autorizada (NOM_AUTORIZADO), mes de agosto (R.mes===8) y
+     existe configuración VÁLIDA para el MISMO año de la nómina (R.anio) con
+     dga en {B,C,D}. La guarda exterior (NOM_AUTORIZADO && esMes && R.mes===8)
+     garantiza CERO consultas —de conceptos anuales y de la tabla salarial— fuera
+     de agosto, en vista anual o en categorías no autorizadas.
+       B → 4A50_DGA_OPCION_B   C → 4A50_DGA_OPCION_C   D → 4A50_DGA_OPCION_D
+     El importe procede EXCLUSIVAMENTE de la tabla salarial ACTIVA por su ID
+     EXACTO, mediante resolverImporte() en modo 'once' (importe completo una sola
+     vez; NUNCA se multiplica por días/meses/unidades ni se hardcodea). Se suma
+     UNA sola vez a totalCent (entra en la base imponible del IRPF vía el total
+     devengado), pero NO alimenta cotizableOrdinarioCent (cotiza=false): no forma
+     parte de Base CC ni Base CP. La futura cotización prorrateada queda fuera de
+     esta tarea. NUNCA se consultan los IDs unitarios (4A50_DGA_UNITARIO_*).
+       · Sin configuración / dga:null / año sin configurar → sin fila, cero consultas.
+       · ID ausente, importe pendiente/no numérico, almacén salarial corrupto o sin
+         tabla activa → fila «Pdte.» y bloqueo de deducciones y líquido mediante el
+         mecanismo existente (resolverImporte → celdaPend + todosImportes=false).
+     NEXUM-009R1 — Se distinguen TRES casos según la lectura de conceptos anuales:
+       (1) Ausencia voluntaria (sinConfig, sinAnio, ok+dga:null) → sin fila, cero
+           consultas y SIN tocar todosImportes.
+       (2) Configuración válida (ok + dga∈{B,C,D}) → lógica económica intacta.
+       (3) Configuración NO VERIFICABLE (lector ausente/no función, excepción,
+           resultado null/primitivo/objeto inválido, estado 'corrupto', estado
+           desconocido, u ok con dga ausente o fuera de {null,B,C,D}) → NO se
+           consulta ningún ID salarial; una única fila informativa «Pdte.» que
+           fija todosImportes=false (bloquea IRPF, cotizaciones, total a deducir y
+           líquido) y activa un aviso. La configuración almacenada NO se borra,
+           repara ni sustituye. */
+  var _dgaNoVerificable=false;
+  if(NOM_AUTORIZADO && esMes && R.mes===8){
+    /* Lectura PROTEGIDA: lector ausente o excepción dejan _dgaLect indefinido, que
+       cae en el caso NO VERIFICABLE. No se consulta la tabla salarial hasta
+       confirmar que la configuración es válida (caso 2). */
+    var _dgaLect;
+    if(typeof window.caLeerAnio==='function'){
+      try { _dgaLect=window.caLeerAnio(R.anio); }
+      catch(e){ _dgaLect=undefined; }
+    }
+    var _dgaEstado=(_dgaLect && typeof _dgaLect==='object' && !Array.isArray(_dgaLect)) ? _dgaLect.estado : undefined;
+    var _dgaAusenciaVoluntaria = (_dgaEstado==='sinConfig' || _dgaEstado==='sinAnio' ||
+      (_dgaEstado==='ok' && _dgaLect.dga===null));
+    var _dgaValida = (_dgaEstado==='ok' && (_dgaLect.dga==='B' || _dgaLect.dga==='C' || _dgaLect.dga==='D'));
+
+    if(_dgaValida){
+      var _DGA_ID={ 'B':'4A50_DGA_OPCION_B', 'C':'4A50_DGA_OPCION_C', 'D':'4A50_DGA_OPCION_D' };
+      var _dgaRes=resolverImporte(_DGA_ID[_dgaLect.dga],'once',null);
+      if(_dgaRes.cent==null){ todosImportes=false; }
+      else { totalCent+=_dgaRes.cent; } /* cotiza=false: NO entra en cotizableOrdinarioCent */
+      h+=descCelda('4A50','DGA · Opción económica '+_dgaLect.dga)
+        +'<div class="n">1</div>'
+        +'<div class="n">'+_dgaRes.inner+'</div>'
+        +'<div class="n"></div>';
+    } else if(_dgaAusenciaVoluntaria){
+      /* sinConfig, sinAnio u ok+dga:null → sin fila, cero consultas, sin bloqueo. */
+    } else {
+      /* NO VERIFICABLE → fila informativa «Pdte.» sin consultar ningún ID; bloquea
+         los totales para evitar una nómina incompleta. */
+      _dgaNoVerificable=true;
+      todosImportes=false;
+      h+=descCelda('4A50','DGA · Configuración anual no verificable')
+        +'<div class="n">—</div>'
+        +'<div class="n">'+celdaPend+'</div>'
+        +'<div class="n"></div>';
+    }
   }
 
   /* ===================== DEV-010R12/R13 — II · DEDUCCIONES: IRPF (/401) + COTIZACIONES
@@ -9140,6 +9744,13 @@ function tcNomRenderProvisional(data){
     h+='<div class="nom-recibo-aviso">⚠️ La tabla salarial activa (año '+tcEsc(String(infoActiva.id))+') ya no existe o no es válida: todos los importes quedan como «Pdte.». Activa una tabla válida en las Tablas Salariales.</div>';
   } else if(faltaAlgunImporte){
     h+='<div class="nom-recibo-aviso">⚠️ Faltan importes en la tabla salarial activa (año '+tcEsc(String(infoActiva.anio))+'): concepto no encontrado o importe pendiente. Las celdas afectadas y el total devengado quedan como «Pdte.». Revisa esa tabla.</div>';
+  }
+
+  /* NEXUM-009R1 — Aviso de configuración anual DGA no verificable (solo agosto).
+     Independiente de la cadena anterior: en este caso no se consulta la tabla
+     salarial, por lo que estadoAlmacenCorrupto/faltaAlgunImporte no se activan. */
+  if(_dgaNoVerificable){
+    h+='<div class="nom-recibo-aviso">⚠️ La configuración anual de DGA no se pudo verificar: la fila DGA queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revísala en «Más → Conceptos anuales».</div>';
   }
 
   /* DEV-010R11 — Aviso específico de la RETENCIÓN DE IRPF. Solo puede activarse
@@ -13905,7 +14516,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-007R1';
+    var VC_VERSION_ACTUAL = 'NEXUM-009R1';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
 
@@ -17111,6 +17722,7 @@ window.tcMsgAbrirDia=function(fecha){
     // Más
     on('nexoMasPerfil', function(){ if(typeof window.tcPerfilAbrirModal==='function') window.tcPerfilAbrirModal(); });
     on('nexoMasDescuentos', function(){ if(typeof window.tcDescuentosAbrirModal==='function') window.tcDescuentosAbrirModal(); });
+    on('nexoMasConceptosAnuales', function(){ if(typeof window.caAbrirModal==='function') window.caAbrirModal(); });
     on('nexoMasMensajes', function(){ var b=$('btnMensajes'); if(b) b.click(); });
     on('nexoMasBackup', function(){ abrirSeccion('backup'); });
     on('nexoMasAdmin', function(){ var a=$('btnAdminAcceso'); if(a) a.click(); });

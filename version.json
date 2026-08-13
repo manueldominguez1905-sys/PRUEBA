@@ -1,5 +1,5 @@
 {
-  "version": "NEXUM-007R1",
+  "version": "NEXUM-009R1",
   "fecha": "2026-08-13",
-  "mensaje": "Corrección de actualización y restauración de copias de seguridad."
+  "mensaje": "Corrección: en agosto, una configuración DGA no verificable muestra una fila «Pdte.» y bloquea el líquido en vez de omitir la fila."
 }
