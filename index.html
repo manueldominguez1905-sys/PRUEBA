@@ -626,7 +626,8 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-anual-mes.tc-anual-mes-actual{border:1.5px solid var(--color-primary);border-radius:10px;padding:8px 8px 4px;margin-left:-2px;margin-right:-2px;box-shadow:0 0 0 3px rgba(122,31,43,.10);}
 body.dark #tc .tc-anual-mes.tc-anual-mes-actual{box-shadow:0 0 0 3px rgba(177,65,79,.16);}
 #tc .tc-anual-mes.tc-anual-mes-actual .tc-anual-mes-title{color:var(--color-primary);}
-#tc .tc-anual-dow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin-bottom:3px;}
+#tc .tc-anual-dow{display:grid;grid-template-columns:minmax(44px,58px) repeat(7,minmax(0,1fr));gap:4px;margin-bottom:3px;}
+#tc .tc-anual-dow::before{content:"";display:block;}
 #tc .tc-anual-dow span{text-align:center;font-size:9px;font-weight:700;color:var(--text3);padding:2px 0;text-transform:uppercase;}
 #tc .tc-anual-dow span:nth-child(6),#tc .tc-anual-dow span:nth-child(7){color:var(--danger);}
 /* La rejilla de días de cada mes en el Anual reutiliza .tc-cgrid/.tc-week-row (con el
@@ -782,7 +783,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-009R1</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-011R1</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -950,7 +951,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
     <div class="perfil-box">
       <button type="button" id="caXBtn" class="perfil-cerrar-x" aria-label="Cerrar conceptos anuales"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       <h2 id="caTitulo" class="perfil-titulo"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4M9 14l2 2 4-4"/></svg>Conceptos anuales</h2>
-      <p id="caIntro" class="perfil-intro">Configura la opción económica anual DGA por año. El importe se cobra una sola vez en agosto y procede exclusivamente de la tabla salarial activa. Nada se activa ni se guarda automáticamente.</p>
+      <p id="caIntro" class="perfil-intro">Configura las opciones económicas anuales por año: DGA (se cobra una sola vez en agosto) y Bonobús familiar (se cobra una sola vez en julio). Los importes proceden exclusivamente de la tabla salarial activa. Nada se activa ni se guarda automáticamente.</p>
       <div id="caAvisoCorrupto" class="perfil-aviso-corrupto" role="alert" style="display:none;"></div>
 
       <form id="conceptosAnualesForm" novalidate>
@@ -969,6 +970,17 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
             <option value="D">Opción D</option>
           </select>
           <div id="caDgaError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <!-- NEXUM-010 — Bonobús familiar (decisión anual). Cobro único en JULIO por
+             el ID exacto 4I88_BONOBUS_FAMILIAR cuando se elige la opción económica. -->
+        <div class="perfil-campo" id="caCampoBonobus">
+          <label for="caBonobus">Bonobús familiar</label>
+          <select id="caBonobus" aria-describedby="caBonobusError">
+            <option value="no">No cobrar en nómina</option>
+            <option value="si">Sí, opción económica</option>
+          </select>
+          <div id="caBonobusError" class="perfil-error" aria-live="polite"></div>
         </div>
 
         <div class="perfil-botones">
@@ -3644,9 +3656,10 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     return false;
   }
 
-  // NEXUM-009 — Conceptos anuales (DGA). Casos EXACTOS:
+  // NEXUM-009 / NEXUM-010 — Conceptos anuales (DGA + Bonobús familiar). Casos EXACTOS:
   //   · Lector ausente (caLeer no es función) → error y se ABORTA (sin Blob ni descarga).
-  //   · estado 'ok' con configuración válida → objeto completo {version:1,anios:{…}}.
+  //   · estado 'ok' con configuración válida → objeto completo {version:1,anios:{…}}
+  //     ya normalizado por caValidar, con dga y bonobusEconomico en cada año.
   //   · estado 'sinConfig' → conceptosAnuales:null.
   //   · 'corrupto', estado inesperado o excepción → se ABORTA. No se convierte una
   //     configuración dañada en null en silencio. Siempre presente en el backup.
@@ -3853,12 +3866,14 @@ function importarDatos(archivo) {
         }
         descNuevoValidado = _cdVal.config;
       }
-      // NEXUM-009 — Conceptos anuales (DGA). Solo se procesa si el backup DECLARA
-      // la propiedad (los backups antiguos que NO la traen conservan la config
-      // actual). null → eliminar la clave al restaurar. Objeto → debe ser una
-      // configuración válida (version:1, anios como objeto, años "YYYY" y dga
-      // B/C/D/null, sin propiedades desconocidas); si no lo es, se rechaza TODO
-      // el backup aquí, antes de tocar nada.
+      // NEXUM-009 / NEXUM-010 — Conceptos anuales (DGA + Bonobús familiar). Solo se
+      // procesa si el backup DECLARA la propiedad (los backups antiguos que NO la
+      // traen conservan la config actual). null → eliminar la clave al restaurar.
+      // Objeto → debe ser una configuración válida (version:1, anios como objeto,
+      // años "YYYY", dga B/C/D/null y bonobusEconomico booleano —ausente en backups
+      // antiguos {dga} se NORMALIZA a false—, sin propiedades desconocidas); si no lo
+      // es, se rechaza TODO el backup aquí, antes de tocar nada. window.caValidar
+      // devuelve el objeto normalizado con ambos campos, que es lo que se restaura.
       var caSolicitado = Object.prototype.hasOwnProperty.call(datos, "conceptosAnuales");
       var caEsNull = caSolicitado && datos.conceptosAnuales === null;
       var caNuevoValidado = null;
@@ -5676,22 +5691,31 @@ function inicializarCamaraOCR() {
 
 /* ==========================================================================
    NEXUM-009 — CONCEPTOS ANUALES (opción económica DGA, cobrada en agosto)
+   NEXUM-010 — Se amplía con el Bonobús familiar (opción económica, cobrado una
+   sola vez en JULIO por el ID exacto 4I88_BONOBUS_FAMILIAR).
    Clave localStorage: nexum_v1_conceptos_anuales (INDEPENDIENTE de Perfil y de
    Descuentos; nunca se mezclan).
-   Esquema ESTRICTO:
-     { version:1, anios:{ "YYYY": { dga:"B"|"C"|"D"|null } } }
+   Esquema ESTRICTO (NEXUM-010):
+     { version:1, anios:{ "YYYY": { dga:"B"|"C"|"D"|null, bonobusEconomico:true|false } } }
    · version obligatoria y exactamente el número 1.
    · anios es un objeto (nunca array). Puede estar vacío ({}).
    · Cada clave de anios es una cadena de 4 dígitos "YYYY".
-   · Cada valor es un objeto con UNA sola propiedad: dga.
+   · Cada valor es un objeto con las propiedades dga y bonobusEconomico.
    · dga admite EXACTAMENTE "B", "C", "D" o null. dga:null = ese año no se cobra.
+   · bonobusEconomico admite EXACTAMENTE true o false (nunca otro tipo).
+   · COMPATIBILIDAD: una configuración antigua con solo { dga } sigue siendo
+     válida; al validarla/leerla se NORMALIZA en memoria como bonobusEconomico:false.
+     Leer NUNCA reescribe ni migra el almacenamiento. Los nuevos guardados incluyen
+     SIEMPRE dga y bonobusEconomico.
    · Se rechazan propiedades desconocidas (raíz, año o valor), años inválidos,
-     valores ausentes, strings no permitidos y objetos corruptos. Nada se completa
-     en silencio.
+     valores ausentes, strings no permitidos, bonobusEconomico no booleano y
+     objetos corruptos. Nada se completa en silencio salvo la normalización
+     documentada de bonobusEconomico ausente a false.
    ESTE MÓDULO SOLO GUARDA / VALIDA / MUESTRA / LEE / ELIMINA la configuración
-   anual. La conexión económica con la Nómina (fila 4A50, agosto) se resuelve en
-   tcNomRenderProvisional reutilizando las fórmulas existentes. NO toca Perfil,
-   Descuentos, tablas salariales, IndexedDB ni ninguna fórmula económica.
+   anual. La conexión económica con la Nómina (fila 4A50 DGA en agosto; fila 4I88
+   Bonobús familiar en julio) se resuelve en tcNomRenderProvisional reutilizando las
+   fórmulas existentes. NO toca Perfil, Descuentos, tablas salariales, IndexedDB ni
+   ninguna fórmula económica.
    ========================================================================== */
 (function(){
   'use strict';
@@ -5701,6 +5725,8 @@ function inicializarCamaraOCR() {
 
   function _caAnioValido(y){ return typeof y==='string' && /^\d{4}$/.test(y); }
   function _caDgaValido(v){ return v===null || (typeof v==='string' && !!CA_DGA_VALIDOS[v]); }
+  /* NEXUM-010 — bonobusEconomico debe ser EXACTAMENTE booleano. */
+  function _caBonobusValido(v){ return v===true || v===false; }
 
   /* Validación PURA (no escribe, nunca lanza). Devuelve
      {ok:true, config:{version:1, anios:{...}}} (objeto NUEVO reconstruido, sin
@@ -5729,16 +5755,24 @@ function inicializarCamaraOCR() {
         var val=anios[y];
         if(!val || typeof val!=='object' || Array.isArray(val))
           return { ok:false, error:'La configuración del año '+y+' no es válida.', campo:'anio' };
-        /* Solo se admite la propiedad dga. */
+        /* NEXUM-010 — Solo se admiten las propiedades dga y bonobusEconomico. */
         for(var kk in val){
-          if(Object.prototype.hasOwnProperty.call(val,kk) && kk!=='dga')
+          if(Object.prototype.hasOwnProperty.call(val,kk) && kk!=='dga' && kk!=='bonobusEconomico')
             return { ok:false, error:'El año '+y+' contiene propiedades no reconocidas.', campo:'anio' };
         }
         if(!Object.prototype.hasOwnProperty.call(val,'dga'))
           return { ok:false, error:'Falta el valor de DGA del año '+y+'.', campo:'dga' };
         if(!_caDgaValido(val.dga))
           return { ok:false, error:'El valor de DGA del año '+y+' no es válido.', campo:'dga' };
-        out.anios[y]={ dga:val.dga };
+        /* NEXUM-010 — bonobusEconomico: si está presente debe ser booleano; si
+           falta (config antigua {dga}) se NORMALIZA a false sin reescribir. */
+        var _bono=false;
+        if(Object.prototype.hasOwnProperty.call(val,'bonobusEconomico')){
+          if(!_caBonobusValido(val.bonobusEconomico))
+            return { ok:false, error:'El valor de Bonobús familiar del año '+y+' no es válido.', campo:'bonobus' };
+          _bono=val.bonobusEconomico;
+        }
+        out.anios[y]={ dga:val.dga, bonobusEconomico:_bono };
       }
       return { ok:true, config:out };
     } catch(e){
@@ -5761,15 +5795,18 @@ function inicializarCamaraOCR() {
   }
 
   /* Lectura pública de UN año concreto, para la conexión con la Nómina.
-     {estado:'ok', dga:"B"|"C"|"D"|null} | {estado:'sinAnio'} |
-     {estado:'sinConfig'} | {estado:'corrupto'} */
+     {estado:'ok', dga:"B"|"C"|"D"|null, bonobusEconomico:true|false} |
+     {estado:'sinAnio'} | {estado:'sinConfig'} | {estado:'corrupto'}
+     NEXUM-010 — bonobusEconomico se devuelve SIEMPRE como booleano (ya
+     normalizado por caValidar; una config antigua {dga} produce false). */
   function caLeerAnio(anio){
     var lect=caLeer();
     if(lect.estado==='corrupto') return { estado:'corrupto' };
     if(lect.estado!=='ok') return { estado:'sinConfig' };
     var y=String(anio==null?'':anio).trim();
     if(!Object.prototype.hasOwnProperty.call(lect.config.anios, y)) return { estado:'sinAnio' };
-    return { estado:'ok', dga:lect.config.anios[y].dga };
+    var _a=lect.config.anios[y];
+    return { estado:'ok', dga:_a.dga, bonobusEconomico:(_a.bonobusEconomico===true) };
   }
 
   /* Serializa + escribe + relee EXACTO; si falla restaura el valor previo exacto
@@ -5799,25 +5836,29 @@ function inicializarCamaraOCR() {
      completo. 4) Escribe. 5) Relee y compara EXACTO. 6) Rollback verificado si
      algo falla. Nunca devuelve ok:true sin verificar la persistencia.
      {ok:true, config} | {ok:false, error, campo}. */
-  function caGuardarAnio(anio, dga){
+  function caGuardarAnio(anio, dga, bonobusEconomico){
     var y=String(anio==null?'':anio).trim();
     if(!_caAnioValido(y)) return { ok:false, error:'El año debe tener el formato AAAA (cuatro dígitos).', campo:'anio' };
     if(!_caDgaValido(dga)) return { ok:false, error:'La opción de DGA no es válida.', campo:'dga' };
+    /* NEXUM-010 — El Bonobús familiar se persiste SIEMPRE junto al DGA; debe ser
+       un booleano exacto (rechaza cualquier otro valor). */
+    if(!_caBonobusValido(bonobusEconomico)) return { ok:false, error:'La opción de Bonobús familiar no es válida.', campo:'bonobus' };
     /* Lectura obligatoria del valor anterior ANTES de escribir. */
     var previoRaw, previoLegible=true;
     try { previoRaw = localStorage.getItem(CA_KEY); } catch(e){ previoLegible=false; }
     if(!previoLegible)
       return { ok:false, error:'No se pudo leer el estado anterior de los conceptos anuales. No se ha guardado nada.', campo:null };
     /* Objeto completo preservando años válidos existentes (si el almacén estaba
-       corrupto o vacío, se parte de un objeto nuevo con solo este año). */
+       corrupto o vacío, se parte de un objeto nuevo con solo este año). Se
+       conservan AMBAS decisiones (dga y bonobusEconomico) de cada año. */
     var base={ version:1, anios:{} };
     var lect=caLeer();
     if(lect.estado==='ok'){
       for(var k in lect.config.anios){
-        if(Object.prototype.hasOwnProperty.call(lect.config.anios,k)) base.anios[k]={ dga:lect.config.anios[k].dga };
+        if(Object.prototype.hasOwnProperty.call(lect.config.anios,k)) base.anios[k]={ dga:lect.config.anios[k].dga, bonobusEconomico:(lect.config.anios[k].bonobusEconomico===true) };
       }
     }
-    base.anios[y]={ dga:dga };
+    base.anios[y]={ dga:dga, bonobusEconomico:bonobusEconomico };
     var v=caValidar(base);
     if(!v.ok) return { ok:false, error:v.error, campo:v.campo||null };
     var serial;
@@ -5845,10 +5886,11 @@ function inicializarCamaraOCR() {
     var base={ version:1, anios:{} };
     if(lect.estado==='ok'){
       for(var k in lect.config.anios){
-        if(Object.prototype.hasOwnProperty.call(lect.config.anios,k) && k!==y) base.anios[k]={ dga:lect.config.anios[k].dga };
+        if(Object.prototype.hasOwnProperty.call(lect.config.anios,k) && k!==y) base.anios[k]={ dga:lect.config.anios[k].dga, bonobusEconomico:(lect.config.anios[k].bonobusEconomico===true) };
       }
     }
-    /* Almacén corrupto o config sin años: eliminar la clave por completo. */
+    /* Almacén corrupto o config sin años: eliminar la clave por completo.
+       NEXUM-010 — Eliminar un año borra CONJUNTAMENTE sus decisiones DGA y Bonobús. */
     var quedan=Object.keys(base.anios).length;
     var serial=null;
     if(quedan>0){
@@ -5888,12 +5930,12 @@ function inicializarCamaraOCR() {
   }
 
   function _caLimpiarErrores(){
-    ['caCampoAnio','caCampoDga'].forEach(function(id){ var d=document.getElementById(id); if(d) d.classList.remove('tiene-error'); });
-    ['caAnioError','caDgaError'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=''; });
+    ['caCampoAnio','caCampoDga','caCampoBonobus'].forEach(function(id){ var d=document.getElementById(id); if(d) d.classList.remove('tiene-error'); });
+    ['caAnioError','caDgaError','caBonobusError'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=''; });
   }
   function _caMostrarError(campo, mensaje){
-    var campoDiv=(campo==='dga')?'caCampoDga':'caCampoAnio';
-    var errDiv=(campo==='dga')?'caDgaError':'caAnioError';
+    var campoDiv=(campo==='dga')?'caCampoDga':(campo==='bonobus')?'caCampoBonobus':'caCampoAnio';
+    var errDiv=(campo==='dga')?'caDgaError':(campo==='bonobus')?'caBonobusError':'caAnioError';
     var d=document.getElementById(campoDiv); if(d) d.classList.add('tiene-error');
     var e=document.getElementById(errDiv); if(e) e.textContent=mensaje;
   }
@@ -5911,6 +5953,12 @@ function inicializarCamaraOCR() {
     if(str==='B'||str==='C'||str==='D') return { ok:true, dga:str };
     return { ok:false };
   }
+  /* NEXUM-010 — El select de Bonobús familiar es cerrado: solo "no"/"si". */
+  function _caParseBonobus(str){
+    if(str==='no') return { ok:true, bonobus:false };
+    if(str==='si') return { ok:true, bonobus:true };
+    return { ok:false };
+  }
 
   /* Refleja en el select el valor guardado para el año que hay en el input (o
      «No concedido» si ese año no está configurado). Muestra/oculta «Eliminar».
@@ -5918,6 +5966,7 @@ function inicializarCamaraOCR() {
   function _caReflejarAnio(){
     var inp=document.getElementById('caAnio');
     var sel=document.getElementById('caDga');
+    var selB=document.getElementById('caBonobus');
     var btnEliminar=document.getElementById('caEliminarBtn');
     var parsed=_caParseAnio(inp?inp.value:'');
     var tieneAnioGuardado=false;
@@ -5926,11 +5975,16 @@ function inicializarCamaraOCR() {
       if(lect.estado==='ok'){
         tieneAnioGuardado=true;
         if(sel) sel.value=(lect.dga==null?'':lect.dga);
+        /* NEXUM-010 — Refleja el Bonobús guardado; config nueva → su valor,
+           config antigua/año sin configurar → "No cobrar en nómina". */
+        if(selB) selB.value=(lect.bonobusEconomico===true?'si':'no');
       } else {
         if(sel) sel.value='';
+        if(selB) selB.value='no';
       }
     } else {
       if(sel) sel.value='';
+      if(selB) selB.value='no';
     }
     if(btnEliminar){
       btnEliminar.style.display = tieneAnioGuardado ? '' : 'none';
@@ -6007,7 +6061,14 @@ function inicializarCamaraOCR() {
       try{ if(sel) sel.focus(); }catch(e){}
       return;
     }
-    var res=caGuardarAnio(pa.anio, pd.dga);
+    var selB=document.getElementById('caBonobus');
+    var pb=_caParseBonobus(selB?selB.value:'');
+    if(!pb.ok){
+      _caMostrarError('bonobus','Selecciona una opción de Bonobús familiar válida.');
+      try{ if(selB) selB.focus(); }catch(e){}
+      return;
+    }
+    var res=caGuardarAnio(pa.anio, pd.dga, pb.bonobus);
     if(!res.ok){
       _caMostrarError(res.campo||'anio', res.error||'No se pudo guardar la configuración.');
       return;
@@ -6054,6 +6115,11 @@ function inicializarCamaraOCR() {
     if(sel) sel.addEventListener('change', function(){
       var d=document.getElementById('caCampoDga'); if(d) d.classList.remove('tiene-error');
       var e=document.getElementById('caDgaError'); if(e) e.textContent='';
+    });
+    var selB=document.getElementById('caBonobus');
+    if(selB) selB.addEventListener('change', function(){
+      var d=document.getElementById('caCampoBonobus'); if(d) d.classList.remove('tiene-error');
+      var e=document.getElementById('caBonobusError'); if(e) e.textContent='';
     });
     var btnCancelar=document.getElementById('caCancelarBtn');
     if(btnCancelar) btnCancelar.addEventListener('click', function(){ caCerrarModal(); });
@@ -9487,6 +9553,249 @@ function tcNomRenderProvisional(data){
     }
   }
 
+  /* ===================== NEXUM-010 — BONOBÚS FAMILIAR · OPCIÓN ECONÓMICA ANUAL (julio)
+     El Bonobús familiar en opción económica se cobra UNA SOLA VEZ en julio. Solo se
+     resuelve cuando se cumplen SIMULTÁNEAMENTE: vista mensual (esMes), categoría
+     Conductor-Perceptor autorizada (NOM_AUTORIZADO), mes de julio (R.mes===7) y
+     existe configuración anual VÁLIDA para el MISMO año de la nómina (R.anio) con
+     bonobusEconomico===true. La guarda exterior (NOM_AUTORIZADO && esMes && R.mes===7)
+     garantiza CERO consultas —de conceptos anuales y de la tabla salarial— fuera de
+     julio, en vista anual o en categorías no autorizadas.
+       ID salarial EXACTO: 4I88_BONOBUS_FAMILIAR (nunca por código, nombre, texto
+       parcial, fallback ni importe hardcodeado). Se resuelve con resolverImporte() en
+       modo 'once' (importe completo una sola vez; NUNCA por unidades). Se suma UNA sola
+       vez a totalCent (entra en la base del IRPF vía el total devengado), pero NO
+       alimenta cotizableOrdinarioCent (cotiza=false): no forma parte de Base CC ni Base
+       CP. La futura prorrata de cotización queda expresamente fuera de alcance.
+     Tres casos según la lectura de conceptos anuales:
+       (1) Ausencia (sinConfig, sinAnio, ok+bonobusEconomico:false) → sin fila, cero
+           consultas y SIN tocar todosImportes.
+       (2) Activo (ok + bonobusEconomico:true) → fila económica; ID ausente, pendiente,
+           no numérico, tabla ausente/corrupta → «Pdte.» y bloqueo de totales por el
+           mecanismo existente (resolverImporte → celdaPend + todosImportes=false).
+       (3) Configuración NO VERIFICABLE (lector ausente/no función, excepción, resultado
+           null/primitivo/objeto inválido, estado 'corrupto' o desconocido) → NO se
+           consulta ningún ID salarial; una única fila informativa «Pdte.» que fija
+           todosImportes=false y activa un aviso. La configuración NO se borra ni repara. */
+  var _bonoNoVerificable=false;
+  if(NOM_AUTORIZADO && esMes && R.mes===7){
+    /* Lectura PROTEGIDA: lector ausente o excepción dejan _bonoLect indefinido, que
+       cae en el caso NO VERIFICABLE. No se consulta la tabla salarial hasta confirmar
+       que la configuración es válida y el Bonobús está activo (caso 2). */
+    var _bonoLect;
+    if(typeof window.caLeerAnio==='function'){
+      try { _bonoLect=window.caLeerAnio(R.anio); }
+      catch(e){ _bonoLect=undefined; }
+    }
+    var _bonoEstado=(_bonoLect && typeof _bonoLect==='object' && !Array.isArray(_bonoLect)) ? _bonoLect.estado : undefined;
+    var _bonoAusencia = (_bonoEstado==='sinConfig' || _bonoEstado==='sinAnio' ||
+      (_bonoEstado==='ok' && _bonoLect.bonobusEconomico===false));
+    var _bonoActivo = (_bonoEstado==='ok' && _bonoLect.bonobusEconomico===true);
+
+    if(_bonoActivo){
+      /* Consulta ÚNICA del ID exacto; importe completo una sola vez (modo 'once'). */
+      var _bonoRes=resolverImporte('4I88_BONOBUS_FAMILIAR','once',null);
+      if(_bonoRes.cent==null){ todosImportes=false; }
+      else { totalCent+=_bonoRes.cent; } /* cotiza=false: NO entra en cotizableOrdinarioCent */
+      h+=descCelda('4I88','Bonobús familiar · Opción económica')
+        +'<div class="n">1</div>'
+        +'<div class="n">'+_bonoRes.inner+'</div>'
+        +'<div class="n"></div>';
+    } else if(_bonoAusencia){
+      /* sinConfig, sinAnio u ok+bonobusEconomico:false → sin fila, cero consultas, sin bloqueo. */
+    } else {
+      /* NO VERIFICABLE → fila informativa «Pdte.» sin consultar ningún ID; bloquea
+         los totales para evitar una nómina incompleta. */
+      _bonoNoVerificable=true;
+      todosImportes=false;
+      h+=descCelda('4I88','Bonobús familiar · Configuración anual no verificable')
+        +'<div class="n">—</div>'
+        +'<div class="n">'+celdaPend+'</div>'
+        +'<div class="n"></div>';
+    }
+  }
+
+  /* ===================== NEXUM-011 — PAGAS EXTRAORDINARIAS · CONDUCTOR-PERCEPTOR
+     Paga extraordinaria de VERANO (solo en la nómina de junio, R.mes===6) y de
+     INVIERNO (solo en la de noviembre, R.mes===11). Solo se resuelve cuando se
+     cumplen SIMULTÁNEAMENTE: vista mensual (esMes), categoría Conductor-Perceptor
+     autorizada (NOM_AUTORIZADO) y mes junio o noviembre. La guarda exterior
+     (NOM_AUTORIZADO && esMes && (R.mes===6 || R.mes===11)) garantiza CERO filas y
+     CERO consultas —a PAGA_EXTRA_CP y a los ANTIGUEDAD_CP_*— en cualquier otro mes,
+     en vista anual o en categorías no autorizadas.
+
+     PERIODO GENERADO (ambos extremos incluidos):
+       · Verano  → 01/07 del año anterior — 30/06 del año de la nómina.
+       · Invierno→ 01/01 — 31/12 del año de la nómina (proyectada hasta el 31/12
+                   aunque se abone en noviembre).
+     Se cuentan días naturales reales con fechas UTC (Date.UTC), inmune al horario
+     de verano, y con años bisiestos automáticos (366 días cuando corresponde).
+
+     IMPORTE COMPLETO = paga EXTRA de la tabla activa (ID EXACTO PAGA_EXTRA_CP, modo
+     'once') + antigüedad aplicable. La antigüedad usa UN ÚNICO ID según el tramo al
+     ÚLTIMO día del periodo (30/06 en verano, 31/12 en invierno):
+       MENOS2 → 0 € (sin consultar antigüedad)   2 → ANTIGUEDAD_CP_2
+       4 → ANTIGUEDAD_CP_4   9 → ANTIGUEDAD_CP_9   14 → ANTIGUEDAD_CP_14
+       19 → ANTIGUEDAD_CP_19   24 → ANTIGUEDAD_CP_24
+     NUNCA se suman tramos, NUNCA se usa el salario base mensual ya renderizado,
+     NUNCA se hardcodea importe ni se busca por código/nombre/aproximación. El tramo
+     se calcula EXCLUSIVAMENTE con tcPerfilCalcularTramo a la fecha final del periodo.
+
+     PROPORCIÓN POR DÍAS (fechaAntiguedad = fecha de ingreso):
+       · ingreso ≤ inicio del periodo → genera todos los días.
+       · ingreso dentro del periodo   → desde el ingreso hasta el final, ambos incl.
+       · ingreso > final del periodo  → 0 días: sin fila y CERO consultas.
+     Fórmula en céntimos (redondeo ÚNICO al resultado final; nunca se redondean
+     fracciones/porcentajes/importes intermedios):
+       pagaCent = Math.round(importeCompletoCent × diasGenerados / diasTotalesPeriodo)
+     Se valida Number.isSafeInteger en importe completo, días, producto y resultado.
+
+     PARTICIPACIÓN: pagaCent se suma UNA sola vez a totalCent (entra en la base del
+     IRPF vía el total devengado). NO se suma a cotizableOrdinarioCent (no altera
+     Base CC/CP ni prorrata) ni a horasExtraCent (no es hora extraordinaria). La
+     cotización de las pagas ya se contempla mediante la prorrata del modelo existente.
+
+     ESTADOS PENDIENTES: si falta la tabla activa, PAGA_EXTRA_CP o el ID de antigüedad
+     necesario, o su importe es pendiente/no numérico → la fila se muestra «Pdte.» y
+     se fija todosImportes=false (bloqueando total devengado, deducciones y líquido con
+     el mecanismo existente), sin fallback ni importe alternativo. Con tramo
+     INVALIDO/NO_APLICABLE no se consulta ningún ID salarial: se conserva el estado
+     pendiente/aviso ya existente de la Nómina y no se inventa categoría ni antigüedad. */
+  if(NOM_AUTORIZADO && esMes && (R.mes===6 || R.mes===11)){
+    var _pgVerano = (R.mes===6);
+    var _PG_MS = 86400000;
+    /* Límites del periodo en UTC (mes 0-based en Date.UTC). Verano: 01/07 (mes 6)
+       del año anterior — 30/06 (mes 5, día 30) del año de la nómina. Invierno:
+       01/01 — 31/12 del año de la nómina. */
+    var _pgInicioUTC, _pgFinUTC, _pgMesFin, _pgDesc;
+    if(_pgVerano){
+      _pgInicioUTC = Date.UTC(R.anio-1, 6, 1);
+      _pgFinUTC    = Date.UTC(R.anio, 5, 30);
+      _pgMesFin    = 6;
+      _pgDesc      = 'Paga extraordinaria de verano';
+    } else {
+      _pgInicioUTC = Date.UTC(R.anio, 0, 1);
+      _pgFinUTC    = Date.UTC(R.anio, 11, 31);
+      _pgMesFin    = 12;
+      _pgDesc      = 'Paga extraordinaria de invierno';
+    }
+    /* Días naturales del periodo (ambos extremos incluidos). Bisiestos automáticos. */
+    var _pgDiasTotales = Math.round((_pgFinUTC - _pgInicioUTC)/_PG_MS) + 1;
+
+    /* NEXUM-011R1 — Fecha de ingreso = fechaAntiguedad del perfil, con PARSER LOCAL y
+       estricto (NO se usa tcPerfilFechaReal: es privada de la IIFE del Perfil y no
+       está exportada, así que invocarla aquí lanzaría ReferenceError). Exige cadena
+       'YYYY-MM-DD', construye la fecha con Date.UTC y verifica con una fecha UTC que
+       los componentes resultantes coinciden EXACTAMENTE (rechaza 2026-02-30, meses
+       o días imposibles, etc.). Devuelve los milisegundos UTC (usados DIRECTAMENTE
+       para contar días; nunca se convierte a fecha local) o null si no es válida.
+       Si no es válida: no se consulta ningún ID y se conserva el tratamiento pendiente
+       existente de la Nómina (sin fila; el bloque de antigüedad mensual ya lo gestiona). */
+    var _pgIngresoUTC = (function(iso){
+      if(typeof iso!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+      var p=iso.split('-'), y=+p[0], mo=+p[1], da=+p[2];
+      if(mo<1||mo>12||da<1||da>31) return null;
+      var ms=Date.UTC(y, mo-1, da);
+      var chk=new Date(ms);
+      if(chk.getUTCFullYear()!==y || chk.getUTCMonth()!==(mo-1) || chk.getUTCDate()!==da) return null;
+      return ms;
+    })(_perfilNom.fechaAntiguedad);
+    if(_pgIngresoUTC!=null){
+      /* Proporción por días, inclusiva (se opera DIRECTAMENTE con el valor UTC). */
+      var _pgDiasGen;
+      if(_pgIngresoUTC <= _pgInicioUTC)      _pgDiasGen = _pgDiasTotales;
+      else if(_pgIngresoUTC <= _pgFinUTC)    _pgDiasGen = Math.round((_pgFinUTC - _pgIngresoUTC)/_PG_MS) + 1;
+      else                                   _pgDiasGen = 0;
+
+      /* ingreso posterior al final del periodo → sin fila y CERO consultas. */
+      if(_pgDiasGen > 0){
+        /* Cantidad mostrada «X/Y días» y nota de invierno: dependen solo de los días
+           y del mes, así que se preparan una vez para los dos desenlaces posibles. */
+        var _pgCantTxt = _pgDiasGen + '/' + _pgDiasTotales + ' días';
+        var _pgNotaHtml = _pgVerano ? ''
+          : '<div style="grid-column:1/-1; padding:0 7px 3px; font-size:10px; line-height:1.4; opacity:.85; color:#123a8c;">Estimación proyectada hasta el 31/12.</div>';
+
+        /* NEXUM-011R1 — Tramo al ÚLTIMO día del periodo (30/06 en verano, 31/12 en
+           invierno) mediante la API PÚBLICA window.tcPerfilCalcularTramo (la función
+           homónima privada de la IIFE del Perfil NO está en este ámbito). Guarda de
+           existencia (typeof === 'function') y try/catch: si la API falta, lanza una
+           excepción o devuelve un estado distinto de MENOS2/2/4/9/14/19/24 (INVALIDO,
+           NO_APLICABLE, undefined…), NO se consulta ningún ID salarial, la paga se
+           muestra «Pdte.» y se bloquean los totales. Nunca se reutiliza el tramo del
+           mes de la nómina. */
+        var _pgTramo, _pgTramoOk=false;
+        if(typeof window.tcPerfilCalcularTramo==='function'){
+          try { _pgTramo=window.tcPerfilCalcularTramo(_perfilNom.fechaAntiguedad, R.anio, _pgMesFin); _pgTramoOk=true; }
+          catch(e){ _pgTramoOk=false; }
+        }
+        var _PG_ANT_ID = { '2':'ANTIGUEDAD_CP_2', '4':'ANTIGUEDAD_CP_4', '9':'ANTIGUEDAD_CP_9',
+                           '14':'ANTIGUEDAD_CP_14', '19':'ANTIGUEDAD_CP_19', '24':'ANTIGUEDAD_CP_24' };
+        var _pgTramoValido = (_pgTramoOk && (_pgTramo==='MENOS2' ||
+          Object.prototype.hasOwnProperty.call(_PG_ANT_ID, _pgTramo)));
+        if(_pgTramoValido){
+          /* Parte EXTRA: ID EXACTO PAGA_EXTRA_CP, modo 'once' (importe completo). */
+          var _pgExtraRes = resolverImporte('PAGA_EXTRA_CP','once',null);
+          var _pgExtraCent = _pgExtraRes.cent;
+          /* Antigüedad: MENOS2 aporta 0 € SIN consultar ningún ID; los tramos
+             económicos consultan su ÚNICO ID exacto. */
+          var _pgAntCent = 0, _pgAntPend = false;
+          if(_pgTramo!=='MENOS2'){
+            var _pgAntRes = resolverImporte(_PG_ANT_ID[_pgTramo],'once',null);
+            if(_pgAntRes.cent==null) _pgAntPend = true; else _pgAntCent = _pgAntRes.cent;
+          }
+
+          /* Importe completo y proporción, con guardas de entero seguro en importe
+             completo, días, producto y resultado. Redondeo ÚNICO al resultado final. */
+          var _pgPagaCent = null;
+          if(_pgExtraCent!=null && !_pgAntPend){
+            var _pgImporteCompleto = _pgExtraCent + _pgAntCent;
+            if(Number.isSafeInteger(_pgImporteCompleto) &&
+               Number.isSafeInteger(_pgDiasGen) && Number.isSafeInteger(_pgDiasTotales) &&
+               _pgDiasTotales > 0){
+              var _pgProd = _pgImporteCompleto * _pgDiasGen;
+              if(Number.isSafeInteger(_pgProd)){
+                var _pgRes = Math.round(_pgProd / _pgDiasTotales);
+                if(Number.isSafeInteger(_pgRes)) _pgPagaCent = _pgRes;
+              }
+            }
+          }
+
+          if(_pgPagaCent!=null){
+            /* Éxito: se suma UNA sola vez a totalCent (IRPF vía total). NO a
+               cotizableOrdinarioCent ni a horasExtraCent. */
+            totalCent += _pgPagaCent;
+            h+=descCelda('PAGA EXTRA', _pgDesc)
+              +'<div class="n">'+tcEsc(_pgCantTxt)+'</div>'
+              +'<div class="n">'+tcEsc(tcNomFmtCentimos(_pgPagaCent))+'</div>'
+              +'<div class="n"></div>'
+              +_pgNotaHtml;
+          } else {
+            /* Pendiente: EXTRA o antigüedad sin importe utilizable, o cálculo no
+               seguro → fila «Pdte.» y bloqueo de totales por el mecanismo existente.
+               Sin fallback ni importe alternativo. */
+            todosImportes=false;
+            h+=descCelda('PAGA EXTRA', _pgDesc)
+              +'<div class="n">'+tcEsc(_pgCantTxt)+'</div>'
+              +'<div class="n">'+celdaPend+'</div>'
+              +'<div class="n"></div>'
+              +_pgNotaHtml;
+          }
+        } else {
+          /* API ausente/excepción o tramo fuera de MENOS2/2/4/9/14/19/24 (INVALIDO,
+             NO_APLICABLE, undefined…): CERO consultas de IDs salariales; la paga se
+             muestra «Pdte.» y se bloquean los totales por el mecanismo existente.
+             Sin fallback ni importe alternativo. */
+          todosImportes=false;
+          h+=descCelda('PAGA EXTRA', _pgDesc)
+            +'<div class="n">'+tcEsc(_pgCantTxt)+'</div>'
+            +'<div class="n">'+celdaPend+'</div>'
+            +'<div class="n"></div>'
+            +_pgNotaHtml;
+        }
+      }
+    }
+  }
+
   /* ===================== DEV-010R12/R13 — II · DEDUCCIONES: IRPF (/401) + COTIZACIONES
      SOCIALES DEL TRABAJADOR (/350, /370, /380) + HORAS EXTRAORDINARIAS (/390)
      Conecta con la Nómina Provisional mensual el IRPF (formula de R11, INALTERADA),
@@ -9751,6 +10060,13 @@ function tcNomRenderProvisional(data){
      salarial, por lo que estadoAlmacenCorrupto/faltaAlgunImporte no se activan. */
   if(_dgaNoVerificable){
     h+='<div class="nom-recibo-aviso">⚠️ La configuración anual de DGA no se pudo verificar: la fila DGA queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revísala en «Más → Conceptos anuales».</div>';
+  }
+
+  /* NEXUM-010 — Aviso de configuración anual del Bonobús familiar no verificable
+     (solo julio). Independiente de la cadena anterior: en este caso no se consulta
+     la tabla salarial, por lo que estadoAlmacenCorrupto/faltaAlgunImporte no se activan. */
+  if(_bonoNoVerificable){
+    h+='<div class="nom-recibo-aviso">⚠️ La configuración anual del Bonobús familiar no se pudo verificar: la fila Bonobús queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revísala en «Más → Conceptos anuales».</div>';
   }
 
   /* DEV-010R11 — Aviso específico de la RETENCIÓN DE IRPF. Solo puede activarse
@@ -14516,7 +14832,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-009R1';
+    var VC_VERSION_ACTUAL = 'NEXUM-011R1';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
 

@@ -1,5 +1,5 @@
 {
-  "version": "NEXUM-009R1",
+  "version": "NEXUM-011R1",
   "fecha": "2026-08-13",
-  "mensaje": "Corrección: en agosto, una configuración DGA no verificable muestra una fila «Pdte.» y bloquea el líquido en vez de omitir la fila."
+  "mensaje": "Corrección: la cabecera L-M-X-J-V-S-D del calendario anual ahora usa la misma rejilla de 8 columnas (nº de semana + 7 días) que las filas de fechas, por lo que los días de la semana quedan alineados con sus columnas. Cambio exclusivamente estético en .tc-anual-dow; sin cambios en JavaScript, navegación, cálculos, nómina ni almacenamiento."
 }
