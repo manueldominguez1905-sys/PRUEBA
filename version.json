@@ -1,5 +1,5 @@
 {
-  "version": "NEXUM-011R1",
-  "fecha": "2026-08-13",
-  "mensaje": "Corrección: la cabecera L-M-X-J-V-S-D del calendario anual ahora usa la misma rejilla de 8 columnas (nº de semana + 7 días) que las filas de fechas, por lo que los días de la semana quedan alineados con sus columnas. Cambio exclusivamente estético en .tc-anual-dow; sin cambios en JavaScript, navegación, cálculos, nómina ni almacenamiento."
+  "version": "NEXUM-012R1",
+  "fecha": "2026-08-14",
+  "mensaje": "NEXUM-012R1 — Corrección quirúrgica de la validación FFPP. caValidar aplica compatibilidad TODO-O-NADA: la configuración antigua solo es válida si faltan simultáneamente los tres tramos (ffpp75, ffpp10, ffpp15), que se normalizan a pendiente; si están los tres, se validan estrictamente; si hay solo uno o dos, se rechaza toda la configuración como esquema FFPP incompleto (sin completar claves en silencio). En la nómina, si caLeerAnio devuelve 'ok' pero falta o es inválido algún tramo, toda la configuración FFPP se trata como «no verificable» (una fila, cero consultas a FFPP_CP, totales bloqueados y aviso), sin convertir el tramo inválido en pendiente. Sin cambios en fórmulas, porcentajes, meses, redondeos, FFPP_CP, totalCent, IRPF, Base CC/CP, DGA, Bonobús, pagas extraordinarias, navegación, calendarios, jornadas, tablas salariales, importador ni almacenamiento."
 }

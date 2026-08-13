@@ -229,6 +229,11 @@ textarea { width: 100%; resize: vertical; font-family: monospace; }
 .perfil-campo.tiene-error input, .perfil-campo.tiene-error select { border-color: var(--color-danger); box-shadow: 0 0 0 2px var(--color-danger-bg); }
 .perfil-aviso-corrupto { background: var(--color-danger-bg); color: var(--color-danger); border: 1px solid var(--color-danger); border-radius: 8px; padding: 10px 12px; font-size: 0.85rem; margin-bottom: 14px; line-height: 1.4; }
 .perfil-aviso-corrupto::before { content: "⚠ "; font-weight: 700; }
+/* NEXUM-012 — Sección Fiestas primaverales dentro de «Conceptos anuales». Estilo
+   NEXUM, claro/oscuro, móvil sin scroll horizontal (hereda ancho de .perfil-campo). */
+.ca-ffpp-seccion { margin: 4px 0 4px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+.ca-ffpp-titulo { margin: 0 0 4px; font-size: 0.95rem; font-weight: 700; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.03em; }
+.ca-ffpp-nota { margin: 0 0 12px; font-size: 0.8rem; color: var(--color-text-secondary); line-height: 1.5; }
 .perfil-botones { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
 .perfil-botones .btn { width: 100%; }
 .perfil-datos { font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.7; margin: 0 0 14px; }
@@ -783,7 +788,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-011R1</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-012R1</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -951,7 +956,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
     <div class="perfil-box">
       <button type="button" id="caXBtn" class="perfil-cerrar-x" aria-label="Cerrar conceptos anuales"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       <h2 id="caTitulo" class="perfil-titulo"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4M9 14l2 2 4-4"/></svg>Conceptos anuales</h2>
-      <p id="caIntro" class="perfil-intro">Configura las opciones económicas anuales por año: DGA (se cobra una sola vez en agosto) y Bonobús familiar (se cobra una sola vez en julio). Los importes proceden exclusivamente de la tabla salarial activa. Nada se activa ni se guarda automáticamente.</p>
+      <p id="caIntro" class="perfil-intro">Configura las opciones económicas anuales por año: DGA (se cobra una sola vez en agosto), Bonobús familiar (se cobra una sola vez en julio) y Fiestas primaverales (75 % y 10 % en abril, 15 % en diciembre). Los importes proceden exclusivamente de la tabla salarial activa. Nada se activa ni se guarda automáticamente.</p>
       <div id="caAvisoCorrupto" class="perfil-aviso-corrupto" role="alert" style="display:none;"></div>
 
       <form id="conceptosAnualesForm" novalidate>
@@ -981,6 +986,64 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
             <option value="si">Sí, opción económica</option>
           </select>
           <div id="caBonobusError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <!-- NEXUM-012 — Fiestas primaverales (FFPP) · Conductor-Perceptor. Tres tramos
+             INDEPENDIENTES tomados del importe completo FFPP_CP de la tabla activa:
+             75 % y 10 % en abril, 15 % en diciembre. Los meses están FIJADOS (sin
+             selector de mes). El campo «Días reconocidos» solo aparece en «Cobro
+             proporcional». Estados por select cerrado; nunca texto libre. -->
+        <div class="ca-ffpp-seccion">
+          <h3 class="ca-ffpp-titulo">Fiestas primaverales</h3>
+          <p class="ca-ffpp-nota">Indica manualmente la situación reconocida por la empresa para cada tramo y año. Nada se calcula automáticamente por jornadas, antigüedad ni alta. El importe procede del concepto FFPP_CP de la tabla salarial activa.</p>
+
+          <div class="perfil-campo" id="caCampoFfpp75">
+            <label for="caFfpp75">75 % · Abril</label>
+            <select id="caFfpp75" aria-describedby="caFfpp75Error">
+              <option value="pendiente">Pendiente de confirmación</option>
+              <option value="noCorresponde">No corresponde</option>
+              <option value="completo">Cobro completo</option>
+              <option value="proporcional">Cobro proporcional</option>
+            </select>
+            <div id="caFfpp75Error" class="perfil-error" aria-live="polite"></div>
+          </div>
+          <div class="perfil-campo" id="caCampoFfpp75Dias" style="display:none;">
+            <label for="caFfpp75Dias">Días reconocidos por la empresa</label>
+            <input type="number" id="caFfpp75Dias" min="1" max="366" step="1" inputmode="numeric" autocomplete="off" aria-describedby="caFfpp75DiasError" />
+            <div id="caFfpp75DiasError" class="perfil-error" aria-live="polite"></div>
+          </div>
+
+          <div class="perfil-campo" id="caCampoFfpp10">
+            <label for="caFfpp10">10 % · Abril</label>
+            <select id="caFfpp10" aria-describedby="caFfpp10Error">
+              <option value="pendiente">Pendiente de confirmación</option>
+              <option value="noCorresponde">No corresponde</option>
+              <option value="completo">Cobro completo</option>
+              <option value="proporcional">Cobro proporcional</option>
+            </select>
+            <div id="caFfpp10Error" class="perfil-error" aria-live="polite"></div>
+          </div>
+          <div class="perfil-campo" id="caCampoFfpp10Dias" style="display:none;">
+            <label for="caFfpp10Dias">Días reconocidos por la empresa</label>
+            <input type="number" id="caFfpp10Dias" min="1" max="366" step="1" inputmode="numeric" autocomplete="off" aria-describedby="caFfpp10DiasError" />
+            <div id="caFfpp10DiasError" class="perfil-error" aria-live="polite"></div>
+          </div>
+
+          <div class="perfil-campo" id="caCampoFfpp15">
+            <label for="caFfpp15">15 % · Diciembre</label>
+            <select id="caFfpp15" aria-describedby="caFfpp15Error">
+              <option value="pendiente">Pendiente de confirmación</option>
+              <option value="noCorresponde">No corresponde</option>
+              <option value="completo">Cobro completo</option>
+              <option value="proporcional">Cobro proporcional</option>
+            </select>
+            <div id="caFfpp15Error" class="perfil-error" aria-live="polite"></div>
+          </div>
+          <div class="perfil-campo" id="caCampoFfpp15Dias" style="display:none;">
+            <label for="caFfpp15Dias">Días reconocidos por la empresa</label>
+            <input type="number" id="caFfpp15Dias" min="1" max="366" step="1" inputmode="numeric" autocomplete="off" aria-describedby="caFfpp15DiasError" />
+            <div id="caFfpp15DiasError" class="perfil-error" aria-live="polite"></div>
+          </div>
         </div>
 
         <div class="perfil-botones">
@@ -5722,11 +5785,49 @@ function inicializarCamaraOCR() {
 
   var CA_KEY = 'nexum_v1_conceptos_anuales';
   var CA_DGA_VALIDOS = { 'B':1, 'C':1, 'D':1 };
+  /* NEXUM-012 — Tramos de Fiestas Primaverales (FFPP). Tres claves independientes,
+     estados por conjunto CERRADO. El ejercicio coincide con el año natural: los días
+     de «proporcional» se validan contra los días de ESE año (365 / 366). */
+  var CA_FFPP_KEYS = ['ffpp75','ffpp10','ffpp15'];
+  var CA_FFPP_ESTADOS = { 'pendiente':1, 'noCorresponde':1, 'completo':1, 'proporcional':1 };
 
   function _caAnioValido(y){ return typeof y==='string' && /^\d{4}$/.test(y); }
   function _caDgaValido(v){ return v===null || (typeof v==='string' && !!CA_DGA_VALIDOS[v]); }
   /* NEXUM-010 — bonobusEconomico debe ser EXACTAMENTE booleano. */
   function _caBonobusValido(v){ return v===true || v===false; }
+  /* NEXUM-012 — Días naturales del año (año en cadena "YYYY"). Bisiesto → 366. */
+  function _caDiasAnio(y){ var n=parseInt(y,10); return ((n%4===0 && n%100!==0)||n%400===0)?366:365; }
+  /* NEXUM-012 — Validación PURA y NORMALIZADORA de un tramo FFPP para un año dado.
+     Devuelve {ok:true, tramo:{estado,dias}} (objeto NUEVO) o {ok:false, error}.
+     Rechaza: no-objeto, arrays, propiedades desconocidas, esquema incompleto,
+     estados desconocidos, tipos incorrectos, strings numéricos, NaN/Infinity,
+     decimales y días fuera de [1, díasDelAño]. dias === null salvo en proporcional. */
+  function _caTramoValido(raw, y, nombre){
+    if(raw===undefined) return { ok:'ausente' };
+    if(!raw || typeof raw!=='object' || Array.isArray(raw))
+      return { ok:false, error:'El tramo '+nombre+' del año '+y+' no es válido.' };
+    for(var k in raw){
+      if(Object.prototype.hasOwnProperty.call(raw,k) && k!=='estado' && k!=='dias')
+        return { ok:false, error:'El tramo '+nombre+' del año '+y+' contiene propiedades no reconocidas.' };
+    }
+    if(!Object.prototype.hasOwnProperty.call(raw,'estado'))
+      return { ok:false, error:'Falta el estado del tramo '+nombre+' del año '+y+'.' };
+    var est=raw.estado;
+    if(typeof est!=='string' || !CA_FFPP_ESTADOS[est])
+      return { ok:false, error:'El estado del tramo '+nombre+' del año '+y+' no es válido.' };
+    if(!Object.prototype.hasOwnProperty.call(raw,'dias'))
+      return { ok:false, error:'Falta el campo de días del tramo '+nombre+' del año '+y+'.' };
+    var dias=raw.dias;
+    if(est==='proporcional'){
+      var diasAnio=_caDiasAnio(y);
+      if(typeof dias!=='number' || !Number.isInteger(dias) || !Number.isSafeInteger(dias) || dias<1 || dias>diasAnio)
+        return { ok:false, error:'Los días reconocidos del tramo '+nombre+' del año '+y+' deben ser un entero entre 1 y '+diasAnio+'.' };
+      return { ok:true, tramo:{ estado:'proporcional', dias:dias } };
+    }
+    if(dias!==null)
+      return { ok:false, error:'El tramo '+nombre+' del año '+y+' solo lleva días en «Cobro proporcional».' };
+    return { ok:true, tramo:{ estado:est, dias:null } };
+  }
 
   /* Validación PURA (no escribe, nunca lanza). Devuelve
      {ok:true, config:{version:1, anios:{...}}} (objeto NUEVO reconstruido, sin
@@ -5755,9 +5856,11 @@ function inicializarCamaraOCR() {
         var val=anios[y];
         if(!val || typeof val!=='object' || Array.isArray(val))
           return { ok:false, error:'La configuración del año '+y+' no es válida.', campo:'anio' };
-        /* NEXUM-010 — Solo se admiten las propiedades dga y bonobusEconomico. */
+        /* NEXUM-010/012 — Propiedades admitidas por año: dga, bonobusEconomico y los
+           tres tramos FFPP (ffpp75, ffpp10, ffpp15). Cualquier otra → rechazo. */
         for(var kk in val){
-          if(Object.prototype.hasOwnProperty.call(val,kk) && kk!=='dga' && kk!=='bonobusEconomico')
+          if(Object.prototype.hasOwnProperty.call(val,kk) && kk!=='dga' && kk!=='bonobusEconomico'
+             && kk!=='ffpp75' && kk!=='ffpp10' && kk!=='ffpp15')
             return { ok:false, error:'El año '+y+' contiene propiedades no reconocidas.', campo:'anio' };
         }
         if(!Object.prototype.hasOwnProperty.call(val,'dga'))
@@ -5772,7 +5875,38 @@ function inicializarCamaraOCR() {
             return { ok:false, error:'El valor de Bonobús familiar del año '+y+' no es válido.', campo:'bonobus' };
           _bono=val.bonobusEconomico;
         }
-        out.anios[y]={ dga:val.dga, bonobusEconomico:_bono };
+        /* NEXUM-012R1 — Tres tramos FFPP con compatibilidad TODO-O-NADA. La
+           compatibilidad antigua SOLO se aplica si faltan SIMULTÁNEAMENTE las tres
+           claves (ffpp75, ffpp10, ffpp15): configuración antigua {dga}/{bonobus} →
+           se NORMALIZAN las tres a {estado:'pendiente', dias:null} sin considerarla
+           corrupta ni reescribir el almacenamiento en la lectura. Si están PRESENTES
+           las tres, cada una se valida ESTRICTAMENTE con _caTramoValido(). Si hay solo
+           una o dos, se RECHAZA toda la configuración como esquema FFPP incompleto: no
+           se completan en silencio las claves que falten. */
+        var _ffppPresentes=0;
+        for(var _fp=0; _fp<CA_FFPP_KEYS.length; _fp++){
+          if(Object.prototype.hasOwnProperty.call(val, CA_FFPP_KEYS[_fp])) _ffppPresentes++;
+        }
+        var _tramos={};
+        if(_ffppPresentes===0){
+          /* Configuración antigua: las tres se normalizan a pendiente. */
+          _tramos.ffpp75={ estado:'pendiente', dias:null };
+          _tramos.ffpp10={ estado:'pendiente', dias:null };
+          _tramos.ffpp15={ estado:'pendiente', dias:null };
+        } else if(_ffppPresentes===CA_FFPP_KEYS.length){
+          /* Esquema completo: validación estricta de cada tramo. */
+          for(var _fi=0; _fi<CA_FFPP_KEYS.length; _fi++){
+            var _fk=CA_FFPP_KEYS[_fi];
+            var _tv=_caTramoValido(val[_fk], y, _fk);
+            if(_tv.ok!==true) return { ok:false, error:_tv.error, campo:_fk };
+            _tramos[_fk]=_tv.tramo;
+          }
+        } else {
+          /* Esquema FFPP incompleto (una o dos claves): se rechaza toda la config. */
+          return { ok:false, error:'La configuración de Fiestas primaverales del año '+y+' está incompleta: deben estar los tres tramos o ninguno.', campo:'ffpp75' };
+        }
+        out.anios[y]={ dga:val.dga, bonobusEconomico:_bono,
+                       ffpp75:_tramos.ffpp75, ffpp10:_tramos.ffpp10, ffpp15:_tramos.ffpp15 };
       }
       return { ok:true, config:out };
     } catch(e){
@@ -5806,7 +5940,12 @@ function inicializarCamaraOCR() {
     var y=String(anio==null?'':anio).trim();
     if(!Object.prototype.hasOwnProperty.call(lect.config.anios, y)) return { estado:'sinAnio' };
     var _a=lect.config.anios[y];
-    return { estado:'ok', dga:_a.dga, bonobusEconomico:(_a.bonobusEconomico===true) };
+    /* NEXUM-012 — Devuelve también los tres tramos FFPP ya normalizados por
+       caValidar (copias nuevas, para que el consumidor no altere la config). */
+    return { estado:'ok', dga:_a.dga, bonobusEconomico:(_a.bonobusEconomico===true),
+             ffpp75:{ estado:_a.ffpp75.estado, dias:_a.ffpp75.dias },
+             ffpp10:{ estado:_a.ffpp10.estado, dias:_a.ffpp10.dias },
+             ffpp15:{ estado:_a.ffpp15.estado, dias:_a.ffpp15.dias } };
   }
 
   /* Serializa + escribe + relee EXACTO; si falla restaura el valor previo exacto
@@ -5836,13 +5975,32 @@ function inicializarCamaraOCR() {
      completo. 4) Escribe. 5) Relee y compara EXACTO. 6) Rollback verificado si
      algo falla. Nunca devuelve ok:true sin verificar la persistencia.
      {ok:true, config} | {ok:false, error, campo}. */
-  function caGuardarAnio(anio, dga, bonobusEconomico){
+  /* NEXUM-012 — Copia profunda de un año YA normalizado (dga, bonobus y los tres
+     tramos FFPP). Se usa para preservar los demás años al guardar/eliminar. */
+  function _caCopiaAnio(a){
+    return { dga:a.dga, bonobusEconomico:(a.bonobusEconomico===true),
+             ffpp75:{ estado:a.ffpp75.estado, dias:a.ffpp75.dias },
+             ffpp10:{ estado:a.ffpp10.estado, dias:a.ffpp10.dias },
+             ffpp15:{ estado:a.ffpp15.estado, dias:a.ffpp15.dias } };
+  }
+  function caGuardarAnio(anio, dga, bonobusEconomico, ffpp){
     var y=String(anio==null?'':anio).trim();
     if(!_caAnioValido(y)) return { ok:false, error:'El año debe tener el formato AAAA (cuatro dígitos).', campo:'anio' };
     if(!_caDgaValido(dga)) return { ok:false, error:'La opción de DGA no es válida.', campo:'dga' };
     /* NEXUM-010 — El Bonobús familiar se persiste SIEMPRE junto al DGA; debe ser
        un booleano exacto (rechaza cualquier otro valor). */
     if(!_caBonobusValido(bonobusEconomico)) return { ok:false, error:'La opción de Bonobús familiar no es válida.', campo:'bonobus' };
+    /* NEXUM-012 — Los tres tramos FFPP son OBLIGATORIOS al guardar un año (esquema
+       completo). Cada uno se valida contra los días de ESTE año. */
+    if(!ffpp || typeof ffpp!=='object' || Array.isArray(ffpp))
+      return { ok:false, error:'Faltan los datos de Fiestas primaverales.', campo:'ffpp75' };
+    var _tram={};
+    for(var _fi=0; _fi<CA_FFPP_KEYS.length; _fi++){
+      var _fk=CA_FFPP_KEYS[_fi];
+      var _tv=_caTramoValido(ffpp[_fk], y, _fk);
+      if(_tv.ok!==true) return { ok:false, error:(_tv.error||'El tramo '+_fk+' no es válido.'), campo:_fk };
+      _tram[_fk]=_tv.tramo;
+    }
     /* Lectura obligatoria del valor anterior ANTES de escribir. */
     var previoRaw, previoLegible=true;
     try { previoRaw = localStorage.getItem(CA_KEY); } catch(e){ previoLegible=false; }
@@ -5850,15 +6008,16 @@ function inicializarCamaraOCR() {
       return { ok:false, error:'No se pudo leer el estado anterior de los conceptos anuales. No se ha guardado nada.', campo:null };
     /* Objeto completo preservando años válidos existentes (si el almacén estaba
        corrupto o vacío, se parte de un objeto nuevo con solo este año). Se
-       conservan AMBAS decisiones (dga y bonobusEconomico) de cada año. */
+       conservan TODAS las decisiones (dga, bonobusEconomico y FFPP) de cada año. */
     var base={ version:1, anios:{} };
     var lect=caLeer();
     if(lect.estado==='ok'){
       for(var k in lect.config.anios){
-        if(Object.prototype.hasOwnProperty.call(lect.config.anios,k)) base.anios[k]={ dga:lect.config.anios[k].dga, bonobusEconomico:(lect.config.anios[k].bonobusEconomico===true) };
+        if(Object.prototype.hasOwnProperty.call(lect.config.anios,k)) base.anios[k]=_caCopiaAnio(lect.config.anios[k]);
       }
     }
-    base.anios[y]={ dga:dga, bonobusEconomico:bonobusEconomico };
+    base.anios[y]={ dga:dga, bonobusEconomico:bonobusEconomico,
+                    ffpp75:_tram.ffpp75, ffpp10:_tram.ffpp10, ffpp15:_tram.ffpp15 };
     var v=caValidar(base);
     if(!v.ok) return { ok:false, error:v.error, campo:v.campo||null };
     var serial;
@@ -5886,11 +6045,12 @@ function inicializarCamaraOCR() {
     var base={ version:1, anios:{} };
     if(lect.estado==='ok'){
       for(var k in lect.config.anios){
-        if(Object.prototype.hasOwnProperty.call(lect.config.anios,k) && k!==y) base.anios[k]={ dga:lect.config.anios[k].dga, bonobusEconomico:(lect.config.anios[k].bonobusEconomico===true) };
+        if(Object.prototype.hasOwnProperty.call(lect.config.anios,k) && k!==y) base.anios[k]=_caCopiaAnio(lect.config.anios[k]);
       }
     }
     /* Almacén corrupto o config sin años: eliminar la clave por completo.
-       NEXUM-010 — Eliminar un año borra CONJUNTAMENTE sus decisiones DGA y Bonobús. */
+       NEXUM-010/012 — Eliminar un año borra CONJUNTAMENTE sus decisiones DGA,
+       Bonobús y los tres tramos FFPP, conservando intactos los demás años. */
     var quedan=Object.keys(base.anios).length;
     var serial=null;
     if(quedan>0){
@@ -5929,15 +6089,36 @@ function inicializarCamaraOCR() {
     }
   }
 
+  /* NEXUM-012 — Mapa campo → {div contenedor, div de error} para todos los campos
+     del modal (incluidos los tres tramos FFPP y sus campos de días). */
+  var _CA_CAMPOS={
+    'anio':      { div:'caCampoAnio',        err:'caAnioError' },
+    'dga':       { div:'caCampoDga',         err:'caDgaError' },
+    'bonobus':   { div:'caCampoBonobus',     err:'caBonobusError' },
+    'ffpp75':    { div:'caCampoFfpp75',      err:'caFfpp75Error' },
+    'ffpp10':    { div:'caCampoFfpp10',      err:'caFfpp10Error' },
+    'ffpp15':    { div:'caCampoFfpp15',      err:'caFfpp15Error' },
+    'ffpp75dias':{ div:'caCampoFfpp75Dias',  err:'caFfpp75DiasError' },
+    'ffpp10dias':{ div:'caCampoFfpp10Dias',  err:'caFfpp10DiasError' },
+    'ffpp15dias':{ div:'caCampoFfpp15Dias',  err:'caFfpp15DiasError' }
+  };
   function _caLimpiarErrores(){
-    ['caCampoAnio','caCampoDga','caCampoBonobus'].forEach(function(id){ var d=document.getElementById(id); if(d) d.classList.remove('tiene-error'); });
-    ['caAnioError','caDgaError','caBonobusError'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=''; });
+    for(var c in _CA_CAMPOS){
+      if(!Object.prototype.hasOwnProperty.call(_CA_CAMPOS,c)) continue;
+      var d=document.getElementById(_CA_CAMPOS[c].div); if(d) d.classList.remove('tiene-error');
+      var e=document.getElementById(_CA_CAMPOS[c].err); if(e) e.textContent='';
+    }
   }
   function _caMostrarError(campo, mensaje){
-    var campoDiv=(campo==='dga')?'caCampoDga':(campo==='bonobus')?'caCampoBonobus':'caCampoAnio';
-    var errDiv=(campo==='dga')?'caDgaError':(campo==='bonobus')?'caBonobusError':'caAnioError';
-    var d=document.getElementById(campoDiv); if(d) d.classList.add('tiene-error');
-    var e=document.getElementById(errDiv); if(e) e.textContent=mensaje;
+    var m=_CA_CAMPOS[campo]||_CA_CAMPOS['anio'];
+    var d=document.getElementById(m.div); if(d) d.classList.add('tiene-error');
+    var e=document.getElementById(m.err); if(e) e.textContent=mensaje;
+  }
+  /* NEXUM-012 — Limpia el error de UN solo campo (por su clave del mapa). */
+  function _caLimpiarCampo(campo){
+    var m=_CA_CAMPOS[campo]; if(!m) return;
+    var d=document.getElementById(m.div); if(d) d.classList.remove('tiene-error');
+    var e=document.getElementById(m.err); if(e) e.textContent='';
   }
 
   /* Convierte el texto del input de año en una cadena "YYYY" válida (a prueba de
@@ -5959,10 +6140,64 @@ function inicializarCamaraOCR() {
     if(str==='si') return { ok:true, bonobus:true };
     return { ok:false };
   }
+  /* NEXUM-012 — IDs de los controles FFPP por clave de tramo. */
+  var _CA_FFPP_UI={
+    'ffpp75':{ sel:'caFfpp75', campoDias:'caCampoFfpp75Dias', dias:'caFfpp75Dias', campoErr:'ffpp75', campoDiasErr:'ffpp75dias' },
+    'ffpp10':{ sel:'caFfpp10', campoDias:'caCampoFfpp10Dias', dias:'caFfpp10Dias', campoErr:'ffpp10', campoDiasErr:'ffpp10dias' },
+    'ffpp15':{ sel:'caFfpp15', campoDias:'caCampoFfpp15Dias', dias:'caFfpp15Dias', campoErr:'ffpp15', campoDiasErr:'ffpp15dias' }
+  };
+  /* Días del año que hay actualmente escrito en el input (365/366; 366 por defecto
+     si el año aún no es válido, para no rechazar de más en el HTML). */
+  function _caFfppDiasAnioUI(){
+    var inp=document.getElementById('caAnio');
+    var pa=_caParseAnio(inp?inp.value:'');
+    return pa.ok ? _caDiasAnio(pa.anio) : 366;
+  }
+  /* Muestra/oculta el campo «Días reconocidos» de un tramo según su estado y
+     ajusta el máximo dinámico (365/366). No valida ni guarda. */
+  function _caFfppToggleDias(fk){
+    var ui=_CA_FFPP_UI[fk]; if(!ui) return;
+    var sel=document.getElementById(ui.sel);
+    var campo=document.getElementById(ui.campoDias);
+    var dias=document.getElementById(ui.dias);
+    var prop=(sel && sel.value==='proporcional');
+    if(campo) campo.style.display = prop ? '' : 'none';
+    if(dias){
+      dias.max=String(_caFfppDiasAnioUI());
+      if(!prop) dias.value='';
+    }
+  }
+  /* Parsea un tramo desde la UI (select + input de días). Valida en JavaScript
+     sin confiar solo en el HTML: entero, mínimo 1, máximo 365/366 del año. */
+  function _caParseFfppTramo(estadoStr, diasStr, diasAnio){
+    if(typeof estadoStr!=='string' || !CA_FFPP_ESTADOS[estadoStr]) return { ok:false, campo:'estado' };
+    if(estadoStr!=='proporcional') return { ok:true, tramo:{ estado:estadoStr, dias:null } };
+    var s=(typeof diasStr==='string')?diasStr.trim():String(diasStr==null?'':diasStr).trim();
+    if(!/^\d+$/.test(s)) return { ok:false, campo:'dias' };
+    var n=parseInt(s,10);
+    if(!Number.isSafeInteger(n) || n<1 || n>diasAnio) return { ok:false, campo:'dias' };
+    return { ok:true, tramo:{ estado:'proporcional', dias:n } };
+  }
 
   /* Refleja en el select el valor guardado para el año que hay en el input (o
      «No concedido» si ese año no está configurado). Muestra/oculta «Eliminar».
      No escribe nada. */
+  /* NEXUM-012 — Refleja en los tres selects FFPP el estado guardado (o «pendiente»
+     si el año no está configurado) y precarga los días de los tramos proporcionales.
+     Después ajusta la visibilidad del campo de días de cada tramo. */
+  function _caReflejarFfpp(lect){
+    for(var fk in _CA_FFPP_UI){
+      if(!Object.prototype.hasOwnProperty.call(_CA_FFPP_UI,fk)) continue;
+      var ui=_CA_FFPP_UI[fk];
+      var sel=document.getElementById(ui.sel);
+      var dias=document.getElementById(ui.dias);
+      var t=(lect && lect.estado==='ok' && lect[fk] && typeof lect[fk]==='object') ? lect[fk] : null;
+      var est=(t && CA_FFPP_ESTADOS[t.estado]) ? t.estado : 'pendiente';
+      if(sel) sel.value=est;
+      if(dias) dias.value=(est==='proporcional' && typeof t.dias==='number') ? String(t.dias) : '';
+      _caFfppToggleDias(fk);
+    }
+  }
   function _caReflejarAnio(){
     var inp=document.getElementById('caAnio');
     var sel=document.getElementById('caDga');
@@ -5970,10 +6205,12 @@ function inicializarCamaraOCR() {
     var btnEliminar=document.getElementById('caEliminarBtn');
     var parsed=_caParseAnio(inp?inp.value:'');
     var tieneAnioGuardado=false;
+    var _lectFfpp=null;
     if(parsed.ok){
       var lect=caLeerAnio(parsed.anio);
       if(lect.estado==='ok'){
         tieneAnioGuardado=true;
+        _lectFfpp=lect;
         if(sel) sel.value=(lect.dga==null?'':lect.dga);
         /* NEXUM-010 — Refleja el Bonobús guardado; config nueva → su valor,
            config antigua/año sin configurar → "No cobrar en nómina". */
@@ -5986,6 +6223,8 @@ function inicializarCamaraOCR() {
       if(sel) sel.value='';
       if(selB) selB.value='no';
     }
+    /* NEXUM-012 — Refleja los tres tramos FFPP (año sin guardar → «pendiente»). */
+    _caReflejarFfpp(_lectFfpp);
     if(btnEliminar){
       btnEliminar.style.display = tieneAnioGuardado ? '' : 'none';
       btnEliminar.removeAttribute('data-confirmando');
@@ -6068,7 +6307,29 @@ function inicializarCamaraOCR() {
       try{ if(selB) selB.focus(); }catch(e){}
       return;
     }
-    var res=caGuardarAnio(pa.anio, pd.dga, pb.bonobus);
+    /* NEXUM-012 — Los tres tramos FFPP. Validación en JavaScript (no solo HTML):
+       estado por conjunto cerrado y días enteros 1..365/366 en «proporcional». */
+    var _diasAnioUI=_caDiasAnio(pa.anio);
+    var _ffpp={};
+    for(var _fi=0; _fi<CA_FFPP_KEYS.length; _fi++){
+      var _fk=CA_FFPP_KEYS[_fi];
+      var _ui=_CA_FFPP_UI[_fk];
+      var _selT=document.getElementById(_ui.sel);
+      var _inpD=document.getElementById(_ui.dias);
+      var _pt=_caParseFfppTramo(_selT?_selT.value:'', _inpD?_inpD.value:'', _diasAnioUI);
+      if(!_pt.ok){
+        if(_pt.campo==='dias'){
+          _caMostrarError(_ui.campoDiasErr,'Introduce los días reconocidos como un entero entre 1 y '+_diasAnioUI+'.');
+          try{ if(_inpD) _inpD.focus(); }catch(e){}
+        } else {
+          _caMostrarError(_ui.campoErr,'Selecciona una situación válida para este tramo.');
+          try{ if(_selT) _selT.focus(); }catch(e){}
+        }
+        return;
+      }
+      _ffpp[_fk]=_pt.tramo;
+    }
+    var res=caGuardarAnio(pa.anio, pd.dga, pb.bonobus, _ffpp);
     if(!res.ok){
       _caMostrarError(res.campo||'anio', res.error||'No se pudo guardar la configuración.');
       return;
@@ -6120,6 +6381,19 @@ function inicializarCamaraOCR() {
     if(selB) selB.addEventListener('change', function(){
       var d=document.getElementById('caCampoBonobus'); if(d) d.classList.remove('tiene-error');
       var e=document.getElementById('caBonobusError'); if(e) e.textContent='';
+    });
+    /* NEXUM-012 — Cada select FFPP: limpia sus errores y muestra/oculta su campo de
+       días. Cada input de días: limpia su error al escribir. */
+    Object.keys(_CA_FFPP_UI).forEach(function(fk){
+      var ui=_CA_FFPP_UI[fk];
+      var s=document.getElementById(ui.sel);
+      if(s) s.addEventListener('change', function(){
+        _caLimpiarCampo(ui.campoErr);
+        _caLimpiarCampo(ui.campoDiasErr);
+        _caFfppToggleDias(fk);
+      });
+      var di=document.getElementById(ui.dias);
+      if(di) di.addEventListener('input', function(){ _caLimpiarCampo(ui.campoDiasErr); });
     });
     var btnCancelar=document.getElementById('caCancelarBtn');
     if(btnCancelar) btnCancelar.addEventListener('click', function(){ caCerrarModal(); });
@@ -9615,6 +9889,177 @@ function tcNomRenderProvisional(data){
     }
   }
 
+  /* ===================== NEXUM-012 — FIESTAS PRIMAVERALES (FFPP) · CONDUCTOR-PERCEPTOR
+     La paga de Fiestas Primaverales se abona en TRES TRAMOS INDEPENDIENTES tomados
+     del importe COMPLETO del ID salarial EXACTO FFPP_CP (100 % de la paga): 75 % y
+     10 % en la nómina provisional de ABRIL, y 15 % en la de DICIEMBRE. Los meses
+     están FIJADOS; no hay selector de mes. El ejercicio coincide con el año natural
+     y comienza de cero cada 1 de enero: NO se arrastran días, cantidades ni
+     porcentajes al año siguiente. Cada tramo se reconoce MANUALMENTE por el usuario
+     en «Más → Conceptos anuales» (nunca por jornadas, antigüedad, alta ni absentismo).
+
+     La guarda exterior (NOM_AUTORIZADO && esMes && (R.mes===4 || R.mes===12)) asegura
+     CERO filas y CERO consultas —de conceptos anuales y de la tabla salarial— fuera
+     de abril/diciembre, en vista anual o en categorías no autorizadas.
+
+     FFPP_CP se resuelve UNA SOLA VEZ por mes (modo 'once'); en abril el 75 % y el 10 %
+     COMPARTEN ese único resultado. No se consulta FFPP_CP si todos los tramos del mes
+     están en 'pendiente' o 'noCorresponde'. Cada tramo calculado se suma UNA sola vez
+     a totalCent (entra en el IRPF vía el total devengado); NO alimenta
+     cotizableOrdinarioCent ni horasExtraCent: no altera Base CC/CP, prorrata ni /390.
+
+     FÓRMULAS (redondeo ÚNICO al importe final de cada tramo; nunca se redondean
+     porcentaje, proporción, días ni resultados intermedios):
+       completo     → round(ffppCompletaCent × pct / 100)
+       proporcional → round(ffppCompletaCent × pct × dias / (100 × diasDelAño))
+     con diasDelAño = 365 (normal) o 366 (bisiesto). Se valida Number.isSafeInteger en
+     importe completo, porcentaje, días, producto intermedio y resultado final.
+
+     ESTADOS por tramo:
+       noCorresponde → sin fila, sin consulta (si ningún otro tramo la necesita), no
+                       toca todosImportes ni bloquea totales.
+       pendiente / año no configurado / sin configuración → fila informativa «Pdte.»,
+                       sin consultar la tabla por ese tramo, todosImportes=false y aviso.
+       completo/proporcional con FFPP_CP válido → importe calculado y sumado una vez.
+       completo/proporcional con FFPP_CP ausente/pendiente/no numérico → fila «Pdte.»
+                       y bloqueo de totales (mecanismo resolverImporte existente).
+       config corrupta / lector ausente / excepción / estado desconocido → una fila
+                       «Configuración FFPP no verificable», CERO consultas, bloqueo y
+                       aviso; la configuración almacenada NO se toca ni se repara. */
+  var _ffppNoVerificable=false;
+  var _ffppPendiente=false;
+  if(NOM_AUTORIZADO && esMes && (R.mes===4 || R.mes===12)){
+    /* Definición de los tramos del mes (meses FIJOS). El 15 % de diciembre NO lleva
+       código de nómina (código visual vacío) y NO es la «Bolsa FFPP». */
+    var _ffppDefs = (R.mes===4)
+      ? [ { key:'ffpp75', pct:75, cod:'4A34', desc:'1.er pago FFPP · 75 %' },
+          { key:'ffpp10', pct:10, cod:'4A61', desc:'2.º pago FFPP · 10 %' } ]
+      : [ { key:'ffpp15', pct:15, cod:'',     desc:'Paga FFPP · 15 %' } ];
+
+    /* Lectura PROTEGIDA de la configuración anual del MISMO año de la nómina. Lector
+       ausente o excepción → NO VERIFICABLE (no se consulta la tabla salarial). */
+    var _ffppLect;
+    var _ffppLectorOk=(typeof window.caLeerAnio==='function');
+    if(_ffppLectorOk){
+      try { _ffppLect=window.caLeerAnio(R.anio); }
+      catch(e){ _ffppLect=undefined; _ffppLectorOk='excepcion'; }
+    }
+    var _ffppEstadoCfg=(_ffppLect && typeof _ffppLect==='object' && !Array.isArray(_ffppLect)) ? _ffppLect.estado : undefined;
+    /* Verificable solo si el lector respondió con un estado conocido. 'corrupto' o
+       cualquier estado inesperado → NO verificable. */
+    var _ffppVerificable = (_ffppLectorOk===true) &&
+      (_ffppEstadoCfg==='ok' || _ffppEstadoCfg==='sinConfig' || _ffppEstadoCfg==='sinAnio');
+
+    /* Días del año natural de la nómina (bisiesto → 366) para validar «proporcional». */
+    var _ffppDiasAnio = ((R.anio%4===0 && R.anio%100!==0)||R.anio%400===0)?366:365;
+    /* Estados FFPP válidos (defensa local; caLeerAnio ya los normaliza). */
+    var _ffppEstadosValidos={ 'pendiente':1, 'noCorresponde':1, 'completo':1, 'proporcional':1 };
+    /* NEXUM-012R1 — VERIFICACIÓN DEFENSIVA DE INTEGRIDAD. Aunque caLeerAnio normaliza,
+       si devuelve estado:'ok' pero FALTA algún tramo FFPP o su estructura, estado o
+       días son inválidos, se trata TODA la configuración FFPP como «no verificable»:
+       una sola fila, CERO consultas a FFPP_CP, todosImportes=false y aviso. NUNCA se
+       convierte un tramo inválido en «pendiente» ni se repara la config almacenada. */
+    if(_ffppVerificable && _ffppEstadoCfg==='ok'){
+      var _ffppKeysChk=['ffpp75','ffpp10','ffpp15'];
+      for(var _ck=0; _ck<_ffppKeysChk.length; _ck++){
+        var _ot=_ffppLect[_ffppKeysChk[_ck]];
+        var _integro=(_ot && typeof _ot==='object' && !Array.isArray(_ot) && !!_ffppEstadosValidos[_ot.estado] &&
+          (_ot.estado==='proporcional'
+            ? (typeof _ot.dias==='number' && Number.isInteger(_ot.dias) && Number.isSafeInteger(_ot.dias) && _ot.dias>=1 && _ot.dias<=_ffppDiasAnio)
+            : _ot.dias===null));
+        if(!_integro){ _ffppVerificable=false; break; }
+      }
+    }
+
+    if(!_ffppVerificable){
+      /* CERO consultas de IDs salariales: una única fila informativa y bloqueo. */
+      _ffppNoVerificable=true;
+      todosImportes=false;
+      h+=descCelda('','Configuración FFPP no verificable')
+        +'<div class="n">—</div>'
+        +'<div class="n">'+celdaPend+'</div>'
+        +'<div class="n"></div>';
+    } else {
+      /* Situación de cada tramo (la integridad de 'ok' ya está verificada arriba).
+         sinConfig/sinAnio → todos como «pendiente». */
+      var _ffppInfo=_ffppDefs.map(function(t){
+        var est='pendiente', dd=null;
+        if(_ffppEstadoCfg==='ok'){
+          var _o=_ffppLect[t.key];
+          est=_o.estado; dd=(typeof _o.dias==='number')?_o.dias:null;
+        }
+        return { def:t, estado:est, dias:dd };
+      });
+      /* ¿Algún tramo requiere el importe? Solo entonces se consulta FFPP_CP (una vez). */
+      var _ffppNecesita=_ffppInfo.some(function(ti){ return ti.estado==='completo' || ti.estado==='proporcional'; });
+      var _ffppCompletaCent=null;
+      if(_ffppNecesita){
+        var _ffppRes=resolverImporte('FFPP_CP','once',null); /* ÚNICA consulta del mes */
+        if(_ffppRes.cent!=null) _ffppCompletaCent=_ffppRes.cent;
+      }
+      /* Formato del porcentaje nominal «75,00 %» (NO se recalcula un % efectivo). */
+      var _ffppPctTxt=function(pct){ return String(pct.toFixed(2)).replace('.',',')+' %'; };
+
+      _ffppInfo.forEach(function(ti){
+        var t=ti.def, est=ti.estado, pct=t.pct;
+        if(est==='noCorresponde'){
+          return; /* sin fila; no toca todosImportes; no bloquea totales */
+        }
+        if(est==='pendiente'){
+          /* Fila informativa, sin consultar la tabla por este tramo; bloquea totales. */
+          _ffppPendiente=true;
+          todosImportes=false;
+          h+=descCelda(t.cod, t.desc+' · Pendiente de confirmación')
+            +'<div class="n">—</div>'
+            +'<div class="n">'+celdaPend+'</div>'
+            +'<div class="n"></div>';
+          return;
+        }
+        /* completo o proporcional: usa el ÚNICO resultado de FFPP_CP del mes. */
+        var _cantTxt = (est==='proporcional')
+          ? (_ffppPctTxt(pct)+' · '+ti.dias+' días')
+          : _ffppPctTxt(pct);
+        var _impCent=null;
+        if(_ffppCompletaCent!=null && Number.isSafeInteger(_ffppCompletaCent) && Number.isSafeInteger(pct)){
+          if(est==='completo'){
+            var _prodC=_ffppCompletaCent*pct;
+            if(Number.isSafeInteger(_prodC)){
+              var _rC=Math.round(_prodC/100);
+              if(Number.isSafeInteger(_rC)) _impCent=_rC;
+            }
+          } else { /* proporcional */
+            var _dias=ti.dias;
+            if(Number.isSafeInteger(_dias) && _dias>=1 && Number.isSafeInteger(_ffppDiasAnio) && _ffppDiasAnio>0){
+              var _prodP=_ffppCompletaCent*pct*_dias;
+              if(Number.isSafeInteger(_prodP)){
+                var _rP=Math.round(_prodP/(100*_ffppDiasAnio));
+                if(Number.isSafeInteger(_rP)) _impCent=_rP;
+              }
+            }
+          }
+        }
+        if(_impCent!=null){
+          /* Éxito: se suma UNA sola vez a totalCent (IRPF vía total). NO a
+             cotizableOrdinarioCent ni a horasExtraCent. */
+          totalCent+=_impCent;
+          h+=descCelda(t.cod, t.desc)
+            +'<div class="n">'+tcEsc(_cantTxt)+'</div>'
+            +'<div class="n">'+tcEsc(tcNomFmtCentimos(_impCent))+'</div>'
+            +'<div class="n"></div>';
+        } else {
+          /* FFPP_CP ausente/pendiente/no numérico o cálculo no seguro → «Pdte.» y
+             bloqueo de totales. Sin importe alternativo. resolverImporte ya fijó el
+             aviso de tabla (faltaAlgunImporte / estadoAlmacenCorrupto). */
+          todosImportes=false;
+          h+=descCelda(t.cod, t.desc)
+            +'<div class="n">'+tcEsc(_cantTxt)+'</div>'
+            +'<div class="n">'+celdaPend+'</div>'
+            +'<div class="n"></div>';
+        }
+      });
+    }
+  }
+
   /* ===================== NEXUM-011 — PAGAS EXTRAORDINARIAS · CONDUCTOR-PERCEPTOR
      Paga extraordinaria de VERANO (solo en la nómina de junio, R.mes===6) y de
      INVIERNO (solo en la de noviembre, R.mes===11). Solo se resuelve cuando se
@@ -10067,6 +10512,16 @@ function tcNomRenderProvisional(data){
      la tabla salarial, por lo que estadoAlmacenCorrupto/faltaAlgunImporte no se activan. */
   if(_bonoNoVerificable){
     h+='<div class="nom-recibo-aviso">⚠️ La configuración anual del Bonobús familiar no se pudo verificar: la fila Bonobús queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revísala en «Más → Conceptos anuales».</div>';
+  }
+
+  /* NEXUM-012 — Avisos de Fiestas Primaverales (solo abril/diciembre). Independientes
+     de la cadena anterior: cuando la config no es verificable no se consulta la tabla,
+     por lo que estadoAlmacenCorrupto/faltaAlgunImporte no se activan por FFPP. */
+  if(_ffppNoVerificable){
+    h+='<div class="nom-recibo-aviso">⚠️ La configuración anual de Fiestas primaverales no se pudo verificar: la fila FFPP queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revísala en «Más → Conceptos anuales».</div>';
+  }
+  if(_ffppPendiente){
+    h+='<div class="nom-recibo-aviso">⚠️ Hay tramos de Fiestas primaverales pendientes de confirmación: sus filas quedan como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Indica la situación reconocida en «Más → Conceptos anuales».</div>';
   }
 
   /* DEV-010R11 — Aviso específico de la RETENCIÓN DE IRPF. Solo puede activarse
@@ -14832,7 +15287,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-011R1';
+    var VC_VERSION_ACTUAL = 'NEXUM-012R1';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
 
