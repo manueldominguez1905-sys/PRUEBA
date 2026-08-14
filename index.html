@@ -477,6 +477,18 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-d-thumb{position:absolute;inset:0;background-size:cover;background-position:top center;opacity:.20;border-radius:6px;pointer-events:none;z-index:0;}
 #tc .tc-d-arch{position:absolute;top:2px;right:3px;font-size:9px;line-height:1;z-index:2;opacity:.7;pointer-events:none;} /* DEV-007R7 — marca de hoja archivada */
 #tc .tc-d-mini .tc-d-arch{top:1px;right:1px;font-size:6.5px;} /* DEV-008R16: tamaño/posición ajustados a la celda mini */
+/* NEXUM-015 — distintivo INC (badge pequeño). No sustituye el tag del turno original:
+   se añade junto a él. Esquina inferior izquierda para no colisionar con avisos/dot. */
+#tc .tc-dinc{position:absolute;bottom:3px;left:3px;font-size:7px;font-weight:800;letter-spacing:.3px;line-height:1;padding:1px 3px;border-radius:3px;background:var(--danger);color:#fff;z-index:2;pointer-events:none;}
+#tc .tc-d-mini .tc-dinc{bottom:1px;left:1px;font-size:5.5px;padding:0.5px 2px;border-radius:2px;}
+/* NEXUM-015 — tarjeta de servicio de incidencia en la ficha diaria */
+#tc .nx15-inc-card{border:1px solid var(--danger);border-radius:10px;padding:12px;margin-top:10px;background:var(--color-surface,transparent);}
+#tc .nx15-inc-card .nx15-inc-hd{font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--danger);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+#tc .nx15-inc-kv{font-size:13px;line-height:1.7;color:var(--text2,inherit);}
+#tc .nx15-inc-kv strong{color:inherit;}
+#tc .nx15-inc-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+#tc .nx15-inc-actions .tc-btn{flex:1 1 auto;}
+#tc .nx15-inc-estado{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(0,0,0,.06);}
 
 /* Modificador --mini: mismo componente .tc-d, reducido para la vista Anual (12 meses).
    Solo cambia tamaño/tipografía; toda la lógica de color, estado y estructura es la de .tc-d. */
@@ -783,7 +795,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-012R2</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-015R2</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -1071,6 +1083,8 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
         <div><strong>Copia de seguridad pendiente</strong><br>Aún no has guardado la copia de hoy.</div>
         <button id="btnDescargarBackupPendiente" type="button" class="btn btn-primary" style="margin-left:auto;">Descargar copia de seguridad</button>
       </div>
+      <!-- NEXUM-015 — Avisos de servicios asignados e incidencias (generador central). -->
+      <div id="nx15AvisosInicio"></div>
       <div id="nexoAvisosVacio" class="nexo-avisos-vacio">Sin avisos pendientes.</div>
     </section>
 
@@ -1079,7 +1093,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 class="nexo-bloque-titulo">Accesos rápidos</h2>
       <div class="menu-grid">
         <button class="nexo-acc-btn" id="nexoAccHojaRuta">
-          <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V8H18"/><path d="M9 12h6M9 15.5h6"/></svg></span><span class="menu-label">Hoja de ruta</span>
+          <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V8H18"/><path d="M9 12h6M9 15.5h6"/></svg></span><span class="menu-label">Hojas y servicios</span>
         </button>
         <button class="nexo-acc-btn" id="nexoAccVerJornada">
           <span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg></span><span class="menu-label">Ver jornada</span>
@@ -1441,7 +1455,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
         <!-- PANEL SUBIR HOJAS DE RUTA -->
         <div id="pnl-import" style="display:none">
           <div class="tc-sh-hd">
-            <div><div class="tc-sh-title">&#128196; Subir hojas de ruta</div><div class="tc-sh-sub">PDF una p&#225;gina por d&#237;a</div></div>
+            <div><div class="tc-sh-title">&#128196; Subir hojas de ruta o resumen de servicios</div><div class="tc-sh-sub">PDF, imagen o fotograf&#237;a &middot; hoja de ruta o resumen semanal</div></div>
             <button class="tc-xbtn" onclick="tcClose()">&#10005;</button>
           </div>
           <div class="tc-imp-panel">
@@ -1452,8 +1466,15 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
                 <div class="tc-zone-sub">Una p&#225;gina por d&#237;a</div>
                 <input type="file" id="imp-file" accept="application/pdf" onchange="tcImpLoad(this)" style="display:none">
               </div>
-              <div class="tc-tip">&#128161; La app detectar&#225; autom&#225;ticamente la fecha de cada hoja. El turno no se modifica.</div>
+              <div class="tc-tip">&#128161; La app detectar&#225; autom&#225;ticamente la fecha de cada hoja y el resumen semanal. El turno no se modifica.</div>
               <button class="tc-btn tc-btn-primary" style="margin-top:12px;padding:13px;width:100%;" id="imp-go-btn" onclick="tcImpProcess()" disabled>Extraer p&#225;ginas</button>
+              <!-- NEXUM-015 — Imagen y fotograf&#237;a (c&#225;mara trasera) de una hoja o resumen en papel. -->
+              <div style="display:flex;gap:8px;margin-top:10px;">
+                <button type="button" class="tc-btn tc-btn-ghost" style="flex:1;padding:11px;" onclick="document.getElementById('imp-img-file').click()">&#128247; Imagen</button>
+                <button type="button" class="tc-btn tc-btn-ghost" style="flex:1;padding:11px;" onclick="document.getElementById('imp-cam-file').click()">&#128248; Fotograf&#237;a</button>
+              </div>
+              <input type="file" id="imp-img-file" accept="image/*" onchange="if(typeof nx15ImportarImagen==='function')nx15ImportarImagen(this)" style="display:none">
+              <input type="file" id="imp-cam-file" accept="image/*" capture="environment" onchange="if(typeof nx15ImportarImagen==='function')nx15ImportarImagen(this)" style="display:none">
             </div>
             <div id="imp-prog" style="display:none">
               <div class="tc-prog-wrap">
@@ -6697,6 +6718,13 @@ function tcValidarDiaImportado(reg){
   for(var b=0;b<bools.length;b++) if(bools[b] in reg&&typeof reg[bools[b]]!=='boolean') return false;
   if('imgData' in reg && reg.imgData!=null && !tcImagenDataUrlValida(reg.imgData)) return false;
   if('thumbData' in reg && reg.thumbData!=null && !tcImagenDataUrlValida(reg.thumbData)) return false;
+  /* NEXUM-015 — Objetos del día para servicios asignados e incidencias. Validación
+     estricta: version exactamente 1, propiedades desconocidas rechazadas, textos
+     seguros y acotados, horas válidas (admitiendo extendidas 24:xx). Backups
+     antiguos SIN estos objetos siguen siendo válidos (la clave simplemente no
+     aparece); un campo nuevo inválido rechaza TODO el día (backup completo). */
+  if('asignacionServicio' in reg && !nx15ValidarAsignacion(reg.asignacionServicio)) return false;
+  if('servicioIncidencia' in reg && !nx15ValidarServicioInc(reg.servicioIncidencia)) return false;
   return tcValidarJornadaImportada(reg.jornada);
 }
 function tcValidarTurnoImportado(t){
@@ -7191,6 +7219,9 @@ function tcRenderCal(){
         var dot=document.createElement('div'); dot.className='tc-ddot'; dot.style.background='var(--danger)';
         cell.appendChild(dot);
       }
+      /* NEXUM-015 — distintivo INC (servicio de incidencia). No sustituye el tag
+         del turno original: se añade junto a él. */
+      if(typeof nx15AplicarBadgeInc==='function') nx15AplicarBadgeInc(cell,reg);
       if(c.inMonth){
         (function(k,r){cell.addEventListener('click',function(){tcOpenDay(k,r);});})(key,reg);
       }
@@ -7326,7 +7357,15 @@ window.tcGetRegistroDia=function(key){
       try{ jornada=JSON.parse(JSON.stringify(r.jornada)); }catch(_e){ jornada=null; }
       if(jornada){ try{ Object.freeze(jornada); }catch(_e2){} }
     }
-    var copia={ turno:(r.turno!=null?r.turno:''), servicio:(r.servicio!=null?r.servicio:''), jornada:jornada };
+    /* NEXUM-015R1 — Copia defensiva y congelada de asignacionServicio (nunca la
+       referencia interna). Permite que Inicio lea el servicio del resumen semanal
+       cuando aún no existe hoja, sin poder alterar el almacén de `dias`. */
+    var asignacion=null;
+    if(r.asignacionServicio&&typeof r.asignacionServicio==='object'){
+      try{ asignacion=JSON.parse(JSON.stringify(r.asignacionServicio)); }catch(_ea){ asignacion=null; }
+      if(asignacion){ try{ Object.freeze(asignacion); }catch(_eb){} }
+    }
+    var copia={ turno:(r.turno!=null?r.turno:''), servicio:(r.servicio!=null?r.servicio:''), jornada:jornada, asignacionServicio:asignacion };
     try{ Object.freeze(copia); }catch(_e3){}
     return copia;
   }catch(e){ return null; }
@@ -7454,6 +7493,8 @@ function tcRenderAnual(scrollToActual){
           var dot=document.createElement('div'); dot.className='tc-ddot'; dot.style.background='var(--danger)';
           cell.appendChild(dot);
         }
+        /* NEXUM-015 — distintivo INC (mini). No sustituye el tag del turno. */
+        if(typeof nx15AplicarBadgeInc==='function') nx15AplicarBadgeInc(cell,reg);
         (function(k,r){cell.addEventListener('click',function(){tcOpenDay(k,r);});})(key,reg);
         tcAplicarEventoEnCelda(cell,key);
         row.appendChild(cell);
@@ -7626,6 +7667,10 @@ function tcRenderView(key,reg){
   }
   if(reg.servicio) html+='<div class="tc-serv-card"><div class="tc-serv-lbl">Servicio</div><div class="tc-serv-val">'+tcEsc(reg.servicio)+'</div></div>';
   html+=tcJornadaCardHtml(reg);
+  /* NEXUM-015 — Tarjeta de servicio de incidencia (aditiva). Solo aparece si el
+     día tiene un servicio de incidencia registrado (reg.servicioIncidencia o
+     reg.asignacionServicio.clase==='incidencia'). No sustituye nada. */
+  if(typeof nx15IncCardHtml==='function') html+=nx15IncCardHtml(key,reg);
   if(reg.incidencia) html+='<div class="tc-inc-box">⚠️ '+tcEsc(reg.incidencia)+'</div>';
   if(reg.notas) html+='<div class="tc-nota-box">📋 '+tcEsc(reg.notas)+'</div>';
   document.getElementById('vw-extra').innerHTML=html;
@@ -8134,8 +8179,9 @@ function tcNocturnidadAmpliaciones(jr){
 }
 
 /* FUNCIÓN PURA — Nocturnidad de un día. Clasifica el tipo (general /
-   semana_santa / feria) según el evento laboral del día y, durante SS/Feria,
-   conserva la referencia 4B25 sin decidir todavía si sustituye o se acumula. */
+   semana_santa / feria) según el evento laboral del día y conserva la
+   referencia orientativa (Semana Santa → 4B25, Feria → 4B27) sin decidir
+   todavía si sustituye o se acumula. */
 function tcCalcularNocturnidadDia(fecha){
   var reg=dias[fecha];
   var res={
@@ -8686,7 +8732,7 @@ function tcResumenLaboralMes(anio,mes){
     computoOficialMinutos:0,
     ampliacionesConfirmadas:0, ampliacionesPendientes:0,
     horasExtraordinarias:0,
-    nocturnidadGeneral:0, nocturnidadSemanaSanta:0, nocturnidadFeria:0,
+    nocturnidadGeneral:0, nocturnidadAmpliadaGeneral:0, nocturnidadSemanaSanta:0, nocturnidadFeria:0,
     solapeFeria:0, solapeSemanaSanta:0, solapePendienteDias:0, /* DEV-010R15 */
     excesoFisico:0, excesoEquivalente:0, excesoPendienteDias:0, /* DEV-010R16 */
     td:0, dejeNormal:0, extraCalle7:0,
@@ -8701,6 +8747,7 @@ function tcResumenLaboralMes(anio,mes){
     jornadaTardeNocheEspecialPendiente:0, /* NEXUM-006R1 (4A0N) — 0/1: falta 'Domingo de Ramos' en el año */
     tpMensualCompleto:false, tpMensualUnidades:0, tpDiarioUnidades:0, /* DEV-008R3 */
     festivoTrabajadoDias:0, festivoEspecialDias:0, domingoRamosDias:0, festivoDesplazadoDias:0, /* DEV-008R10 */
+    serviciosIncidenciaConfirmados:0, serviciosIncidenciaPendientes:0, /* NEXUM-015 */
     diasPendientesRevision:0, diasConDatos:0
   };
   if(isNaN(a)||isNaN(m)||m<1||m>12) return R;
@@ -8799,6 +8846,21 @@ function tcResumenLaboralMes(anio,mes){
       if(turnoFinal==='PM'||turnoFinal==='PT'||turnoFinal==='PN') mesTurnoPartidoDias++;
       else if(turnoFinal==='CM'||turnoFinal==='CT'||turnoFinal==='CN') mesTurnoRectoPresente=true;
     }
+    /* NEXUM-015 — Servicios de incidencia. Se cuentan ANTES de exigir jornada:
+       una incidencia programada o pendiente de hoja aún no tiene reg.jornada.
+       Máximo UNA unidad por fecha (es un objeto por día). Confirmados =
+       confirmada_hoja | confirmada_manual. Pendientes = programada |
+       servicio_asignado cuya fecha ya se haya alcanzado (fecha <= hoy). Estado
+       no_realizada aporta CERO. No se toca reg.turno ni ningún cálculo. */
+    var _si15=reg.servicioIncidencia;
+    if(_si15&&typeof _si15==='object'){
+      if(_si15.estado==='confirmada_hoja'||_si15.estado==='confirmada_manual'){
+        R.serviciosIncidenciaConfirmados++;
+      } else if((_si15.estado==='programada'||_si15.estado==='servicio_asignado')&&
+                (typeof nx15FechaAlcanzada==='function'?nx15FechaAlcanzada(key):false)){
+        R.serviciosIncidenciaPendientes++;
+      }
+    }
     var jr=reg.jornada; if(!jr) continue;
     R.diasConDatos++;
     /* NEXUM-006R1 (4A0N) — Jornada tarde-noche especial. ADICIONAL a
@@ -8880,7 +8942,7 @@ function tcResumenLaboralMes(anio,mes){
     var n=tcCalcularNocturnidadDia(key);
     if(n.tipo==='semana_santa') R.nocturnidadSemanaSanta+=n.totalNocturnoComputable;
     else if(n.tipo==='feria') R.nocturnidadFeria+=n.totalNocturnoComputable;
-    else R.nocturnidadGeneral+=n.totalNocturnoComputable;
+    else { R.nocturnidadGeneral+=n.minutosProgramados; R.nocturnidadAmpliadaGeneral+=n.minutosAmpliacionesConfirmadas; }
     if(n.parcial||n.pendienteDescanso||n.revisionParte2) pendDia=true;
     var s=tcCalcularSolapeDia(key);
     if(s.estado==='computable'){
@@ -8915,7 +8977,7 @@ function tcResumenLaboral(anio,mes){
   var a=parseInt(anio,10);
   var meses=[]; for(var m=1;m<=12;m++) meses.push(tcResumenLaboralMes(a,m));
   var claves=['computoOficialMinutos','ampliacionesConfirmadas','ampliacionesPendientes','horasExtraordinarias',
-    'nocturnidadGeneral','nocturnidadSemanaSanta','nocturnidadFeria','solapeFeria','solapeSemanaSanta','solapePendienteDias', /* DEV-010R15 */
+    'nocturnidadGeneral','nocturnidadAmpliadaGeneral','nocturnidadSemanaSanta','nocturnidadFeria','solapeFeria','solapeSemanaSanta','solapePendienteDias', /* DEV-010R15 */
     'excesoFisico','excesoEquivalente','excesoPendienteDias','td','dejeNormal','extraCalle7', /* DEV-010R16 */
     'partidoDias','tpHasta2h','tpMas2h','tpPendiente',
     'tpHasta2hLaborables','tpHasta2hSabados','tpHasta2hFestivos', /* DEV-010R14 */
@@ -8924,6 +8986,7 @@ function tcResumenLaboral(anio,mes){
     'jornadaTardeNocheEspecialDias','jornadaTardeNocheEspecialPendiente', /* NEXUM-006 / NEXUM-006R1 (4A0N) */
     'tpMensualUnidades','tpDiarioUnidades', /* DEV-008R3 */
     'festivoTrabajadoDias','festivoEspecialDias','domingoRamosDias','festivoDesplazadoDias', /* DEV-008R10 */
+    'serviciosIncidenciaConfirmados','serviciosIncidenciaPendientes', /* NEXUM-015 */
     'diasPendientesRevision','diasConDatos'];
   var anual={anio:a, mes:null, nombreMes:'Año '+a};
   claves.forEach(function(k){ anual[k]=0; });
@@ -9049,6 +9112,7 @@ function tcNomRenderResumen(data){
     ['Ampliaciones pendientes','dur','ampliacionesPendientes'],
     ['Horas extraordinarias','dur','horasExtraordinarias'],
     ['Nocturnidad general','dur','nocturnidadGeneral'],
+    ['Nocturnidad ampliada','dur','nocturnidadAmpliadaGeneral'],
     ['Nocturnidad Semana Santa','dur','nocturnidadSemanaSanta'],
     ['Nocturnidad Feria','dur','nocturnidadFeria'],
     ['Solape Semana Santa','dur','solapeSemanaSanta'],
@@ -9058,6 +9122,8 @@ function tcNomRenderResumen(data){
     ['T.D. (tiempo de desplazamiento)','dur','td'],
     ['Deje base para regularización anual','dur','dejeNormal'],
     ['Suplemento Calle 7 para regularización anual','dur','extraCalle7'],
+    ['Servicios de incidencia confirmados','int','serviciosIncidenciaConfirmados'],
+    ['Servicios de incidencia pendientes','int','serviciosIncidenciaPendientes'],
     ['Días pendientes de revisión','int','diasPendientesRevision']
   ];
   var h='<div class="form-card">';
@@ -9194,8 +9260,9 @@ function tcNomRenderProvisional(data){
      el ID salarial exacto 4A33_NOCTURNIDAD_GENERAL y modo 'horas': se calcula por
      hora desde los minutos ya determinados por la app —fórmula (minutos/60)×
      importe_hora— sin redondear minutos ni horas, redondeando solo el importe
-     final a céntimos con los helpers monetarios existentes. Semana Santa y Feria
-     continúan usando sus IDs independientes (4B25, modo 'horas'). NO se conecta el
+     final a céntimos con los helpers monetarios existentes. Semana Santa continúa
+     usando su ID independiente 4B25_NOCT_SS y Feria usa el ID exacto
+     4B27_HORAS_NOCTURNAS_FERIA (código visible 4B27), ambos en modo 'horas'. NO se conecta el
      plus mensual 4B11_NOCTURNIDAD ni ningún otro plus adicional. DEV-010R9 — el
      cómputo mensual de desplazamiento (T.D.) se conecta AQUÍ con el ID salarial
      exacto 49A6_DESPLAZAMIENTO y modo 'horas': R.td llega en MINUTOS y se calcula
@@ -9262,8 +9329,18 @@ function tcNomRenderProvisional(data){
      autorizar) _heIdSal es null: resolverImporte devuelve «Pdte.» sin consultar. */
   add('4A31','Horas extraordinarias','minutos',R.horasExtraordinarias,null,_heIdSal,'horas',false);
   add('4A33','Horas nocturnas','minutos',R.nocturnidadGeneral,null,'4A33_NOCTURNIDAD_GENERAL','horas',true);
+  add(
+    '4B13',
+    'Horas nocturnas ampliadas',
+    'minutos',
+    R.nocturnidadAmpliadaGeneral,
+    null,
+    '4B13_NOCT_AMPLIADA',
+    'horas',
+    true
+  );
   add('4B25','Horas nocturnas Semana Santa','minutos',R.nocturnidadSemanaSanta,null,'4B25_NOCT_SS','horas',true);
-  add('4B25','Horas nocturnas Feria','minutos',R.nocturnidadFeria,null,'4B25_NOCT_FERIA','horas',true);
+  add('4B27','Horas nocturnas Feria','minutos',R.nocturnidadFeria,null,'4B27_HORAS_NOCTURNAS_FERIA','horas',true);
   /* DEV-010R15 — Solapes de fiestas primaverales conectados económicamente con la
      tabla salarial ACTIVA por ID EXACTO y modo 'horas'. R.solapeSemanaSanta y
      R.solapeFeria llegan en MINUTOS (el formato visible HH.MM NO es decimal):
@@ -9362,6 +9439,22 @@ function tcNomRenderProvisional(data){
   add('4A72','Plus festivo especial trabajado','unid',R.festivoEspecialDias,'días','4A72_FESTIVO_ESPECIAL','dias',true);
   add('4A93','Plus Domingo de Ramos trabajado','unid',R.domingoRamosDias,'días','4A93_RAMOS','dias',true);
   add('4A37','Plus Festivo Desplazado','unid',R.festivoDesplazadoDias,'días','4A37_FESTIVO_DESPLAZ','dias',true);
+  /* NEXUM-015 — Servicio de incidencia. Días × importe del ID EXACTO
+     4ASI_INCIDENCIA de la tabla salarial ACTIVA (sin importe hardcodeado, sin
+     búsqueda por nombre/código/aproximación, sin idSalFallback). Modo 'dias',
+     cotiza=true → base cotizable ordinaria. Cantidad = incidencias confirmadas
+     (confirmada_hoja | confirmada_manual). Con 0 confirmadas add() no crea fila
+     ni se consulta ningún ID. ID ausente/pendiente/no numérico → «Pdte.» y bloqueo
+     por resolverImporte(); vista anual (esMes false) o categoría no autorizada →
+     cero consultas por la guarda central de resolverImporte(). Varias confirmadas
+     generan UNA sola fila y UNA sola consulta; el importe se calcula por unidades. */
+  add('4ASI','Servicio de incidencia','unid',R.serviciosIncidenciaConfirmados,'días','4ASI_INCIDENCIA','dias',true);
+  /* NEXUM-015 — Incidencias PENDIENTES de confirmar cuya fecha ya se ha alcanzado:
+     una SOLA fila informativa (cod/idSal null → resolverImporte devuelve «Pdte.»
+     SIN consultar la tabla y fija todosImportes=false, bloqueando los totales para
+     evitar una nómina incompleta). add() oculta la fila si la cantidad es 0, de modo
+     que las incidencias FUTURAS (no alcanzadas), DES y VAC no la generan ni bloquean. */
+  add(null,'Servicios de incidencia pendientes de confirmar','unid',R.serviciosIncidenciaPendientes,'días');
 
   /* Celda de descripción con su código (si lo tiene). */
   function descCelda(cod,desc){
@@ -10767,6 +10860,11 @@ window.tcPdfPick=function(inputId,handler){
    transaccional desde el editor), nunca antes de tener todo decidido. */
 function tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto,opcionDatos){
   var habiaHoja=!!(dias[fecha]&&dias[fecha].imgData);
+  /* NEXUM-015 — Instantánea previa (para poder revertir si el usuario cancela el
+     registro como incidencia) y detección de si el día ya era INC antes de fusionar
+     la hoja (para relacionarla automáticamente sin preguntar). */
+  var _nx15Snap=null; try{ _nx15Snap=dias[fecha]?JSON.parse(JSON.stringify(dias[fecha])):null; }catch(_e){ _nx15Snap=null; }
+  var _nx15PrevInc=(typeof nx15EsInc==='function')?nx15EsInc(dias[fecha]):false;
   var reg=dias[fecha]||{};
   reg.imgData=imgData; reg.thumbData=thumbData;
   /* DEV-007R7 — La imagen vuelve a estar presente: el día deja de estar archivado. */
@@ -10792,6 +10890,10 @@ function tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto,opcionDatos){
   if(guardado){
     var avisoRevision=tcJornadaRevisionPendiente(reg.jornada)&&!revisionPrevia;
     tcToast((habiaHoja?'✔ Hoja de ruta reemplazada':'✔ Hoja de ruta añadida')+(avisoRevision?' · ⚠️ Revisa la jornada: hay datos manuales distintos de los detectados':'')+(cambioResuelto?' · 🔄 Turno del cambio resuelto: '+reg.turno:'')+(cambioNoDetectado?' · ⚠️ No se pudo detectar el turno. Asígnalo manualmente.':''));
+    /* NEXUM-015 — Relación INC↔hoja. Si el día ya era INC, se confirma con la hoja
+       (confirmada_hoja) sin preguntar. Si NO lo era y la hoja es simplificada, se
+       pregunta «¿Este servicio corresponde a una incidencia?» (Sí/No/Cancelar). */
+    if(typeof nx15PostHojaGuardada==='function') nx15PostHojaGuardada(fecha,texto,_nx15PrevInc,_nx15Snap,habiaHoja);
   }
 }
 
@@ -13536,15 +13638,23 @@ window.tcImpProcess=function(){
                  ningún dato. El bucle continúa con las demás páginas. */
               var ocrFallido=!!(r.ocrIntentado&&r.error);
               var texto=r.texto;
+              /* NEXUM-015 — Detección de resumen semanal «TUSSAM - Servicios asignados».
+                 Una página que sea resumen NO se trata como hoja de ruta (sin jornada);
+                 sus filas se aplican como asignaciones de servicio/incidencia por fecha. */
+              var resumenFilas=ocrFallido?null:((typeof nx15ParseResumenSemanal==='function')?nx15ParseResumenSemanal(texto):null);
+              var esResumen=!!(resumenFilas&&resumenFilas.length);
               var key=ocrFallido?null:tcDetectFecha(texto);
-              var serv=ocrFallido?null:tcDetectServicio(texto);
-              var jornadaExtraida=ocrFallido?null:tcExtraerJornadaHojaRuta(texto,key?dias[key]:null);
-              pdfPages.push({key:key,imgData:img,servicio:serv,fechaOk:!!key,jornadaExtraida:jornadaExtraida,ocrError:ocrFallido?(r.error||'OCR fallido'):null});
+              var serv=(ocrFallido||esResumen)?null:tcDetectServicio(texto);
+              var jornadaExtraida=(ocrFallido||esResumen)?null:tcExtraerJornadaHojaRuta(texto,key?dias[key]:null);
+              pdfPages.push({key:key,imgData:img,servicio:serv,fechaOk:!!key,jornadaExtraida:jornadaExtraida,ocrError:ocrFallido?(r.error||'OCR fallido'):null,esResumen:esResumen,resumenFilas:esResumen?resumenFilas:null});
               var row=document.createElement('div'); row.className='tc-page-row';
               var thmb=document.createElement('img'); thmb.className='tc-page-thumb'; thmb.src=img;
               var inf=document.createElement('div'); inf.className='tc-page-info';
               if(ocrFallido){
                 inf.innerHTML='<div class="tc-page-num">Pág. '+n+'</div><div class="tc-page-date">❌ OCR fallido</div><div class="tc-page-st warn">Motivo: '+tcEsc(r.error||'desconocido')+'</div>';
+              } else if(esResumen){
+                var _nInc=0; for(var _ri=0;_ri<resumenFilas.length;_ri++){ if(resumenFilas[_ri].clase==='incidencia') _nInc++; }
+                inf.innerHTML='<div class="tc-page-num">Pág. '+n+'</div><div class="tc-page-date">📋 Resumen de servicios</div><div class="tc-page-st ok">'+resumenFilas.length+' día(s)'+(_nInc?(' · '+_nInc+' incidencia(s)'):'')+'</div>';
               } else {
                 var fLabel,stCls;
                 if(key){
@@ -13661,10 +13771,27 @@ function tcAplicarRetencionHojas(){
 function tcBorrarSemanaAntigua(){ return tcAplicarRetencionHojas(); }
 
 window.tcImpConfirm=function(){
-  var validas=pdfPages.filter(function(p){return p.fechaOk&&p.key&&tcCambioFechaValida(p.key);}); /* DEV-007R9 (tarea 5) — nunca un día con fecha imposible */
-  var skip=pdfPages.length-validas.length;
-  if(!validas.length){tcToast('No hay páginas válidas para guardar');return;}
-  var pendientes=validas.length,ok=0,revisar=0,resueltosCambio=0,cambioSinDetectar=0; /* DEV-006R4 · DEV-006R7 */
+  /* NEXUM-015 — Se aplican PRIMERO las páginas de resumen semanal (asignaciones por
+     fecha). No sustituyen reg.turno: crean/actualizan reg.asignacionServicio y, para
+     las incidencias, reg.servicioIncidencia (relacionando con hoja previa si ya
+     existía en esa fecha). Idempotente. Después se procesan las hojas de ruta. */
+  var resumenPages=pdfPages.filter(function(p){return p.esResumen&&p.resumenFilas&&p.resumenFilas.length;});
+  var resumenDias=0;
+  resumenPages.forEach(function(p){ p.resumenFilas.forEach(function(f){ if(typeof nx15AplicarResumenFila==='function'&&nx15AplicarResumenFila(f.fecha,f)) resumenDias++; }); });
+
+  var validas=pdfPages.filter(function(p){return !p.esResumen&&p.fechaOk&&p.key&&tcCambioFechaValida(p.key);}); /* DEV-007R9 (tarea 5) — nunca un día con fecha imposible */
+  var skip=pdfPages.filter(function(p){return !p.esResumen;}).length-validas.length;
+  if(!validas.length){
+    /* Solo resumen (sin hojas válidas): se guardan los cambios del resumen. */
+    if(resumenDias>0){
+      var _g0=saveDias(); tcRenderCal();
+      if(_g0){ tcImpReset(); tcToast('✔ Resumen aplicado · '+resumenDias+' día(s) de servicios'); }
+    } else {
+      tcToast('No hay páginas válidas para guardar');
+    }
+    return;
+  }
+  var pendientes=validas.length,ok=0,revisar=0,resueltosCambio=0,cambioSinDetectar=0,incConf=0; /* DEV-006R4 · DEV-006R7 · NEXUM-015 incConf */
   function generarThumb(p,callback){
     var img=new Image();
     img.onload=function(){
@@ -13709,6 +13836,10 @@ window.tcImpConfirm=function(){
       if(tcCambioResolverPendiente(ex,p.key)) resueltosCambio++; /* DEV-006R4 */
       else if(cambioPendientePrevio) cambioSinDetectar++;
       dias[p.key]=ex;
+      /* NEXUM-015 — Si el día es INC (por el resumen ya aplicado en este mismo lote
+         o por una marca previa), la hoja de ruta lo confirma: confirmada_hoja, una
+         sola unidad económica, idempotente. Nunca se toca reg.turno. */
+      if(typeof nx15EsInc==='function'&&nx15EsInc(ex)){ if(nx15ConfirmarIncidenciaPorHoja(p.key)) incConf++; }
       ok++;
       pendientes--;
       if(pendientes===0){
@@ -13720,7 +13851,7 @@ window.tcImpConfirm=function(){
         /* DEV-007R8 — No se declara éxito si el guardado falló (saveDias ya avisó
            del almacenamiento lleno). */
         if(guardado){
-          tcToast('✔ '+ok+' días guardados'+(skip?' · '+skip+' omitidos':'')+(revisar?' · ⚠️ '+revisar+' día(s) requieren revisión':'')+(resueltosCambio?' · 🔄 '+resueltosCambio+' turno(s) de cambio resueltos':'')+(cambioSinDetectar?' · ⚠️ No se pudo detectar el turno. Asígnalo manualmente.':''));
+          tcToast('✔ '+ok+' días guardados'+(resumenDias?' · 📋 resumen: '+resumenDias+' día(s)':'')+(incConf?' · ⚠️ '+incConf+' incidencia(s) confirmada(s)':'')+(skip?' · '+skip+' omitidos':'')+(revisar?' · ⚠️ '+revisar+' día(s) requieren revisión':'')+(resueltosCambio?' · 🔄 '+resueltosCambio+' turno(s) de cambio resueltos':'')+(cambioSinDetectar?' · ⚠️ No se pudo detectar el turno. Asígnalo manualmente.':''));
         }
       }
     });
@@ -14968,6 +15099,17 @@ function tcObtenerMensajes(){
         }
       }
     }catch(e){}
+
+    /* 6) NEXUM-015 — Servicios asignados e incidencias. IDs estables por fecha y
+       clase de aviso (nx15-hoja:… / nx15-inc:…), evitando duplicados. Fecha futura
+       nunca genera aviso; DES/VAC tampoco; confirmada_hoja/confirmada_manual/
+       no_realizada tampoco. Se apoya en helpers del módulo NEXUM-015 (con guarda). */
+    try{
+      if(typeof nx15AvisosDia==='function'){
+        var _av15=nx15AvisosDia(fecha,reg); /* array de {id,tipo,fecha,titulo,descripcion,prioridad} o [] */
+        if(_av15&&_av15.length){ for(var _i15=0;_i15<_av15.length;_i15++) push(_av15[_i15]); }
+      }
+    }catch(e){}
   });
   return lista;
 }
@@ -14988,6 +15130,513 @@ window.tcMsgAbrirDia=function(fecha){
   try{ tcOpenDay(fecha, dias[fecha]||{}); }catch(e){ return false; }
   return true;
 };
+
+
+  /* =========================================================
+     NEXUM-015R2 — Módulo de servicios asignados e incidencias INTEGRADO
+     dentro de la IIFE del calendario (antes era un bloque «script» independiente
+     que no veía dias/saveDias y lanzaba ReferenceError). Usa directamente el
+     estado real `dias` y las funciones del calendario. No duplica dias ni saveDias.
+     ========================================================= */
+  /* ---------- Constantes y validación estricta ---------- */
+  var NX15_CLASES=['servicio','incidencia','descanso','vacaciones'];
+  var NX15_ESTADOS=['programada','servicio_asignado','confirmada_hoja','confirmada_manual','no_realizada'];
+
+  /* Hora "HH:MM" admitiendo valores extendidos (hasta 47:59, p.ej. 24:30). */
+  function nx15EsHoraStr(s){
+    if(typeof s!=='string') return false;
+    var m=/^(\d{1,2}):([0-5]\d)$/.exec(s);
+    return !!m && (+m[1])<=47;
+  }
+  function nx15HoraValida(v){ return v===null || nx15EsHoraStr(v); }
+  function nx15TextoSeguro(v,max){
+    return typeof v==='string' && v.length<=max && !/[\u0000\u0008\u000B\u000C]/.test(v);
+  }
+  function nx15HoraAMin(h){ var m=/^(\d{1,2}):([0-5]\d)$/.exec(h||''); return m?(+m[1]*60+(+m[2])):null; }
+
+  /* Valida reg.asignacionServicio. version exactamente 1, SOLO las claves
+     permitidas (propiedades desconocidas rechazadas), textos seguros y acotados,
+     horas válidas o null, fuente fija. null/undefined → válido (campo ausente). */
+  function nx15ValidarAsignacion(o){
+    if(o===null||o===undefined) return true;
+    if(typeof tcEsObjPlano==='function'?!tcEsObjPlano(o):(typeof o!=='object'||Array.isArray(o))) return false;
+    var claves=Object.keys(o);
+    var permitidas=['version','clase','servicio','horaInicio','lugar','fuente'];
+    for(var i=0;i<claves.length;i++){ if(permitidas.indexOf(claves[i])===-1) return false; }
+    if(o.version!==1) return false;
+    if(NX15_CLASES.indexOf(o.clase)===-1) return false;
+    if(!(o.servicio===null||nx15TextoSeguro(o.servicio,120))) return false;
+    if(!(o.horaInicio===null||nx15EsHoraStr(o.horaInicio))) return false;
+    if(!(o.lugar===null||nx15TextoSeguro(o.lugar,200))) return false;
+    if(o.fuente!=='resumen_servicios') return false;
+    return true;
+  }
+  /* Valida reg.servicioIncidencia. version 1, estado del conjunto permitido,
+     horas válidas o null, observaciones string acotada, sin claves desconocidas. */
+  function nx15ValidarServicioInc(o){
+    if(o===null||o===undefined) return true;
+    if(typeof tcEsObjPlano==='function'?!tcEsObjPlano(o):(typeof o!=='object'||Array.isArray(o))) return false;
+    var claves=Object.keys(o);
+    var permitidas=['version','estado','horaInicio','horaFin','observaciones'];
+    for(var i=0;i<claves.length;i++){ if(permitidas.indexOf(claves[i])===-1) return false; }
+    if(o.version!==1) return false;
+    if(NX15_ESTADOS.indexOf(o.estado)===-1) return false;
+    if(!(o.horaInicio===null||nx15EsHoraStr(o.horaInicio))) return false;
+    if(!(o.horaFin===null||nx15EsHoraStr(o.horaFin))) return false;
+    if(!(typeof o.observaciones==='string'&&nx15TextoSeguro(o.observaciones,2000))) return false;
+    return true;
+  }
+
+  /* ---------- Fechas ---------- */
+  function nx15NumFecha(k){ var p=String(k).split('-'); var y=+p[0],m=+p[1],d=+p[2]; if(isNaN(y)||isNaN(m)||isNaN(d)) return 0; return y*10000+m*100+d; }
+  function nx15HoyKey(){ var d=new Date(); return d.getFullYear()+'-'+tcPad(d.getMonth()+1)+'-'+tcPad(d.getDate()); }
+  function nx15FechaAlcanzada(k){ return nx15NumFecha(k)>0 && nx15NumFecha(k)<=nx15NumFecha(nx15HoyKey()); }
+  function nx15EsFutura(k){ return nx15NumFecha(k)>nx15NumFecha(nx15HoyKey()); }
+  function nx15NormFecha(s){
+    var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if(m){ var k=m[1]+'-'+m[2]+'-'+m[3]; return (typeof tcCambioFechaValida==='function'&&tcCambioFechaValida(k))?k:null; }
+    m=/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/.exec(s);
+    if(m){ var d=+m[1],mo=+m[2],y=+m[3]; if(y<100)y+=2000; var k2=y+'-'+tcPad(mo)+'-'+tcPad(d); return (typeof tcCambioFechaValida==='function'&&tcCambioFechaValida(k2))?k2:null; }
+    return null;
+  }
+  function nx15NormHoraStr(s){ if(typeof s!=='string') return null; var m=/^(\d{1,2})[:.,]([0-5]\d)$/.exec(s.trim()); if(!m) return null; var hh=+m[1]; if(hh>47) return null; return tcPad(hh)+':'+m[2]; }
+
+  /* ---------- Estado del día ---------- */
+  function nx15EsInc(reg){ return !!(reg&&typeof reg==='object'&&(reg.servicioIncidencia||(reg.asignacionServicio&&reg.asignacionServicio.clase==='incidencia'))); }
+  function nx15TieneHoja(reg){
+    if(!reg) return false;
+    if(reg.imgData||reg.hojaArchivada) return true;
+    var jr=reg.jornada;
+    if(jr&&(jr.origen==='hoja_ruta'||jr.origen==='mixto')&&(jr.inicioTeorico||jr.finTeorico||jr.computoOficialMinutos!=null)) return true;
+    return false;
+  }
+  function nx15HorasDeJornada(reg){
+    var jr=reg&&reg.jornada;
+    var hi=(jr&&nx15EsHoraStr(jr.inicioTeorico))?jr.inicioTeorico:null;
+    var hf=(jr&&nx15EsHoraStr(jr.finTeorico))?jr.finTeorico:null;
+    return {horaInicio:hi,horaFin:hf};
+  }
+
+  /* ---------- Distintivo INC en el calendario ---------- */
+  function nx15AplicarBadgeInc(cell,reg){
+    try{ if(!cell||!nx15EsInc(reg)) return; var b=document.createElement('div'); b.className='tc-dinc'; b.textContent='INC'; b.title='Servicio de incidencia'; cell.appendChild(b); }catch(e){}
+  }
+
+  /* ---------- Etiquetas ---------- */
+  function nx15EstadoLabel(e){
+    switch(e){
+      case 'programada': return 'Programada';
+      case 'servicio_asignado': return 'Servicio asignado';
+      case 'confirmada_hoja': return 'Confirmada (hoja de ruta)';
+      case 'confirmada_manual': return 'Confirmada (manual)';
+      case 'no_realizada': return 'No realizada';
+      default: return '—';
+    }
+  }
+  function nx15OrigenLabel(reg){
+    var si=reg&&reg.servicioIncidencia; var e=si&&si.estado;
+    if(e==='confirmada_hoja') return 'Hoja de ruta';
+    if(e==='confirmada_manual') return 'Confirmación manual';
+    var asg=reg&&reg.asignacionServicio;
+    if(asg&&asg.fuente==='resumen_servicios') return 'Resumen de servicios';
+    return '—';
+  }
+
+  /* NEXUM-015R1 — Iconos SVG NEXUM (mismo estilo homogéneo del resto de la app:
+     viewBox 0 0 24 24, trazo currentColor, sin emojis) para la interfaz de
+     servicio de incidencia y su modal manual. */
+  var NX15_IC={
+    alerta:'<svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4L3 19h18L12 4z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg>',
+    pdf:'<svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
+    foto:'<svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.2-2h6.6L17 7h1.5A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.2"/></svg>',
+    editar:'<svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L18 10l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+    confirmar:'<svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+    noRealizada:'<svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/></svg>'
+  };
+  /* ---------- Tarjeta "SERVICIO DE INCIDENCIA" en la ficha diaria ---------- */
+  function nx15IncCardHtml(key,reg){
+    if(!nx15EsInc(reg)) return '';
+    var si=reg.servicioIncidencia||{};
+    var asg=reg.asignacionServicio||{};
+    var estado=si.estado||(asg.clase==='incidencia'?'programada':'');
+    var servicio=(asg.servicio!=null&&asg.servicio!=='')?asg.servicio:'—';
+    var lugar=(asg.lugar!=null&&asg.lugar!=='')?asg.lugar:'—';
+    var ini=(si.horaInicio!=null?si.horaInicio:(asg.horaInicio!=null?asg.horaInicio:null));
+    var fin=(si.horaFin!=null?si.horaFin:null);
+    var obs=(si.observaciones!=null&&si.observaciones!=='')?si.observaciones:'';
+    var f=tcEsc(key);
+    var h='<div class="nx15-inc-card">';
+    h+='<div class="nx15-inc-hd">'+NX15_IC.alerta+'Servicio de incidencia</div>';
+    h+='<div class="nx15-inc-kv">';
+    h+='Estado: <span class="nx15-inc-estado">'+tcEsc(nx15EstadoLabel(estado))+'</span><br>';
+    h+='Servicio: <strong>'+tcEsc(servicio)+'</strong><br>';
+    h+='Lugar: <strong>'+tcEsc(lugar)+'</strong><br>';
+    h+='Inicio: <strong>'+tcEsc(ini!=null?ini:'—')+'</strong><br>';
+    h+='Fin: <strong>'+tcEsc(fin!=null?fin:'—')+'</strong><br>';
+    h+='Origen: <strong>'+tcEsc(nx15OrigenLabel(reg))+'</strong>';
+    if(obs) h+='<br>Observaciones: <strong>'+tcEsc(obs)+'</strong>';
+    h+='</div>';
+    h+='<div class="nx15-inc-actions">';
+    h+='<button class="tc-btn tc-btn-ghost" onclick="nx15CardCargarPdf(\''+f+'\')">'+NX15_IC.pdf+'Cargar PDF</button>';
+    h+='<button class="tc-btn tc-btn-ghost" onclick="nx15CardFoto(\''+f+'\')">'+NX15_IC.foto+'Hacer fotografía</button>';
+    if(estado==='confirmada_manual')
+      h+='<button class="tc-btn tc-btn-ghost" onclick="nx15CardConfirmarManual(\''+f+'\')">'+NX15_IC.editar+'Editar confirmación manual</button>';
+    else
+      h+='<button class="tc-btn tc-btn-ghost" onclick="nx15CardConfirmarManual(\''+f+'\')">'+NX15_IC.confirmar+'Confirmar manualmente</button>';
+    if(estado!=='no_realizada')
+      h+='<button class="tc-btn tc-btn-ghost" onclick="nx15CardNoRealizada(\''+f+'\')">'+NX15_IC.noRealizada+'Marcar no realizada</button>';
+    h+='</div></div>';
+    return h;
+  }
+
+  /* ---------- Avisos (generador central) ---------- */
+  function nx15AvisosDia(fecha,reg){
+    var out=[];
+    if(!reg||typeof reg!=='object') return out;
+    if(nx15EsFutura(fecha)) return out; /* fecha futura: sin aviso */
+    var asg=reg.asignacionServicio||null;
+    var si=reg.servicioIncidencia||null;
+    var clase=asg?asg.clase:null;
+    if(clase==='descanso'||clase==='vacaciones') return out; /* DES/VAC: sin aviso */
+    if(si||clase==='incidencia'){
+      var est=si?si.estado:'programada';
+      if(est==='confirmada_hoja'||est==='confirmada_manual'||est==='no_realizada') return out;
+      if(est==='servicio_asignado'){
+        out.push({id:'nx15-inc:'+fecha, tipo:'incidencia', fecha:fecha, titulo:'Incidencia pendiente de hoja de ruta', descripcion:'Hay un servicio asignado a la incidencia; falta la hoja de ruta o la confirmación.', prioridad:'alta'});
+      } else {
+        out.push({id:'nx15-inc:'+fecha, tipo:'incidencia', fecha:fecha, titulo:'Incidencia pendiente de completar', descripcion:'Incidencia sin servicio ni confirmación. Añade la hoja o confírmala manualmente.', prioridad:'alta'});
+      }
+      return out;
+    }
+    if(clase==='servicio'){
+      if(nx15TieneHoja(reg)) return out;
+      if(fecha===nx15HoyKey()){
+        out.push({id:'nx15-hoja:'+fecha, tipo:'servicio', fecha:fecha, titulo:'Hoja de ruta de hoy', descripcion:'Recuerda subir la hoja de ruta del servicio de hoy.', prioridad:'baja'});
+      } else {
+        out.push({id:'nx15-hoja:'+fecha, tipo:'servicio', fecha:fecha, titulo:'Hoja de ruta pendiente', descripcion:'Falta la hoja de ruta de un servicio asignado ya pasado.', prioridad:'media'});
+      }
+    }
+    return out;
+  }
+  /* Render de estos avisos también en «Avisos importantes» de Inicio. Devuelve
+     true si pintó al menos uno. Reutiliza el generador central tcMsgObtener. */
+  function nx15RenderAvisosInicio(){
+    var cont=document.getElementById('nx15AvisosInicio'); if(!cont) return false;
+    var lista=[];
+    try{
+      var todos=(typeof window.tcMsgObtener==='function')?(window.tcMsgObtener()||[]):[];
+      for(var i=0;i<todos.length;i++){ var t=todos[i]; if(t&&(t.tipo==='incidencia'||t.tipo==='servicio')) lista.push(t); }
+    }catch(e){ lista=[]; }
+    if(!lista.length){ cont.innerHTML=''; return false; }
+    /* NEXUM-015R1 — El Centro de mensajes conserva TODOS los avisos (tcMsgObtener
+       intacto); aquí Inicio solo muestra los 3 más recientes por fecha. Si hay más,
+       una única línea remite a la campana. No se elimina, marca como leído ni altera
+       ningún aviso persistente: es solo presentación. */
+    var orden=lista.slice().sort(function(a,b){ var fa=(a&&a.fecha)||'', fb=(b&&b.fecha)||''; return fa<fb?1:(fa>fb?-1:0); });
+    var MAX=3;
+    var visibles=orden.slice(0,MAX);
+    var h='';
+    visibles.forEach(function(m){
+      h+='<div class="banner-aviso banner-alerta" role="alert" style="cursor:pointer;flex-wrap:wrap;" onclick="if(typeof window.tcMsgAbrirDia===\'function\')window.tcMsgAbrirDia(\''+tcEsc(m.fecha)+'\')">'
+        +'<div><strong>'+tcEsc(m.titulo)+'</strong><br>'+tcEsc(m.descripcion)+' <span style="opacity:.7;">('+tcEsc(m.fecha)+')</span></div></div>';
+    });
+    if(orden.length>MAX){
+      var restantes=orden.length-MAX;
+      h+='<div class="banner-aviso" role="note" style="opacity:.85;">Hay '+restantes+' avisos más. Consúltalos desde la campana.</div>';
+    }
+    cont.innerHTML=h;
+    return true;
+  }
+
+  /* ---------- Parser del resumen semanal «TUSSAM - Servicios asignados» ---------- */
+  function nx15ParseResumenSemanal(texto){
+    var t=String(texto||'');
+    if(!/Servicios\s+asignados/i.test(t)||!/TUSSAM/i.test(t)) return [];
+    var lineas=t.split(/\r?\n/);
+    var hi=-1;
+    for(var i=0;i<lineas.length;i++){ if(/Servicios\s+asignados/i.test(lineas[i])){ hi=i; break; } }
+    if(hi<0) return [];
+    var filas=[], vistas={};
+    for(var j=hi+1;j<lineas.length;j++){
+      var ln=(lineas[j]||'').trim();
+      if(!ln) continue;
+      if(/^TUSSAM/i.test(ln)&&!/Servicios\s+asignados/i.test(ln)) break; /* otra sección/hoja */
+      if(/Hoja\s+de\s+Ruta/i.test(ln)) break; /* comienza una hoja de ruta */
+      var m=ln.match(/(\d{4}-\d{2}-\d{2}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\s+([A-Za-zÁÉÍÓÚÜÑ0-9]{2,12})\s*([0-2]?\d[:.,][0-5]\d)?\s*(.*)$/);
+      if(!m) continue;
+      var fecha=nx15NormFecha(m[1]); if(!fecha) continue;
+      if(vistas[fecha]) continue; /* una fila por fecha: la primera gana */
+      var codigo=(m[2]||'').toUpperCase();
+      var hora=m[3]?nx15NormHoraStr(m[3]):null;
+      var lugar=(m[4]||'').trim(); if(lugar==='') lugar=null; else if(lugar.length>200) lugar=lugar.slice(0,200);
+      var clase, servicio;
+      if(codigo==='INC'){ clase='incidencia'; servicio=null; }
+      else if(codigo==='DES'){ clase='descanso'; servicio=null; }
+      else if(codigo==='VAC'){ clase='vacaciones'; servicio=null; }
+      else { clase='servicio'; servicio=codigo; }
+      vistas[fecha]=true;
+      filas.push({fecha:fecha, clase:clase, servicio:servicio, horaInicio:hora, lugar:lugar});
+    }
+    return filas;
+  }
+
+  /* Aplica una fila del resumen a un día. NO toca reg.turno. No guarda (el
+     llamador guarda). Idempotente. Relaciona con hoja previa si ya existía. */
+  function nx15AplicarResumenFila(fecha,fila){
+    if(!fecha||typeof tcCambioFechaValida!=='function'||!tcCambioFechaValida(fecha)||!fila) return false;
+    var reg=dias[fecha]||{};
+    var asg={version:1, clase:fila.clase,
+      servicio:(fila.servicio!=null?String(fila.servicio).slice(0,120):null),
+      horaInicio:(fila.horaInicio!=null?fila.horaInicio:null),
+      lugar:(fila.lugar!=null?String(fila.lugar).slice(0,200):null),
+      fuente:'resumen_servicios'};
+    if(!nx15ValidarAsignacion(asg)) return false;
+    reg.asignacionServicio=asg;
+    if(fila.clase==='incidencia'){
+      var si=reg.servicioIncidencia;
+      var yaDecidida=si&&(si.estado==='confirmada_manual'||si.estado==='no_realizada'||si.estado==='confirmada_hoja');
+      if(!yaDecidida){
+        var confirmadaHoja=nx15TieneHoja(reg);
+        var estado=confirmadaHoja?'confirmada_hoja':((fila.servicio!=null||fila.horaInicio!=null)?'servicio_asignado':'programada');
+        var horas=confirmadaHoja?nx15HorasDeJornada(reg):{horaInicio:(fila.horaInicio!=null?fila.horaInicio:null),horaFin:null};
+        var obs=(si&&typeof si.observaciones==='string')?si.observaciones:'';
+        var nuevo={version:1, estado:estado, horaInicio:horas.horaInicio, horaFin:horas.horaFin, observaciones:obs};
+        reg.servicioIncidencia=nx15ValidarServicioInc(nuevo)?nuevo:{version:1,estado:'programada',horaInicio:null,horaFin:null,observaciones:''};
+      }
+    } else {
+      /* NEXUM-015R1 — El resumen semanal corregido es la referencia vigente: si el
+         día pasa a servicio/descanso/vacaciones, la incidencia anterior deja de
+         existir. Se elimina reg.servicioIncidencia antes de guardar, de modo que
+         desaparezcan el distintivo INC, la tarjeta, los avisos y cualquier unidad
+         4ASI previa. NO se tocan reg.turno, reg.jornada, imágenes ni otros datos. */
+      if(reg.servicioIncidencia) delete reg.servicioIncidencia;
+    }
+    dias[fecha]=reg;
+    return true;
+  }
+
+  /* Confirma la incidencia de un día con los datos de su hoja de ruta
+     (confirmada_hoja). Idempotente. No guarda (el llamador guarda). */
+  function nx15ConfirmarIncidenciaPorHoja(fecha){
+    var reg=dias[fecha]; if(!reg) return false;
+    var horas=nx15HorasDeJornada(reg);
+    /* NEXUM-015R1 — Guarda central: una incidencia solo pasa a confirmada_hoja
+       cuando la hoja importada ha producido una jornada con hora real de inicio Y
+       fin válidas (admite horas extendidas, p.ej. 24:30). Si falta cualquiera de
+       las dos, se devuelve false, se conserva el estado anterior y NO se genera la
+       unidad 4ASI. */
+    if(!nx15EsHoraStr(horas.horaInicio)||!nx15EsHoraStr(horas.horaFin)) return false;
+    var obs=(reg.servicioIncidencia&&typeof reg.servicioIncidencia.observaciones==='string')?reg.servicioIncidencia.observaciones:'';
+    var nuevo={version:1, estado:'confirmada_hoja', horaInicio:horas.horaInicio, horaFin:horas.horaFin, observaciones:obs};
+    if(!nx15ValidarServicioInc(nuevo)) return false;
+    reg.servicioIncidencia=nuevo; dias[fecha]=reg; return true;
+  }
+
+  /* ¿La hoja importada es "simplificada" (posible incidencia)? Heurística: es una
+     hoja de ruta con muy pocas marcas horarias (sin la tabla detallada de viajes). */
+  function nx15EsHojaSimplificada(texto){
+    var t=String(texto||'');
+    if(!/Hoja\s+de\s+Ruta/i.test(t)&&!/Toma\s+servicio/i.test(t)) return false;
+    var horas=(t.match(/\b[0-4]?\d[:.,][0-5]\d\b/g)||[]).length;
+    return horas<=8;
+  }
+
+  /* Post-procesado tras guardar una hoja individual (tcDiaHojaGuardarEn). */
+  function nx15PostHojaGuardada(fecha,texto,prevInc,snapshotPrev,habiaHoja){
+    var reg=dias[fecha]; if(!reg) return;
+    if(prevInc){
+      if(nx15ConfirmarIncidenciaPorHoja(fecha)){ if(saveDias()){ tcRenderCal(); if(activeDate===fecha) tcRenderView(fecha,dias[fecha]); tcToast('✔ Incidencia confirmada con la hoja de ruta.'); } }
+      else { tcToast('⚠️ La hoja no aporta hora real de inicio y fin válidas. La incidencia sigue pendiente.'); }
+      return;
+    }
+    if(!nx15EsHojaSimplificada(texto)) return; /* hoja normal: no se pregunta */
+    tcModalPrompt('Servicio de incidencia','¿Este servicio corresponde a una incidencia?',[
+      {label:'Sí, es una incidencia',className:'btn-primary',onClick:function(){
+        if(nx15ConfirmarIncidenciaPorHoja(fecha)){ if(saveDias()){ tcRenderCal(); if(activeDate===fecha) tcRenderView(fecha,dias[fecha]); tcToast('✔ Incidencia registrada y confirmada.'); } }
+        else { tcToast('⚠️ La hoja no aporta hora real de inicio y fin válidas. No se ha confirmado la incidencia.'); }
+      }},
+      {label:'No, jornada ordinaria',className:'btn-secondary',onClick:function(){ /* se conserva como jornada ordinaria (ya guardada) */ }},
+      {label:'Cancelar',className:'btn-secondary',onClick:function(){
+        if(snapshotPrev==null) delete dias[fecha]; else dias[fecha]=snapshotPrev;
+        saveDias(); tcRenderCal();
+        if(activeDate===fecha&&dias[fecha]) tcRenderView(fecha,dias[fecha]);
+        tcToast('Cambios descartados.');
+      }}
+    ]);
+  }
+
+  /* ---------- Confirmación manual (incidencia sin hoja) ---------- */
+  /* NEXUM-015R1 — Elemento que abrió el modal, para restaurarle el foco al cerrar. */
+  var _nx15MMOpener=null;
+  /* Cierre CENTRAL del modal manual: oculta, retira el atrapador de teclado y
+     devuelve el foco al botón que lo abrió. Todas las vías de cierre sin guardar
+     (X, Cancelar, Escape, fondo) y también el guardado correcto pasan por aquí. */
+  function nx15CerrarModalManual(){
+    var ov=document.getElementById('nx15-modal-manual');
+    if(ov) ov.style.display='none';
+    document.removeEventListener('keydown', nx15MMKeydown, true);
+    var op=_nx15MMOpener; _nx15MMOpener=null;
+    if(op&&typeof op.focus==='function'){ try{ op.focus(); }catch(e){} }
+  }
+  /* Escape cierra sin guardar; Tab/Shift+Tab quedan atrapados dentro del modal. */
+  function nx15MMKeydown(e){
+    var ov=document.getElementById('nx15-modal-manual');
+    if(!ov||ov.style.display==='none') return;
+    var k=e.key;
+    if(k==='Escape'||e.keyCode===27){ e.preventDefault(); nx15CerrarModalManual(); return; }
+    if(k==='Tab'||e.keyCode===9){
+      var foco=ov.querySelectorAll('button, [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])');
+      var vis=[]; for(var i=0;i<foco.length;i++){ var el=foco[i]; if(el.offsetParent!==null||el===document.activeElement) vis.push(el); }
+      if(!vis.length) return;
+      var first=vis[0], last=vis[vis.length-1];
+      if(e.shiftKey){ if(document.activeElement===first||!ov.contains(document.activeElement)){ e.preventDefault(); last.focus(); } }
+      else { if(document.activeElement===last||!ov.contains(document.activeElement)){ e.preventDefault(); first.focus(); } }
+    }
+  }
+  function nx15EnsureModalManual(){
+    var ov=document.getElementById('nx15-modal-manual');
+    if(ov) return ov;
+    ov=document.createElement('div'); ov.id='nx15-modal-manual';
+    ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true'); ov.setAttribute('aria-labelledby','nx15mm-titulo');
+    ov.style.cssText='display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;';
+    ov.innerHTML=''
+      +'<div style="position:relative;background:var(--color-surface,#fff);color:var(--color-text,#111);max-width:420px;width:100%;border-radius:14px;padding:18px;max-height:90vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.3);">'
+      +'<button type="button" id="nx15mm-x" class="perfil-cerrar-x" aria-label="Cerrar confirmación de incidencia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
+      +'<h3 id="nx15mm-titulo" style="margin:0 0 4px;font-size:17px;padding-right:44px;">Confirmar incidencia sin hoja de ruta</h3>'
+      +'<p style="margin:0 0 12px;font-size:12px;opacity:.75;">Registra una sola unidad con las horas reales. No modifica el turno ni crea jornada teórica.</p>'
+      +'<label style="display:block;font-size:12px;font-weight:700;margin:8px 0 3px;">Fecha</label>'
+      +'<input type="date" id="nx15mm-fecha" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--color-border,#ccc);background:var(--color-surface,#fff);color:inherit;">'
+      +'<label style="display:block;font-size:12px;font-weight:700;margin:10px 0 3px;">Hora real de inicio (HH:MM, admite 24:30)</label>'
+      +'<input type="text" id="nx15mm-ini" inputmode="numeric" maxlength="5" placeholder="Ej. 15:30" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--color-border,#ccc);background:var(--color-surface,#fff);color:inherit;">'
+      +'<label style="display:block;font-size:12px;font-weight:700;margin:10px 0 3px;">Hora real de fin (HH:MM, admite 24:30)</label>'
+      +'<input type="text" id="nx15mm-fin" inputmode="numeric" maxlength="5" placeholder="Ej. 22:30" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--color-border,#ccc);background:var(--color-surface,#fff);color:inherit;">'
+      +'<label style="display:block;font-size:12px;font-weight:700;margin:10px 0 3px;">Observaciones (opcional)</label>'
+      +'<textarea id="nx15mm-obs" rows="3" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--color-border,#ccc);background:var(--color-surface,#fff);color:inherit;resize:vertical;"></textarea>'
+      +'<div id="nx15mm-err" style="color:var(--color-danger,#c0392b);font-size:12px;margin-top:8px;min-height:16px;"></div>'
+      +'<div style="display:flex;gap:8px;margin-top:12px;">'
+      +'<button type="button" id="nx15mm-cancelar" class="btn btn-secondary" style="flex:1;">Cancelar</button>'
+      +'<button type="button" id="nx15mm-guardar" class="btn btn-primary" style="flex:1;">Guardar</button>'
+      +'</div></div>';
+    document.body.appendChild(ov);
+    /* Pulsar el fondo (fuera del cuadro) cierra sin guardar. */
+    ov.addEventListener('click',function(e){ if(e.target===ov) nx15CerrarModalManual(); });
+    document.getElementById('nx15mm-x').addEventListener('click',nx15CerrarModalManual);
+    document.getElementById('nx15mm-cancelar').addEventListener('click',nx15CerrarModalManual);
+    document.getElementById('nx15mm-guardar').addEventListener('click',nx15GuardarManual);
+    return ov;
+  }
+  function nx15ModalManual(fecha,editable){
+    var reg=dias[fecha]||{}; var si=reg.servicioIncidencia||{};
+    /* Recuerda el botón que abrió el modal para restaurarle el foco al cerrar. */
+    _nx15MMOpener=(document.activeElement&&document.activeElement!==document.body)?document.activeElement:null;
+    var ov=nx15EnsureModalManual();
+    var inpF=document.getElementById('nx15mm-fecha');
+    inpF.value=fecha; inpF.disabled=!editable;
+    document.getElementById('nx15mm-ini').value=(si.horaInicio!=null?si.horaInicio:'');
+    document.getElementById('nx15mm-fin').value=(si.horaFin!=null?si.horaFin:'');
+    document.getElementById('nx15mm-obs').value=(si.observaciones!=null?si.observaciones:'');
+    document.getElementById('nx15mm-err').textContent='';
+    ov.style.display='flex';
+    document.addEventListener('keydown', nx15MMKeydown, true);
+    try{ var primero=editable?inpF:document.getElementById('nx15mm-ini'); if(primero&&typeof primero.focus==='function') primero.focus(); }catch(e){}
+  }
+  function nx15GuardarManual(){
+    var fecha=document.getElementById('nx15mm-fecha').value;
+    var ini=(document.getElementById('nx15mm-ini').value||'').trim();
+    var fin=(document.getElementById('nx15mm-fin').value||'').trim();
+    var obs=(document.getElementById('nx15mm-obs').value||'').trim();
+    var err=document.getElementById('nx15mm-err');
+    if(typeof tcCambioFechaValida!=='function'||!tcCambioFechaValida(fecha)){ err.textContent='Fecha no válida.'; return; }
+    var iniN=nx15NormHoraStr(ini), finN=nx15NormHoraStr(fin);
+    if(!iniN){ err.textContent='La hora de inicio es obligatoria y válida (HH:MM, admite 24:30).'; return; }
+    if(!finN){ err.textContent='La hora de fin es obligatoria y válida (HH:MM, admite 24:30).'; return; }
+    if(nx15HoraAMin(finN)<=nx15HoraAMin(iniN)){ err.textContent='La hora de fin debe ser posterior a la de inicio.'; return; }
+    if(obs.length>2000) obs=obs.slice(0,2000);
+    var reg=dias[fecha]||{};
+    var nuevo={version:1, estado:'confirmada_manual', horaInicio:iniN, horaFin:finN, observaciones:obs};
+    if(!nx15ValidarServicioInc(nuevo)){ err.textContent='Datos no válidos.'; return; }
+    reg.servicioIncidencia=nuevo; /* NO toca reg.turno · NO crea jornada teórica */
+    dias[fecha]=reg;
+    if(!saveDias()){ err.textContent='No se pudo guardar.'; return; }
+    nx15CerrarModalManual(); /* NEXUM-015R1 — cierre por la misma función central */
+    tcRenderCal(); if(activeDate===fecha) tcRenderView(fecha,reg);
+    try{ if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }catch(e){}
+    tcToast('✔ Incidencia confirmada manualmente.');
+  }
+
+  /* ---------- Acciones de la tarjeta ---------- */
+  var _nx15FotoFecha=null;
+  function nx15CardCargarPdf(fecha){ activeDate=fecha; if(typeof tcPdfPick==='function') tcPdfPick('dia-hoja-file',tcDiaHojaPdf); }
+  function nx15CardFoto(fecha){ _nx15FotoFecha=fecha; var inp=document.getElementById('nx15-cam-file'); if(inp){ inp.value=''; inp.click(); } }
+  function nx15CardConfirmarManual(fecha){ nx15ModalManual(fecha,false); }
+  function nx15CardNoRealizada(fecha){
+    tcModalPrompt('Marcar no realizada','¿Marcar este servicio de incidencia como NO realizado? No generará ninguna unidad económica; se conserva que estuvo programada.',[
+      {label:'Sí, no se realizó',className:'btn-primary',onClick:function(){
+        var reg=dias[fecha]; if(!reg) return;
+        var si=reg.servicioIncidencia||{version:1,estado:'programada',horaInicio:null,horaFin:null,observaciones:''};
+        var nuevo={version:1, estado:'no_realizada', horaInicio:(si.horaInicio!=null?si.horaInicio:null), horaFin:(si.horaFin!=null?si.horaFin:null), observaciones:(typeof si.observaciones==='string'?si.observaciones:'')};
+        if(!nx15ValidarServicioInc(nuevo)) return;
+        reg.servicioIncidencia=nuevo; dias[fecha]=reg;
+        if(!saveDias()) return;
+        tcRenderCal(); if(activeDate===fecha) tcRenderView(fecha,reg);
+        try{ if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }catch(e){}
+        tcToast('Marcado como no realizado.');
+      }},
+      {label:'Cancelar',className:'btn-secondary',onClick:function(){}}
+    ]);
+  }
+
+  /* ---------- Importación por imagen / fotografía ---------- */
+  function nx15ImportarImagen(input){ var file=input&&input.files&&input.files[0]; if(!file) return; input.value=''; nx15ProcesarImagen(file,null); }
+  function nx15ProcesarImagen(file,fechaForzada){
+    var apiKey=(typeof obtenerApiKeyOCR==='function')?obtenerApiKeyOCR():null;
+    tcToast('🔎 Procesando imagen…');
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var dataUrl=ev.target.result;
+      comprimirImagen(dataUrl).then(function(comp){
+        function seguir(texto){
+          texto=texto||'';
+          var filas=nx15ParseResumenSemanal(texto);
+          if(filas&&filas.length){ var n=0; filas.forEach(function(f){ if(nx15AplicarResumenFila(f.fecha,f)) n++; }); if(saveDias()){ tcRenderCal(); tcToast('✔ Resumen aplicado · '+n+' día(s)'); } return; }
+          /* NEXUM-015R1 — Sin texto OCR útil NO se guarda ninguna hoja (no se llama a
+             tcDiaHojaGuardarEn con texto vacío). No se toca imgData, jornada ni el
+             estado de la incidencia: sigue pendiente con aviso claro. */
+          if(!texto.trim()){ tcToast('⚠️ No se pudo leer una hoja válida de la imagen. La incidencia sigue pendiente.'); return; }
+          var fecha=fechaForzada||((typeof tcDetectFecha==='function')?tcDetectFecha(texto):null);
+          if(!fecha){ tcToast('⚠️ No se detectó la fecha en la imagen.'); return; }
+          tcDiaHojaGuardarEn(fecha,comp,comp,texto);
+        }
+        /* NEXUM-015R1 — Falta la clave OCR: no se guarda hoja con texto vacío; la
+           incidencia se conserva pendiente y se avisa. */
+        if(!apiKey){ tcToast('⚠️ Configura la clave OCR.space en Ajustes para leer la imagen. La incidencia sigue pendiente.'); return; }
+        leerTicketConOCRSpace(comp,apiKey).then(function(texto){ seguir(texto||''); }).catch(function(e){ tcToast('⚠️ OCR: '+((e&&e.message)?e.message:'no se pudo leer la imagen')+'. La incidencia sigue pendiente.'); });
+      }).catch(function(){ tcToast('⚠️ No se pudo procesar la imagen.'); });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ---------- Init: input de cámara para la tarjeta ---------- */
+  (function nx15Init(){
+    function crear(){
+      if(!document.getElementById('nx15-cam-file')){
+        var inp=document.createElement('input');
+        inp.type='file'; inp.id='nx15-cam-file'; inp.accept='image/*'; inp.setAttribute('capture','environment'); inp.style.display='none';
+        inp.addEventListener('change',function(){ var f=inp.files&&inp.files[0]; if(f&&_nx15FotoFecha){ nx15ProcesarImagen(f,_nx15FotoFecha); } inp.value=''; });
+        document.body.appendChild(inp);
+      }
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',crear); else crear();
+  })();
+  /* ---------- NEXUM-015R2 — Exposición mínima en window ----------
+     Solo funciones llamadas desde HTML (onclick/onchange) o desde otros bloques «script».
+     NO se expone dias, saveDias ni estado interno mutable. */
+  window.nx15ImportarImagen=nx15ImportarImagen;
+  window.nx15CardCargarPdf=nx15CardCargarPdf;
+  window.nx15CardFoto=nx15CardFoto;
+  window.nx15CardConfirmarManual=nx15CardConfirmarManual;
+  window.nx15CardNoRealizada=nx15CardNoRealizada;
+  window.nx15RenderAvisosInicio=nx15RenderAvisosInicio;
 
 })();
   </script>
@@ -15058,7 +15707,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-012R2';
+    var VC_VERSION_ACTUAL = 'NEXUM-015R2';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
 
@@ -15212,7 +15861,7 @@ window.tcMsgAbrirDia=function(fecha){
       <div class="nexo-fs-group">
         <div class="nexo-fs-group-title">Turnos y jornada</div>
         <div class="menu-grid">
-          <button class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcOpenImport)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 18v-5M9.6 15.4 12 13l2.4 2.4"/></svg></span><span class="menu-label">Subir hojas de ruta</span></button>
+          <button class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcOpenImport)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 18v-5M9.6 15.4 12 13l2.4 2.4"/></svg></span><span class="menu-label">Subir hojas de ruta o resumen de servicios</span></button>
           <button class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcOpenAsignar)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="M8 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M9 13.5l2 2 4-4"/></svg></span><span class="menu-label">Asignar turnos</span></button>
           <button id="tcBtnGestionarCambios" class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcOpenGestorCambios)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></span><span class="menu-label">Gestionar cambios</span></button>
           <button class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcLeyenda)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.3 13 20.8a1.5 1.5 0 0 1-2.1 0L4 13.9V4h9.9l6.6 6.6a1.6 1.6 0 0 1 0 2.7z"/><circle cx="9" cy="9" r="1.4"/></svg></span><span class="menu-label">Tipos de turnos</span></button>
@@ -18140,7 +18789,11 @@ window.tcMsgAbrirDia=function(fecha){
         fin1Txt = _h.fin1;
         ini2Txt = _h.inicio2;
         finTxt  = _h.fin;
-        if(reg.servicio) servicioTxt=String(reg.servicio);
+        // NEXUM-015R1 — Servicio visible en Inicio. Primero reg.servicio; si está
+        // vacío, el servicio del resumen semanal (reg.asignacionServicio.servicio);
+        // si ambos faltan, «—». Solo lectura/presentación: no se escribe ni sincroniza.
+        if(reg.servicio){ servicioTxt=String(reg.servicio); }
+        else if(reg.asignacionServicio&&reg.asignacionServicio.servicio){ servicioTxt=String(reg.asignacionServicio.servicio); }
         var real = (jr.horaFinRealParte2||jr.horaFinRealParte1);
         if(real){ estado='Jornada registrada'; estadoCls='ok'; }
         else if(reg.turno){ estado='Jornada programada'; estadoCls='pend'; }
@@ -18156,9 +18809,12 @@ window.tcMsgAbrirDia=function(fecha){
       if(est){ est.className='nexo-dia-estado'+(estadoCls?(' '+estadoCls):''); if($('nexoDiaEstadoTxt')) $('nexoDiaEstadoTxt').textContent=estado; }
 
       // C. Avisos: mostrar "sin avisos" solo si ambos banners están ocultos
+      // NEXUM-015 — Render de los avisos de servicios/incidencias desde el generador central.
+      var nx15Hay=false;
+      try{ if(typeof window.nx15RenderAvisosInicio==='function') nx15Hay=(window.nx15RenderAvisosInicio()===true); }catch(e){ nx15Hay=false; }
       var b1=$('bannerAviso'), b2=$('bannerBackupPendiente'), vac=$('nexoAvisosVacio');
       if(vac){
-        var hayAviso = (b1&&b1.style.display!=='none'&&b1.textContent.trim()!=='') || (b2&&b2.style.display!=='none');
+        var hayAviso = (b1&&b1.style.display!=='none'&&b1.textContent.trim()!=='') || (b2&&b2.style.display!=='none') || nx15Hay;
         vac.style.display = hayAviso ? 'none' : 'block';
       }
     }
@@ -18280,6 +18936,11 @@ window.tcMsgAbrirDia=function(fecha){
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
   })();
   </script>
+
+  <!-- NEXUM-015R2 — El módulo NEXUM-015 se integró dentro de la IIFE del
+       calendario (más arriba, justo antes de su cierre). El bloque «script»
+       independiente y su comentario se eliminaron para que use el estado real
+       (dias/saveDias) sin ReferenceError. -->
 
   <!-- =========================================================
        NEXUM-003R6 — Contención de anchura móvil (sin bloquear zoom)
