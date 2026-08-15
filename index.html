@@ -823,7 +823,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-015R3R3R1</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-015R3R3R2</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -15459,26 +15459,43 @@ window.tcMsgAbrirDia=function(fecha){
     var lista=[];
     try{
       var todos=(typeof window.tcMsgObtener==='function')?(window.tcMsgObtener()||[]):[];
-      for(var i=0;i<todos.length;i++){ var t=todos[i]; if(t&&(t.tipo==='incidencia'||t.tipo==='servicio')) lista.push(t); }
+      /* NEXUM-015R3R3R2 — Inicio muestra ÚNICAMENTE avisos NO leídos. La lectura se
+         consulta por el puente público del Centro de mensajes (tc_v1_mensajes_leidos);
+         si aún no existe, se muestran todos (no leídos por defecto). */
+      var esLeido=(typeof window.tcMsgEsLeido==='function')?window.tcMsgEsLeido:function(){return false;};
+      for(var i=0;i<todos.length;i++){
+        var t=todos[i];
+        if(!t||(t.tipo!=='incidencia'&&t.tipo!=='servicio')) continue; /* mismos tipos que hoy */
+        if(esLeido(t.id)===true) continue;                             /* excluir leídos */
+        lista.push(t);
+      }
     }catch(e){ lista=[]; }
     if(!lista.length){ cont.innerHTML=''; return false; }
-    /* NEXUM-015R1 — El Centro de mensajes conserva TODOS los avisos (tcMsgObtener
-       intacto); aquí Inicio solo muestra los 3 más recientes por fecha. Si hay más,
-       una única línea remite a la campana. No se elimina, marca como leído ni altera
-       ningún aviso persistente: es solo presentación. */
+    /* Solo presentación: Inicio muestra los 3 avisos NO leídos más recientes por fecha
+       y, si hay más NO leídos, una única línea remite a la campana. No se elimina, ni se
+       marca como leído aquí, ni se altera ningún aviso persistente. */
     var orden=lista.slice().sort(function(a,b){ var fa=(a&&a.fecha)||'', fb=(b&&b.fecha)||''; return fa<fb?1:(fa>fb?-1:0); });
     var MAX=3;
     var visibles=orden.slice(0,MAX);
     var h='';
     visibles.forEach(function(m){
-      h+='<div class="banner-aviso banner-alerta" role="alert" style="cursor:pointer;flex-wrap:wrap;" onclick="if(typeof window.tcMsgAbrirDia===\'function\')window.tcMsgAbrirDia(\''+tcEsc(m.fecha)+'\')">'
+      h+='<div class="banner-aviso banner-alerta" role="alert" style="cursor:pointer;flex-wrap:wrap;" data-msg-id="'+tcEsc(m.id)+'" data-fecha="'+tcEsc(m.fecha)+'">'
         +'<div><strong>'+tcEsc(m.titulo)+'</strong><br>'+tcEsc(m.descripcion)+' <span style="opacity:.7;">('+tcEsc(m.fecha)+')</span></div></div>';
     });
     if(orden.length>MAX){
       var restantes=orden.length-MAX;
-      h+='<div class="banner-aviso" role="note" style="opacity:.85;">Hay '+restantes+' avisos más. Consúltalos desde la campana.</div>';
+      h+='<div class="banner-aviso" role="note" style="opacity:.85;">Hay '+restantes+' aviso'+(restantes===1?'':'s')+' más. Consúltalos desde la campana.</div>';
     }
     cont.innerHTML=h;
+    /* Clic gestionado por addEventListener (sin onclick inline): marca leído UNA vez y
+       abre el día. Al reconstruirse el innerHTML no quedan listeners duplicados. */
+    Array.prototype.forEach.call(cont.querySelectorAll('.banner-aviso[data-msg-id]'),function(el){
+      el.addEventListener('click',function(){
+        var id=el.getAttribute('data-msg-id'), fecha=el.getAttribute('data-fecha');
+        if(typeof window.tcMsgMarcarLeido==='function') window.tcMsgMarcarLeido(id);
+        if(typeof window.tcMsgAbrirDia==='function') window.tcMsgAbrirDia(fecha);
+      });
+    });
     return true;
   }
 
@@ -16181,7 +16198,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-015R3R3R1';
+    var VC_VERSION_ACTUAL = 'NEXUM-015R3R3R2';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
     var vcActualizando = false; /* guarda: impide doble ejecución/recarga */
@@ -18733,7 +18750,7 @@ window.tcMsgAbrirDia=function(fecha){
     function marcarTodos(){
       var st=estado(); var l=cargarLeidos();
       st.mensajes.forEach(function(m){ if(l.indexOf(m.id)===-1) l.push(m.id); });
-      guardarLeidos(l); window.tcMsgRefrescar();
+      guardarLeidos(l); refrescarTodo();
     }
 
     function pintar(st){
@@ -18766,7 +18783,7 @@ window.tcMsgAbrirDia=function(fecha){
           marcarLeido(id);
           cerrar();
           if(typeof window.tcMsgAbrirDia==='function') window.tcMsgAbrirDia(fecha);
-          window.tcMsgRefrescar();
+          refrescarTodo();
         });
       });
     }
@@ -18786,6 +18803,28 @@ window.tcMsgAbrirDia=function(fecha){
       var panel=document.getElementById('msgPanel');
       if(panel&&panel.getAttribute('data-abierto')==='1') pintar(st);
       return noLeidos;
+    };
+
+    /* NEXUM-015R3R3R2 — Refresco unificado tras un cambio de lectura: campana + panel
+       (tcMsgRefrescar) e Inicio (nexoRefrescarInicio, si existe). Sin temporizadores ni
+       observadores; nexoRefrescarInicio no vuelve a llamar aquí, de modo que no hay
+       recursión. */
+    function refrescarTodo(){
+      window.tcMsgRefrescar();
+      if(typeof window.nexoRefrescarInicio==='function'){ window.nexoRefrescarInicio(); }
+    }
+
+    /* Puentes públicos SEGUROS del estado de lectura. NO exponen ni permiten mutar el
+       array interno de leídos: solo consultan (booleano) o marcan reutilizando
+       marcarLeido() (que conserva la poda existente). */
+    window.tcMsgEsLeido=function(id){
+      if(!id) return false;
+      try{ return estado().set[id]===true; }catch(e){ return false; }
+    };
+    window.tcMsgMarcarLeido=function(id){
+      if(!id) return;
+      marcarLeido(id);   /* reutiliza la lógica y la poda existentes */
+      refrescarTodo();   /* actualiza campana, panel e Inicio */
     };
 
     function wire(){
