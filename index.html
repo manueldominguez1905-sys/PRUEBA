@@ -479,8 +479,36 @@ body.dark .banner-alerta { background-color: #3a2e00; border-color: #e6a817; col
 #tc .tc-d-mini .tc-d-arch{top:1px;right:1px;font-size:6.5px;} /* DEV-008R16: tamaño/posición ajustados a la celda mini */
 /* NEXUM-015 — distintivo INC (badge pequeño). No sustituye el tag del turno original:
    se añade junto a él. Esquina inferior izquierda para no colisionar con avisos/dot. */
-#tc .tc-dinc{position:absolute;bottom:3px;left:3px;font-size:7px;font-weight:800;letter-spacing:.3px;line-height:1;padding:1px 3px;border-radius:3px;background:var(--danger);color:#fff;z-index:2;pointer-events:none;}
-#tc .tc-d-mini .tc-dinc{bottom:1px;left:1px;font-size:5.5px;padding:0.5px 2px;border-radius:2px;}
+#tc .tc-dinc{
+  position:relative;
+  bottom:auto;
+  left:auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  align-self:center;
+  width:max-content;
+  margin:2px auto 0;
+  font-size:7px;
+  font-weight:800;
+  letter-spacing:.3px;
+  line-height:1;
+  padding:1px 4px;
+  border-radius:3px;
+  background:var(--danger);
+  color:#fff;
+  z-index:2;
+  pointer-events:none;
+}
+
+#tc .tc-d-mini .tc-dinc{
+  bottom:auto;
+  left:auto;
+  margin:1px auto 0;
+  font-size:5.5px;
+  padding:.5px 2px;
+  border-radius:2px;
+}
 /* NEXUM-015 — tarjeta de servicio de incidencia en la ficha diaria */
 #tc .nx15-inc-card{border:1px solid var(--danger);border-radius:10px;padding:12px;margin-top:10px;background:var(--color-surface,transparent);}
 #tc .nx15-inc-card .nx15-inc-hd{font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--danger);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
@@ -795,7 +823,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-015R3R3</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-015R3R3R1</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -16090,57 +16118,57 @@ window.tcMsgAbrirDia=function(fecha){
   <!-- ===================== SISTEMA DE DETECCIÓN DE NUEVAS VERSIONES ===================== -->
   <!-- Módulo 100% aditivo. No modifica ninguna función, estilo ni almacenamiento existente. -->
   <style>
-    #vc-overlay {
-      display: none; position: fixed; inset: 0; z-index: 9999;
-      background-color: rgba(0,0,0,0.5);
-      align-items: center; justify-content: center;
-      padding: 16px;
-    }
-    #vc-overlay.vc-visible { display: flex; }
-    #vc-box {
+    /* NEXUM-015R3R3R1 — Aviso de nueva versión COMPACTO y NO MODAL. No hay overlay a
+       pantalla completa, ni backdrop, ni capa con pointer-events que bloquee la app.
+       Solo el propio aviso recibe clics. Se ancla POR ENCIMA de la barra inferior
+       (.nexo-bottom-nav, alto var(--nexo-nav-h)) respetando safe-area-inset-bottom. */
+    #vc-aviso {
+      display: none;
+      position: fixed;
+      left: 0; right: 0; margin: 0 auto;
+      bottom: calc(var(--nexo-nav-h, 60px) + env(safe-area-inset-bottom) + 12px);
+      z-index: 500;
+      box-sizing: border-box;
+      width: calc(100% - 24px);
+      max-width: 420px;
       background-color: var(--color-surface);
       color: var(--color-text);
       border: 1px solid var(--color-border);
-      border-radius: var(--radius, 10px);
-      box-shadow: var(--shadow, 0 4px 16px rgba(0,0,0,0.25));
-      max-width: 380px; width: 100%;
-      padding: 22px;
-      text-align: left;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.28);
+      padding: 8px 8px 8px 14px;
     }
-    #vc-box h3 {
-      margin: 0 0 10px 0; font-size: 1.05rem;
-      color: var(--color-primary);
+    #vc-aviso.vc-visible { display: flex; align-items: center; gap: 8px; }
+    #vc-aviso .vc-aviso-txt {
+      flex: 1 1 auto; min-width: 0;
+      font-size: 0.9rem; font-weight: 600; line-height: 1.25;
+      color: var(--color-text);
+      overflow-wrap: anywhere;
     }
-    #vc-box .vc-linea {
-      font-size: 0.88rem; color: var(--color-text-secondary);
-      margin-bottom: 4px;
+    #vc-aviso button {
+      flex: 0 0 auto;
+      min-height: 44px;
+      border: none; border-radius: 8px;
+      font-size: 0.88rem; font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
-    #vc-box .vc-mensaje {
-      font-size: 0.92rem; color: var(--color-text);
-      margin: 12px 0 18px 0; line-height: 1.4;
+    #vc-btn-actualizar {
+      min-width: 44px; padding: 0 16px;
+      background-color: var(--color-primary); color: #fff;
     }
-    #vc-box .vc-botones {
-      display: flex; gap: 10px; justify-content: flex-end;
+    #vc-btn-cerrar {
+      width: 44px; min-width: 44px; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      background-color: transparent; color: var(--color-text-secondary);
+      font-size: 1.4rem; line-height: 1;
     }
-    #vc-box button {
-      border: none; border-radius: 8px; padding: 9px 16px;
-      font-size: 0.88rem; cursor: pointer;
-    }
-    #vc-btn-mas-tarde { background-color: var(--color-border); color: var(--color-text); }
-    #vc-btn-actualizar { background-color: var(--color-primary); color: #fff; }
   </style>
 
-  <div id="vc-overlay">
-    <div id="vc-box" role="dialog" aria-modal="true" aria-labelledby="vc-titulo">
-      <h3 id="vc-titulo">Nueva versión disponible</h3>
-      <div class="vc-linea">Versión: <strong id="vc-version"></strong></div>
-      <div class="vc-linea">Fecha: <span id="vc-fecha"></span></div>
-      <div class="vc-mensaje" id="vc-mensaje"></div>
-      <div class="vc-botones">
-        <button id="vc-btn-mas-tarde" type="button">Más tarde</button>
-        <button id="vc-btn-actualizar" type="button">Actualizar ahora</button>
-      </div>
-    </div>
+  <div id="vc-aviso" role="status" aria-live="polite">
+    <span class="vc-aviso-txt">Nueva versión disponible</span>
+    <button id="vc-btn-actualizar" type="button">Actualizar</button>
+    <button id="vc-btn-cerrar" type="button" aria-label="Cerrar aviso de actualización">&times;</button>
   </div>
 
   <script>
@@ -16153,32 +16181,40 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-015R3R3';
+    var VC_VERSION_ACTUAL = 'NEXUM-015R3R3R1';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
+    var vcActualizando = false; /* guarda: impide doble ejecución/recarga */
+    /* NEXUM-015R3R3R1 — Versión cuyo aviso el usuario ha descartado con la X en ESTA
+       ejecución de la página (solo en memoria). No se persiste ni marca como instalada.
+       Si el servidor publica luego OTRA versión distinta, el aviso vuelve a mostrarse. */
+    var vcVersionDescartada = null;
 
+    /* NEXUM-015R3R3R1 — Aviso COMPACTO y NO MODAL. NUNCA renderiza info.mensaje, ni la
+       fecha, ni historial: solo el texto fijo «Nueva versión disponible» y dos botones
+       (Actualizar / X). No bloquea la app: el fondo, el scroll y el resto de controles
+       siguen operativos porque no existe overlay ni backdrop. */
     function vcMostrarDialogo(info) {
-      var overlay = document.getElementById('vc-overlay');
-      if (!overlay) return;
-      document.getElementById('vc-version').textContent = info.version || '';
-      document.getElementById('vc-fecha').textContent = info.fecha || '';
-      document.getElementById('vc-mensaje').textContent = info.mensaje || '';
-      overlay.classList.add('vc-visible');
-
-      document.getElementById('vc-btn-mas-tarde').onclick = function () {
-        /* «Más tarde» solo cierra el aviso; NO marca la versión remota como
-           instalada. En la próxima comprobación se volverá a ofrecer. */
-        overlay.classList.remove('vc-visible');
-      };
+      var aviso = document.getElementById('vc-aviso');
+      if (!aviso) return;
+      if (vcVersionDescartada === info.version) return; /* descartada en esta ejecución */
+      aviso.classList.add('vc-visible');
 
       document.getElementById('vc-btn-actualizar').onclick = function () {
-        overlay.classList.remove('vc-visible');
         vcActualizarAhora();
+      };
+      document.getElementById('vc-btn-cerrar').onclick = function () {
+        /* La X oculta ÚNICAMENTE el aviso. No recarga, no escribe versión falsa,
+           no toca datos. No reaparece durante esta ejecución para la misma versión. */
+        aviso.classList.remove('vc-visible');
+        vcVersionDescartada = info.version;
       };
     }
 
     function vcActualizarAhora() {
-      /* «Actualizar ahora» NO escribe la versión remota en localStorage. */
+      if (vcActualizando) return; /* una sola ejecución: evita doble recarga */
+      vcActualizando = true;
+      /* «Actualizar» NO escribe la versión remota en localStorage. */
       var limpiarCaches = function () {
         if (window.caches && caches.keys) {
           return caches.keys().then(function (nombres) {
