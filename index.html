@@ -795,7 +795,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-015R2</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-015R3R3</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -1904,7 +1904,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
          Columnas alineadas con CSS Grid. Sin bordes horizontales por concepto y
          sin fondos grises. Colores fijos (independientes del tema) para conservar
          el aspecto de papel. */
-      #tab-nomina .nom-recibo{ background:#ffffff; color:#123a8c; border:1.5px solid #111; border-radius:3px; font-family:"Courier New",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace; font-size:12px; line-height:1.4; box-sizing:border-box; width:100%; max-width:850px; margin:0 auto; height:auto; max-height:none; overflow:visible; box-shadow:0 1px 4px rgba(0,0,0,.12); }
+      #tab-nomina .nom-recibo{ --nom-recibo-azul:#0B2F73; background:#ffffff; color:var(--nom-recibo-azul); border:1.5px solid #111; border-radius:3px; font-family:"Courier New",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace; font-size:12px; line-height:1.4; box-sizing:border-box; width:100%; max-width:850px; margin:0 auto; height:auto; max-height:none; overflow:visible; box-shadow:0 1px 4px rgba(0,0,0,.12); }
       #tab-nomina .nom-recibo *{ box-sizing:border-box; }
       #tab-nomina .nom-recibo-head{ padding:9px 11px; border-bottom:1.5px solid #111; overflow:visible; }
       #tab-nomina .nom-recibo-title{ font-weight:700; letter-spacing:.6px; font-size:12px; text-transform:uppercase; margin-bottom:5px; }
@@ -1918,7 +1918,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
          Importe descuento. Columnas numéricas con mínimo estable que puede crecer
          (minmax) en vez de recortarse, para impedir solapamientos entre columnas. */
       #tab-nomina .nom-recibo-grid{ display:grid; grid-template-columns:minmax(280px,1fr) minmax(4.8em,auto) minmax(4.9em,auto) minmax(4.9em,auto); min-width:650px; align-items:start; }
-      #tab-nomina .nom-recibo-grid > div{ padding:3px 7px; color:#123a8c; font-size:11.5px; }
+      #tab-nomina .nom-recibo-grid > div{ padding:3px 7px; color:var(--nom-recibo-azul,#0B2F73); font-size:11.5px; }
       /* Celdas numéricas: alineadas a la derecha, sin envolver, con separador vertical
          negro estructural (nunca un borde horizontal por concepto). */
       #tab-nomina .nom-recibo-grid > div.n{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; border-left:1px solid #111; }
@@ -10024,7 +10024,7 @@ function tcNomRenderProvisional(data){
            y del mes, así que se preparan una vez para los dos desenlaces posibles. */
         var _pgCantTxt = _pgDiasGen + '/' + _pgDiasTotales + ' días';
         var _pgNotaHtml = _pgVerano ? ''
-          : '<div style="grid-column:1/-1; padding:0 7px 3px; font-size:10px; line-height:1.4; opacity:.85; color:#123a8c;">Estimación proyectada hasta el 31/12.</div>';
+          : '<div style="grid-column:1/-1; padding:0 7px 3px; font-size:10px; line-height:1.4; opacity:.85; color:var(--nom-recibo-azul,#0B2F73);">Estimación proyectada hasta el 31/12.</div>';
 
         /* NEXUM-011R1 — Tramo al ÚLTIMO día del periodo (30/06 en verano, 31/12 en
            invierno) mediante la API PÚBLICA window.tcPerfilCalcularTramo (la función
@@ -10334,7 +10334,7 @@ function tcNomRenderProvisional(data){
   h+='<div class="r"><span>Total a deducir (estimado)</span><span'+(calculoCompleto?'':' class="nom-recibo-pend"')+'>'+(calculoCompleto?tcEsc(tcNomFmtCentimos(totalDeduccionesCent)):PEND)+'</span></div>';
   h+='<div class="r big"><span>Líquido a percibir (provisional)</span><span'+(calculoCompleto?'':' class="nom-recibo-pend"')+'>'+(calculoCompleto?tcEsc(tcNomFmtCentimos(liquidoCent)):PEND)+'</span></div>';
   /* DEV-010R12 — Nota breve solo cuando el cálculo mensual es completo. */
-  if(calculoCompleto) h+='<div style="padding:4px 0 0; font-size:10px; line-height:1.4; opacity:.85; color:#123a8c;">Cotizaciones y líquido estimados automáticamente para un mes ordinario. Pueden variar en bajas, liquidaciones, atrasos o situaciones excepcionales.</div>';
+  if(calculoCompleto) h+='<div style="padding:4px 0 0; font-size:10px; line-height:1.4; opacity:.85; color:var(--nom-recibo-azul,#0B2F73);">Cotizaciones y líquido estimados automáticamente para un mes ordinario. Pueden variar en bajas, liquidaciones, atrasos o situaciones excepcionales.</div>';
   h+='</div>';
 
   /* --- Aviso específico de importes (DEV-010, dentro del recibo, sin bloquear
@@ -13628,25 +13628,68 @@ window.tcImpProcess=function(){
                DEV-006R3 — La imagen mostrada/guardada (img, 1.2/0.60) no cambia;
                para OCR se usa una imagen exclusiva de alta resolución solo si la
                página está escaneada. */
-            tcImagenOcrSiEscaneada(page,textoPdf,img).then(function(imgOcr){
-            tcObtenerTextoHoja(textoPdf,imgOcr,function(msg){
-              document.getElementById('imp-prog-txt').textContent='Página '+n+' de '+total+' · '+msg;
-            }).then(function(r){
+            var apiKeyPdf=(typeof obtenerApiKeyOCR==='function')?obtenerApiKeyOCR():null;
+            var textoSuficiente=tcTextoPdfSuficiente(textoPdf);
+            /* NEXUM-015R3R1 — Lectura de la página:
+               · Página digital con texto suficiente → texto de PDF.js (sin OCR).
+               · Página escaneada → UNA sola llamada de OCR de TABLA como primera
+                 lectura; su ParsedText/overlay sirve tanto para resumen como para hoja. */
+            function nx15LeerPagina(){
+              if(textoSuficiente){ return Promise.resolve({texto:textoPdf, overlay:null, ocrIntentado:false, sinClave:false, error:null}); }
+              if(!apiKeyPdf){ return Promise.resolve({texto:(textoPdf||''), overlay:null, ocrIntentado:false, sinClave:true, error:null}); }
+              document.getElementById('imp-prog-txt').textContent='Página '+n+' de '+total+' · PDF escaneado · OCR de tabla…';
+              return tcImagenOcrSiEscaneada(page,textoPdf,img).then(function(imgOcr){
+                var fuente=imgOcr||img;
+                return comprimirImagen(fuente).then(function(comp){
+                  return nx15OCRTablaServicios(comp,apiKeyPdf).then(function(rr){
+                    return {texto:(rr.texto||''), overlay:rr.overlay||null, ocrIntentado:true, sinClave:false, error:null};
+                  });
+                });
+              }).catch(function(err){
+                return {texto:(textoPdf||''), overlay:null, ocrIntentado:true, sinClave:false, error:(err&&err.message)?err.message:'ocr_error'};
+              });
+            }
+            nx15LeerPagina().then(function(r){
               if(r.sinClave) impSinClaveOCR=true;
               /* DEV-006R3 — Si el OCR se intentó y falló, la página se marca como
                  "OCR fallido", se muestra el motivo y NO se extrae ni se anuncia
                  ningún dato. El bucle continúa con las demás páginas. */
               var ocrFallido=!!(r.ocrIntentado&&r.error);
-              var texto=r.texto;
-              /* NEXUM-015 — Detección de resumen semanal «TUSSAM - Servicios asignados».
-                 Una página que sea resumen NO se trata como hoja de ruta (sin jornada);
-                 sus filas se aplican como asignaciones de servicio/incidencia por fecha. */
-              var resumenFilas=ocrFallido?null:((typeof nx15ParseResumenSemanal==='function')?nx15ParseResumenSemanal(texto):null);
-              var esResumen=!!(resumenFilas&&resumenFilas.length);
-              var key=ocrFallido?null:tcDetectFecha(texto);
-              var serv=(ocrFallido||esResumen)?null:tcDetectServicio(texto);
-              var jornadaExtraida=(ocrFallido||esResumen)?null:tcExtraerJornadaHojaRuta(texto,key?dias[key]:null);
-              pdfPages.push({key:key,imgData:img,servicio:serv,fechaOk:!!key,jornadaExtraida:jornadaExtraida,ocrError:ocrFallido?(r.error||'OCR fallido'):null,esResumen:esResumen,resumenFilas:esResumen?resumenFilas:null});
+              var texto=r.texto||'';
+              var textoOverlay=r.overlay?nx15TextoDesdeOverlay(r.overlay):'';
+              /* Candidato a resumen: cabecera reconocible O encabezados + ≥2 fechas.
+                 NO depende de que el OCR escriba exactamente TUSSAM/Servicios asignados. */
+              var candidato=!ocrFallido && (typeof nx15EsCandidatoResumen==='function') && (nx15EsCandidatoResumen(texto) || (!!textoOverlay && nx15EsCandidatoResumen(textoOverlay)));
+              /* Analiza el resumen. Si es candidato con cabecera pero cero filas y la
+                 página era DIGITAL, se ejecuta OCR de tabla sobre la imagen disponible
+                 (aunque tcImagenOcrSiEscaneada devuelva null, se usa img). */
+              function nx15ResolverAnalisis(){
+                if(ocrFallido||!candidato) return Promise.resolve(null);
+                var textoRes=(textoOverlay&&nx15EsCandidatoResumen(textoOverlay))?textoOverlay:texto;
+                var a=nx15AnalizarResumen(textoRes);
+                if((a.filas&&a.filas.length)||a.error) return Promise.resolve(a);
+                if(textoSuficiente&&apiKeyPdf){
+                  document.getElementById('imp-prog-txt').textContent='Página '+n+' de '+total+' · leyendo tabla de servicios…';
+                  return tcImagenOcrSiEscaneada(page,'',img).then(function(imgOcr2){
+                    var fuente2=imgOcr2||img;
+                    return comprimirImagen(fuente2).then(function(comp2){
+                      return nx15OCRTablaServicios(comp2,apiKeyPdf).then(function(rr2){ return nx15AnalizarLecturaTabla(rr2); });
+                    });
+                  }).catch(function(){ return a; });
+                }
+                return Promise.resolve(a);
+              }
+              nx15ResolverAnalisis().then(function(analisis){
+              var esResumen=!!(analisis&&analisis.filas&&analisis.filas.length&&!analisis.error);
+              var resumenFilas=esResumen?analisis.filas:null;
+              /* Un candidato a resumen NUNCA se convierte en hoja individual, aunque su
+                 tabla resulte incompleta (key=null). */
+              var resumenFallido=!esResumen&&candidato;
+              var resumenError=(analisis&&analisis.error)?analisis.error:null;
+              var key=(ocrFallido||resumenFallido)?null:tcDetectFecha(texto);
+              var serv=(ocrFallido||esResumen||resumenFallido)?null:tcDetectServicio(texto);
+              var jornadaExtraida=(ocrFallido||esResumen||resumenFallido)?null:tcExtraerJornadaHojaRuta(texto,key?dias[key]:null);
+              pdfPages.push({key:key,imgData:img,servicio:serv,fechaOk:!!key,jornadaExtraida:jornadaExtraida,ocrError:ocrFallido?(r.error||'OCR fallido'):null,esResumen:esResumen,resumenFilas:esResumen?resumenFilas:null,resumenFallido:resumenFallido,resumenError:resumenError});
               var row=document.createElement('div'); row.className='tc-page-row';
               var thmb=document.createElement('img'); thmb.className='tc-page-thumb'; thmb.src=img;
               var inf=document.createElement('div'); inf.className='tc-page-info';
@@ -13655,6 +13698,8 @@ window.tcImpProcess=function(){
               } else if(esResumen){
                 var _nInc=0; for(var _ri=0;_ri<resumenFilas.length;_ri++){ if(resumenFilas[_ri].clase==='incidencia') _nInc++; }
                 inf.innerHTML='<div class="tc-page-num">Pág. '+n+'</div><div class="tc-page-date">📋 Resumen de servicios</div><div class="tc-page-st ok">'+resumenFilas.length+' día(s)'+(_nInc?(' · '+_nInc+' incidencia(s)'):'')+'</div>';
+              } else if(resumenFallido){
+                inf.innerHTML='<div class="tc-page-num">Pág. '+n+'</div><div class="tc-page-date">📋 Resumen de servicios</div><div class="tc-page-st warn">'+(resumenError?tcEsc(resumenError):'Sin filas reconocidas')+'. No se aplicará ningún día.</div>';
               } else {
                 var fLabel,stCls;
                 if(key){
@@ -13666,7 +13711,7 @@ window.tcImpProcess=function(){
               row.appendChild(thmb); row.appendChild(inf);
               document.getElementById('imp-pages').appendChild(row);
               procPag(n+1);
-            });
+              });
             });
           });
         });
@@ -13776,16 +13821,62 @@ window.tcImpConfirm=function(){
      las incidencias, reg.servicioIncidencia (relacionando con hoja previa si ya
      existía en esa fecha). Idempotente. Después se procesan las hojas de ruta. */
   var resumenPages=pdfPages.filter(function(p){return p.esResumen&&p.resumenFilas&&p.resumenFilas.length;});
+  var resumenFallidoPages=pdfPages.filter(function(p){return p.resumenFallido;});
+  var resumenErrorPages=pdfPages.filter(function(p){return p.resumenError;});
+  /* NEXUM-015R3R2 (corrección 2) — TODO O NADA REAL entre páginas: si CUALQUIER página
+     del PDF es un resumen con error de análisis (fila inválida, fecha inválida o
+     duplicado contradictorio) O un candidato a resumen fallido (cero filas válidas), se
+     ABORTA la importación completa ANTES de tocar «dias». No se aplican las páginas
+     válidas si otra página candidata del mismo PDF ha fallado, y un candidato a resumen
+     fallido NUNCA se convierte en hoja individual. */
+  if(resumenErrorPages.length){
+    var _pe=resumenErrorPages[0];
+    tcToast('⚠️ '+(_pe.resumenError||'Resumen no válido.')+' No se ha modificado ningún día.');
+    return;
+  }
+  if(resumenFallidoPages.length){
+    tcToast('⚠️ Se detectó un candidato a resumen de servicios sin ninguna fila válida. No se ha modificado ningún día. Revisa la calidad de la imagen o la clave OCR.space.');
+    return;
+  }
+  /* Reúne y valida TODAS las filas del resumen ANTES de tocar «dias». Exige una fila
+     válida por fecha y rechaza duplicados contradictorios entre páginas. */
+  var resumenFilasTodas=[], resumenPorFecha={}, resumenFechaError=null;
+  for(var _rp=0;_rp<resumenPages.length&&!resumenFechaError;_rp++){
+    var _fs=resumenPages[_rp].resumenFilas;
+    for(var _fi=0;_fi<_fs.length;_fi++){
+      var _f=_fs[_fi];
+      if(typeof nx15FilaAplicable==='function'&&!nx15FilaAplicable(_f)){ resumenFechaError=(_f&&_f.fecha)||'desconocida'; break; }
+      if(resumenPorFecha[_f.fecha]){
+        if(typeof nx15FilasIguales==='function'&&!nx15FilasIguales(resumenPorFecha[_f.fecha],_f)){ resumenFechaError=_f.fecha; break; }
+        continue; /* duplicado idéntico: idempotente */
+      }
+      resumenPorFecha[_f.fecha]=_f; resumenFilasTodas.push(_f);
+    }
+  }
+  if(resumenFechaError){
+    tcToast('⚠️ Resumen con fila inválida o contradictoria en '+resumenFechaError+'. No se ha modificado ningún día.');
+    return;
+  }
+  /* NEXUM-015R3R2 (corrección 3) — Fase de aplicación diferida. Todo lo que toca «dias»
+     vive dentro de _run(), que se ejecuta UNA sola vez (guardia _yaAplicado). Con un
+     resumen sólo se llama tras pulsar «Aplicar» en la confirmación; si el PDF sólo trae
+     hojas individuales, se llama directamente conservando el flujo existente. */
+  var _yaAplicado=false;
+  function _run(){
+    if(_yaAplicado) return; _yaAplicado=true;
   var resumenDias=0;
-  resumenPages.forEach(function(p){ p.resumenFilas.forEach(function(f){ if(typeof nx15AplicarResumenFila==='function'&&nx15AplicarResumenFila(f.fecha,f)) resumenDias++; }); });
+  resumenFilasTodas.forEach(function(f){ if(typeof nx15AplicarResumenFila==='function'&&nx15AplicarResumenFila(f.fecha,f)) resumenDias++; });
 
-  var validas=pdfPages.filter(function(p){return !p.esResumen&&p.fechaOk&&p.key&&tcCambioFechaValida(p.key);}); /* DEV-007R9 (tarea 5) — nunca un día con fecha imposible */
-  var skip=pdfPages.filter(function(p){return !p.esResumen;}).length-validas.length;
+  var validas=pdfPages.filter(function(p){return !p.esResumen&&!p.resumenFallido&&p.fechaOk&&p.key&&tcCambioFechaValida(p.key);}); /* DEV-007R9 (tarea 5) — nunca un día con fecha imposible; R3 — nunca un resumen fallido como hoja */
+  var skip=pdfPages.filter(function(p){return !p.esResumen&&!p.resumenFallido;}).length-validas.length;
   if(!validas.length){
     /* Solo resumen (sin hojas válidas): se guardan los cambios del resumen. */
     if(resumenDias>0){
       var _g0=saveDias(); tcRenderCal();
       if(_g0){ tcImpReset(); tcToast('✔ Resumen aplicado · '+resumenDias+' día(s) de servicios'); }
+    } else if(resumenFallidoPages.length){
+      /* Candidato a resumen detectado pero sin filas válidas: no se modifica ningún día. */
+      tcToast('⚠️ Se detectó un resumen de servicios pero no se reconoció ninguna fila válida. No se ha modificado ningún día. Revisa la calidad de la imagen o la clave OCR.space.');
     } else {
       tcToast('No hay páginas válidas para guardar');
     }
@@ -13856,6 +13947,21 @@ window.tcImpConfirm=function(){
       }
     });
   });
+  }
+  /* NEXUM-015R3R2 (corrección 3) — Confirmación REAL antes de importar un resumen PDF.
+     Si el PDF contiene algún resumen, se muestra tcModalPrompt y «dias»/almacenamiento
+     permanecen intactos hasta que el usuario pulse «Aplicar» (una sola ejecución vía la
+     guardia _yaAplicado). Si el PDF sólo trae hojas individuales, se conserva el flujo
+     existente SIN esta confirmación. El flujo por imagen mantiene su confirmación aparte. */
+  if(resumenPages.length && typeof tcModalPrompt==='function'){
+    var _msgResumen=(typeof nx15MsgResumenReconocido==='function')?nx15MsgResumenReconocido(resumenFilasTodas):(resumenFilasTodas.length+' día(s)');
+    tcModalPrompt('Confirmar resumen de servicios', _msgResumen, [
+      {label:'Aplicar', className:'btn-primary', onClick:_run},
+      {label:'Cancelar', className:'btn-secondary', onClick:function(){ tcToast('Resumen no aplicado. No se ha modificado ningún día.'); }}
+    ]);
+    return;
+  }
+  _run();
 };
 
 function tcDetectFecha(texto){
@@ -15348,36 +15454,353 @@ window.tcMsgAbrirDia=function(fecha){
     return true;
   }
 
-  /* ---------- Parser del resumen semanal «TUSSAM - Servicios asignados» ---------- */
-  function nx15ParseResumenSemanal(texto){
+  /* ---------- Parser del resumen semanal «TUSSAM - Servicios asignados» ----------
+     NEXUM-015R3R1 — Parser TOLERANTE + análisis TODO-O-NADA. Ya NO exige que fecha,
+     servicio, hora y lugar estén en una única línea, ni depende de que el OCR escriba
+     exactamente «TUSSAM»/«Servicios asignados». Estrategia:
+       · Recorta desde la cabecera (si aparece) y descarta lo posterior a «Hoja de Ruta».
+       · Usa cada fecha DD/MM/YYYY (o YYYY-MM-DD) como INICIO de un registro y reúne
+         todo lo que aparece hasta la siguiente fecha.
+       · Admite DES, VAC e INC sin hora ni lugar.
+       · En clase servicio el código es OBLIGATORIO; conserva su cero inicial y admite
+         alfanuméricos (0247, 2812, C310, C208, L27). Nunca toma el número del lugar.
+       · Valida fechas y horas reales; no inventa valores dudosos. */
+
+  /* Segmenta el texto por fecha. Devuelve [{fecha|null, rawFecha, seg}]. */
+  function nx15SegmentosPorFecha(texto){
     var t=String(texto||'');
-    if(!/Servicios\s+asignados/i.test(t)||!/TUSSAM/i.test(t)) return [];
-    var lineas=t.split(/\r?\n/);
-    var hi=-1;
-    for(var i=0;i<lineas.length;i++){ if(/Servicios\s+asignados/i.test(lineas[i])){ hi=i; break; } }
-    if(hi<0) return [];
-    var filas=[], vistas={};
-    for(var j=hi+1;j<lineas.length;j++){
-      var ln=(lineas[j]||'').trim();
-      if(!ln) continue;
-      if(/^TUSSAM/i.test(ln)&&!/Servicios\s+asignados/i.test(ln)) break; /* otra sección/hoja */
-      if(/Hoja\s+de\s+Ruta/i.test(ln)) break; /* comienza una hoja de ruta */
-      var m=ln.match(/(\d{4}-\d{2}-\d{2}|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\s+([A-Za-zÁÉÍÓÚÜÑ0-9]{2,12})\s*([0-2]?\d[:.,][0-5]\d)?\s*(.*)$/);
-      if(!m) continue;
-      var fecha=nx15NormFecha(m[1]); if(!fecha) continue;
-      if(vistas[fecha]) continue; /* una fila por fecha: la primera gana */
-      var codigo=(m[2]||'').toUpperCase();
-      var hora=m[3]?nx15NormHoraStr(m[3]):null;
-      var lugar=(m[4]||'').trim(); if(lugar==='') lugar=null; else if(lugar.length>200) lugar=lugar.slice(0,200);
-      var clase, servicio;
-      if(codigo==='INC'){ clase='incidencia'; servicio=null; }
-      else if(codigo==='DES'){ clase='descanso'; servicio=null; }
-      else if(codigo==='VAC'){ clase='vacaciones'; servicio=null; }
-      else { clase='servicio'; servicio=codigo; }
-      vistas[fecha]=true;
-      filas.push({fecha:fecha, clase:clase, servicio:servicio, horaInicio:hora, lugar:lugar});
+    var idx=t.search(/Servici\w*\s+asignad\w*/i);
+    var cuerpo=(idx>=0)?t.slice(idx):t;
+    var hr=cuerpo.search(/Hoja\s+de\s+Ruta/i);
+    if(hr>0) cuerpo=cuerpo.slice(0,hr);
+    var plano=cuerpo.replace(/[ \t\r\n\f\v]+/g,' ');
+    /* Requiere DOS separadores, de modo que una hora "15:31" nunca sea una fecha. */
+    var reFecha=/(\d{4}-\d{2}-\d{2})|(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})/g;
+    var pos=[], mm;
+    while((mm=reFecha.exec(plano))!==null){ pos.push({raw:mm[0], start:mm.index, end:mm.index+mm[0].length}); }
+    var out=[];
+    for(var i=0;i<pos.length;i++){
+      var fecha=nx15NormFecha(pos[i].raw.replace(/\./g,'/'));
+      var seg=plano.slice(pos[i].end, (i+1<pos.length)?pos[i+1].start:plano.length);
+      out.push({fecha:fecha, rawFecha:pos[i].raw, seg:seg});
     }
-    return filas;
+    return out;
+  }
+
+  /* Interpreta el contenido entre una fecha y la siguiente. Devuelve la fila
+     {fecha,clase,servicio,horaInicio,lugar} o null si es inválida/ambigua. */
+  function nx15FilaDeSegmento(fecha, seg){
+    var s=String(seg||'');
+    /* 1) Marca de clase sin servicio: DES/VAC/INC como palabra completa. */
+    var cls=s.match(/\b(DES|VAC|INC)\b/i);
+    if(cls){
+      var c=cls[1].toUpperCase();
+      var clase=(c==='INC')?'incidencia':(c==='DES'?'descanso':'vacaciones');
+      return {fecha:fecha, clase:clase, servicio:null, horaInicio:null, lugar:null};
+    }
+    /* 2) Servicio ordinario. Columnas: Servicio | Hora inicio | Lugar.
+          - servicio (OBLIGATORIO): código 2–12, con 0–2 letras iniciales + 2–4 dígitos
+            y letra final opcional (0247, 2812, C310, C208, L27). Excluye topónimos con
+            3+ letras iniciales (ARC460, PAS918…).
+          - hora (opcional): HH:MM · lugar (opcional): token con letras tras la hora. */
+    var toks=s.trim().split(/\s+/).filter(Boolean);
+    var esHora=function(x){ return /^[0-2]?\d[:.,][0-5]\d$/.test(x); };
+    var esCodigo=function(x){ return /^[A-Za-z]{0,2}\d{2,4}[A-Za-z]?$/.test(x) && x.length>=2 && x.length<=12; };
+    var i, idxHora=-1;
+    for(i=0;i<toks.length;i++){ if(esHora(toks[i])){ idxHora=i; break; } }
+    var hora=(idxHora>=0)?nx15NormHoraStr(toks[idxHora]):null;
+    /* servicio: primer código válido situado ANTES de la hora (o en cualquier
+       posición si no hay hora). */
+    var servicio=null, idxServ=-1;
+    for(i=0;i<toks.length;i++){
+      if(idxHora>=0 && i>=idxHora) break;
+      if(i===idxHora) continue;
+      if(esCodigo(toks[i])){ servicio=toks[i]; idxServ=i; break; }
+    }
+    if(servicio===null && idxHora<0){
+      for(i=0;i<toks.length;i++){ if(esCodigo(toks[i])){ servicio=toks[i]; idxServ=i; break; } }
+    }
+    /* lugar: primer token con letras tras la hora (o tras el servicio si no hay hora). */
+    var lugar=null, desde=(idxHora>=0)?idxHora+1:((idxServ>=0)?idxServ+1:0);
+    for(i=desde;i<toks.length;i++){
+      if(i===idxHora||i===idxServ) continue;
+      if(esHora(toks[i])) continue;
+      if(/[A-Za-zÁÉÍÓÚÜÑ]/.test(toks[i])){ lugar=toks[i]; break; }
+    }
+    if(lugar&&lugar.length>200) lugar=lugar.slice(0,200);
+    /* Código de servicio OBLIGATORIO: si falta o es ambiguo → fila inválida. */
+    if(servicio===null) return null;
+    return {fecha:fecha, clase:'servicio', servicio:servicio, horaInicio:hora, lugar:lugar};
+  }
+
+  function nx15FilasIguales(a,b){
+    if(!a||!b) return false;
+    return a.clase===b.clase &&
+      (a.servicio||null)===(b.servicio||null) &&
+      (a.horaInicio||null)===(b.horaInicio||null) &&
+      (a.lugar||null)===(b.lugar||null);
+  }
+
+  /* Cuenta fechas únicas VÁLIDAS presentes en el texto. */
+  function nx15ContarFechasValidas(texto){
+    var segs=nx15SegmentosPorFecha(texto), set={}, n=0;
+    for(var i=0;i<segs.length;i++){ var f=segs[i].fecha; if(f&&!set[f]){ set[f]=1; n++; } }
+    return n;
+  }
+
+  /* ¿El texto es CANDIDATO a resumen? Cabecera reconocible O encabezados
+     Date/Fecha + Servicio + Hora/Lugar con al menos dos fechas válidas. NO depende de
+     que el OCR escriba exactamente «TUSSAM»/«Servicios asignados». */
+  function nx15EsCandidatoResumen(texto){
+    var t=String(texto||'');
+    if(!t) return false;
+    if(/Servici\w*\s+asignad\w*/i.test(t)) return true;
+    var enc=(/\b(Date|Fecha)\b/i.test(t)) && (/Servici/i.test(t)) && (/\b(Hora|Lugar)\b/i.test(t));
+    if(enc && nx15ContarFechasValidas(t)>=2) return true;
+    return false;
+  }
+
+  /* Análisis TODO-O-NADA. Cuenta fechas únicas, exige una fila válida por fecha y
+     rechaza duplicados contradictorios. Si UNA sola fila es inválida/ambigua devuelve
+     error con la fecha afectada y filas=[]. No omite filas silenciosamente. */
+  function nx15AnalizarResumen(texto){
+    var res={filas:[], error:null, fechaError:null, fechasDetectadas:0, candidato:nx15EsCandidatoResumen(texto)};
+    var segs=nx15SegmentosPorFecha(texto);
+    if(!segs.length) return res;
+    var porFecha={}, orden=[], vistas=[];
+    /* NEXUM-015R3R2 (corrección 1) — Se cuentan las fechas DETECTADAS a medida que se
+       analizan, ANTES de validar la fila, y también cuando el análisis termina en error.
+       Así nx15AnalizarLecturaTabla puede detectar que una lectura vio una fecha (válida,
+       inválida o ambigua) que la otra omitió, y nunca ocultar una fila problemática. */
+    var _verFecha=function(f){ if(f && vistas.indexOf(f)<0){ vistas.push(f); } res.fechasDetectadas=vistas.length; };
+    for(var i=0;i<segs.length;i++){
+      var sg=segs[i];
+      if(!sg.fecha){ res.fechasDetectadas=vistas.length+1; /* fecha adicional ambigua/ inválida */ res.error='Fecha no válida ("'+sg.rawFecha+'").'; res.fechaError=sg.rawFecha; res.filas=[]; return res; }
+      _verFecha(sg.fecha);
+      var fila=nx15FilaDeSegmento(sg.fecha, sg.seg);
+      if(!fila){ res.error='Fila inválida o ambigua en '+sg.fecha+' (falta el código de servicio u otro dato obligatorio).'; res.fechaError=sg.fecha; res.filas=[]; return res; }
+      if(porFecha[sg.fecha]){
+        if(!nx15FilasIguales(porFecha[sg.fecha], fila)){ res.error='Duplicado contradictorio en '+sg.fecha+'.'; res.fechaError=sg.fecha; res.filas=[]; return res; }
+        continue; /* duplicado idéntico: idempotente */
+      }
+      porFecha[sg.fecha]=fila; orden.push(sg.fecha);
+    }
+    res.fechasDetectadas=vistas.length;
+    res.filas=orden.map(function(f){ return porFecha[f]; });
+    return res;
+  }
+
+  /* Valida una fila SIN mutar «dias» (para el chequeo previo todo-o-nada). */
+  function nx15FilaAplicable(fila){
+    if(!fila||!fila.fecha) return false;
+    if(typeof tcCambioFechaValida!=='function'||!tcCambioFechaValida(fila.fecha)) return false;
+    var asg={version:1, clase:fila.clase,
+      servicio:(fila.servicio!=null?String(fila.servicio).slice(0,120):null),
+      horaInicio:(fila.horaInicio!=null?fila.horaInicio:null),
+      lugar:(fila.lugar!=null?String(fila.lugar).slice(0,200):null),
+      fuente:'resumen_servicios'};
+    return nx15ValidarAsignacion(asg);
+  }
+
+  /* Wrapper de compatibilidad: filas limpias sólo si el texto es candidato y el
+     análisis no tiene error. Se usa para detección/recuento ligeros. */
+  function nx15ParseResumenSemanal(texto){
+    if(!nx15EsCandidatoResumen(texto)) return [];
+    var a=nx15AnalizarResumen(texto);
+    return a.error?[]:a.filas;
+  }
+
+  /* ---------- NEXUM-015R3 — Ruta OCR de TABLA específica para «Servicios asignados» ----------
+     Ruta INDEPENDIENTE que reutiliza la misma clave OCR.space, sin tocar el OCR de
+     recaudación, liquidaciones ni hojas de ruta (leerTicketConOCRSpace queda intacto).
+     Solicita reconocimiento de tabla y el overlay de coordenadas. */
+  function nx15OCRTablaServicios(imagenBase64, apiKey){
+    var URL_OCR='https://api.ocr.space/parse/image';
+    var base64final=(String(imagenBase64).indexOf('data:')===0)?imagenBase64:('data:image/jpeg;base64,'+imagenBase64);
+    var fd=new FormData();
+    fd.append('apikey',            apiKey);
+    fd.append('language',          'spa');
+    fd.append('isTable',           'true');
+    fd.append('isOverlayRequired', 'true');
+    fd.append('detectOrientation', 'true');
+    fd.append('scale',             'true');
+    fd.append('OCREngine',         '2');
+    fd.append('base64Image',       base64final);
+    return fetch(URL_OCR,{method:'POST',body:fd}).then(function(resp){
+      return resp.text().then(function(raw){
+        if(resp.status===401) throw new Error('API Key inválida o no autorizada (HTTP 401).');
+        if(resp.status===403) throw new Error('Acceso denegado. Revisa la API Key (HTTP 403).');
+        if(resp.status===429) throw new Error('Límite de peticiones alcanzado (HTTP 429).');
+        if(resp.status>=500)  throw new Error('Error interno del servidor OCR.space (HTTP '+resp.status+').');
+        if(!resp.ok)          throw new Error('Error HTTP '+resp.status+': '+raw.slice(0,200));
+        var datos; try{ datos=JSON.parse(raw); }catch(e){ throw new Error('La respuesta OCR no es JSON válido.'); }
+        if(datos.IsErroredOnProcessing) throw new Error('OCR.space no pudo procesar la imagen: '+JSON.stringify(datos.ErrorMessage));
+        var pr=datos.ParsedResults&&datos.ParsedResults[0];
+        return {texto:(pr&&pr.ParsedText)||'', overlay:(pr&&pr.TextOverlay)||null};
+      });
+    });
+  }
+
+  /* Reconstruye texto por FILAS a partir del overlay: agrupa las palabras por su
+     posición vertical (Top) y las ordena por posición horizontal (Left). Esto
+     recompone las columnas Fecha | Servicio | Hora | Lugar aunque el OCR las haya
+     separado en distintas «líneas» internas. Devuelve el texto fila-a-fila. */
+  function nx15TextoDesdeOverlay(overlay){
+    if(!overlay||!overlay.Lines||!overlay.Lines.length) return '';
+    var palabras=[];
+    for(var li=0;li<overlay.Lines.length;li++){
+      var ws=overlay.Lines[li].Words; if(!ws) continue;
+      for(var wi=0;wi<ws.length;wi++){
+        var w=ws[wi]; var txt=(w.WordText!=null)?String(w.WordText):'';
+        if(!txt) continue;
+        palabras.push({t:txt, left:(+w.Left||0), top:(+w.Top||0), h:(+w.Height||0)});
+      }
+    }
+    if(!palabras.length) return '';
+    palabras.sort(function(a,b){ return (a.top-b.top)||(a.left-b.left); });
+    /* Tolerancia vertical = 60% de la altura mediana de palabra (mínimo 6px). */
+    var hs=palabras.map(function(p){return p.h;}).filter(function(h){return h>0;}).sort(function(a,b){return a-b;});
+    var hMed=hs.length?hs[Math.floor(hs.length/2)]:12;
+    var tol=Math.max(6, hMed*0.6);
+    var filas=[], actual=null, base=null;
+    for(var i=0;i<palabras.length;i++){
+      var p=palabras[i];
+      if(actual===null||Math.abs(p.top-base)>tol){ actual=[]; filas.push(actual); base=p.top; }
+      actual.push(p);
+    }
+    var lineas=filas.map(function(row){
+      row.sort(function(a,b){ return a.left-b.left; });
+      return row.map(function(x){ return x.t; }).join(' ');
+    });
+    return lineas.join('\n');
+  }
+
+  /* Lee un resumen de servicios de una imagen (dataURL/base64) por la ruta de tabla
+     y devuelve Promise<filas>. Primero reconstruye por overlay; si no hay filas,
+     usa el texto plano del OCR. Ambas rutas usan el MISMO parser tolerante. */
+  /* Elige el MEJOR análisis entre el texto reconstruido por overlay (fila-a-fila) y
+     el texto plano del OCR. Una lectura limpia (con filas y sin error) gana; si no,
+     se conserva la de más fechas detectadas (para poder surtir un error concreto). */
+  function nx15AnalizarLecturaTabla(res){
+    /* NEXUM-015R3R2 (corrección 1) — Se analizan SIEMPRE las dos fuentes no vacías
+       (overlay reconstruido y ParsedText del OCR) y NO se devuelve la primera lectura
+       válida. Entre dos lecturas válidas y compatibles se elige la MÁS COMPLETA (más
+       fechas/filas); si comparten una fecha con datos contradictorios → error y cero
+       filas; y si cualquiera de las lecturas contiene una fecha/fila problemática
+       (inválida, ambigua, duplicada o contradictoria) que la otra omitió, se rechaza
+       todo. Nunca se oculta una fila problemática escogiendo la lectura más corta. */
+    var textoOv=(res&&res.overlay)?nx15TextoDesdeOverlay(res.overlay):'';
+    var textoRaw=(res&&res.texto)||'';
+    var cands=[];
+    if(textoOv) cands.push(nx15AnalizarResumen(textoOv));
+    if(textoRaw) cands.push(nx15AnalizarResumen(textoRaw));
+    var vacio={filas:[], error:null, fechaError:null, fechasDetectadas:0, candidato:false};
+    if(!cands.length) return vacio;
+
+    /* 1) Cualquier lectura con error problemático manda: se devuelve el error (cero
+       filas), eligiendo el que MÁS fechas detectó para surtir el aviso más completo.
+       Así una séptima fecha inválida en una fuente nunca se oculta usando la otra. */
+    var conError=cands.filter(function(a){ return !!a.error; });
+    if(conError.length){
+      var peor=conError[0];
+      for(var e=1;e<conError.length;e++){ if(conError[e].fechasDetectadas>peor.fechasDetectadas) peor=conError[e]; }
+      return {filas:[], error:peor.error, fechaError:peor.fechaError, fechasDetectadas:peor.fechasDetectadas, candidato:peor.candidato};
+    }
+
+    /* 2) Todas las lecturas son válidas (sin error). Con una sola, se devuelve. */
+    if(cands.length===1) return cands[0];
+
+    /* 3) Dos lecturas válidas: contradicción en cualquier fecha común → error, cero filas. */
+    var A=cands[0], B=cands[1];
+    var mapA={}; A.filas.forEach(function(f){ mapA[f.fecha]=f; });
+    var mapB={}; B.filas.forEach(function(f){ mapB[f.fecha]=f; });
+    for(var k in mapA){
+      if(mapB[k] && !nx15FilasIguales(mapA[k], mapB[k])){
+        return {filas:[], error:'Lecturas contradictorias en '+k+' (overlay y texto OCR no coinciden).', fechaError:k, fechasDetectadas:Math.max(A.fechasDetectadas,B.fechasDetectadas), candidato:true};
+      }
+    }
+    /* 4) NEXUM-015R3R3 — Decisión EXPLÍCITA y DETERMINISTA por anidamiento de los
+       conjuntos de fechas (ya comprobado que no hay contradicción en las fechas
+       comunes). Se ELIMINA por completo la antigua selección «por más filas»: si ningún
+       conjunto contiene al otro, las lecturas son incompatibles y se rechaza TODO (cero
+       filas, sin modificar «dias» ni llamar a saveDias). El conjunto vacío está contenido
+       en cualquier otro, de modo que una fuente vacía frente a otra válida NO es
+       incompatibilidad. */
+    var supAB=Object.keys(mapB).every(function(k){ return !!mapA[k]; }); /* A contiene todas las fechas de B */
+    var supBA=Object.keys(mapA).every(function(k){ return !!mapB[k]; }); /* B contiene todas las fechas de A */
+    if(supAB && supBA) return A; /* mismos conjuntos → overlay A (nunca B en el empate) */
+    if(supAB) return A;          /* A es superconjunto (estricto) de B */
+    if(supBA) return B;          /* B es superconjunto (estricto) de A */
+    /* Conjuntos NO anidados: cada fuente reconoce alguna fecha que la otra omite. */
+    var _union={}; Object.keys(mapA).forEach(function(k){ _union[k]=1; }); Object.keys(mapB).forEach(function(k){ _union[k]=1; });
+    return {filas:[], error:'Lecturas incompletas o incompatibles: overlay y texto OCR reconocen fechas diferentes.', fechaError:null, fechasDetectadas:Object.keys(_union).length, candidato:!!(A.candidato||B.candidato)};
+  }
+  /* Lee un resumen de una imagen por la ruta de tabla. Devuelve Promise<análisis>. */
+  function nx15LeerResumenServicios(imagenBase64, apiKey){
+    return nx15OCRTablaServicios(imagenBase64, apiKey).then(function(res){
+      return nx15AnalizarLecturaTabla(res);
+    });
+  }
+
+  /* Mensaje de interfaz exigido: «Resumen reconocido: N días · N descansos · N
+     servicio(s) · N incidencia(s)». */
+  function nx15ContarResumen(filas){
+    var c={total:(filas?filas.length:0), des:0, vac:0, serv:0, inc:0};
+    (filas||[]).forEach(function(f){
+      if(f.clase==='descanso') c.des++;
+      else if(f.clase==='vacaciones') c.vac++;
+      else if(f.clase==='incidencia') c.inc++;
+      else c.serv++;
+    });
+    return c;
+  }
+  function nx15MsgResumenReconocido(filas){
+    var c=nx15ContarResumen(filas);
+    var s='Resumen reconocido: '
+      +c.total+' '+(c.total===1?'día':'días')+' · '
+      +c.des+' '+(c.des===1?'descanso':'descansos')+' · '
+      +c.serv+' '+(c.serv===1?'servicio':'servicios')+' · '
+      +c.inc+' '+(c.inc===1?'incidencia':'incidencias');
+    if(c.vac>0) s+=' · '+c.vac+' '+(c.vac===1?'vacación':'vacaciones');
+    return s;
+  }
+  /* Aplica un análisis de resumen con TODO-O-NADA y CONFIRMACIÓN previa. Recibe el
+     objeto de nx15AnalizarResumen/nx15AnalizarLecturaTabla. Idempotente. Cero filas o
+     una sola fila inválida/ambigua → cero modificaciones (no interpreta la primera
+     fecha como hoja individual). */
+  function nx15AplicarResumenConfirmado(analisis){
+    var a=analisis||{};
+    if(a.error){ tcToast('⚠️ '+a.error+' No se ha modificado ningún día.'); return; }
+    var filas=a.filas||[];
+    if(!filas.length){ tcToast('⚠️ No se reconoció ninguna fila del resumen de servicios. No se ha modificado ningún día.'); return; }
+    /* Chequeo previo: TODAS las filas deben ser aplicables antes de tocar «dias». */
+    for(var i=0;i<filas.length;i++){
+      if(!nx15FilaAplicable(filas[i])){
+        tcToast('⚠️ Fila inválida en '+((filas[i]&&filas[i].fecha)?filas[i].fecha:'fecha desconocida')+'. No se ha modificado ningún día.');
+        return;
+      }
+    }
+    var msg=nx15MsgResumenReconocido(filas);
+    var aplicar=function(){
+      var n=0;
+      filas.forEach(function(f){ if(nx15AplicarResumenFila(f.fecha,f)) n++; });
+      if(n===filas.length && saveDias()){
+        tcRenderCal();
+        try{ if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }catch(e){}
+        tcToast('✔ Resumen aplicado · '+n+' día(s)');
+      } else {
+        tcToast('⚠️ No se pudo guardar el resumen. No se ha modificado ningún día.');
+      }
+    };
+    /* Mostrar confirmación antes de guardar. */
+    if(typeof tcModalPrompt==='function'){
+      tcModalPrompt('Confirmar resumen de servicios', msg+'. ¿Aplicar al calendario?',[
+        {label:'Aplicar', className:'btn-primary', onClick:aplicar},
+        {label:'Cancelar', className:'btn-secondary', onClick:function(){ tcToast('Resumen no aplicado.'); }}
+      ]);
+    } else {
+      tcToast(msg); aplicar();
+    }
   }
 
   /* Aplica una fila del resumen a un día. NO toca reg.turno. No guarda (el
@@ -15590,27 +16013,50 @@ window.tcMsgAbrirDia=function(fecha){
   function nx15ImportarImagen(input){ var file=input&&input.files&&input.files[0]; if(!file) return; input.value=''; nx15ProcesarImagen(file,null); }
   function nx15ProcesarImagen(file,fechaForzada){
     var apiKey=(typeof obtenerApiKeyOCR==='function')?obtenerApiKeyOCR():null;
+    /* NEXUM-015R3R1 — fechaForzada!=null significa que la imagen se abrió desde la
+       tarjeta de un día concreto → flujo de HOJA individual. Los botones generales
+       Imagen/Fotografía (fechaForzada==null) NO asumen resumen: clasifican primero. */
+    var desdeTarjeta=(fechaForzada!=null);
     tcToast('🔎 Procesando imagen…');
     var reader=new FileReader();
     reader.onload=function(ev){
       var dataUrl=ev.target.result;
       comprimirImagen(dataUrl).then(function(comp){
-        function seguir(texto){
+        if(!apiKey){
+          /* El documento es una imagen: sin clave OCR no puede leerse. */
+          tcToast(desdeTarjeta
+            ? '⚠️ Configura la clave OCR.space en Ajustes para leer la imagen. La incidencia sigue pendiente.'
+            : 'Este documento es una imagen. Configura la clave OCR.space para leerlo.');
+          return;
+        }
+        /* Flujo de HOJA individual usando el texto OCR ya obtenido. */
+        function flujoHoja(texto, forzarFecha, pendienteMsg){
           texto=texto||'';
-          var filas=nx15ParseResumenSemanal(texto);
-          if(filas&&filas.length){ var n=0; filas.forEach(function(f){ if(nx15AplicarResumenFila(f.fecha,f)) n++; }); if(saveDias()){ tcRenderCal(); tcToast('✔ Resumen aplicado · '+n+' día(s)'); } return; }
-          /* NEXUM-015R1 — Sin texto OCR útil NO se guarda ninguna hoja (no se llama a
-             tcDiaHojaGuardarEn con texto vacío). No se toca imgData, jornada ni el
-             estado de la incidencia: sigue pendiente con aviso claro. */
-          if(!texto.trim()){ tcToast('⚠️ No se pudo leer una hoja válida de la imagen. La incidencia sigue pendiente.'); return; }
-          var fecha=fechaForzada||((typeof tcDetectFecha==='function')?tcDetectFecha(texto):null);
+          if(!texto.trim()){ tcToast(pendienteMsg||'⚠️ No se pudo leer una hoja válida de la imagen.'); return; }
+          var fecha=forzarFecha||((typeof tcDetectFecha==='function')?tcDetectFecha(texto):null);
           if(!fecha){ tcToast('⚠️ No se detectó la fecha en la imagen.'); return; }
           tcDiaHojaGuardarEn(fecha,comp,comp,texto);
         }
-        /* NEXUM-015R1 — Falta la clave OCR: no se guarda hoja con texto vacío; la
-           incidencia se conserva pendiente y se avisa. */
-        if(!apiKey){ tcToast('⚠️ Configura la clave OCR.space en Ajustes para leer la imagen. La incidencia sigue pendiente.'); return; }
-        leerTicketConOCRSpace(comp,apiKey).then(function(texto){ seguir(texto||''); }).catch(function(e){ tcToast('⚠️ OCR: '+((e&&e.message)?e.message:'no se pudo leer la imagen')+'. La incidencia sigue pendiente.'); });
+        if(desdeTarjeta){
+          /* Imagen de una incidencia concreta: hoja con fecha forzada (OCR general). */
+          leerTicketConOCRSpace(comp,apiKey).then(function(texto){ flujoHoja(texto,fechaForzada,'⚠️ No se pudo leer una hoja válida de la imagen. La incidencia sigue pendiente.'); })
+            .catch(function(e){ tcToast('⚠️ OCR: '+((e&&e.message)?e.message:'no se pudo leer la imagen')+'. La incidencia sigue pendiente.'); });
+          return;
+        }
+        /* Botones generales: el documento puede ser un RESUMEN o una HOJA individual.
+           Una sola lectura OCR de tabla; con su ParsedText/overlay se clasifica. */
+        nx15OCRTablaServicios(comp,apiKey).then(function(res){
+          var textoOv=res.overlay?nx15TextoDesdeOverlay(res.overlay):'';
+          var textoRaw=res.texto||'';
+          var candidato=nx15EsCandidatoResumen(textoRaw)||(!!textoOv&&nx15EsCandidatoResumen(textoOv));
+          if(candidato){
+            /* Resumen verificable → recuento + confirmación + todo-o-nada. */
+            nx15AplicarResumenConfirmado(nx15AnalizarLecturaTabla(res));
+          } else {
+            /* No es resumen → hoja individual con el texto OCR ya obtenido. */
+            flujoHoja(textoRaw,null,'⚠️ No se pudo leer una hoja válida de la imagen.');
+          }
+        }).catch(function(e){ tcToast('⚠️ OCR: '+((e&&e.message)?e.message:'no se pudo leer la imagen')+'. No se ha modificado ningún día.'); });
       }).catch(function(){ tcToast('⚠️ No se pudo procesar la imagen.'); });
     };
     reader.readAsDataURL(file);
@@ -15707,7 +16153,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-015R2';
+    var VC_VERSION_ACTUAL = 'NEXUM-015R3R3';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
 
