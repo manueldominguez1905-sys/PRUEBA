@@ -823,7 +823,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-015R3R3R3</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-016R1</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -924,6 +924,25 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
           <div id="tcPerfilFechaError" class="perfil-error" aria-live="polite"></div>
         </div>
 
+        <!-- NEXUM-016 — Contrato activo. El selector empieza en «Selecciona…» (también
+             para perfiles heredados). «Eventual» revela la fecha prevista de
+             finalización; «Indefinido» la oculta y se guarda como null. -->
+        <div class="perfil-campo" id="perfilCampoTipoContrato">
+          <label for="tcPerfilTipoContrato">Tipo de contrato</label>
+          <select id="tcPerfilTipoContrato" aria-describedby="tcPerfilTipoContratoError">
+            <option value="">Selecciona…</option>
+            <option value="indefinido">Indefinido</option>
+            <option value="eventual">Eventual</option>
+          </select>
+          <div id="tcPerfilTipoContratoError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <div class="perfil-campo" id="perfilCampoFinContrato" style="display:none;">
+          <label for="tcPerfilFinContrato">Fecha prevista de finalización</label>
+          <input type="date" id="tcPerfilFinContrato" aria-describedby="tcPerfilFinContratoError" />
+          <div id="tcPerfilFinContratoError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
         <div class="perfil-botones">
           <button type="submit" id="tcPerfilGuardarBtn" class="btn btn-primary">Guardar perfil</button>
           <button type="button" id="tcPerfilDespuesBtn" class="btn btn-secondary">Configurar después</button>
@@ -990,8 +1009,8 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
   <div id="modalConceptosAnuales" class="perfil-overlay" data-abierto="0" role="dialog" aria-modal="true" aria-labelledby="caTitulo" aria-describedby="caIntro">
     <div class="perfil-box">
       <button type="button" id="caXBtn" class="perfil-cerrar-x" aria-label="Cerrar conceptos anuales"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-      <h2 id="caTitulo" class="perfil-titulo"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4M9 14l2 2 4-4"/></svg>Conceptos anuales</h2>
-      <p id="caIntro" class="perfil-intro">Configura las opciones económicas anuales por año: DGA (se cobra una sola vez en agosto) y Bonobús familiar (se cobra una sola vez en julio). Los importes proceden exclusivamente de la tabla salarial activa. Nada se activa ni se guarda automáticamente.</p>
+      <h2 id="caTitulo" class="perfil-titulo"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4M9 14l2 2 4-4"/></svg>Condiciones laborales del año</h2>
+      <p id="caIntro" class="perfil-intro">Configura las condiciones laborales por año: DGA (se cobra una sola vez en agosto), Bonobús familiar (se cobra una sola vez en julio) y el régimen de titularidad (corrido o partido). Los importes proceden exclusivamente de la tabla salarial activa. Nada se activa ni se guarda automáticamente.</p>
       <div id="caAvisoCorrupto" class="perfil-aviso-corrupto" role="alert" style="display:none;"></div>
 
       <form id="conceptosAnualesForm" novalidate>
@@ -1021,6 +1040,18 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
             <option value="si">Sí, opción económica</option>
           </select>
           <div id="caBonobusError" class="perfil-error" aria-live="polite"></div>
+        </div>
+
+        <!-- NEXUM-016 — Régimen de titularidad anual (corrido/partido). En esta
+             versión SOLO se almacena; todavía no altera ningún importe. -->
+        <div class="perfil-campo" id="caCampoRegimen">
+          <label for="caRegimen">Régimen titular</label>
+          <select id="caRegimen" aria-describedby="caRegimenError">
+            <option value="">Sin indicar</option>
+            <option value="corrido">Corrido</option>
+            <option value="partido">Partido</option>
+          </select>
+          <div id="caRegimenError" class="perfil-error" aria-live="polite"></div>
         </div>
 
         <div class="perfil-botones">
@@ -2069,7 +2100,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <div class="nexo-mas-lista">
         <button type="button" class="nexo-mas-item" id="nexoMasPerfil"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg></span><span class="nexo-mas-tx">Perfil laboral</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
         <button type="button" class="nexo-mas-item" id="nexoMasDescuentos"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 9.2A4 4 0 0 0 9 12a4 4 0 0 0 6.5 2.8"/><path d="M7 11h5.5M7 13h4.5"/></svg></span><span class="nexo-mas-tx">Descuentos e IRPF</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
-        <button type="button" class="nexo-mas-item" id="nexoMasConceptosAnuales"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4M9 14l2 2 4-4"/></svg></span><span class="nexo-mas-tx">Conceptos anuales</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+        <button type="button" class="nexo-mas-item" id="nexoMasConceptosAnuales"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4M9 14l2 2 4-4"/></svg></span><span class="nexo-mas-tx">Condiciones laborales del año</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
         <button type="button" class="nexo-mas-item" id="nexoMasMensajes"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 4.5 1.8 5.6 2 5.8H4c.2-.2 2-1.3 2-5.8z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span><span class="nexo-mas-tx">Centro de mensajes</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
       </div>
 
@@ -3637,9 +3668,11 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     }
   } catch (e) { tablaSalarialActivaParaGuardar = null; }
 
-  // DEV-010R5 — Perfil laboral. Casos EXACTOS:
+  // DEV-010R5 / NEXUM-016 — Perfil laboral. Casos EXACTOS:
   //   · Lector ausente (tcPerfilLeer no es función) → error y se ABORTA.
-  //   · estado 'ok' con perfil válido → objeto actual con version:1.
+  //   · estado 'ok' con perfil válido → objeto NORMALIZADO a version:2 (incluye
+  //     tipoContrato y fechaFinContrato; un perfil v1 heredado se exporta ya
+  //     normalizado con ambos campos a null, sin perder datos).
   //   · estado 'sinPerfil' → perfilLaboral:null.
   //   · 'corrupto', estado inesperado, resultado inválido o excepción → se ABORTA.
   // No se convierte un perfil dañado en null en silencio. Siempre presente en el
@@ -3653,10 +3686,12 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     var _plRead = window.tcPerfilLeer();
     if (_plRead && _plRead.estado === "ok" && _plRead.perfil) {
       perfilLaboralParaGuardar = {
-        version: 1,
+        version: 2,
         nombre: _plRead.perfil.nombre,
         categoriaId: _plRead.perfil.categoriaId,
-        fechaAntiguedad: _plRead.perfil.fechaAntiguedad
+        fechaAntiguedad: _plRead.perfil.fechaAntiguedad,
+        tipoContrato: (_plRead.perfil.tipoContrato == null ? null : _plRead.perfil.tipoContrato),
+        fechaFinContrato: (_plRead.perfil.fechaFinContrato == null ? null : _plRead.perfil.fechaFinContrato)
       };
     } else if (_plRead && _plRead.estado === "sinPerfil") {
       perfilLaboralParaGuardar = null;
@@ -3705,10 +3740,12 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     return false;
   }
 
-  // NEXUM-009 / NEXUM-010 — Conceptos anuales (DGA + Bonobús familiar). Casos EXACTOS:
+  // NEXUM-009 / NEXUM-010 / NEXUM-016 — Condiciones laborales del año (DGA + Bonobús
+  // familiar + régimen de titularidad). Casos EXACTOS:
   //   · Lector ausente (caLeer no es función) → error y se ABORTA (sin Blob ni descarga).
   //   · estado 'ok' con configuración válida → objeto completo {version:1,anios:{…}}
-  //     ya normalizado por caValidar, con dga y bonobusEconomico en cada año.
+  //     ya normalizado por caValidar, con dga, bonobusEconomico y regimenTurno en cada
+  //     año (una copia sin regimenTurno se normaliza a null; no se pierde dato alguno).
   //   · estado 'sinConfig' → conceptosAnuales:null.
   //   · 'corrupto', estado inesperado o excepción → se ABORTA. No se convierte una
   //     configuración dañada en null en silencio. Siempre presente en el backup.
@@ -3875,12 +3912,14 @@ function importarDatos(archivo) {
           return;
         }
       }
-      // DEV-010R5 — Perfil laboral. Solo se procesa si el backup DECLARA la
-      // propiedad (los backups antiguos que no la traen no tocan el perfil
-      // actual). null → eliminar el perfil al restaurar. Objeto → debe ser un
-      // perfil válido (categoría del catálogo cerrado, fecha real y no futura,
-      // sin propiedades desconocidas); si no lo es, se rechaza TODO el backup
-      // aquí, antes de tocar nada.
+      // DEV-010R5 / NEXUM-016 — Perfil laboral. Solo se procesa si el backup DECLARA
+      // la propiedad (los backups antiguos que no la traen no tocan el perfil
+      // actual). null → eliminar el perfil al restaurar. Objeto → tcPerfilValidar
+      // acepta tanto un perfil v1 heredado (que NORMALIZA a v2 con contrato en null,
+      // sin perder datos) como un perfil v2 exacto (categoría del catálogo cerrado,
+      // fecha real y no futura, tipo/fecha de contrato coherentes, sin propiedades
+      // desconocidas); si no lo es, se rechaza TODO el backup aquí, antes de tocar
+      // nada. Lo que se restaura es SIEMPRE el objeto v2 normalizado.
       var perfilSolicitado = Object.prototype.hasOwnProperty.call(datos, "perfilLaboral");
       var perfilEsNull = perfilSolicitado && datos.perfilLaboral === null;
       var perfilNuevoValidado = null;
@@ -3915,14 +3954,16 @@ function importarDatos(archivo) {
         }
         descNuevoValidado = _cdVal.config;
       }
-      // NEXUM-009 / NEXUM-010 — Conceptos anuales (DGA + Bonobús familiar). Solo se
-      // procesa si el backup DECLARA la propiedad (los backups antiguos que NO la
-      // traen conservan la config actual). null → eliminar la clave al restaurar.
-      // Objeto → debe ser una configuración válida (version:1, anios como objeto,
-      // años "YYYY", dga B/C/D/null y bonobusEconomico booleano —ausente en backups
-      // antiguos {dga} se NORMALIZA a false—, sin propiedades desconocidas); si no lo
-      // es, se rechaza TODO el backup aquí, antes de tocar nada. window.caValidar
-      // devuelve el objeto normalizado con ambos campos, que es lo que se restaura.
+      // NEXUM-009 / NEXUM-010 / NEXUM-016 — Condiciones laborales del año (DGA +
+      // Bonobús familiar + régimen de titularidad). Solo se procesa si el backup
+      // DECLARA la propiedad (los backups antiguos que NO la traen conservan la config
+      // actual). null → eliminar la clave al restaurar. Objeto → debe ser una
+      // configuración válida (version:1, anios como objeto, años "YYYY", dga B/C/D/null,
+      // bonobusEconomico booleano —ausente en backups antiguos {dga} se NORMALIZA a
+      // false— y regimenTurno "corrido"/"partido"/null —ausente se NORMALIZA a null—,
+      // sin propiedades desconocidas); si no lo es, se rechaza TODO el backup aquí,
+      // antes de tocar nada. window.caValidar devuelve el objeto normalizado con los
+      // tres campos, que es lo que se restaura.
       var caSolicitado = Object.prototype.hasOwnProperty.call(datos, "conceptosAnuales");
       var caEsNull = caSolicitado && datos.conceptosAnuales === null;
       var caNuevoValidado = null;
@@ -4126,14 +4167,18 @@ function importarDatos(archivo) {
             tsActivaRevertido = true;
           } catch (e) { tsActivaRevertido = false; }
         }
-        // DEV-010R5 — Reversión del PERFIL LABORAL al valor exacto anterior.
+        // DEV-010R5 / NEXUM-016R1 — Reversión del PERFIL LABORAL al valor exacto
+        // anterior (o eliminación si antes no existía), con VERIFICACIÓN por relectura.
+        // perfilRevertido solo será true tras comprobar la restauración exacta:
+        //   · previo existente → setItem y getItem === perfilPrevioRaw.
+        //   · previo inexistente → removeItem y getItem == null.
+        // Cualquier excepción o relectura distinta deja perfilRevertido=false.
         var perfilRevertido = true;
         if (perfilSolicitado) {
           perfilRevertido = false;
           try {
-            if (perfilPrevioRaw != null) localStorage.setItem('tc_v1_perfil_laboral', perfilPrevioRaw);
-            else localStorage.removeItem('tc_v1_perfil_laboral');
-            perfilRevertido = true;
+            if (perfilPrevioRaw != null) { localStorage.setItem('tc_v1_perfil_laboral', perfilPrevioRaw); perfilRevertido = (localStorage.getItem('tc_v1_perfil_laboral') === perfilPrevioRaw); }
+            else { localStorage.removeItem('tc_v1_perfil_laboral'); perfilRevertido = (localStorage.getItem('tc_v1_perfil_laboral') == null); }
           } catch (e) { perfilRevertido = false; }
         }
         // DEV-010R10 — Reversión de la CONFIGURACIÓN DE DESCUENTOS al valor exacto
@@ -4239,19 +4284,29 @@ function importarDatos(archivo) {
       }
 
       // ============================================================
-      // 4d) DEV-010R5 — PERFIL LABORAL, con el mismo rollback. Objeto validado →
-      //     se escribe; null → se elimina. Cualquier fallo de escritura activa el
-      //     rollback completo (calendario, tablas, tabla activa y perfil).
+      // 4d) DEV-010R5 / NEXUM-016R1 — PERFIL LABORAL, con el mismo rollback.
+      //     Aplicación TRANSACCIONAL con relectura exacta (sin llamar a
+      //     tcPerfilGuardar/tcPerfilEliminar):
+      //       · Objeto validado → se serializa UNA sola vez y se escribe esa misma
+      //         cadena; perfilAplicado = (getItem === perfilNuevoSerializado).
+      //       · perfilLaboral:null → removeItem; perfilAplicado = (getItem == null).
+      //     Cualquier excepción, escritura/eliminación silenciosamente ignorada o
+      //     relectura distinta deja perfilAplicado=false y activa el rollback global.
       // ============================================================
       if (perfilSolicitado) {
         var perfilAplicado = false;
         try {
           if (perfilEsNull) {
             localStorage.removeItem('tc_v1_perfil_laboral');
+            // Relee: solo se da por aplicado si la clave quedó realmente ausente.
+            perfilAplicado = (localStorage.getItem('tc_v1_perfil_laboral') == null);
           } else {
-            localStorage.setItem('tc_v1_perfil_laboral', JSON.stringify(perfilNuevoValidado));
+            // Se serializa una sola vez y se escribe esa misma cadena.
+            var perfilNuevoSerializado = JSON.stringify(perfilNuevoValidado);
+            localStorage.setItem('tc_v1_perfil_laboral', perfilNuevoSerializado);
+            // Relee: solo se da por aplicado si lo releído coincide exactamente.
+            perfilAplicado = (localStorage.getItem('tc_v1_perfil_laboral') === perfilNuevoSerializado);
           }
-          perfilAplicado = true;
         } catch (e) { perfilAplicado = false; }
         if (!perfilAplicado) {
           avisarFalloImportacion("No se pudo restaurar el perfil laboral. No se ha importado nada.");
@@ -4863,19 +4918,37 @@ function inicializarCamaraOCR() {
 
 /* ============================================================================
    DEV-010R5 — PERFIL LABORAL PERSISTENTE
-   Clave localStorage: tc_v1_perfil_laboral
-     { version:1, nombre:"", categoriaId:"CONDUCTOR_PERCEPTOR", fechaAntiguedad:"YYYY-MM-DD" }
+   Clave localStorage: tc_v1_perfil_laboral  (SIEMPRE la misma; no se crea otra)
+   NEXUM-016 — Esquema ampliado a VERSIÓN 2 (contrato activo):
+     { version:2, nombre:"", categoriaId:"...", fechaAntiguedad:"YYYY-MM-DD",
+       tipoContrato:"indefinido"|"eventual"|null, fechaFinContrato:"YYYY-MM-DD"|null }
+   · fechaAntiguedad = fecha de entrada del contrato vigente.
+   · tipoContrato==="indefinido" exige fechaFinContrato===null.
+   · tipoContrato==="eventual" exige fechaFinContrato válida y >= fechaAntiguedad
+     (no se rechaza una fecha final pasada).
+   · tipoContrato===null (heredado o «Selecciona…») exige fechaFinContrato===null.
+   COMPATIBILIDAD v1: el perfil antiguo EXACTO { version:1, nombre, categoriaId,
+   fechaAntiguedad } sigue siendo válido SOLO como entrada heredada; al leerlo se
+   NORMALIZA en memoria a v2 con tipoContrato:null y fechaFinContrato:null SIN
+   reescribir localStorage. El siguiente guardado desde la interfaz persiste v2
+   completo. No se guarda historial de contratos: una nueva contratación o la
+   ampliación de un eventual modifican el MISMO perfil (su fecha final).
    El grupo profesional se DERIVA de la categoría y NO se almacena.
    Este módulo NO toca ninguna fórmula, cantidad, ID salarial, modo, tabla
-   activa, jornada, calendario ni concepto económico de la Nómina. Solo crea un
-   perfil laboral independiente y su interfaz.
+   activa, jornada, calendario ni concepto económico de la Nómina más allá de
+   exponer los helpers puros de proporción por contrato (NEXUM-016).
    ========================================================================== */
 (function(){
   'use strict';
 
   var TC_PERFIL_KEY = 'tc_v1_perfil_laboral';
   var TC_PERFIL_MAX_NOMBRE = 100;
-  var TC_PERFIL_CLAVES = { version:1, nombre:1, categoriaId:1, fechaAntiguedad:1 };
+  /* NEXUM-016 — Juegos de claves ESTRICTOS por versión (para rechazar propiedades
+     desconocidas). v1 heredado: exactamente 4 claves. v2: añade tipoContrato y
+     fechaFinContrato. Un objeto v1 que incluya claves de contrato NO es «exacto»
+     y se rechaza; solo la versión 2 admite tipoContrato/fechaFinContrato. */
+  var TC_PERFIL_CLAVES_V1 = { version:1, nombre:1, categoriaId:1, fechaAntiguedad:1 };
+  var TC_PERFIL_CLAVES_V2 = { version:1, nombre:1, categoriaId:1, fechaAntiguedad:1, tipoContrato:1, fechaFinContrato:1 };
 
   function _esc(s){
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -4964,20 +5037,25 @@ function inicializarCamaraOCR() {
   function tcPerfilEsBisiesto(y){ return (y%4===0 && y%100!==0) || (y%400===0); }
 
   /* Valida y NORMALIZA un objeto de perfil (de la UI o de un backup). No escribe.
-     Devuelve {ok:true, perfil:{version,nombre,categoriaId,fechaAntiguedad}} o
-     {ok:false, error, campo}. Rechaza propiedades desconocidas (backups). */
+     Acepta EXCLUSIVAMENTE dos entradas: v1 heredado (4 claves, version===1) o v2
+     (version===2). SIEMPRE devuelve un perfil NORMALIZADO a v2:
+     {ok:true, perfil:{version:2, nombre, categoriaId, fechaAntiguedad,
+      tipoContrato, fechaFinContrato}} o {ok:false, error, campo}.
+     Rechaza propiedades desconocidas, versiones no soportadas, fechas imposibles,
+     formatos distintos de YYYY-MM-DD, strings numéricos y valores no previstos. */
   function tcPerfilValidar(datos){
     if(!datos || typeof datos!=='object' || Array.isArray(datos))
       return { ok:false, error:'El perfil no es un objeto válido.', campo:null };
+    /* Versión OBLIGATORIA y exactamente 1 (heredado) o 2. Se rechaza ausente,
+       null, "1"/"2", 0, decimales o cualquier otro valor. */
+    if(datos.version!==1 && datos.version!==2)
+      return { ok:false, error:'Versión de perfil no soportada.', campo:null };
+    var esV2 = (datos.version===2);
+    var CLAVES = esV2 ? TC_PERFIL_CLAVES_V2 : TC_PERFIL_CLAVES_V1;
     for(var k in datos){
-      if(Object.prototype.hasOwnProperty.call(datos,k) && !TC_PERFIL_CLAVES[k])
+      if(Object.prototype.hasOwnProperty.call(datos,k) && !CLAVES[k])
         return { ok:false, error:'El perfil contiene propiedades no reconocidas.', campo:null };
     }
-    /* Esquema estricto: la versión es OBLIGATORIA y debe ser exactamente el
-       número 1. Se rechaza ausente, null, "1", 0, decimales o cualquier otro
-       valor. Nunca se completa una versión ausente automáticamente. */
-    if(datos.version!==1)
-      return { ok:false, error:'Versión de perfil no soportada.', campo:null };
     var nombre = datos.nombre;
     if(nombre==null) nombre='';
     if(typeof nombre!=='string')
@@ -4993,7 +5071,33 @@ function inicializarCamaraOCR() {
     var hoy = tcPerfilFechaReal(tcPerfilHoyISO());
     if(dt.getTime() > hoy.getTime())
       return { ok:false, error:'La fecha de antigüedad no puede ser posterior a hoy.', campo:'fechaAntiguedad' };
-    return { ok:true, perfil:{ version:1, nombre:nombre, categoriaId:datos.categoriaId, fechaAntiguedad:datos.fechaAntiguedad } };
+    /* NEXUM-016 — Contrato activo. v1 heredado → normalización silenciosa a
+       tipoContrato:null, fechaFinContrato:null (NO se asume «indefinido»). v2 →
+       validación estricta del tipo y de la fecha final. */
+    var tipo, fin;
+    if(!esV2){
+      tipo = null; fin = null;
+    } else {
+      tipo = datos.tipoContrato;
+      fin  = datos.fechaFinContrato;
+      if(tipo!==null && tipo!=='indefinido' && tipo!=='eventual')
+        return { ok:false, error:'El tipo de contrato no es válido.', campo:'tipoContrato' };
+      if(tipo==='eventual'){
+        /* Eventual exige una fecha final REAL (YYYY-MM-DD) e IGUAL o POSTERIOR a
+           la fecha de entrada. No se rechaza una fecha final pasada. */
+        var df = tcPerfilFechaReal(fin);
+        if(!df)
+          return { ok:false, error:'La fecha prevista de finalización no es una fecha válida.', campo:'fechaFinContrato' };
+        if(df.getTime() < dt.getTime())
+          return { ok:false, error:'La fecha de finalización no puede ser anterior a la fecha de entrada.', campo:'fechaFinContrato' };
+      } else {
+        /* indefinido o null → SIN fecha final (debe ser exactamente null). */
+        if(fin!==null)
+          return { ok:false, error:'Un contrato indefinido no lleva fecha de finalización.', campo:'fechaFinContrato' };
+      }
+    }
+    return { ok:true, perfil:{ version:2, nombre:nombre, categoriaId:datos.categoriaId,
+      fechaAntiguedad:datos.fechaAntiguedad, tipoContrato:tipo, fechaFinContrato:fin } };
   }
 
   /* ---------- API pública ---------- */
@@ -5134,6 +5238,9 @@ function inicializarCamaraOCR() {
       grupoId: r.grupo.id,
       grupoNombre: r.grupo.nombre,
       fechaAntiguedad: r.perfil.fechaAntiguedad,
+      /* NEXUM-016 — Contrato activo (ya normalizado a v2 por tcPerfilLeer). */
+      tipoContrato: r.perfil.tipoContrato,
+      fechaFinContrato: r.perfil.fechaFinContrato,
       tramo: tcPerfilCalcularTramo(r.perfil.fechaAntiguedad, anio, mes)
     };
   }
@@ -5144,6 +5251,87 @@ function inicializarCamaraOCR() {
       return { grupoId:g.grupoId, grupoNombre:g.grupoNombre,
         categorias: g.cats.map(function(c){ return { id:c[0], nombre:c[1] }; }) };
     });
+  }
+
+  /* ===================== NEXUM-016 — HELPERS PUROS DE PERIODO/PROPORCIÓN
+     Ambos son PUROS y SEGUROS: nunca lanzan y devuelven objetos de estado. No
+     usan la fecha actual para alterar el resultado. Parser UTC estricto, días
+     naturales inclusivos, sin horas locales ni cambios de horario, con años
+     bisiestos automáticos y validación Number.isSafeInteger. */
+
+  /* Parser UTC estricto: exige 'YYYY-MM-DD' real (rechaza 2026-02-30, etc.) y
+     devuelve los milisegundos UTC del día o null. No convierte a hora local. */
+  function _tcParseUTC(iso){
+    if(typeof iso!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+    var p=iso.split('-'), y=+p[0], mo=+p[1], da=+p[2];
+    if(mo<1||mo>12||da<1||da>31) return null;
+    var ms=Date.UTC(y, mo-1, da);
+    var d=new Date(ms);
+    if(d.getUTCFullYear()!==y || d.getUTCMonth()!==(mo-1) || d.getUTCDate()!==da) return null;
+    return ms;
+  }
+  function _tcISODesdeUTC(ms){
+    var d=new Date(ms), mm=d.getUTCMonth()+1, dd=d.getUTCDate();
+    return d.getUTCFullYear()+'-'+(mm<10?'0':'')+mm+'-'+(dd<10?'0':'')+dd;
+  }
+
+  /* window.tcPerfilPeriodoContrato(fechaInicioPeriodo, fechaFinPeriodo)
+     Usa el perfil laboral VIGENTE (tcPerfilLeer). Estados posibles:
+       { estado:'ok', diasPeriodo, diasContrato, inicio, fin }
+       { estado:'noAplica', diasPeriodo, diasContrato:0 }
+       { estado:'noVerificable' }
+     Reglas: inicio efectivo = máx(entrada, inicio del periodo). Indefinido → fin
+     efectivo = fin del periodo. Eventual → fin efectivo = mín(fecha final, fin del
+     periodo). Contrato heredado (tipoContrato:null) o no determinable → noVerificable
+     (NO se asume indefinido). Si inicio efectivo > fin efectivo → noAplica. */
+  var _TC_DIA_MS = 86400000;
+  function tcPerfilPeriodoContrato(fechaInicioPeriodo, fechaFinPeriodo){
+    try {
+      var iniP=_tcParseUTC(fechaInicioPeriodo), finP=_tcParseUTC(fechaFinPeriodo);
+      if(iniP==null || finP==null || finP<iniP) return { estado:'noVerificable' };
+      var diasPeriodo=Math.round((finP-iniP)/_TC_DIA_MS)+1;
+      if(!Number.isSafeInteger(diasPeriodo) || diasPeriodo<1) return { estado:'noVerificable' };
+      var r=tcPerfilLeer();
+      if(r.estado!=='ok' || !r.perfil) return { estado:'noVerificable' };
+      var entrada=_tcParseUTC(r.perfil.fechaAntiguedad);
+      if(entrada==null) return { estado:'noVerificable' };
+      var tipo=r.perfil.tipoContrato, finEfMax;
+      if(tipo==='indefinido'){
+        finEfMax=finP;
+      } else if(tipo==='eventual'){
+        var finC=_tcParseUTC(r.perfil.fechaFinContrato);
+        if(finC==null) return { estado:'noVerificable' };
+        finEfMax=(finC<finP)?finC:finP;
+      } else {
+        /* null (heredado / «Selecciona…») u otro → no verificable. */
+        return { estado:'noVerificable' };
+      }
+      var iniEf=(entrada>iniP)?entrada:iniP;
+      if(iniEf>finEfMax) return { estado:'noAplica', diasPeriodo:diasPeriodo, diasContrato:0 };
+      var diasContrato=Math.round((finEfMax-iniEf)/_TC_DIA_MS)+1;
+      if(!Number.isSafeInteger(diasContrato) || diasContrato<1)
+        return { estado:'noAplica', diasPeriodo:diasPeriodo, diasContrato:0 };
+      return { estado:'ok', diasPeriodo:diasPeriodo, diasContrato:diasContrato,
+        inicio:_tcISODesdeUTC(iniEf), fin:_tcISODesdeUTC(finEfMax) };
+    } catch(e){ return { estado:'noVerificable' }; }
+  }
+
+  /* window.tcAplicarProporcionContrato(importeCompletoCent, periodo)
+       importe proporcional = Math.round(importeCompletoCent × diasContrato / diasPeriodo)
+     Solo opera sobre un periodo en estado 'ok'. Valida enteros seguros en el
+     importe, los días, el producto y el resultado. NO redondea porcentajes ni
+     valores intermedios: un único Math.round al final. Devuelve céntimos enteros
+     o null si algo no es utilizable (nunca lanza). */
+  function tcAplicarProporcionContrato(importeCompletoCent, periodo){
+    if(!Number.isSafeInteger(importeCompletoCent)) return null;
+    if(!periodo || typeof periodo!=='object' || periodo.estado!=='ok') return null;
+    var dc=periodo.diasContrato, dp=periodo.diasPeriodo;
+    if(!Number.isSafeInteger(dc) || !Number.isSafeInteger(dp) || dp<1 || dc<0) return null;
+    var prod=importeCompletoCent*dc;
+    if(!Number.isSafeInteger(prod)) return null;
+    var res=Math.round(prod/dp);
+    if(!Number.isSafeInteger(res)) return null;
+    return res;
   }
 
   /* ---------- Interfaz (modal reutilizado: inicial + edición) ---------- */
@@ -5174,20 +5362,40 @@ function inicializarCamaraOCR() {
   }
 
   function _perfilLimpiarErrores(){
-    ['perfilCampoNombre','perfilCampoCategoria','perfilCampoFecha'].forEach(function(id){
+    ['perfilCampoNombre','perfilCampoCategoria','perfilCampoFecha','perfilCampoTipoContrato','perfilCampoFinContrato'].forEach(function(id){
       var c=document.getElementById(id); if(c) c.classList.remove('tiene-error');
     });
-    ['tcPerfilNombreError','tcPerfilCategoriaError','tcPerfilFechaError'].forEach(function(id){
+    ['tcPerfilNombreError','tcPerfilCategoriaError','tcPerfilFechaError','tcPerfilTipoContratoError','tcPerfilFinContratoError'].forEach(function(id){
       var e=document.getElementById(id); if(e) e.textContent='';
     });
   }
   function _perfilMostrarError(campo, mensaje){
     var map={ nombre:['perfilCampoNombre','tcPerfilNombreError'],
               categoriaId:['perfilCampoCategoria','tcPerfilCategoriaError'],
-              fechaAntiguedad:['perfilCampoFecha','tcPerfilFechaError'] };
+              fechaAntiguedad:['perfilCampoFecha','tcPerfilFechaError'],
+              tipoContrato:['perfilCampoTipoContrato','tcPerfilTipoContratoError'],
+              fechaFinContrato:['perfilCampoFinContrato','tcPerfilFinContratoError'] };
     var t=map[campo]||map.nombre;
     var c=document.getElementById(t[0]); if(c) c.classList.add('tiene-error');
     var e=document.getElementById(t[1]); if(e) e.textContent=mensaje;
+  }
+
+  /* NEXUM-016 — Muestra/oculta la fecha prevista de finalización según el tipo de
+     contrato. «Eventual» la muestra; «Indefinido» o «Selecciona…» la ocultan y
+     limpian su valor y su error (así el guardado la envía como null). */
+  function _perfilActualizarContrato(){
+    var sel=document.getElementById('tcPerfilTipoContrato');
+    var campoFin=document.getElementById('perfilCampoFinContrato');
+    var inFin=document.getElementById('tcPerfilFinContrato');
+    if(!sel||!campoFin) return;
+    if(sel.value==='eventual'){
+      campoFin.style.display='';
+    } else {
+      campoFin.style.display='none';
+      if(inFin) inFin.value='';
+      campoFin.classList.remove('tiene-error');
+      var e=document.getElementById('tcPerfilFinContratoError'); if(e) e.textContent='';
+    }
   }
 
   function _perfilFocusables(){
@@ -5238,18 +5446,26 @@ function inicializarCamaraOCR() {
     var inNombre=document.getElementById('tcPerfilNombre');
     var selCat=document.getElementById('tcPerfilCategoria');
     var inFecha=document.getElementById('tcPerfilFecha');
+    var selTipo=document.getElementById('tcPerfilTipoContrato');
+    var inFin=document.getElementById('tcPerfilFinContrato');
     inFecha.max = tcPerfilHoyISO();
     if(lectura.estado==='ok'){
       inNombre.value = lectura.perfil.nombre || '';
       /* Al editar, seleccionar automáticamente la categoría almacenada. */
       selCat.value = tcPerfilCategoriaValida(lectura.perfil.categoriaId) ? lectura.perfil.categoriaId : '';
       inFecha.value = lectura.perfil.fechaAntiguedad || '';
+      /* NEXUM-016 — Contrato activo. Para perfiles heredados (tipoContrato:null)
+         el selector queda en «Selecciona…» y la fecha final vacía. */
+      if(selTipo) selTipo.value = (lectura.perfil.tipoContrato==='indefinido' || lectura.perfil.tipoContrato==='eventual') ? lectura.perfil.tipoContrato : '';
+      if(inFin) inFin.value = lectura.perfil.fechaFinContrato || '';
     } else {
       /* sinPerfil o corrupto → NO autoseleccionar ninguna categoría (jamás
          Conductor-Perceptor por defecto) ni fechas ficticias. */
       inNombre.value=''; selCat.value=''; inFecha.value='';
+      if(selTipo) selTipo.value=''; if(inFin) inFin.value='';
     }
     _perfilActualizarGrupo();
+    _perfilActualizarContrato();
     _perfilLimpiarErrores();
 
     var btnGuardar=document.getElementById('tcPerfilGuardarBtn');
@@ -5284,18 +5500,28 @@ function inicializarCamaraOCR() {
 
   function _perfilGuardarDesdeUI(){
     _perfilLimpiarErrores();
+    /* NEXUM-016 — Se construye y guarda SIEMPRE el esquema v2 estricto. El tipo de
+       contrato en «Selecciona…» ('') se envía como null; la fecha final solo se
+       adjunta cuando el tipo es «eventual» (indefinido/null → null). */
+    var _tipoRaw=document.getElementById('tcPerfilTipoContrato').value;
+    var _tipo=(_tipoRaw==='indefinido'||_tipoRaw==='eventual')?_tipoRaw:null;
+    var _finRaw=document.getElementById('tcPerfilFinContrato').value;
+    var _fin=(_tipo==='eventual') ? ((_finRaw && _finRaw.trim()!=='') ? _finRaw : '') : null;
     var datos={
-      version: 1,
+      version: 2,
       nombre: document.getElementById('tcPerfilNombre').value,
       categoriaId: document.getElementById('tcPerfilCategoria').value,
-      fechaAntiguedad: document.getElementById('tcPerfilFecha').value
+      fechaAntiguedad: document.getElementById('tcPerfilFecha').value,
+      tipoContrato: _tipo,
+      fechaFinContrato: _fin
     };
     _perfilGuardando=true;
     var res=tcPerfilGuardar(datos);
     _perfilGuardando=false;
     if(!res.ok){
       _perfilMostrarError(res.campo||'nombre', res.error||'No se pudo guardar el perfil.');
-      var focoId={ nombre:'tcPerfilNombre', categoriaId:'tcPerfilCategoria', fechaAntiguedad:'tcPerfilFecha' }[res.campo];
+      var focoId={ nombre:'tcPerfilNombre', categoriaId:'tcPerfilCategoria', fechaAntiguedad:'tcPerfilFecha',
+        tipoContrato:'tcPerfilTipoContrato', fechaFinContrato:'tcPerfilFinContrato' }[res.campo];
       if(focoId){ try{ document.getElementById(focoId).focus(); }catch(e){} }
       return;
     }
@@ -5328,6 +5554,19 @@ function inicializarCamaraOCR() {
       var c=document.getElementById('perfilCampoCategoria'); if(c) c.classList.remove('tiene-error');
       var e=document.getElementById('tcPerfilCategoriaError'); if(e) e.textContent='';
     });
+    /* NEXUM-016 — Cambio de tipo de contrato: revela/oculta la fecha final y
+       limpia los errores de ambos campos. */
+    var selTipo=document.getElementById('tcPerfilTipoContrato');
+    if(selTipo) selTipo.addEventListener('change', function(){
+      _perfilActualizarContrato();
+      var c=document.getElementById('perfilCampoTipoContrato'); if(c) c.classList.remove('tiene-error');
+      var e=document.getElementById('tcPerfilTipoContratoError'); if(e) e.textContent='';
+    });
+    var inFin=document.getElementById('tcPerfilFinContrato');
+    if(inFin) inFin.addEventListener('input', function(){
+      var c=document.getElementById('perfilCampoFinContrato'); if(c) c.classList.remove('tiene-error');
+      var e=document.getElementById('tcPerfilFinContratoError'); if(e) e.textContent='';
+    });
     var btnDespues=document.getElementById('tcPerfilDespuesBtn');
     if(btnDespues) btnDespues.addEventListener('click', function(){ tcPerfilCerrarModal(); });
     var btnCerrar=document.getElementById('tcPerfilCerrarBtn');
@@ -5358,6 +5597,8 @@ function inicializarCamaraOCR() {
   window.tcPerfilEliminar        = tcPerfilEliminar;
   window.tcPerfilCalcularTramo   = tcPerfilCalcularTramo;
   window.tcPerfilInfoNomina      = tcPerfilInfoNomina;
+  window.tcPerfilPeriodoContrato = tcPerfilPeriodoContrato;   /* NEXUM-016 */
+  window.tcAplicarProporcionContrato = tcAplicarProporcionContrato; /* NEXUM-016 */
   window.tcPerfilValidar         = tcPerfilValidar;
   window.tcPerfilCategoriaValida = tcPerfilCategoriaValida;
   window.tcPerfilInfoCategoria   = tcPerfilInfoCategoria;
@@ -5742,10 +5983,20 @@ function inicializarCamaraOCR() {
    NEXUM-009 — CONCEPTOS ANUALES (opción económica DGA, cobrada en agosto)
    NEXUM-010 — Se amplía con el Bonobús familiar (opción económica, cobrado una
    sola vez en JULIO por el ID exacto 4I88_BONOBUS_FAMILIAR).
+   NEXUM-016 — La pantalla se renombra visualmente a «Condiciones laborales del
+   año» y se amplía con el régimen de titularidad anual (corrido/partido). NO se
+   crea otra clave ni se duplica DGA en otro sitio.
    Clave localStorage: nexum_v1_conceptos_anuales (INDEPENDIENTE de Perfil y de
    Descuentos; nunca se mezclan).
-   Esquema ESTRICTO (NEXUM-010):
-     { version:1, anios:{ "YYYY": { dga:"B"|"C"|"D"|null, bonobusEconomico:true|false } } }
+   Esquema ESTRICTO (NEXUM-010 / NEXUM-016):
+     { version:1, anios:{ "YYYY": { dga:"B"|"C"|"D"|null, bonobusEconomico:true|false,
+                                    regimenTurno:"corrido"|"partido"|null } } }
+   · regimenTurno admite EXACTAMENTE "corrido", "partido" o null.
+   · COMPATIBILIDAD: una configuración anterior SIN regimenTurno se NORMALIZA en
+     memoria a regimenTurno:null (leer NUNCA reescribe). Los guardados desde la
+     interfaz persisten SIEMPRE los tres campos (dga, bonobusEconomico y
+     regimenTurno). En esta versión regimenTurno SOLO se almacena: no altera todavía
+     ningún importe (ver comentario NEXUM-016 sobre plus de partido y descanso).
    · version obligatoria y exactamente el número 1.
    · anios es un objeto (nunca array). Puede estar vacío ({}).
    · Cada clave de anios es una cadena de 4 dígitos "YYYY".
@@ -5842,10 +6093,12 @@ function inicializarCamaraOCR() {
         var val=anios[y];
         if(!val || typeof val!=='object' || Array.isArray(val))
           return { ok:false, error:'La configuración del año '+y+' no es válida.', campo:'anio' };
-        /* NEXUM-010/012 — Propiedades admitidas por año: dga, bonobusEconomico y los
-           tres tramos FFPP (ffpp75, ffpp10, ffpp15). Cualquier otra → rechazo. */
+        /* NEXUM-010/012/016 — Propiedades admitidas por año: dga, bonobusEconomico,
+           regimenTurno y los tres tramos FFPP heredados (ffpp75, ffpp10, ffpp15).
+           Cualquier otra → rechazo. */
         for(var kk in val){
           if(Object.prototype.hasOwnProperty.call(val,kk) && kk!=='dga' && kk!=='bonobusEconomico'
+             && kk!=='regimenTurno'
              && kk!=='ffpp75' && kk!=='ffpp10' && kk!=='ffpp15')
             return { ok:false, error:'El año '+y+' contiene propiedades no reconocidas.', campo:'anio' };
         }
@@ -5860,6 +6113,15 @@ function inicializarCamaraOCR() {
           if(!_caBonobusValido(val.bonobusEconomico))
             return { ok:false, error:'El valor de Bonobús familiar del año '+y+' no es válido.', campo:'bonobus' };
           _bono=val.bonobusEconomico;
+        }
+        /* NEXUM-016 — regimenTurno: si está presente debe ser exactamente
+           "corrido", "partido" o null; si falta (config anterior) se NORMALIZA a
+           null sin reescribir el almacenamiento. */
+        var _reg=null;
+        if(Object.prototype.hasOwnProperty.call(val,'regimenTurno')){
+          if(val.regimenTurno!==null && val.regimenTurno!=='corrido' && val.regimenTurno!=='partido')
+            return { ok:false, error:'El régimen de titularidad del año '+y+' no es válido.', campo:'regimen' };
+          _reg=val.regimenTurno;
         }
         /* NEXUM-012R2 — FFPP totalmente AUTOMÁTICO: el objeto normalizado ya NO
            guarda tramos FFPP (se calculan desde la fecha de antigüedad del perfil).
@@ -5885,8 +6147,9 @@ function inicializarCamaraOCR() {
           /* Esquema FFPP incompleto (una o dos claves): se rechaza toda la config. */
           return { ok:false, error:'La configuración de Fiestas primaverales del año '+y+' está incompleta: deben estar los tres tramos o ninguno.', campo:'ffpp75' };
         }
-        /* Objeto normalizado: SOLO DGA y Bonobús (los tramos FFPP se descartan). */
-        out.anios[y]={ dga:val.dga, bonobusEconomico:_bono };
+        /* Objeto normalizado: DGA, Bonobús y régimen de titularidad (los tramos
+           FFPP heredados se descartan; se calculan desde el Perfil). */
+        out.anios[y]={ dga:val.dga, bonobusEconomico:_bono, regimenTurno:_reg };
       }
       return { ok:true, config:out };
     } catch(e){
@@ -5920,8 +6183,10 @@ function inicializarCamaraOCR() {
     var y=String(anio==null?'':anio).trim();
     if(!Object.prototype.hasOwnProperty.call(lect.config.anios, y)) return { estado:'sinAnio' };
     var _a=lect.config.anios[y];
-    /* NEXUM-012R2 — Solo DGA y Bonobús (FFPP ya no forma parte del esquema). */
-    return { estado:'ok', dga:_a.dga, bonobusEconomico:(_a.bonobusEconomico===true) };
+    /* NEXUM-012R2 / NEXUM-016 — DGA, Bonobús y régimen de titularidad (FFPP ya no
+       forma parte del esquema). */
+    return { estado:'ok', dga:_a.dga, bonobusEconomico:(_a.bonobusEconomico===true),
+      regimenTurno:(_a.regimenTurno==null?null:_a.regimenTurno) };
   }
 
   /* Serializa + escribe + relee EXACTO; si falla restaura el valor previo exacto
@@ -5954,15 +6219,20 @@ function inicializarCamaraOCR() {
   /* NEXUM-012R2 — Copia profunda de un año YA normalizado (solo dga y bonobus).
      Se usa para preservar los demás años al guardar/eliminar. */
   function _caCopiaAnio(a){
-    return { dga:a.dga, bonobusEconomico:(a.bonobusEconomico===true) };
+    return { dga:a.dga, bonobusEconomico:(a.bonobusEconomico===true),
+      regimenTurno:(a.regimenTurno==null?null:a.regimenTurno) };
   }
-  function caGuardarAnio(anio, dga, bonobusEconomico){
+  function caGuardarAnio(anio, dga, bonobusEconomico, regimenTurno){
     var y=String(anio==null?'':anio).trim();
     if(!_caAnioValido(y)) return { ok:false, error:'El año debe tener el formato AAAA (cuatro dígitos).', campo:'anio' };
     if(!_caDgaValido(dga)) return { ok:false, error:'La opción de DGA no es válida.', campo:'dga' };
     /* NEXUM-010 — El Bonobús familiar se persiste SIEMPRE junto al DGA; debe ser
        un booleano exacto (rechaza cualquier otro valor). */
     if(!_caBonobusValido(bonobusEconomico)) return { ok:false, error:'La opción de Bonobús familiar no es válida.', campo:'bonobus' };
+    /* NEXUM-016 — El régimen de titularidad se persiste SIEMPRE (tercer campo);
+       debe ser exactamente "corrido", "partido" o null. */
+    if(regimenTurno!==null && regimenTurno!=='corrido' && regimenTurno!=='partido')
+      return { ok:false, error:'La opción de régimen de titularidad no es válida.', campo:'regimen' };
     /* Lectura obligatoria del valor anterior ANTES de escribir. */
     var previoRaw, previoLegible=true;
     try { previoRaw = localStorage.getItem(CA_KEY); } catch(e){ previoLegible=false; }
@@ -5978,7 +6248,7 @@ function inicializarCamaraOCR() {
         if(Object.prototype.hasOwnProperty.call(lect.config.anios,k)) base.anios[k]=_caCopiaAnio(lect.config.anios[k]);
       }
     }
-    base.anios[y]={ dga:dga, bonobusEconomico:bonobusEconomico };
+    base.anios[y]={ dga:dga, bonobusEconomico:bonobusEconomico, regimenTurno:regimenTurno };
     var v=caValidar(base);
     if(!v.ok) return { ok:false, error:v.error, campo:v.campo||null };
     var serial;
@@ -6054,7 +6324,8 @@ function inicializarCamaraOCR() {
   var _CA_CAMPOS={
     'anio':    { div:'caCampoAnio',    err:'caAnioError' },
     'dga':     { div:'caCampoDga',     err:'caDgaError' },
-    'bonobus': { div:'caCampoBonobus', err:'caBonobusError' }
+    'bonobus': { div:'caCampoBonobus', err:'caBonobusError' },
+    'regimen': { div:'caCampoRegimen', err:'caRegimenError' }
   };
   function _caLimpiarErrores(){
     for(var c in _CA_CAMPOS){
@@ -6088,6 +6359,14 @@ function inicializarCamaraOCR() {
     if(str==='si') return { ok:true, bonobus:true };
     return { ok:false };
   }
+  /* NEXUM-016 — El select de régimen de titularidad es cerrado: ""→null (sin
+     indicar), "corrido" o "partido". */
+  function _caParseRegimen(str){
+    if(str==='') return { ok:true, regimen:null };
+    if(str==='corrido') return { ok:true, regimen:'corrido' };
+    if(str==='partido') return { ok:true, regimen:'partido' };
+    return { ok:false };
+  }
 
   /* Refleja en el select el valor guardado para el año que hay en el input (o
      «No concedido» si ese año no está configurado). Muestra/oculta «Eliminar».
@@ -6096,6 +6375,7 @@ function inicializarCamaraOCR() {
     var inp=document.getElementById('caAnio');
     var sel=document.getElementById('caDga');
     var selB=document.getElementById('caBonobus');
+    var selR=document.getElementById('caRegimen');
     var btnEliminar=document.getElementById('caEliminarBtn');
     var parsed=_caParseAnio(inp?inp.value:'');
     var tieneAnioGuardado=false;
@@ -6107,13 +6387,18 @@ function inicializarCamaraOCR() {
         /* NEXUM-010 — Refleja el Bonobús guardado; config nueva → su valor,
            config antigua/año sin configurar → "No cobrar en nómina". */
         if(selB) selB.value=(lect.bonobusEconomico===true?'si':'no');
+        /* NEXUM-016 — Refleja el régimen guardado; ausente/año sin configurar →
+           "Sin indicar". */
+        if(selR) selR.value=(lect.regimenTurno==null?'':lect.regimenTurno);
       } else {
         if(sel) sel.value='';
         if(selB) selB.value='no';
+        if(selR) selR.value='';
       }
     } else {
       if(sel) sel.value='';
       if(selB) selB.value='no';
+      if(selR) selR.value='';
     }
     if(btnEliminar){
       btnEliminar.style.display = tieneAnioGuardado ? '' : 'none';
@@ -6197,12 +6482,19 @@ function inicializarCamaraOCR() {
       try{ if(selB) selB.focus(); }catch(e){}
       return;
     }
-    var res=caGuardarAnio(pa.anio, pd.dga, pb.bonobus);
+    var selR=document.getElementById('caRegimen');
+    var pr=_caParseRegimen(selR?selR.value:'');
+    if(!pr.ok){
+      _caMostrarError('regimen','Selecciona una opción de régimen de titularidad válida.');
+      try{ if(selR) selR.focus(); }catch(e){}
+      return;
+    }
+    var res=caGuardarAnio(pa.anio, pd.dga, pb.bonobus, pr.regimen);
     if(!res.ok){
       _caMostrarError(res.campo||'anio', res.error||'No se pudo guardar la configuración.');
       return;
     }
-    if(typeof mostrarToast==='function') mostrarToast('Conceptos anuales guardados para '+pa.anio+'.', 'success');
+    if(typeof mostrarToast==='function') mostrarToast('Condiciones laborales del año guardadas para '+pa.anio+'.', 'success');
     caCerrarModal();
     _caRefrescarNomina();
   }
@@ -6221,7 +6513,7 @@ function inicializarCamaraOCR() {
         if(typeof mostrarToast==='function') mostrarToast(res.error||'No se pudo eliminar la configuración.', 'error');
         return;
       }
-      if(typeof mostrarToast==='function') mostrarToast('Configuración del año '+pa.anio+' eliminada.', 'success');
+      if(typeof mostrarToast==='function') mostrarToast('Condiciones laborales del año '+pa.anio+' eliminadas.', 'success');
       caCerrarModal();
       _caRefrescarNomina();
     });
@@ -6249,6 +6541,11 @@ function inicializarCamaraOCR() {
     if(selB) selB.addEventListener('change', function(){
       var d=document.getElementById('caCampoBonobus'); if(d) d.classList.remove('tiene-error');
       var e=document.getElementById('caBonobusError'); if(e) e.textContent='';
+    });
+    var selR=document.getElementById('caRegimen');
+    if(selR) selR.addEventListener('change', function(){
+      var d=document.getElementById('caCampoRegimen'); if(d) d.classList.remove('tiene-error');
+      var e=document.getElementById('caRegimenError'); if(e) e.textContent='';
     });
     var btnCancelar=document.getElementById('caCancelarBtn');
     if(btnCancelar) btnCancelar.addEventListener('click', function(){ caCerrarModal(); });
@@ -9526,6 +9823,16 @@ function tcNomRenderProvisional(data){
     h+='<div class="nom-recibo-kv"><span class="k">Categoría profesional</span><span class="v">'+tcEsc(_perfilNom.categoriaNombre)+'</span></div>';
     h+='<div class="nom-recibo-kv"><span class="k">Grupo profesional</span><span class="v">Grupo '+tcEsc(_perfilNom.grupoId)+' — '+tcEsc(_perfilNom.grupoNombre)+'</span></div>';
     h+='<div class="nom-recibo-kv"><span class="k">Fecha de antigüedad</span><span class="v">'+tcEsc(formatearFecha(_perfilNom.fechaAntiguedad))+'</span></div>';
+    /* NEXUM-016 — Contrato activo. Sin tipo definido (perfil heredado) se marca
+       como pendiente; «Eventual» muestra además su fecha prevista de finalización. */
+    var _tcTxt=(_perfilNom.tipoContrato==='indefinido')?'Indefinido':(_perfilNom.tipoContrato==='eventual')?'Eventual':null;
+    if(_tcTxt){
+      h+='<div class="nom-recibo-kv"><span class="k">Tipo de contrato</span><span class="v">'+tcEsc(_tcTxt)+'</span></div>';
+      if(_perfilNom.tipoContrato==='eventual' && _perfilNom.fechaFinContrato)
+        h+='<div class="nom-recibo-kv"><span class="k">Fin de contrato</span><span class="v">'+tcEsc(formatearFecha(_perfilNom.fechaFinContrato))+'</span></div>';
+    } else {
+      h+='<div class="nom-recibo-kv"><span class="k">Tipo de contrato</span><span class="v nom-recibo-pend">'+PEND+'</span></div>';
+    }
     if(esMes){
       var _pend=(_perfilNom.tramo==='INVALIDO'||_perfilNom.tramo==='NO_APLICABLE');
       h+='<div class="nom-recibo-kv"><span class="k">Antigüedad (tramo)</span><span class="v'+(_pend?' nom-recibo-pend':'')+'">'+tcEsc(tcNomTramoTexto(_perfilNom.tramo))+'</span></div>';
@@ -9716,7 +10023,12 @@ function tcNomRenderProvisional(data){
            fija todosImportes=false (bloquea IRPF, cotizaciones, total a deducir y
            líquido) y activa un aviso. La configuración almacenada NO se borra,
            repara ni sustituye. */
+  /* NEXUM-016 — La DGA se PRORRATEA por el contrato activo sobre el año natural
+     (01/01–31/12). El importe completo procede de la tabla salarial ACTIVA; la
+     proporción se aplica con los helpers puros del Perfil. Se consulta la tabla
+     SOLO cuando el contrato es verificable e intersecta el año. */
   var _dgaNoVerificable=false;
+  var _dgaContratoNoVerificable=false;
   if(NOM_AUTORIZADO && esMes && R.mes===8){
     /* Lectura PROTEGIDA: lector ausente o excepción dejan _dgaLect indefinido, que
        cae en el caso NO VERIFICABLE. No se consulta la tabla salarial hasta
@@ -9732,14 +10044,52 @@ function tcNomRenderProvisional(data){
     var _dgaValida = (_dgaEstado==='ok' && (_dgaLect.dga==='B' || _dgaLect.dga==='C' || _dgaLect.dga==='D'));
 
     if(_dgaValida){
+      /* Proporción del contrato sobre el año natural completo (devengo 01/01–31/12). */
+      var _dgaPer=(typeof window.tcPerfilPeriodoContrato==='function')
+        ? window.tcPerfilPeriodoContrato(R.anio+'-01-01', R.anio+'-12-31')
+        : { estado:'noVerificable' };
       var _DGA_ID={ 'B':'4A50_DGA_OPCION_B', 'C':'4A50_DGA_OPCION_C', 'D':'4A50_DGA_OPCION_D' };
-      var _dgaRes=resolverImporte(_DGA_ID[_dgaLect.dga],'once',null);
-      if(_dgaRes.cent==null){ todosImportes=false; }
-      else { totalCent+=_dgaRes.cent; } /* cotiza=false: NO entra en cotizableOrdinarioCent */
-      h+=descCelda('4A50','DGA · Opción económica '+_dgaLect.dga)
-        +'<div class="n">1</div>'
-        +'<div class="n">'+_dgaRes.inner+'</div>'
-        +'<div class="n"></div>';
+      if(_dgaPer && _dgaPer.estado==='ok'){
+        var _dgaCantTxt=_dgaPer.diasContrato+'/'+_dgaPer.diasPeriodo+' días';
+        /* Consulta ÚNICA del importe completo (modo 'once'); después se prorratea. */
+        var _dgaRes=resolverImporte(_DGA_ID[_dgaLect.dga],'once',null);
+        if(_dgaRes.cent==null){
+          /* Tabla/ID pendiente o corrupto → «Pdte.» y bloqueo (mecanismo existente). */
+          todosImportes=false;
+          h+=descCelda('4A50','DGA · Opción económica '+_dgaLect.dga)
+            +'<div class="n">'+tcEsc(_dgaCantTxt)+'</div>'
+            +'<div class="n">'+celdaPend+'</div>'
+            +'<div class="n"></div>';
+        } else {
+          var _dgaProp=(typeof window.tcAplicarProporcionContrato==='function')
+            ? window.tcAplicarProporcionContrato(_dgaRes.cent, _dgaPer) : null;
+          if(_dgaProp==null){
+            todosImportes=false;
+            h+=descCelda('4A50','DGA · Opción económica '+_dgaLect.dga)
+              +'<div class="n">'+tcEsc(_dgaCantTxt)+'</div>'
+              +'<div class="n">'+celdaPend+'</div>'
+              +'<div class="n"></div>';
+          } else {
+            totalCent+=_dgaProp; /* cotiza=false: NO entra en cotizableOrdinarioCent */
+            h+=descCelda('4A50','DGA · Opción económica '+_dgaLect.dga)
+              +'<div class="n">'+tcEsc(_dgaCantTxt)+'</div>'
+              +'<div class="n">'+tcEsc(tcNomFmtCentimos(_dgaProp))+'</div>'
+              +'<div class="n"></div>';
+          }
+        }
+      } else if(_dgaPer && _dgaPer.estado==='noAplica'){
+        /* El contrato no intersecta el año → sin fila, cero consultas, sin bloqueo. */
+      } else {
+        /* Contrato NO verificable (heredado sin tipo/fecha) → fila informativa sin
+           consultar ningún ID salarial; «Pdte.», bloqueo de totales y aviso para
+           completar el Perfil laboral. */
+        _dgaContratoNoVerificable=true;
+        todosImportes=false;
+        h+=descCelda('4A50','DGA · Contrato no verificable')
+          +'<div class="n">—</div>'
+          +'<div class="n">'+celdaPend+'</div>'
+          +'<div class="n"></div>';
+      }
     } else if(_dgaAusenciaVoluntaria){
       /* sinConfig, sinAnio u ok+dga:null → sin fila, cero consultas, sin bloqueo. */
     } else {
@@ -9778,7 +10128,14 @@ function tcNomRenderProvisional(data){
            null/primitivo/objeto inválido, estado 'corrupto' o desconocido) → NO se
            consulta ningún ID salarial; una única fila informativa «Pdte.» que fija
            todosImportes=false y activa un aviso. La configuración NO se borra ni repara. */
+  /* NEXUM-016 — El Bonobús familiar se PRORRATEA por el contrato activo sobre el año
+     natural (01/01–31/12) con el MISMO helper que la DGA. El importe procede de la
+     tabla ACTIVA por su ID exacto y solo se consulta cuando el contrato es
+     verificable e intersecta el año. La eventual diferencia de un céntimo con una
+     nómina oficial se resuelve usando el importe exacto de la tabla y redondeando
+     únicamente el resultado final (sin ajustes ni constantes inventadas). */
   var _bonoNoVerificable=false;
+  var _bonoContratoNoVerificable=false;
   if(NOM_AUTORIZADO && esMes && R.mes===7){
     /* Lectura PROTEGIDA: lector ausente o excepción dejan _bonoLect indefinido, que
        cae en el caso NO VERIFICABLE. No se consulta la tabla salarial hasta confirmar
@@ -9794,14 +10151,48 @@ function tcNomRenderProvisional(data){
     var _bonoActivo = (_bonoEstado==='ok' && _bonoLect.bonobusEconomico===true);
 
     if(_bonoActivo){
-      /* Consulta ÚNICA del ID exacto; importe completo una sola vez (modo 'once'). */
-      var _bonoRes=resolverImporte('4I88_BONOBUS_FAMILIAR','once',null);
-      if(_bonoRes.cent==null){ todosImportes=false; }
-      else { totalCent+=_bonoRes.cent; } /* cotiza=false: NO entra en cotizableOrdinarioCent */
-      h+=descCelda('4I88','Bonobús familiar · Opción económica')
-        +'<div class="n">1</div>'
-        +'<div class="n">'+_bonoRes.inner+'</div>'
-        +'<div class="n"></div>';
+      var _bonoPer=(typeof window.tcPerfilPeriodoContrato==='function')
+        ? window.tcPerfilPeriodoContrato(R.anio+'-01-01', R.anio+'-12-31')
+        : { estado:'noVerificable' };
+      if(_bonoPer && _bonoPer.estado==='ok'){
+        var _bonoCantTxt=_bonoPer.diasContrato+'/'+_bonoPer.diasPeriodo+' días';
+        /* Consulta ÚNICA del ID exacto; importe completo una sola vez (modo 'once'). */
+        var _bonoRes=resolverImporte('4I88_BONOBUS_FAMILIAR','once',null);
+        if(_bonoRes.cent==null){
+          todosImportes=false;
+          h+=descCelda('4I88','Bonobús familiar · Opción económica')
+            +'<div class="n">'+tcEsc(_bonoCantTxt)+'</div>'
+            +'<div class="n">'+celdaPend+'</div>'
+            +'<div class="n"></div>';
+        } else {
+          var _bonoProp=(typeof window.tcAplicarProporcionContrato==='function')
+            ? window.tcAplicarProporcionContrato(_bonoRes.cent, _bonoPer) : null;
+          if(_bonoProp==null){
+            todosImportes=false;
+            h+=descCelda('4I88','Bonobús familiar · Opción económica')
+              +'<div class="n">'+tcEsc(_bonoCantTxt)+'</div>'
+              +'<div class="n">'+celdaPend+'</div>'
+              +'<div class="n"></div>';
+          } else {
+            totalCent+=_bonoProp; /* cotiza=false: NO entra en cotizableOrdinarioCent */
+            h+=descCelda('4I88','Bonobús familiar · Opción económica')
+              +'<div class="n">'+tcEsc(_bonoCantTxt)+'</div>'
+              +'<div class="n">'+tcEsc(tcNomFmtCentimos(_bonoProp))+'</div>'
+              +'<div class="n"></div>';
+          }
+        }
+      } else if(_bonoPer && _bonoPer.estado==='noAplica'){
+        /* El contrato no intersecta el año → sin fila, cero consultas, sin bloqueo. */
+      } else {
+        /* Contrato NO verificable → fila «Pdte.» sin consultar ningún ID, bloqueo y
+           aviso para completar el Perfil laboral. */
+        _bonoContratoNoVerificable=true;
+        todosImportes=false;
+        h+=descCelda('4I88','Bonobús familiar · Contrato no verificable')
+          +'<div class="n">—</div>'
+          +'<div class="n">'+celdaPend+'</div>'
+          +'<div class="n"></div>';
+      }
     } else if(_bonoAusencia){
       /* sinConfig, sinAnio u ok+bonobusEconomico:false → sin fila, cero consultas, sin bloqueo. */
     } else {
@@ -10000,6 +10391,15 @@ function tcNomRenderProvisional(data){
      el mecanismo existente), sin fallback ni importe alternativo. Con tramo
      INVALIDO/NO_APLICABLE no se consulta ningún ID salarial: se conserva el estado
      pendiente/aviso ya existente de la Nómina y no se inventa categoría ni antigüedad. */
+  /* NEXUM-016R1 — La paga solo se calcula con un CONTRATO VERIFICABLE. Un contrato
+     heredado (tipoContrato:null), ausente o inesperado NO equivale a indefinido.
+       A) indefinido            → fin efectivo = final del periodo (cálculo intacto).
+       B) eventual + fechaFin válida → fin efectivo = mín(fechaFinContrato, final periodo).
+       C) null / ausente / inesperado, o eventual SIN fecha final estrictamente
+          válida (YYYY-MM-DD) → contrato NO verificable: una única fila «Pdte.», CERO
+          consultas a PAGA_EXTRA_CP y a los ANTIGUEDAD_CP_*, totales bloqueados y
+          aviso. Nunca se asume indefinido ni se repara el perfil almacenado. */
+  var _pgContratoNoVerificable=false;
   if(NOM_AUTORIZADO && esMes && (R.mes===6 || R.mes===11)){
     var _pgVerano = (R.mes===6);
     var _PG_MS = 86400000;
@@ -10021,16 +10421,12 @@ function tcNomRenderProvisional(data){
     /* Días naturales del periodo (ambos extremos incluidos). Bisiestos automáticos. */
     var _pgDiasTotales = Math.round((_pgFinUTC - _pgInicioUTC)/_PG_MS) + 1;
 
-    /* NEXUM-011R1 — Fecha de ingreso = fechaAntiguedad del perfil, con PARSER LOCAL y
-       estricto (NO se usa tcPerfilFechaReal: es privada de la IIFE del Perfil y no
-       está exportada, así que invocarla aquí lanzaría ReferenceError). Exige cadena
-       'YYYY-MM-DD', construye la fecha con Date.UTC y verifica con una fecha UTC que
-       los componentes resultantes coinciden EXACTAMENTE (rechaza 2026-02-30, meses
-       o días imposibles, etc.). Devuelve los milisegundos UTC (usados DIRECTAMENTE
-       para contar días; nunca se convierte a fecha local) o null si no es válida.
-       Si no es válida: no se consulta ningún ID y se conserva el tratamiento pendiente
-       existente de la Nómina (sin fila; el bloque de antigüedad mensual ya lo gestiona). */
-    var _pgIngresoUTC = (function(iso){
+    /* NEXUM-011R1 — Parser UTC estricto (NO se usa tcPerfilFechaReal: es privada de la
+       IIFE del Perfil). Exige cadena 'YYYY-MM-DD', construye la fecha con Date.UTC y
+       verifica con una fecha UTC que los componentes coinciden EXACTAMENTE (rechaza
+       2026-02-30, meses o días imposibles). Devuelve los milisegundos UTC (usados
+       DIRECTAMENTE para contar días; nunca se convierte a hora local) o null. */
+    var _pgParseUTC = function(iso){
       if(typeof iso!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
       var p=iso.split('-'), y=+p[0], mo=+p[1], da=+p[2];
       if(mo<1||mo>12||da<1||da>31) return null;
@@ -10038,15 +10434,49 @@ function tcNomRenderProvisional(data){
       var chk=new Date(ms);
       if(chk.getUTCFullYear()!==y || chk.getUTCMonth()!==(mo-1) || chk.getUTCDate()!==da) return null;
       return ms;
-    })(_perfilNom.fechaAntiguedad);
-    if(_pgIngresoUTC!=null){
-      /* Proporción por días, inclusiva (se opera DIRECTAMENTE con el valor UTC). */
-      var _pgDiasGen;
-      if(_pgIngresoUTC <= _pgInicioUTC)      _pgDiasGen = _pgDiasTotales;
-      else if(_pgIngresoUTC <= _pgFinUTC)    _pgDiasGen = Math.round((_pgFinUTC - _pgIngresoUTC)/_PG_MS) + 1;
-      else                                   _pgDiasGen = 0;
+    };
 
-      /* ingreso posterior al final del periodo → sin fila y CERO consultas. */
+    /* NEXUM-016R1 — Verificación del CONTRATO del perfil vigente (casos A/B/C). El
+       denominador (_pgDiasTotales) NUNCA cambia; en eventual solo se recorta el final
+       efectivo a mín(fechaFinContrato, final del periodo). */
+    var _pgTipo = _perfilNom ? _perfilNom.tipoContrato : undefined;
+    var _pgFinEfUTC = _pgFinUTC;   /* fin efectivo del devengo (A: final del periodo) */
+    var _pgContratoOk = false;
+    if(_pgTipo==='indefinido'){
+      _pgContratoOk = true;
+    } else if(_pgTipo==='eventual'){
+      var _pgFinContrUTC = _pgParseUTC(_perfilNom.fechaFinContrato);
+      if(_pgFinContrUTC!=null){
+        _pgContratoOk = true;
+        if(_pgFinContrUTC < _pgFinEfUTC) _pgFinEfUTC = _pgFinContrUTC;   /* mín(fin, periodo) */
+      }
+      /* eventual sin fecha final estrictamente válida → caso C (no verificable). */
+    }
+    /* null, ausente o inesperado → caso C (no verificable). */
+
+    if(!_pgContratoOk){
+      /* CASO C — Contrato NO verificable: fila única «Pdte.», CERO consultas salariales
+         (ni PAGA_EXTRA_CP ni ANTIGUEDAD_CP_*) y bloqueo de totales. */
+      _pgContratoNoVerificable = true;
+      todosImportes = false;
+      h+=descCelda('PAGA EXTRA','Contrato no verificable')
+        +'<div class="n">—</div>'
+        +'<div class="n">'+celdaPend+'</div>'
+        +'<div class="n"></div>';
+    } else {
+      /* CASOS A/B — Contrato verificable. Fecha de ingreso = fechaAntiguedad del perfil.
+         Si no es válida: no se consulta ningún ID (el bloque de antigüedad mensual ya
+         gestiona ese aviso). */
+      var _pgIngresoUTC = _pgParseUTC(_perfilNom.fechaAntiguedad);
+      if(_pgIngresoUTC!=null){
+      /* Proporción por días, inclusiva (se opera DIRECTAMENTE con el valor UTC). El
+         final efectivo (_pgFinEfUTC) ya está recortado para el caso eventual. */
+      var _pgInicioEfUTC = (_pgIngresoUTC > _pgInicioUTC) ? _pgIngresoUTC : _pgInicioUTC;
+      var _pgDiasGen;
+      if(_pgInicioEfUTC > _pgFinEfUTC) _pgDiasGen = 0;
+      else                             _pgDiasGen = Math.round((_pgFinEfUTC - _pgInicioEfUTC)/_PG_MS) + 1;
+
+      /* ingreso posterior al final efectivo del periodo → sin fila y CERO consultas. */
       if(_pgDiasGen > 0){
         /* Cantidad mostrada «X/Y días» y nota de invierno: dependen solo de los días
            y del mes, así que se preparan una vez para los dos desenlaces posibles. */
@@ -10132,8 +10562,29 @@ function tcNomRenderProvisional(data){
             +_pgNotaHtml;
         }
       }
+      }
     }
   }
+
+  /* ===================== NEXUM-016 — COMPLEMENTOS DE TITULARIDAD (PENDIENTE)
+     En esta versión el régimen de titularidad (corrido/partido) SOLO se ALMACENA en
+     las Condiciones laborales del año (nexum_v1_conceptos_anuales → regimenTurno).
+     Todavía NO se calculan ni se muestran filas económicas para:
+       · Plus de turno partido.
+       · Compensación por descanso intermedio.
+     Regla CONFIRMADA que se implementará posteriormente (aquí, junto a su futuro
+     cálculo):
+
+       Un titular de corrido que realiza un servicio partido por un cambio
+       no cobra ni el plus de partido ni la compensación por descanso intermedio.
+
+       Estos complementos pertenecen al titular de la condición de partido.
+       La hoja de ruta representa el servicio realmente realizado, pero no
+       determina por sí sola esos derechos.
+
+     No se implementa la regla económica definitiva porque falta determinar qué
+     importe conserva el titular de partido cuando realiza un corrido. NO se
+     sobrescribe reg.turno, NO se migran cambios y NO se inventan campos diarios. */
 
   /* ===================== DEV-010R12/R13 — II · DEDUCCIONES: IRPF (/401) + COTIZACIONES
      SOCIALES DEL TRABAJADOR (/350, /370, /380) + HORAS EXTRAORDINARIAS (/390)
@@ -10398,14 +10849,32 @@ function tcNomRenderProvisional(data){
      Independiente de la cadena anterior: en este caso no se consulta la tabla
      salarial, por lo que estadoAlmacenCorrupto/faltaAlgunImporte no se activan. */
   if(_dgaNoVerificable){
-    h+='<div class="nom-recibo-aviso">⚠️ La configuración anual de DGA no se pudo verificar: la fila DGA queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revísala en «Más → Conceptos anuales».</div>';
+    h+='<div class="nom-recibo-aviso">⚠️ La configuración anual de DGA no se pudo verificar: la fila DGA queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revísala en «Más → Condiciones laborales del año».</div>';
+  }
+
+  /* NEXUM-016 — Aviso de contrato no verificable para prorratear la DGA (solo
+     agosto): falta el tipo de contrato o su fecha de finalización en el Perfil. */
+  if(_dgaContratoNoVerificable){
+    h+='<div class="nom-recibo-aviso">⚠️ La DGA no se puede prorratear porque el contrato no es verificable (falta el tipo de contrato o su fecha de finalización): la fila DGA queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Completa el Perfil laboral.</div>';
   }
 
   /* NEXUM-010 — Aviso de configuración anual del Bonobús familiar no verificable
      (solo julio). Independiente de la cadena anterior: en este caso no se consulta
      la tabla salarial, por lo que estadoAlmacenCorrupto/faltaAlgunImporte no se activan. */
   if(_bonoNoVerificable){
-    h+='<div class="nom-recibo-aviso">⚠️ La configuración anual del Bonobús familiar no se pudo verificar: la fila Bonobús queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revísala en «Más → Conceptos anuales».</div>';
+    h+='<div class="nom-recibo-aviso">⚠️ La configuración anual del Bonobús familiar no se pudo verificar: la fila Bonobús queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revísala en «Más → Condiciones laborales del año».</div>';
+  }
+
+  /* NEXUM-016 — Aviso de contrato no verificable para prorratear el Bonobús (solo
+     julio): falta el tipo de contrato o su fecha de finalización en el Perfil. */
+  if(_bonoContratoNoVerificable){
+    h+='<div class="nom-recibo-aviso">⚠️ El Bonobús familiar no se puede prorratear porque el contrato no es verificable (falta el tipo de contrato o su fecha de finalización): la fila Bonobús queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Completa el Perfil laboral.</div>';
+  }
+
+  /* NEXUM-016R1 — Aviso de contrato no verificable para las pagas extraordinarias
+     (solo junio/noviembre): un contrato heredado o sin tipo no se proyecta. */
+  if(_pgContratoNoVerificable){
+    h+='<div class="nom-recibo-aviso">⚠️ La paga extraordinaria no se puede calcular porque el contrato no es verificable: la fila queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Completa el tipo de contrato (y, si es eventual, su fecha de finalización) en el Perfil laboral.</div>';
   }
 
   /* NEXUM-012R2 — Aviso de Fiestas Primaverales (solo abril/diciembre): la fecha de
@@ -16198,7 +16667,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-015R3R3R3';
+    var VC_VERSION_ACTUAL = 'NEXUM-016R1';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
     var vcActualizando = false; /* guarda: impide doble ejecución/recarga */
