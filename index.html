@@ -823,7 +823,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-016R1</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-016R2</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -1997,13 +1997,53 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       #tab-nomina .nom-recibo-tot .r.big{ font-weight:700; font-size:12.5px; border-top:1px solid #111; margin-top:5px; padding-top:6px; }
       #tab-nomina .nom-recibo-foot{ padding:8px 11px; border-top:1px dashed #111; font-size:10px; line-height:1.45; opacity:.85; white-space:normal; overflow-wrap:anywhere; }
       #tab-nomina .nom-recibo-aviso{ padding:8px 11px; border-top:1.5px solid #111; font-size:11px; font-weight:700; line-height:1.45; white-space:normal; overflow-wrap:anywhere; }
-      /* Móvil: se conserva la letra legible; solo la rejilla desplaza en horizontal
-         (dentro de .nom-recibo-scroll). Sin zoom/scale, sin posiciones absolutas
-         y sin ocultar columnas. */
+      /* ===== NEXUM-016R2 — Nómina provisional en móvil (≤480px) ================
+         Presentación EXCLUSIVA. La rejilla de 4 columnas se reordena como BLOQUES
+         VERTICALES legibles SIN desplazamiento horizontal, reutilizando EXACTAMENTE
+         las mismas celdas ya generadas por tcNomRenderProvisional() (no se recalcula
+         nada, no se duplican importes, no se oculta información económica). Cada
+         celda numérica se autoetiqueta con el nombre de su columna mediante el
+         atributo data-label —metadato PURAMENTE VISUAL añadido tras el render por
+         tcNomEtiquetarReciboMovil()—; las celdas numéricas vacías se ocultan para no
+         mostrar etiquetas engañosas. Totales, notas y avisos viven fuera de la
+         rejilla y conservan su ancho completo. En >480px la tabla original de 4
+         columnas (Descripción · D/HR/% · Importe devengo · Importe descuento) queda
+         INTACTA: ninguna de estas reglas aplica. */
       @media (max-width:480px){
         #tab-nomina .nom-recibo{ font-size:11.5px; }
         #tab-nomina .nom-recibo-title{ font-size:11.5px; }
         #tab-nomina .nom-recibo-grid > div{ font-size:11px; padding:3px 6px; }
+        /* Se elimina por completo el desplazamiento horizontal del recibo. */
+        #tab-nomina .nom-recibo-scroll{ overflow-x:visible; }
+        /* La rejilla deja de comportarse como tabla: bloques apilados, sin ancho
+           mínimo (se retira el min-width:650px heredado). */
+        #tab-nomina .nom-recibo-grid{ display:block; min-width:0; }
+        /* Cabecera de columnas: se oculta (cada celda ya se autoetiqueta). No es
+           información económica. Se cubren también las celdas de cabecera que además
+           llevan la clase .n (mayor especificidad que la regla .n de más abajo). */
+        #tab-nomina .nom-recibo-grid > div.nom-r-h,
+        #tab-nomina .nom-recibo-grid > div.nom-r-h.n{ display:none; }
+        /* Bandas de sección «I · Devengos» / «II · Deducciones»: a todo el ancho. */
+        #tab-nomina .nom-recibo-grid > div.nom-r-sec{ display:block; }
+        /* Primera línea del bloque: código + descripción del concepto. Una línea
+           negra superior estructural separa cada concepto. */
+        #tab-nomina .nom-recibo-grid > div.desc{
+          display:block; font-weight:700; white-space:normal;
+          padding:6px 9px 2px; border-top:1px solid #111; }
+        /* Segunda zona: etiqueta de la columna (data-label) a la izquierda y su valor
+           a la derecha, en la misma línea. Sin separador vertical de columna. */
+        #tab-nomina .nom-recibo-grid > div.n{
+          display:flex; justify-content:space-between; align-items:baseline;
+          gap:12px; text-align:right; white-space:normal; border-left:0;
+          padding:1px 9px 1px 18px; }
+        #tab-nomina .nom-recibo-grid > div.n[data-label]::before{
+          content:attr(data-label); text-align:left; white-space:nowrap;
+          font-weight:400; opacity:.7; }
+        /* Celda numérica vacía (p.ej. «Importe descuento» de un devengo, o «Importe
+           devengo» de una deducción): se oculta para no mostrar una etiqueta vacía
+           engañosa. Nunca oculta un importe real (una celda con «Pdte.», «—» o un
+           valor NO está vacía y siempre se muestra). */
+        #tab-nomina .nom-recibo-grid > div.n:empty{ display:none; }
       }
       /* Impresión: documento completo visible, sin scroll ni sombra. */
       @media print{
@@ -10932,7 +10972,48 @@ window.tcRenderNomina=function(){
       if(_scrolls&&_scrolls[0]) _scrolls[0].classList.add('nom-scroll-mes');
     }catch(_e){}
   }
+  /* NEXUM-016R2 — Marcado SOLO visual, después del render provisional: etiqueta
+     cada celda numérica del recibo con el nombre de su columna (data-label) para
+     que en móvil (≤480px) se muestre como bloques verticales legibles sin scroll
+     horizontal. No recalcula ni altera ningún importe; solo añade atributos. */
+  if(NOM_TAB==='provisional'){
+    try{ tcNomEtiquetarReciboMovil(cont); }catch(_e){}
+  }
 };
+
+/* NEXUM-016R2 — Etiquetado PURAMENTE VISUAL del recibo provisional para móvil.
+   Recorre las celdas ya generadas por tcNomRenderProvisional() dentro de
+   .nom-recibo-grid y les añade un atributo data-label con el nombre de su columna,
+   reutilizando EXACTAMENTE esas celdas (no crea, duplica ni recalcula importes; no
+   oculta información económica). El grid es una lista plana de celdas cuyo orden por
+   concepto es: [.desc][.n cantidad/%][.n devengo][.n descuento]. Se ignoran la
+   cabecera de columnas (.nom-r-h) y las bandas de sección (.nom-r-sec), usando estas
+   últimas solo para saber si estamos en «II · Deducciones» (donde la 1.ª columna es
+   un porcentaje) o en «I · Devengos» (donde es una cantidad). Las etiquetas solo se
+   pintan vía CSS en ≤480px; en escritorio/tablet el atributo es inerte. */
+function tcNomEtiquetarReciboMovil(cont){
+  if(!cont||!cont.querySelector) return;
+  var grid=cont.querySelector('.nom-recibo-grid');
+  if(!grid) return;
+  var enDeduccion=false, col=0;
+  var nodos=grid.children;
+  for(var i=0;i<nodos.length;i++){
+    var el=nodos[i]; var cl=el.classList;
+    if(!cl) continue;
+    if(cl.contains('nom-r-h')) continue;               /* cabecera de columnas */
+    if(cl.contains('nom-r-sec')){                        /* banda de sección */
+      enDeduccion=/deduc/i.test(el.textContent||'');
+      col=0; continue;
+    }
+    if(cl.contains('desc')){ col=0; continue; }          /* inicia un concepto */
+    if(cl.contains('n')){
+      col++;
+      if(col===1) el.setAttribute('data-label', enDeduccion?'Porcentaje':'Cantidad');
+      else if(col===2) el.setAttribute('data-label','Devengo');
+      else if(col===3) el.setAttribute('data-label','Descuento');
+    }
+  }
+}
 
 /* Delegación de eventos de la pantalla Nómina (aditivo, sin tocar otras). */
 document.addEventListener('click',function(e){
@@ -16667,7 +16748,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-016R1';
+    var VC_VERSION_ACTUAL = 'NEXUM-016R2';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
     var vcActualizando = false; /* guarda: impide doble ejecución/recarga */
