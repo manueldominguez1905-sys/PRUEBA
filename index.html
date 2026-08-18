@@ -823,7 +823,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-016R2</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-017R1</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -1958,6 +1958,81 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       #tab-nomina .nom-nota{ font-size:0.82rem; color:var(--color-text-secondary); margin-top:6px; line-height:1.5; }
       #tab-nomina .nom-proximamente{ text-align:center; padding:40px 16px; color:var(--color-text-secondary); }
       #tab-nomina .nom-proximamente .big{ font-size:2rem; display:block; margin-bottom:8px; }
+
+      /* ===== NEXUM-017 — COMPARACIÓN de nómina oficial vs provisional ==========
+         Interfaz MÓVIL, sin desplazamiento horizontal (360/390/430 px). Usa las
+         variables --color-* del tema (claro y oscuro legibles). El estado NUNCA
+         depende solo del color: cada fila lleva una etiqueta de estado textual. */
+      #tab-nomina .cmp-wrap{ max-width:850px; margin:0 auto; color:var(--color-text); }
+      #tab-nomina .cmp-item, #tab-nomina .cmp-tot{ color:var(--color-text); }
+      #tab-nomina .cmp-pick{ display:flex; flex-direction:column; gap:12px; align-items:flex-start; }
+      #tab-nomina .cmp-btn{ display:inline-flex; align-items:center; gap:8px; background:var(--color-primary); color:#fff; border-radius:10px; padding:12px 16px; font-size:0.95rem; font-weight:700; border:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+      #tab-nomina .cmp-btn.sec{ background:var(--color-surface); color:var(--color-primary); border:1.5px solid var(--color-primary); }
+      #tab-nomina .cmp-btn.ghost{ background:transparent; color:var(--color-text-secondary); border:1.5px solid var(--color-border); }
+      #tab-nomina .cmp-btns{ display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 14px; }
+      #tab-nomina .cmp-file{ font-size:0.88rem; color:var(--color-text); word-break:break-word; overflow-wrap:anywhere; }
+      #tab-nomina .cmp-file .lbl{ color:var(--color-text-secondary); font-weight:600; }
+      #tab-nomina .cmp-estado{ font-size:0.85rem; color:var(--color-text-secondary); margin-top:2px; }
+      #tab-nomina .cmp-aviso{ border-left:4px solid var(--color-primary); background:rgba(122,31,43,.06); border-radius:8px; padding:10px 12px; font-size:0.85rem; line-height:1.5; color:var(--color-text); margin:10px 0; overflow-wrap:anywhere; }
+      body.dark #tab-nomina .cmp-aviso{ background:rgba(177,65,79,.14); }
+      #tab-nomina .cmp-aviso.warn{ border-left-color:var(--color-danger); background:var(--color-danger-bg); }
+      #tab-nomina .cmp-aviso.ok{ border-left-color:var(--color-success); background:var(--color-success-bg); }
+      /* NEXUM-017R1 — Estado AMARILLO «Lectura parcial» (distinto del rojo grave y
+         del verde). Legible en claro y oscuro; no depende solo del color (lleva
+         título y texto explícitos). */
+      #tab-nomina .cmp-aviso.parcial{ border-left-color:#E6A817; background:#FEF3C7; color:#78350F; }
+      body.dark #tab-nomina .cmp-aviso.parcial{ background:rgba(230,168,23,.16); color:var(--color-text); }
+      #tab-nomina .cmp-h{ font-size:0.95rem; font-weight:700; color:var(--color-text); margin:18px 0 8px; }
+      /* Resumen superior en tarjetas apiladas (grid fluido, sin scroll horizontal). */
+      #tab-nomina .cmp-resumen{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; margin-bottom:6px; }
+      #tab-nomina .cmp-kpi{ border:1px solid var(--color-border); border-radius:10px; padding:10px 12px; background:var(--color-surface); min-width:0; }
+      #tab-nomina .cmp-kpi .k{ font-size:0.72rem; text-transform:uppercase; letter-spacing:.3px; color:var(--color-text-secondary); font-weight:700; }
+      #tab-nomina .cmp-kpi .v{ font-size:1.15rem; font-weight:800; color:var(--color-text); margin-top:2px; overflow-wrap:anywhere; }
+      #tab-nomina .cmp-kpi.wide{ grid-column:1/-1; }
+      #tab-nomina .cmp-kpi.wide .v{ font-size:0.95rem; font-weight:700; }
+      /* Filtros */
+      #tab-nomina .cmp-filtros{ display:flex; gap:8px; margin:14px 0 10px; flex-wrap:wrap; }
+      #tab-nomina .cmp-filtro{ border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text-secondary); border-radius:8px; padding:7px 13px; font-size:0.85rem; font-weight:600; cursor:pointer; }
+      #tab-nomina .cmp-filtro.active{ background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
+      /* Bloque de concepto: apilado vertical, legible, sin depender del color. */
+      #tab-nomina .cmp-item{ border:1px solid var(--color-border); border-left-width:5px; border-radius:10px; padding:11px 13px; margin-bottom:9px; background:var(--color-surface); }
+      #tab-nomina .cmp-item .cmp-cab{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; }
+      #tab-nomina .cmp-item .cmp-cod{ font-weight:800; font-size:0.92rem; color:var(--color-text); }
+      #tab-nomina .cmp-item .cmp-cod .c{ font-family:ui-monospace,Consolas,monospace; }
+      #tab-nomina .cmp-item .cmp-tipo{ font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--color-text-secondary); border:1px solid var(--color-border); border-radius:6px; padding:1px 6px; }
+      #tab-nomina .cmp-item .cmp-badge{ font-size:0.72rem; font-weight:800; padding:2px 8px; border-radius:999px; white-space:nowrap; border:1.5px solid var(--color-border); color:var(--color-text); }
+      #tab-nomina .cmp-lineas{ margin-top:7px; display:grid; grid-template-columns:auto 1fr; gap:2px 12px; font-size:0.86rem; }
+      #tab-nomina .cmp-lineas .lk{ color:var(--color-text-secondary); }
+      #tab-nomina .cmp-lineas .lv{ text-align:right; font-variant-numeric:tabular-nums; color:var(--color-text); font-weight:600; overflow-wrap:anywhere; }
+      #tab-nomina .cmp-lineas .lv.dif{ font-weight:800; }
+      /* Estados: color + señal no cromática (borde izquierdo grueso + texto badge). */
+      #tab-nomina .cmp-item.st-coincide{ border-left-color:var(--color-success); opacity:.72; }
+      #tab-nomina .cmp-item.st-coincide .cmp-badge{ border-color:var(--color-success); color:var(--color-success); }
+      #tab-nomina .cmp-item.st-diferencia{ border-left-color:var(--color-danger); }
+      #tab-nomina .cmp-item.st-diferencia .cmp-badge{ border-color:var(--color-danger); color:var(--color-danger); background:var(--color-danger-bg); }
+      #tab-nomina .cmp-item.st-solooficial{ border-left-color:var(--color-primary); }
+      #tab-nomina .cmp-item.st-solooficial .cmp-badge{ border-color:var(--color-primary); color:var(--color-primary); }
+      #tab-nomina .cmp-item.st-solonexum{ border-left-color:var(--color-primary); }
+      #tab-nomina .cmp-item.st-pendientenexum{ border-left-color:var(--color-text-secondary); }
+      #tab-nomina .cmp-item.st-noidentificado{ border-left-color:var(--color-danger); border-style:dashed; }
+      #tab-nomina .cmp-item.st-noidentificado .cmp-badge{ border-color:var(--color-danger); color:var(--color-danger); }
+      #tab-nomina .cmp-tot{ margin-top:8px; border:1px solid var(--color-border); border-radius:10px; overflow:hidden; }
+      #tab-nomina .cmp-tot .row{ display:grid; grid-template-columns:1fr auto auto auto; gap:6px 10px; padding:9px 12px; font-size:0.85rem; border-top:1px solid var(--color-border); align-items:baseline; }
+      #tab-nomina .cmp-tot .row:first-child{ border-top:none; }
+      #tab-nomina .cmp-tot .row.head{ background:var(--color-bg); font-size:0.72rem; text-transform:uppercase; letter-spacing:.3px; color:var(--color-text-secondary); font-weight:700; }
+      #tab-nomina .cmp-tot .row.big{ font-weight:800; }
+      #tab-nomina .cmp-tot .tk{ color:var(--color-text); }
+      #tab-nomina .cmp-tot .tv{ text-align:right; font-variant-numeric:tabular-nums; color:var(--color-text); overflow-wrap:anywhere; }
+      #tab-nomina .cmp-tot .tv.dif{ font-weight:800; }
+      #tab-nomina .cmp-tot .tv.pos{ color:var(--color-success); }
+      #tab-nomina .cmp-tot .tv.neg{ color:var(--color-danger); }
+      #tab-nomina .cmp-foot{ font-size:0.78rem; color:var(--color-text-secondary); line-height:1.5; margin-top:12px; overflow-wrap:anywhere; }
+      @media (max-width:430px){
+        #tab-nomina .cmp-tot .row{ grid-template-columns:1fr auto; }
+        #tab-nomina .cmp-tot .row .tk{ grid-column:1/-1; font-weight:700; }
+        #tab-nomina .cmp-tot .row.head{ display:none; }
+        #tab-nomina .cmp-tot .tv::before{ content:attr(data-lbl); float:left; color:var(--color-text-secondary); font-weight:600; font-size:0.72rem; }
+      }
       /* ===== DEV-007R8 — Nómina provisional con aspecto de recibo real ===== */
       /* Hoja BLANCA, texto AZUL monoespaciado y LÍNEAS NEGRAS estructurales.
          Columnas alineadas con CSS Grid. Sin bordes horizontales por concepto y
@@ -10945,8 +11020,760 @@ function tcNomRenderProvisional(data){
   return h;
 }
 
+/* ============================================================================
+   NEXUM-017 — COMPARACIÓN DE NÓMINA OFICIAL vs PROVISIONAL
+   ----------------------------------------------------------------------------
+   PRIVACIDAD (obligatoria): el PDF se procesa EXCLUSIVAMENTE en el dispositivo
+   con la biblioteca pdf.js ya presente. NO se usa fetch() para subir el
+   documento, NO se envía a OCR.space ni a ningún servicio remoto, NO hay OCR de
+   respaldo. NADA (ni el PDF, ni su texto, ni los resultados) se guarda en
+   localStorage, IndexedDB ni backups: todo el estado vive SOLO en memoria
+   (objeto NOMCMP) y desaparece al recargar o cerrar la aplicación.
+
+   La nómina OFICIAL siempre prevalece. Esta pantalla NO recalcula ni modifica
+   ningún importe de la nómina provisional: reutiliza tal cual las celdas ya
+   generadas por tcNomRenderProvisional(tcResumenLaboral(...)) leyendo sus
+   importes finales en céntimos. No toca totalCent, bases, jornadas ni perfil.
+   ==========================================================================*/
+
+/* Estado en MEMORIA (nunca persiste). */
+var NOMCMP = { anio:null, mes:null, fileName:'', estado:'idle', mensaje:'',
+               oficial:null, nexum:null, resultado:null, filtro:'todos' };
+
+function tcCmpReset(){
+  NOMCMP.anio=null; NOMCMP.mes=null; NOMCMP.fileName=''; NOMCMP.estado='idle';
+  NOMCMP.mensaje=''; NOMCMP.oficial=null; NOMCMP.nexum=null; NOMCMP.resultado=null;
+  /* se conserva NOMCMP.filtro (preferencia de vista, no es dato de la nómina) */
+}
+window.tcCmpQuitar=function(){ tcCmpReset(); tcCmpRerender(); tcToast('Nómina oficial retirada de la memoria'); };
+
+function tcCmpRerender(){
+  if(typeof NOM_TAB!=='undefined' && NOM_TAB==='comparacion'){
+    var cont=document.getElementById('nomContenido');
+    if(cont) cont.innerHTML=tcNomRenderComparacion();
+  }
+}
+
+/* ---- Utilidades numéricas (idénticas a las del recibo; español estricto) ---- */
+function tcCmpEuroACent(str){
+  if(str==null) return null;
+  var s=String(str).replace(/ /g,' ').replace(/\s+/g,'').replace(/€/g,'').replace(/EUR/gi,'');
+  if(s==='') return null;
+  var neg=false;
+  if(/^-/.test(s)){ neg=true; s=s.slice(1); }
+  if(/-$/.test(s)){ neg=true; s=s.slice(0,-1); }
+  if(!/^\d{1,3}(\.\d{3})*,\d{2}$/.test(s) && !/^\d+,\d{2}$/.test(s)) return null;
+  var parts=s.split(','), ent=parts[0].replace(/\./g,''), dec=parts[1];
+  if(!/^\d+$/.test(ent) || !/^\d{2}$/.test(dec)) return null;
+  var cent=parseInt(ent,10)*100+parseInt(dec,10);
+  if(!isFinite(cent)||!Number.isSafeInteger(cent)) return null;
+  return neg?-cent:cent;
+}
+function tcCmpFmt(cent){
+  if(cent==null) return '—';
+  var neg=cent<0; cent=Math.abs(cent);
+  var ent=Math.floor(cent/100), dec=cent%100;
+  var e=String(ent).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  return (neg?'-':'')+e+','+(dec<10?'0':'')+dec+' €';
+}
+function tcCmpFmtSigno(cent){
+  if(cent==null) return '—';
+  var s=tcCmpFmt(Math.abs(cent));
+  return (cent>0?'+':cent<0?'-':'+')+s;
+}
+function tcCmpEsCodigo(tok){
+  if(tok==null) return false;
+  var t=String(tok).trim().toUpperCase();
+  return /^\/[0-9A-Z]{3}$/.test(t) || /^[0-9A-Z]{4}$/.test(t);
+}
+function tcCmpPad2(n){ return n<10?'0'+n:''+n; }
+/* Periodos únicos (una liquidación puede repetir su periodo en varias páginas). */
+function tcCmpPeriodosTexto(oficial){
+  if(!oficial||!oficial.periodos) return '';
+  var vistos={}, out=[];
+  oficial.periodos.forEach(function(p){ if(!vistos[p.texto]){ vistos[p.texto]=1; out.push(p.texto); } });
+  return out.join(' · ');
+}
+
+/* ===== PARSER de la nómina oficial (PDF) — solo posiciones de texto ========= */
+function tcCmpParsearOficial(paginas){
+  var TOL=3.5;
+  var res={ ok:false, noVerificable:false, avisos:[], periodos:[],
+            conceptos:{}, orden:[], noIdentificados:[],
+            totales:{ devengoCent:null, descuentoCent:null, liquidoCent:null,
+                      devengoPresente:false, descuentoPresente:false, liquidoPresente:false },
+            integridad:{ sumaDev:0, sumaDes:0, cuadraDev:null, cuadraDes:null, liquidoCoherente:null },
+            lecturaCompleta:false };
+  if(!paginas||!paginas.length){ res.noVerificable=true; res.avisos.push('Sin páginas.'); return res; }
+
+  function reconstruir(items){
+    var subs=items.slice().filter(function(it){ return it.s && String(it.s).trim()!==''; });
+    subs.sort(function(a,b){ return (b.y-a.y)||(a.x-b.x); });
+    var lineas=[], cur=null;
+    subs.forEach(function(su){
+      if(cur && Math.abs(cur.y-su.y)<=TOL) cur.items.push(su);
+      else { cur={y:su.y, items:[su]}; lineas.push(cur); }
+    });
+    lineas.forEach(function(l){
+      l.items.sort(function(a,b){ return a.x-b.x; });
+      l.text=l.items.map(function(i){ return i.s; }).join(' ').replace(/\s+/g,' ').trim();
+    });
+    return lineas;
+  }
+  function detectarColumnas(lineas){
+    var hQty=null,hDev=null,hDes=null;
+    for(var i=0;i<lineas.length;i++){
+      var l=lineas[i];
+      if(!l.items.some(function(it){ return /^DESCRIPCI/i.test(it.s.trim()); })) continue;
+      l.items.forEach(function(it){
+        var u=it.s.trim().toUpperCase();
+        if(u==='D/HR/%'&&hQty===null) hQty=it.x;
+        else if(u==='DEVENGO'&&hDev===null) hDev=it.x;
+        else if(u==='DESCUENTO'&&hDes===null) hDes=it.x;
+      });
+      if(hQty!==null&&hDev!==null&&hDes!==null) break;
+    }
+    if(hQty===null) hQty=216; if(hDev===null) hDev=372; if(hDes===null) hDes=494;
+    return { bQty:hQty-25, bDev:hDev-45, bDes:hDes-45 };
+  }
+  function extraerPeriodo(texto){
+    var re=/(\d{2})\.(\d{2})\.(\d{2,4})/g, m, f=[];
+    while((m=re.exec(texto))!==null){
+      var yy=m[3].length===2?(2000+parseInt(m[3],10)):parseInt(m[3],10);
+      f.push({ d:parseInt(m[1],10), mes:parseInt(m[2],10), anio:yy });
+    }
+    if(!f.length) return null;
+    var ini=f[0], fin=f[f.length-1];
+    return { mes:fin.mes, anio:fin.anio,
+             texto:tcCmpPad2(ini.d)+'.'+tcCmpPad2(ini.mes)+'.'+ini.anio+' — '+tcCmpPad2(fin.d)+'.'+tcCmpPad2(fin.mes)+'.'+fin.anio };
+  }
+  function juntarNum(items){ return items.map(function(i){ return i.s; }).join('').replace(/\s+/g,''); }
+  function concepto(code){
+    if(!res.conceptos[code]){ res.conceptos[code]={ code:code, descs:[], devengoCent:0, descuentoCent:0, ocurr:[], tieneDev:false, tieneDes:false }; res.orden.push(code); }
+    return res.conceptos[code];
+  }
+
+  var totalesPorPeriodo={};
+  paginas.forEach(function(items,pIdx){
+    var lineas=reconstruir(items);
+    var col=detectarColumnas(lineas);
+    var yHeader=null,yFin=null;
+    lineas.forEach(function(l){
+      if(yHeader===null && /DESCRIPCI/i.test(l.text) && /D\/HR/i.test(l.text)) yHeader=l.y;
+      if(yFin===null && /B\.?\s*Imponible/i.test(l.text)) yFin=l.y;
+    });
+    if(yFin===null) lineas.forEach(function(l){ if(yFin===null && /TOTAL\s+APORTACIONES/i.test(l.text)) yFin=l.y; });
+
+    var pagePeriodo=null;
+    lineas.forEach(function(l){
+      if(/Periodo/i.test(l.text)&&/Liquid/i.test(l.text)){
+        var p=extraerPeriodo(l.text);
+        if(p){ res.periodos.push({ mes:p.mes, anio:p.anio, texto:p.texto }); if(pagePeriodo===null) pagePeriodo=p.texto; }
+      }
+    });
+    var claveTot=pagePeriodo!==null?pagePeriodo:('__pag'+pIdx);
+
+    lineas.forEach(function(l){
+      if(yHeader===null) return;
+      if(l.y>=yHeader-1) return;
+      if(yFin!==null && l.y<=yFin+1) return;
+      var descItems=[],qtyItems=[],devItems=[],desItems=[];
+      l.items.forEach(function(it){
+        if(it.x<col.bQty) descItems.push(it);
+        else if(it.x<col.bDev) qtyItems.push(it);
+        else if(it.x<col.bDes) devItems.push(it);
+        else desItems.push(it);
+      });
+      if(!descItems.length&&!qtyItems.length&&!devItems.length&&!desItems.length) return;
+      var code=null, descTxt='';
+      if(descItems.length){
+        var first=descItems[0].s.trim();
+        var mTok=first.match(/^(\S+)([\s\S]*)$/);
+        var tok0=mTok?mTok[1]:first;
+        if(tcCmpEsCodigo(tok0)){
+          code=tok0.toUpperCase();
+          var resto=[(mTok?mTok[2]:'')].concat(descItems.slice(1).map(function(i){return i.s;})).join(' ');
+          descTxt=resto.replace(/\s+/g,' ').trim();
+        } else {
+          descTxt=descItems.map(function(i){return i.s;}).join(' ').replace(/\s+/g,' ').trim();
+        }
+      }
+      var devStr=devItems.length?juntarNum(devItems):'';
+      var desStr=desItems.length?juntarNum(desItems):'';
+      var qtyStr=qtyItems.length?qtyItems.map(function(i){return i.s;}).join(' ').replace(/\s+/g,' ').trim():'';
+      var devC=devStr?tcCmpEuroACent(devStr):null;
+      var desC=desStr?tcCmpEuroACent(desStr):null;
+      var hayImporte=(devStr!==''||desStr!=='');
+      if(code===null){
+        var t=(descTxt||l.text).toUpperCase();
+        if(/CONCEPTOS\s+MES\s+EN\s+CURSO/.test(t)) return;
+        if(!hayImporte) return;
+        res.noIdentificados.push({ texto:l.text, pagina:pIdx+1, devengoCent:devC, descuentoCent:desC });
+        return;
+      }
+      if(devStr!==''&&devC===null){ res.noIdentificados.push({ texto:l.text, pagina:pIdx+1, motivo:'importe devengo ilegible ('+devStr+')' }); }
+      if(desStr!==''&&desC===null){ res.noIdentificados.push({ texto:l.text, pagina:pIdx+1, motivo:'importe descuento ilegible ('+desStr+')' }); }
+      var C=concepto(code);
+      if(descTxt&&C.descs.indexOf(descTxt)===-1) C.descs.push(descTxt);
+      if(devC!==null){ C.devengoCent+=devC; C.tieneDev=true; res.integridad.sumaDev+=devC; }
+      if(desC!==null){ C.descuentoCent+=desC; C.tieneDes=true; res.integridad.sumaDes+=desC; }
+      C.ocurr.push({ desc:descTxt, cant:qtyStr, devengoCent:devC, descuentoCent:desC });
+    });
+
+    lineas.forEach(function(l){
+      var up=l.text.toUpperCase();
+      function valorTras(claves){
+        var kx=null;
+        l.items.forEach(function(it){
+          var u=it.s.trim().toUpperCase();
+          for(var k=0;k<claves.length;k++){ if(u.indexOf(claves[k])===0){ if(kx===null||it.x<kx) kx=it.x; } }
+        });
+        if(kx===null) return null;
+        var der=l.items.filter(function(it){ return it.x>kx+25; });
+        if(!der.length) return null;
+        der.sort(function(a,b){return a.x-b.x;});
+        return tcCmpEuroACent(juntarNum(der));
+      }
+      if(!totalesPorPeriodo[claveTot]) totalesPorPeriodo[claveTot]={dev:null,des:null,liq:null};
+      var slot=totalesPorPeriodo[claveTot];
+      if(/TOTAL\s+DEVENGOS/.test(up)){ var v=valorTras(['DEVENGOS']); if(v!==null) slot.dev=v; }
+      if(/TOTAL\s+DESCUENTOS/.test(up)){ var v2=valorTras(['DESCUENTOS']); if(v2!==null) slot.des=v2; }
+      if(/IMPORTE\s+L[IÍ]QUIDO/.test(up)){ var v3=valorTras(['LÍQUIDO','LIQUIDO']); if(v3!==null) slot.liq=v3; }
+    });
+  });
+
+  Object.keys(totalesPorPeriodo).forEach(function(k){
+    var s=totalesPorPeriodo[k];
+    if(s.dev!==null){ res.totales.devengoCent=(res.totales.devengoCent||0)+s.dev; res.totales.devengoPresente=true; }
+    if(s.des!==null){ res.totales.descuentoCent=(res.totales.descuentoCent||0)+s.des; res.totales.descuentoPresente=true; }
+    if(s.liq!==null){ res.totales.liquidoCent=(res.totales.liquidoCent||0)+s.liq; res.totales.liquidoPresente=true; }
+  });
+
+  if(res.totales.devengoPresente) res.integridad.cuadraDev=(res.integridad.sumaDev===res.totales.devengoCent);
+  if(res.totales.descuentoPresente) res.integridad.cuadraDes=(res.integridad.sumaDes===res.totales.descuentoCent);
+  if(res.totales.devengoPresente&&res.totales.descuentoPresente&&res.totales.liquidoPresente){
+    res.integridad.liquidoCoherente=((res.totales.devengoCent-res.totales.descuentoCent)===res.totales.liquidoCent);
+    if(!res.integridad.liquidoCoherente){ res.noVerificable=true; res.avisos.push('Los totales impresos no son coherentes (líquido ≠ devengos − descuentos).'); }
+  } else {
+    res.avisos.push('Falta algún total impreso en el PDF.');
+  }
+  /* NEXUM-017R1 — Lectura COMPLETA solo si TODO cuadra: no hay error grave, no hay
+     conceptos no identificados, están los tres totales impresos, el líquido es
+     coherente Y la suma de conceptos leídos cuadra EXACTAMENTE con los totales
+     impresos de devengos y de descuentos. Que el líquido sea devengos − descuentos
+     NO basta. */
+  res.lecturaCompleta=(res.noVerificable===false && res.noIdentificados.length===0 &&
+                       res.totales.devengoPresente && res.totales.descuentoPresente && res.totales.liquidoPresente &&
+                       res.integridad.liquidoCoherente===true &&
+                       res.integridad.cuadraDev===true && res.integridad.cuadraDes===true);
+  res.ok=(res.orden.length>0);
+  return res;
+}
+
+/* ===== EXTRACCIÓN de la nómina PROVISIONAL (reutiliza el render existente) ===
+   Renderiza tcNomRenderProvisional(tcResumenLaboral(anio,mes)) en un contenedor
+   EN MEMORIA (no se inserta en el documento visible) y LEE sus celdas ya
+   calculadas. No recalcula nada. Agrupa por código (mismo criterio que el
+   oficial): un código repetido (p.ej. 4A4E ×3) suma sus importes. */
+function tcCmpExtraerProvisional(anio,mes){
+  var out={ ok:false, conceptos:{}, orden:[],
+            totales:{ devengoCent:null, devengoPend:true, descuentoCent:null, descuentoPend:true, liquidoCent:null, liquidoPend:true } };
+  var html;
+  try{ html=tcNomRenderProvisional(tcResumenLaboral(anio,mes)); }
+  catch(e){ out.error='No se pudo generar la nómina provisional.'; return out; }
+  var tmp=document.createElement('div');
+  tmp.innerHTML=html;
+  var grid=tmp.querySelector('.nom-recibo-grid');
+  function C(code){
+    if(!out.conceptos[code]){ out.conceptos[code]={ code:code, descs:[], devengoCent:0, devengoPend:false, hasDev:false, descuentoCent:0, descuentoPend:false, hasDes:false }; out.orden.push(code); }
+    return out.conceptos[code];
+  }
+  function esPend(cell){
+    if(!cell) return false;
+    if(cell.querySelector && cell.querySelector('.nom-recibo-pend')) return true;
+    return /Pdte\.?|Pendiente/i.test(cell.textContent||'');
+  }
+  if(grid){
+    var seccion='dev';
+    var kids=grid.children;
+    var i=0;
+    while(i<kids.length){
+      var el=kids[i], cl=el.classList;
+      if(cl && cl.contains('nom-r-h')){ i++; continue; }
+      if(cl && cl.contains('nom-r-sec')){ seccion=/deduc/i.test(el.textContent||'')?'ded':'dev'; i++; continue; }
+      if(cl && cl.contains('desc')){
+        var codEl=el.querySelector('.nom-recibo-cod');
+        var code=codEl?(codEl.textContent||'').trim().toUpperCase():'';
+        var descTxt=(el.textContent||'').replace(code,'').replace(/\s+/g,' ').trim();
+        var n1=kids[i+1], n2=kids[i+2], n3=kids[i+3];
+        var amountCell=(seccion==='dev')?n2:n3;
+        i+=4;
+        if(!code || !tcCmpEsCodigo(code)) continue;
+        var reg=C(code);
+        if(descTxt && reg.descs.indexOf(descTxt)===-1) reg.descs.push(descTxt);
+        var pend=esPend(amountCell);
+        var cent=pend?null:tcCmpEuroACent(amountCell?amountCell.textContent:'');
+        if(seccion==='dev'){ reg.hasDev=true; if(pend||cent===null) reg.devengoPend=true; else reg.devengoCent+=cent; }
+        else { reg.hasDes=true; if(pend||cent===null) reg.descuentoPend=true; else reg.descuentoCent+=cent; }
+        continue;
+      }
+      i++;
+    }
+  }
+  var tot=tmp.querySelector('.nom-recibo-tot');
+  if(tot){
+    var rows=tot.querySelectorAll('.r');
+    function leerTot(row){
+      if(!row) return {cent:null,pend:true};
+      var v=row.querySelector('span:last-child');
+      if(!v) return {cent:null,pend:true};
+      if((v.className||'').indexOf('nom-recibo-pend')>=0 || /Pdte\.?|Pendiente/i.test(v.textContent||'')) return {cent:null,pend:true};
+      var c=tcCmpEuroACent(v.textContent);
+      return {cent:c, pend:(c===null)};
+    }
+    var d=leerTot(rows[0]), de=leerTot(rows[1]), li=leerTot(rows[2]);
+    out.totales.devengoCent=d.cent; out.totales.devengoPend=d.pend;
+    out.totales.descuentoCent=de.cent; out.totales.descuentoPend=de.pend;
+    out.totales.liquidoCent=li.cent; out.totales.liquidoPend=li.pend;
+  }
+  out.ok=true;
+  return out;
+}
+
+/* ===== COMPARACIÓN =========================================================
+   Compara SIEMPRE en céntimos enteros, por código exacto. Nunca usa nombre. */
+function tcCmpComparar(oficial, nexum){
+  var filas=[];
+  function nexHas(code,tipo){
+    var n=nexum&&nexum.conceptos[code]; if(!n) return null;
+    if(tipo==='dev'&&n.hasDev) return { cent:n.devengoPend?null:n.devengoCent, pend:n.devengoPend, desc:n.descs[0]||'' };
+    if(tipo==='des'&&n.hasDes) return { cent:n.descuentoPend?null:n.descuentoCent, pend:n.descuentoPend, desc:n.descs[0]||'' };
+    return null;
+  }
+  var vistos={};
+  function claveTipo(code){ return code.charAt(0)==='/'?'des':'dev'; }
+
+  /* Recorre conceptos oficiales (orden de aparición) */
+  oficial.orden.forEach(function(code){
+    var C=oficial.conceptos[code];
+    ['dev','des'].forEach(function(tipo){
+      var oTiene=(tipo==='dev')?C.tieneDev:C.tieneDes;
+      if(!oTiene) return;
+      var oCent=(tipo==='dev')?C.devengoCent:C.descuentoCent;
+      var n=nexHas(code,tipo);
+      vistos[code+'|'+tipo]=true;
+      filas.push(construir(code,tipo,C.descs[0]||'',oCent,n));
+    });
+  });
+  /* Conceptos SOLO en NEXUM (no en oficial) */
+  if(nexum) nexum.orden.forEach(function(code){
+    var n=nexum.conceptos[code];
+    ['dev','des'].forEach(function(tipo){
+      var nTiene=(tipo==='dev')?n.hasDev:n.hasDes;
+      if(!nTiene) return;
+      if(vistos[code+'|'+tipo]) return;
+      var info={ cent:(tipo==='dev'?(n.devengoPend?null:n.devengoCent):(n.descuentoPend?null:n.descuentoCent)),
+                 pend:(tipo==='dev'?n.devengoPend:n.descuentoPend), desc:n.descs[0]||'' };
+      filas.push(construir(code,tipo,n.descs[0]||'',null,info));
+    });
+  });
+
+  function construir(code,tipo,desc,oCent,n){
+    var estado, dif=null, nCent=null, nPend=false;
+    if(n){ nPend=n.pend; nCent=n.pend?null:n.cent; if(!desc&&n.desc) desc=n.desc; }
+    if(oCent!=null && n){
+      if(nPend){ estado='pendienteNexum'; }
+      else if(nCent!=null){ dif=oCent-nCent; estado=(dif===0)?'coincide':'diferencia'; }
+      else { estado='pendienteNexum'; }
+    } else if(oCent!=null && !n){ estado='soloOficial'; }
+    else if(oCent==null && n){ estado = nPend?'pendienteNexum':'soloNexum'; }
+    else { estado='soloNexum'; }
+    return { code:code, tipo:tipo, desc:desc, oficialCent:oCent, nexumCent:nCent, nexumPend:nPend, estado:estado, dif:dif };
+  }
+
+  /* Conceptos NO identificados del oficial */
+  (oficial.noIdentificados||[]).forEach(function(ni){
+    filas.push({ code:null, tipo:(ni.descuentoCent!=null&&ni.devengoCent==null)?'des':'dev',
+      desc:ni.texto||ni.motivo||'Línea no identificada',
+      oficialCent:(ni.devengoCent!=null?ni.devengoCent:ni.descuentoCent),
+      nexumCent:null, nexumPend:false, estado:'noIdentificado', dif:null });
+  });
+
+  var resumen={ coincide:0, diferencia:0, soloOficial:0, soloNexum:0, pendienteNexum:0, noIdentificado:0 };
+  filas.forEach(function(f){ if(resumen[f.estado]!=null) resumen[f.estado]++; });
+
+  /* Totales */
+  var nt=(nexum&&nexum.totales)||{ devengoCent:null,devengoPend:true,descuentoCent:null,descuentoPend:true,liquidoCent:null,liquidoPend:true };
+  function totCmp(oCent,oPres,nCent,nPend){
+    var of=oPres?oCent:null;
+    var ne=nPend?null:nCent;
+    var dif=(of!=null&&ne!=null)?(of-ne):null;
+    return { oficial:of, nexum:ne, nexumPend:nPend, dif:dif };
+  }
+  var totales={
+    devengo:  totCmp(oficial.totales.devengoCent, oficial.totales.devengoPresente, nt.devengoCent, nt.devengoPend),
+    descuento:totCmp(oficial.totales.descuentoCent, oficial.totales.descuentoPresente, nt.descuentoCent, nt.descuentoPend),
+    liquido:  totCmp(oficial.totales.liquidoCent, oficial.totales.liquidoPresente, nt.liquidoCent, nt.liquidoPend)
+  };
+  return { filas:filas, resumen:resumen, totales:totales };
+}
+
+/* ===== LECTURA del PDF (local, sin red, sin OCR) =========================== */
+window.tcCmpPick=function(){
+  var inp=document.getElementById('cmpFileInput');
+  if(inp) inp.click();
+};
+window.tcCmpOnFile=function(input){
+  var file=input&&input.files&&input.files[0];
+  if(!file) return;
+  if(!/\.pdf$/i.test(file.name) && file.type!=='application/pdf'){
+    NOMCMP.estado='error'; NOMCMP.mensaje='El archivo seleccionado no es un PDF.'; NOMCMP.fileName=file.name; tcCmpRerender(); return;
+  }
+  NOMCMP.fileName=file.name; NOMCMP.estado='leyendo'; NOMCMP.mensaje=''; NOMCMP.oficial=null; NOMCMP.nexum=null; NOMCMP.resultado=null;
+  tcCmpRerender();
+  tcCmpLeerPDF(file);
+};
+function tcCmpLeerPDF(file){
+  if(typeof pdfjsLib==='undefined'){
+    if(typeof cargarPDFjsSiNecesario==='function'){
+      cargarPDFjsSiNecesario();
+      if(typeof _pdfjsEstado!=='undefined' && _pdfjsEstado==='error'){
+        NOMCMP.estado='error'; NOMCMP.mensaje='No se pudo cargar el lector de PDF (pdf.js).'; tcCmpRerender(); return;
+      }
+      setTimeout(function(){ tcCmpLeerPDF(file); }, 350); return;
+    }
+    NOMCMP.estado='error'; NOMCMP.mensaje='No se pudo cargar el lector de PDF (pdf.js).'; tcCmpRerender(); return;
+  }
+  var reader=new FileReader();
+  reader.onerror=function(){ NOMCMP.estado='error'; NOMCMP.mensaje='No se pudo leer el archivo.'; tcCmpRerender(); };
+  reader.onload=function(ev){
+    var task;
+    try{ task=pdfjsLib.getDocument({data:new Uint8Array(ev.target.result)}); }
+    catch(e){ NOMCMP.estado='error'; NOMCMP.mensaje='No se pudo abrir el PDF.'; tcCmpRerender(); return; }
+    task.promise.then(function(pdf){
+      var total=pdf.numPages, paginas=[];
+      function leer(n){
+        if(n>total){ tcCmpProcesar(paginas); return; }
+        pdf.getPage(n).then(function(page){
+          page.getTextContent().then(function(tc){
+            var items=[];
+            tc.items.forEach(function(it){ if(it.str) items.push({ x:it.transform[4], y:it.transform[5], w:it.width||0, s:it.str }); });
+            paginas.push(items); leer(n+1);
+          }, function(){ NOMCMP.estado='error'; NOMCMP.mensaje='No se pudo leer el texto del PDF.'; tcCmpRerender(); });
+        }, function(){ NOMCMP.estado='error'; NOMCMP.mensaje='No se pudo leer una página del PDF.'; tcCmpRerender(); });
+      }
+      leer(1);
+    }, function(){ NOMCMP.estado='error'; NOMCMP.mensaje='No se pudo abrir el PDF (¿archivo dañado?).'; tcCmpRerender(); });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function tcCmpProcesar(paginas){
+  /* ¿Hay texto extraíble? */
+  var hayTexto=paginas.some(function(p){ return p.some(function(it){ return it.s && it.s.trim()!==''; }); });
+  if(!hayTexto){
+    NOMCMP.estado='sinTexto';
+    NOMCMP.mensaje='No se pudo leer el texto de esta nómina. Utiliza el PDF original descargado del Portal del Empleado.';
+    tcCmpRerender(); return;
+  }
+  var oficial=tcCmpParsearOficial(paginas);
+  NOMCMP.oficial=oficial;
+  if(!oficial.ok){
+    NOMCMP.estado='sinTexto';
+    NOMCMP.mensaje='No se pudo leer el texto de esta nómina. Utiliza el PDF original descargado del Portal del Empleado.';
+    tcCmpRerender(); return;
+  }
+  /* Verificación del periodo: TODAS las liquidaciones deben ser del mes/año elegido. */
+  var selA=NOM_ANIO, selM=NOM_MES;
+  NOMCMP.anio=selA; NOMCMP.mes=selM;
+  if(!oficial.periodos.length){
+    NOMCMP.estado='periodoNoLeido';
+    NOMCMP.mensaje='No se pudo determinar el periodo de liquidación del PDF.';
+    tcCmpRerender(); return;
+  }
+  var coincide=oficial.periodos.every(function(p){ return p.mes===selM && p.anio===selA; });
+  if(!coincide){
+    NOMCMP.estado='periodoNoCoincide';
+    tcCmpRerender(); return;
+  }
+  /* Extracción de la provisional y comparación */
+  var nexum=tcCmpExtraerProvisional(selA,selM);
+  NOMCMP.nexum=nexum;
+  NOMCMP.resultado=tcCmpComparar(oficial, nexum);
+  NOMCMP.estado='listo';
+  tcCmpRerender();
+}
+
+window.tcCmpSetFiltro=function(f){ NOMCMP.filtro=f; tcCmpRerender(); };
+
+/* ===== INFORME COPIABLE ===================================================== */
+window.tcCmpCopiarInforme=function(){
+  var txt=tcCmpGenerarInforme();
+  if(!txt){ tcToast('Nada que copiar'); return; }
+  function fallback(){
+    try{
+      var ta=document.createElement('textarea');
+      ta.value=txt; ta.setAttribute('readonly','');
+      ta.style.position='fixed'; ta.style.top='-1000px'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      var ok=document.execCommand('copy'); document.body.removeChild(ta);
+      tcToast(ok?'Informe copiado':'No se pudo copiar');
+    }catch(e){ tcToast('No se pudo copiar'); }
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ tcToast('Informe copiado'); }, fallback);
+  } else fallback();
+};
+function tcCmpGenerarInforme(){
+  var R=NOMCMP.resultado, O=NOMCMP.oficial;
+  if(!R||!O) return '';
+  var MES=(typeof MESES!=='undefined'&&MESES[NOMCMP.mes-1])?MESES[NOMCMP.mes-1]:('mes '+NOMCMP.mes);
+  var L=[];
+  L.push('INFORME DE DIFERENCIAS — NÓMINA '+MES.toUpperCase()+' '+NOMCMP.anio);
+  L.push('Archivo oficial: '+(NOMCMP.fileName||'—'));
+  L.push('Periodo oficial: '+tcCmpPeriodosTexto(O));
+  /* NEXUM-017R1 — Aviso de LECTURA PARCIAL cuando los conceptos leídos no cuadran
+     con los totales impresos (sin atribuir causa). */
+  var _I=O.integridad||{};
+  if(_I.cuadraDev===false || _I.cuadraDes===false){
+    L.push('');
+    L.push('*** LECTURA PARCIAL ***');
+    L.push('La suma de los conceptos leídos no coincide con los totales impresos.');
+    if(_I.cuadraDev===false) L.push('  Devengos: suma leída '+tcCmpFmt(_I.sumaDev)+' · total devengado impreso '+tcCmpFmt(O.totales.devengoCent));
+    if(_I.cuadraDes===false) L.push('  Descuentos: suma leída '+tcCmpFmt(_I.sumaDes)+' · total descuento impreso '+tcCmpFmt(O.totales.descuentoCent));
+    L.push('Revisión manual del PDF oficial necesaria antes de reclamar.');
+  }
+  L.push('');
+  L.push('TOTALES (NEXUM provisional / Oficial / Diferencia)');
+  function tline(nombre,t){
+    var ne=(t.nexumPend||t.nexum==null)?'Pdte.':tcCmpFmt(t.nexum);
+    var of=(t.oficial==null)?'Pdte.':tcCmpFmt(t.oficial);
+    var di=(t.dif==null)?'—':tcCmpFmtSigno(t.dif);
+    L.push('  '+nombre+': '+ne+' / '+of+' / '+di);
+  }
+  tline('Total devengado', R.totales.devengo);
+  tline('Total descuentos', R.totales.descuento);
+  tline('Líquido', R.totales.liquido);
+  L.push('');
+  function nombreEstado(e){ return {diferencia:'DIFERENCIA',soloOficial:'SOLO EN OFICIAL',soloNexum:'SOLO EN NEXUM',pendienteNexum:'PENDIENTE EN NEXUM',noIdentificado:'NO IDENTIFICADO'}[e]||e; }
+  function tipoTxt(t){ return t==='des'?' (descuento)':''; }
+  var difs=R.filas.filter(function(f){ return f.estado==='diferencia'; });
+  var soloO=R.filas.filter(function(f){ return f.estado==='soloOficial'; });
+  var soloN=R.filas.filter(function(f){ return f.estado==='soloNexum'; });
+  var pend=R.filas.filter(function(f){ return f.estado==='pendienteNexum'; });
+  var noId=R.filas.filter(function(f){ return f.estado==='noIdentificado'; });
+  function bloque(titulo,arr){
+    if(!arr.length) return;
+    L.push(titulo+' ('+arr.length+')');
+    arr.forEach(function(f){
+      var cod=f.code?f.code:'(sin código)';
+      var d=f.desc?(' '+f.desc):'';
+      if(f.estado==='diferencia'){
+        L.push('  '+cod+tipoTxt(f.tipo)+d+': NEXUM '+tcCmpFmt(f.nexumCent)+' · Oficial '+tcCmpFmt(f.oficialCent)+' · Dif '+tcCmpFmtSigno(f.dif));
+      } else if(f.estado==='soloOficial'){
+        L.push('  '+cod+tipoTxt(f.tipo)+d+': Oficial '+tcCmpFmt(f.oficialCent)+' (no está en NEXUM)');
+      } else if(f.estado==='soloNexum'){
+        L.push('  '+cod+tipoTxt(f.tipo)+d+': NEXUM '+tcCmpFmt(f.nexumCent)+' (no está en la oficial)');
+      } else if(f.estado==='pendienteNexum'){
+        L.push('  '+cod+tipoTxt(f.tipo)+d+': Oficial '+tcCmpFmt(f.oficialCent)+' · NEXUM Pdte.');
+      } else if(f.estado==='noIdentificado'){
+        L.push('  '+cod+tipoTxt(f.tipo)+': '+(f.desc||'')+' · Oficial '+tcCmpFmt(f.oficialCent));
+      }
+    });
+    L.push('');
+  }
+  bloque('CONCEPTOS CON DIFERENCIA', difs);
+  bloque('CONCEPTOS SOLO EN LA NÓMINA OFICIAL', soloO);
+  bloque('CONCEPTOS SOLO EN NEXUM', soloN);
+  bloque('CONCEPTOS PENDIENTES EN NEXUM', pend);
+  bloque('CONCEPTOS NO IDENTIFICADOS (revisar lectura)', noId);
+  var dl=R.totales.liquido.dif;
+  L.push('DIFERENCIA FINAL DEL LÍQUIDO: '+(dl==null?'Pdte.':tcCmpFmtSigno(dl)));
+  L.push('');
+  L.push('Informe generado para revisión. La nómina oficial prevalece y las diferencias deben verificarse antes de presentar una reclamación.');
+  return L.join('\n');
+}
+
+/* ===== RENDER de la pantalla de comparación ================================ */
 function tcNomRenderComparacion(){
-  return '<div class="form-card"><div class="nom-proximamente"><span class="big">🕓</span>Próximamente</div></div>';
+  /* Cambiar de año/mes invalida una comparación cargada (es de otro periodo). */
+  if(NOMCMP.oficial && (NOMCMP.anio!==NOM_ANIO || NOMCMP.mes!==NOM_MES)) tcCmpReset();
+
+  var MES=(typeof MESES!=='undefined'&&MESES[NOM_MES-1])?MESES[NOM_MES-1]:('mes '+NOM_MES);
+  var h='<div class="form-card cmp-wrap">';
+
+  /* Cabecera de selección */
+  h+='<input type="file" id="cmpFileInput" accept="application/pdf,.pdf" style="display:none" onchange="tcCmpOnFile(this)">';
+  h+='<div class="cmp-pick">';
+  h+='<div style="font-weight:700; color:var(--color-text); font-size:0.95rem;">Comparar nómina de '+tcEsc(MES)+' '+NOM_ANIO+'</div>';
+  h+='<div class="cmp-btns">';
+  h+='<button type="button" class="cmp-btn" onclick="tcCmpPick()">📄 Seleccionar nómina oficial (PDF)</button>';
+  if(NOMCMP.fileName || NOMCMP.estado!=='idle')
+    h+='<button type="button" class="cmp-btn ghost" onclick="tcCmpQuitar()">Quitar nómina</button>';
+  h+='</div>';
+  if(NOMCMP.fileName) h+='<div class="cmp-file"><span class="lbl">Archivo:</span> '+tcEsc(NOMCMP.fileName)+'</div>';
+  h+='<div class="cmp-estado">'+tcEsc(tcCmpTextoEstado())+'</div>';
+  h+='</div>';
+
+  /* Aviso de privacidad breve (siempre visible en estado inicial) */
+  if(NOMCMP.estado==='idle'){
+    h+='<div class="cmp-aviso">🔒 El PDF se lee <strong>solo en tu dispositivo</strong>. No se envía a ningún servidor ni se guarda: al recargar la app, la comparación desaparece.<br><br>Elige primero el <strong>año y el mes</strong> arriba; después selecciona la nómina oficial (la del Portal del Empleado) de ese mismo periodo.</div>';
+  }
+  if(NOMCMP.estado==='leyendo'){
+    h+='<div class="cmp-aviso">⏳ Leyendo el PDF localmente…</div>';
+  }
+  if(NOMCMP.estado==='error'){
+    h+='<div class="cmp-aviso warn">⚠️ '+tcEsc(NOMCMP.mensaje||'No se pudo procesar el PDF.')+'</div>';
+  }
+  if(NOMCMP.estado==='sinTexto'){
+    h+='<div class="cmp-aviso warn">⚠️ '+tcEsc(NOMCMP.mensaje)+'</div>';
+  }
+  if(NOMCMP.estado==='periodoNoLeido'){
+    h+='<div class="cmp-aviso warn">⚠️ '+tcEsc(NOMCMP.mensaje)+' No se realiza la comparación.</div>';
+  }
+  if(NOMCMP.estado==='periodoNoCoincide'){
+    var pers=tcCmpPeriodosTexto(NOMCMP.oficial);
+    h+='<div class="cmp-aviso warn">⚠️ El PDF <strong>no corresponde</strong> a '+tcEsc(MES)+' '+NOM_ANIO+'.<br>Periodo(s) encontrado(s) en la nómina: <strong>'+tcEsc(pers||'—')+'</strong>.<br>No se compara. Selecciona la nómina de '+tcEsc(MES)+' '+NOM_ANIO+', o cambia el mes arriba.</div>';
+  }
+
+  if(NOMCMP.estado==='listo' && NOMCMP.resultado){
+    h+=tcCmpRenderResultado();
+  }
+
+  h+='</div>';
+  return h;
+}
+function tcCmpTextoEstado(){
+  switch(NOMCMP.estado){
+    case 'idle': return 'Sin nómina oficial seleccionada.';
+    case 'leyendo': return 'Estado: leyendo el PDF en el dispositivo…';
+    case 'error': return 'Estado: error de lectura.';
+    case 'sinTexto': return 'Estado: PDF sin texto legible.';
+    case 'periodoNoLeido': return 'Estado: periodo no detectado.';
+    case 'periodoNoCoincide': return 'Estado: el periodo no coincide.';
+    case 'listo': return 'Estado: comparación realizada' + (NOMCMP.oficial&&NOMCMP.oficial.lecturaCompleta?' (lectura verificada).':' (lectura parcial).');
+    default: return '';
+  }
+}
+function tcCmpRenderResultado(){
+  var R=NOMCMP.resultado, O=NOMCMP.oficial;
+  var h='';
+  var per=tcCmpPeriodosTexto(O);
+
+  /* Aviso de fiabilidad de lectura (NEXUM-017R1).
+       noVerificable  → ROJO (error grave: totales impresos incoherentes).
+       lecturaCompleta→ VERDE (todo cuadra).
+       en otro caso   → AMARILLO «Lectura parcial» (nunca verde, nunca «fiable»/
+                        «verificada»). */
+  var I=O.integridad||{};
+  if(O.noVerificable){
+    h+='<div class="cmp-aviso warn">⚠️ <strong>Lectura no verificable</strong>: '+tcEsc((O.avisos||[]).join(' '))+' Los totales pueden no ser fiables; revisa el PDF original antes de reclamar.</div>';
+  } else if(O.lecturaCompleta){
+    h+='<div class="cmp-aviso ok">✅ Lectura verificada: los conceptos leídos cuadran con los totales impresos del PDF.</div>';
+  } else {
+    var extra=[];
+    if(O.noIdentificados && O.noIdentificados.length) extra.push(O.noIdentificados.length+' concepto(s) no identificado(s)');
+    if(!(O.totales.devengoPresente&&O.totales.descuentoPresente&&O.totales.liquidoPresente)) extra.push('falta algún total impreso');
+    h+='<div class="cmp-aviso parcial">🟡 <strong>Lectura parcial</strong>: los conceptos extraídos no cuadran con los totales impresos.'
+      +(extra.length?(' ('+tcEsc(extra.join('; '))+')'):'')
+      +'<br>No utilices este resultado directamente para una reclamación sin revisar la nómina oficial.</div>';
+  }
+  /* Detalle NEUTRAL del descuadre por lado (sin atribuir causa). */
+  if(I.cuadraDev===false || I.cuadraDes===false){
+    var lineas=[];
+    if(I.cuadraDev===false) lineas.push('Devengos: suma de conceptos leídos '+tcCmpFmt(I.sumaDev)+' · total devengado impreso '+tcCmpFmt(O.totales.devengoCent));
+    if(I.cuadraDes===false) lineas.push('Descuentos: suma de conceptos leídos '+tcCmpFmt(I.sumaDes)+' · total descuento impreso '+tcCmpFmt(O.totales.descuentoCent));
+    h+='<div class="cmp-aviso parcial">La suma de los conceptos leídos no coincide con los totales impresos. La lectura puede estar incompleta; revisa el PDF oficial antes de utilizar la comparación.<br>'+lineas.join('<br>')+'</div>';
+  }
+
+  /* Resumen superior */
+  h+='<div class="cmp-h">Resumen</div>';
+  h+='<div class="cmp-resumen">';
+  h+='<div class="cmp-kpi wide"><div class="k">Periodo oficial</div><div class="v">'+tcEsc(per||'—')+'</div></div>';
+  h+=kpi('Conceptos oficiales', O.orden.length);
+  h+=kpi('Coinciden', R.resumen.coincide);
+  h+=kpi('Con diferencias', R.resumen.diferencia);
+  h+=kpi('Solo en oficial', R.resumen.soloOficial);
+  h+=kpi('Solo en NEXUM', R.resumen.soloNexum);
+  if(R.resumen.pendienteNexum) h+=kpi('Pendientes en NEXUM', R.resumen.pendienteNexum);
+  if(R.resumen.noIdentificado) h+=kpi('No identificados', R.resumen.noIdentificado);
+  h+='</div>';
+  function kpi(k,v){ return '<div class="cmp-kpi"><div class="k">'+tcEsc(k)+'</div><div class="v">'+v+'</div></div>'; }
+
+  /* Filtros */
+  h+='<div class="cmp-filtros">';
+  h+='<button type="button" class="cmp-filtro'+(NOMCMP.filtro==='todos'?' active':'')+'" onclick="tcCmpSetFiltro(\'todos\')">Todos</button>';
+  h+='<button type="button" class="cmp-filtro'+(NOMCMP.filtro==='diferencias'?' active':'')+'" onclick="tcCmpSetFiltro(\'diferencias\')">Solo diferencias</button>';
+  h+='</div>';
+
+  /* Orden: primero lo relevante (diferencias, solo, pendientes, no id), luego coincidencias. */
+  var prio={ diferencia:0, noIdentificado:1, soloOficial:2, soloNexum:3, pendienteNexum:4, coincide:9 };
+  var filas=R.filas.slice().sort(function(a,b){
+    var pa=prio[a.estado]!=null?prio[a.estado]:5, pb=prio[b.estado]!=null?prio[b.estado]:5;
+    if(pa!==pb) return pa-pb;
+    return String(a.code||'~').localeCompare(String(b.code||'~'));
+  });
+  if(NOMCMP.filtro==='diferencias') filas=filas.filter(function(f){ return f.estado!=='coincide'; });
+
+  h+='<div class="cmp-h">Conceptos</div>';
+  if(!filas.length){
+    h+='<div class="cmp-aviso">No hay conceptos que mostrar con este filtro.</div>';
+  }
+  filas.forEach(function(f){ h+=tcCmpRenderFila(f); });
+
+  /* Totales */
+  h+='<div class="cmp-h">Comparación de totales</div>';
+  h+='<div class="cmp-tot">';
+  h+='<div class="row head"><div class="tk">Concepto</div><div class="tv">NEXUM</div><div class="tv">Oficial</div><div class="tv">Diferencia</div></div>';
+  h+=totRow('Total devengado', R.totales.devengo, false);
+  h+=totRow('Total descuentos', R.totales.descuento, false);
+  h+=totRow('Líquido a percibir', R.totales.liquido, true);
+  h+='</div>';
+  /* Nota de redondeo si alguna diferencia de totales es de ±0,01 */
+  var micro=[R.totales.devengo,R.totales.descuento,R.totales.liquido].some(function(t){ return t.dif!=null && Math.abs(t.dif)===1; });
+  if(micro) h+='<div class="cmp-foot">Nota: una diferencia de 0,01 € puede proceder del orden de redondeo, pero se muestra igualmente.</div>';
+
+  h+='<div class="cmp-btns" style="margin-top:14px;">';
+  h+='<button type="button" class="cmp-btn sec" onclick="tcCmpCopiarInforme()">📋 Copiar informe de diferencias</button>';
+  h+='<button type="button" class="cmp-btn ghost" onclick="tcCmpQuitar()">Quitar nómina</button>';
+  h+='</div>';
+
+  h+='<div class="cmp-foot">La nómina oficial prevalece. Este informe es para revisión; verifica las diferencias antes de presentar una reclamación. Los importes de NEXUM son provisionales y no se han modificado.</div>';
+  return h;
+}
+function totRow(nombre,t,big){
+  var ne=(t.nexumPend||t.nexum==null)?'<span class="nom-recibo-pend">Pdte.</span>':tcEsc(tcCmpFmt(t.nexum));
+  var of=(t.oficial==null)?'<span class="nom-recibo-pend">Pdte.</span>':tcEsc(tcCmpFmt(t.oficial));
+  var difCls='dif', difTxt='—';
+  if(t.dif!=null){ difTxt=tcCmpFmtSigno(t.dif); difCls+=(t.dif>0?' pos':t.dif<0?' neg':''); }
+  return '<div class="row'+(big?' big':'')+'"><div class="tk">'+tcEsc(nombre)+'</div>'
+    +'<div class="tv" data-lbl="NEXUM">'+ne+'</div>'
+    +'<div class="tv" data-lbl="Oficial">'+of+'</div>'
+    +'<div class="tv '+difCls+'" data-lbl="Dif.">'+difTxt+'</div></div>';
+}
+function tcCmpRenderFila(f){
+  var badge={ coincide:'Coincide', diferencia:'Diferencia', soloOficial:'Solo en oficial',
+              soloNexum:'Solo en NEXUM', pendienteNexum:'Pendiente en NEXUM', noIdentificado:'No identificado' }[f.estado]||f.estado;
+  var cls='st-'+f.estado.toLowerCase();
+  var codHtml = f.code ? '<span class="c">'+tcEsc(f.code)+'</span>' : '<span class="c">(sin código)</span>';
+  var desc = f.desc ? (' · '+tcEsc(f.tipo==='des'&&!/descuent/i.test(f.desc)? f.desc : f.desc)) : '';
+  var tipoTag = (f.tipo==='des') ? '<span class="cmp-tipo">Descuento</span>' : '<span class="cmp-tipo">Devengo</span>';
+
+  var h='<div class="cmp-item '+cls+'">';
+  h+='<div class="cmp-cab"><div class="cmp-cod">'+codHtml+desc+'</div><span class="cmp-badge">'+tcEsc(badge)+'</span></div>';
+  h+='<div style="margin-top:3px;">'+tipoTag+'</div>';
+  h+='<div class="cmp-lineas">';
+  if(f.estado==='noIdentificado'){
+    h+='<div class="lk">Texto leído</div><div class="lv" style="text-align:left; font-weight:500;">'+tcEsc(f.desc||'')+'</div>';
+    if(f.oficialCent!=null){ h+='<div class="lk">Importe oficial</div><div class="lv">'+tcEsc(tcCmpFmt(f.oficialCent))+'</div>'; }
+  } else {
+    var nexTxt=(f.estado==='pendienteNexum'||f.nexumPend)?'Pdte.':(f.nexumCent!=null?tcCmpFmt(f.nexumCent):'—');
+    h+='<div class="lk">NEXUM</div><div class="lv">'+tcEsc(nexTxt)+'</div>';
+    h+='<div class="lk">Oficial</div><div class="lv">'+tcEsc(f.oficialCent!=null?tcCmpFmt(f.oficialCent):'—')+'</div>';
+    h+='<div class="lk">Diferencia</div><div class="lv dif">'+tcEsc(f.dif!=null?tcCmpFmtSigno(f.dif):'—')+'</div>';
+  }
+  h+='</div></div>';
+  return h;
 }
 
 window.tcRenderNomina=function(){
@@ -16748,7 +17575,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-016R2';
+    var VC_VERSION_ACTUAL = 'NEXUM-017R1';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
     var vcActualizando = false; /* guarda: impide doble ejecución/recarga */
