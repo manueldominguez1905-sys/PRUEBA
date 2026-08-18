@@ -823,11 +823,15 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-017R2</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-018R2</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
       </div>
+      <!-- NEXUM-018 — Tarjeta de SOLO LECTURA de Datos Generales (tabla salarial,
+           calendario de eventos y acuerdos extraordinarios). La rellena el módulo
+           nxDatosGenerales. Sin botones de acción: el usuario es solo lector. -->
+      <div id="dg-info-card" style="margin-top:16px;"></div>
       <button id="btnCerrarSettings" class="btn btn-secondary" style="width:100%; margin-top:20px;">Cerrar</button>
     </div>
   </div>
@@ -2032,11 +2036,27 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       #tab-nomina .cmp-tot .tv.pos{ color:var(--color-success); }
       #tab-nomina .cmp-tot .tv.neg{ color:var(--color-danger); }
       #tab-nomina .cmp-foot{ font-size:0.78rem; color:var(--color-text-secondary); line-height:1.5; margin-top:12px; overflow-wrap:anywhere; }
-      @media (max-width:430px){
-        #tab-nomina .cmp-tot .row{ grid-template-columns:1fr auto; }
-        #tab-nomina .cmp-tot .row .tk{ grid-column:1/-1; font-weight:700; }
+      /* NEXUM-018R2 — «Comparación de totales» en móvil. Cada bloque (Total
+         devengado / Total descuentos / Líquido) muestra su nombre como título y
+         TRES filas INDEPENDIENTES: NEXUM, Oficial y Diferencia, cada una en su
+         propia línea, con la etiqueta a la izquierda y el importe a la derecha.
+         NEXUM y Oficial NUNCA comparten línea. Rejilla de dos columnas por fila
+         (minmax(0,1fr) auto). Los importes no se parten (nowrap + tabular-nums).
+         Escritorio (>480px) conserva EXACTAMENTE la tabla de 4 columnas anterior. */
+      @media (max-width:480px){
+        #tab-nomina .cmp-tot .row{ display:block; padding:10px 12px; }
         #tab-nomina .cmp-tot .row.head{ display:none; }
-        #tab-nomina .cmp-tot .tv::before{ content:attr(data-lbl); float:left; color:var(--color-text-secondary); font-weight:600; font-size:0.72rem; }
+        #tab-nomina .cmp-tot .row .tk{ display:block; font-weight:700; margin-bottom:5px; }
+        #tab-nomina .cmp-tot .row.big .tk{ font-weight:800; }
+        #tab-nomina .cmp-tot .tv{
+          display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:12px;
+          align-items:baseline; text-align:left; padding:4px 0;
+          white-space:nowrap; font-variant-numeric:tabular-nums; overflow-wrap:normal;
+        }
+        #tab-nomina .cmp-tot .tv::before{
+          content:attr(data-lbl); float:none; white-space:normal; text-align:left;
+          color:var(--color-text-secondary); font-weight:600; font-size:0.8rem;
+        }
       }
       /* ===== DEV-007R8 — Nómina provisional con aspecto de recibo real ===== */
       /* Hoja BLANCA, texto AZUL monoespaciado y LÍNEAS NEGRAS estructurales.
@@ -3760,33 +3780,11 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     if (mostrarAviso) mostrarToast("Los datos en memoria no son válidos. No se ha generado ninguna copia.", "error");
     return false;
   }
-  // DEV-009 — Tablas Salariales (Centro de Administración, independiente del
-  // Calendario Conductor). Bloque SIEMPRE presente como objeto (vacío {} si no
-  // hay tablas instaladas), con la misma exigencia que el resto: si existe
-  // pero está dañado, no se genera ninguna copia.
-  var tablasSalarialesParaGuardar = {};
-  try {
-    if (typeof window.tcExportarTablasSalariales === "function") {
-      var tsBloqueExport = window.tcExportarTablasSalariales();
-      if (tsBloqueExport === null) {
-        if (mostrarAviso) mostrarToast("No se pudo verificar las Tablas Salariales. No se ha generado ninguna copia.", "error");
-        return false;
-      }
-      tablasSalarialesParaGuardar = JSON.parse(JSON.stringify(tsBloqueExport || {}));
-    }
-  } catch (e) {
-    if (mostrarAviso) mostrarToast("No se pudo verificar las Tablas Salariales. No se ha generado ninguna copia.", "error");
-    return false;
-  }
-  // DEV-010R3 — Identificador de la TABLA ACTIVA. Solo el año; null si no hay
-  // ninguna activa válida. tcExportarTablaActiva ya resuelve contra las tablas
-  // reales, así que nunca se exporta una referencia rota.
-  var tablaSalarialActivaParaGuardar = null;
-  try {
-    if (typeof window.tcExportarTablaActiva === "function") {
-      tablaSalarialActivaParaGuardar = window.tcExportarTablaActiva();
-    }
-  } catch (e) { tablaSalarialActivaParaGuardar = null; }
+  // NEXUM-018 — La Tabla Salarial es un DATO GENERAL administrado por GitHub y NO
+  // se incluye en las copias del usuario. Su estado (aunque estuviera dañado) NO
+  // debe impedir hacer una copia de los datos PERSONALES. Por eso ya no se lee ni
+  // se exporta aquí, desacoplando por completo el backup personal de los datos
+  // generales. (Ver módulo nxDatosGenerales para su gestión.)
 
   // DEV-010R5 / NEXUM-016 — Perfil laboral. Casos EXACTOS:
   //   · Lector ausente (tcPerfilLeer no es función) → error y se ABORTA.
@@ -3903,8 +3901,12 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
   calendarioParaGuardar.schema = 1;
   if (!esObjetoBackup(calendarioParaGuardar.dias)) calendarioParaGuardar.dias = {};
   if (!esObjetoBackup(calendarioParaGuardar.turnos)) calendarioParaGuardar.turnos = {};
-  if (!esObjetoBackup(calendarioParaGuardar.datosCalendarioTurnos)) calendarioParaGuardar.datosCalendarioTurnos = {};
-  if (!esObjetoBackup(calendarioParaGuardar.datosCalendarioTurnosMeta)) calendarioParaGuardar.datosCalendarioTurnosMeta = {};
+  // NEXUM-018 — El calendario GENERAL de eventos es un DATO GENERAL administrado
+  // por GitHub: NO pertenece al usuario y NO se exporta en las copias. Los días y
+  // turnos del usuario (dias/turnos) SÍ se conservan. Se fuerzan a {} para no
+  // filtrar datos generales ni permitir que un backup los sustituya al restaurar.
+  calendarioParaGuardar.datosCalendarioTurnos = {};
+  calendarioParaGuardar.datosCalendarioTurnosMeta = {};
 
   var conteo = tcContarCalendarioConductor(calendarioParaGuardar.dias);
   var fechaExportacion = new Date().toISOString();
@@ -3917,10 +3919,12 @@ function exportarDatosArchivo(nombreArchivo, mostrarAviso) {
     calendarioConductor: calendarioParaGuardar,
     calendarioConductorIncluido: true,
     calendarioConductorMeta: { totalDias: conteo.total, hojasRuta: conteo.hojas, jornadas: conteo.jornadas, fechaExportacion: fechaExportacion },
-    tablasSalariales: tablasSalarialesParaGuardar,
-    tablasSalarialesIncluido: true,
-    tablaSalarialActiva: tablaSalarialActivaParaGuardar,
-    tablaSalarialActivaIncluido: true,
+    // NEXUM-018 — Tabla salarial y acuerdos extraordinarios son DATOS GENERALES
+    // (GitHub): NO se exportan. Se marca explícitamente su exclusión para que la
+    // restauración nunca los aplique ni los sustituya.
+    tablasSalarialesIncluido: false,
+    tablaSalarialActivaIncluido: false,
+    datosGeneralesExcluidos: true,
     perfilLaboral: perfilLaboralParaGuardar,
     configDescuentos: configDescuentosParaGuardar,
     conceptosAnuales: conceptosAnualesParaGuardar
@@ -4005,10 +4009,12 @@ function importarDatos(archivo) {
           return;
         }
       }
-      // DEV-009 — Tablas Salariales: mismo criterio que el Calendario Conductor.
-      // Compatible con copias antiguas: si el backup no declara
-      // tablasSalarialesIncluido, no se toca nada de lo ya guardado.
-      var tsSolicitado = datos.tablasSalarialesIncluido === true;
+      // NEXUM-018 — La Tabla Salarial (y su tabla activa) son DATOS GENERALES
+      // administrados por GitHub. NUNCA se restauran desde un backup, ni antiguo
+      // ni nuevo: un backup jamás puede sustituir los datos generales instalados.
+      // Se fuerza tsSolicitado=false para que ni se valide ni se aplique la tabla
+      // salarial ni la referencia activa que pudiera traer cualquier copia.
+      var tsSolicitado = false;
       if (tsSolicitado) {
         var tsIncluidoValido = typeof window.tcValidarTablasSalarialesImportadas === "function"
           && window.tcValidarTablasSalarialesImportadas(datos.tablasSalariales);
@@ -4107,6 +4113,17 @@ function importarDatos(archivo) {
       // (tcImportarDatosCalendarioConductor), que lo rechaza con un error
       // claro y no toca nada.
       var bloqueCrudo = datos.calendarioConductor || datos.diasCalendario;
+      // NEXUM-018 — El calendario GENERAL de eventos es un DATO GENERAL (GitHub).
+      // Se retira del bloque a restaurar para que la restauración NO toque
+      // tc_v1_eventos: tcImportarDatosCalendarioConductor interpreta la AUSENCIA
+      // de datosCalendarioTurnos/Meta como «no tocar los eventos». Los días y
+      // turnos personales del usuario (bloqueCrudo.dias/turnos) SÍ se restauran.
+      try {
+        if (esObjetoBackup(bloqueCrudo)) {
+          delete bloqueCrudo.datosCalendarioTurnos;
+          delete bloqueCrudo.datosCalendarioTurnosMeta;
+        }
+      } catch (e) {}
       var declaraEsquemaNuevo = !!(esObjetoBackup(bloqueCrudo)
         && Object.prototype.hasOwnProperty.call(bloqueCrudo, "schema"));
       var esNuevoEsquemaValido = declaraEsquemaNuevo && bloqueCrudo.schema === 1 && esObjetoBackup(bloqueCrudo.dias);
@@ -11804,7 +11821,7 @@ function totRow(nombre,t,big){
   return '<div class="row'+(big?' big':'')+'"><div class="tk">'+tcEsc(nombre)+'</div>'
     +'<div class="tv" data-lbl="NEXUM">'+ne+'</div>'
     +'<div class="tv" data-lbl="Oficial">'+of+'</div>'
-    +'<div class="tv '+difCls+'" data-lbl="Dif.">'+difTxt+'</div></div>';
+    +'<div class="tv '+difCls+'" data-lbl="Diferencia">'+difTxt+'</div></div>';
 }
 function tcCmpRenderFila(f){
   var badge={ coincide:'Coincide', diferencia:'Diferencia', soloOficial:'Solo en oficial',
@@ -17630,7 +17647,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-017R2';
+    var VC_VERSION_ACTUAL = 'NEXUM-018R2';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
     var vcActualizando = false; /* guarda: impide doble ejecución/recarga */
@@ -17802,7 +17819,9 @@ window.tcMsgAbrirDia=function(fecha){
         <div class="nexo-fs-group-title">Importar calendarios</div>
         <div class="menu-grid">
           <button class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcOpenCal)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5M8 14h3M8 17h5"/></svg></span><span class="menu-label">Importar Calendario de Turnos</span></button>
-          <button class="menu-btn" type="button" onclick="event.stopImmediatePropagation();window.tcGestionAction(tcOpenEventos)"><span class="menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/><path d="M12 12.6l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z"/></svg></span><span class="menu-label">Importar Calendario de Eventos Laborales</span></button>
+          <!-- NEXUM-018 — Retirado «Importar Calendario de Eventos Laborales»: el
+               calendario de eventos es un DATO GENERAL administrado por GitHub; el
+               usuario es solo lector. Se instala/actualiza automáticamente. -->
         </div>
       </div>
       <div class="nexo-fs-group">
@@ -19605,6 +19624,16 @@ window.tcMsgAbrirDia=function(fecha){
         }
       }catch(e){}
     }
+    /* NEXUM-018R1 — Puente seguro: la función anterior es PRIVADA de este ámbito,
+       así que nxDatosGenerales no la alcanzaba con window.tsReRenderNominaSiAbierta.
+       Se expone SOLO este puente (sin exponer ninguna otra variable/función
+       interna). Si la Nómina está abierta se repinta una vez; si está cerrada no
+       se abre; un error de render no rompe la app. */
+    window.tsReRenderNominaSiAbierta = function(){
+      try {
+        tsReRenderNominaSiAbierta();
+      } catch(e){}
+    };
 
     /* ---------- Pantalla: lista de tablas instaladas ----------
        Los contadores (conceptos/pendientes) se recalculan SIEMPRE desde
@@ -20087,11 +20116,18 @@ window.tcMsgAbrirDia=function(fecha){
           '<button class="menu-btn" onclick="window.adminCerrarTodo()"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12H4M11 8l-4 4 4 4"/><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/></svg></span><span class="menu-label">Salir</span></button>'+
           '</div>';
       } else if(pantalla==='datosOficiales'){
+        // NEXUM-018 — La Tabla Salarial y el Calendario de Eventos son DATOS
+        // GENERALES administrados automáticamente desde GitHub. El usuario es
+        // SOLO LECTOR: se retiran de Administración todas las rutas de gestión
+        // (importar/borrar/activar tabla salarial e importar/borrar calendario
+        // de eventos). Su estado se consulta en «Información y ajustes».
         body.innerHTML=volverBtn+
+          '<div class="card" style="margin-bottom:12px;">'+
+          '<div style="font-weight:700;margin-bottom:6px;">Datos oficiales automáticos</div>'+
+          '<p class="help-text" style="margin:0;">La tabla salarial y el calendario de eventos se instalan y actualizan solos desde el servidor oficial. No es necesario importarlos ni gestionarlos. Puedes ver su estado en <strong>Información y ajustes</strong>.</p>'+
+          '</div>'+
           '<div class="menu-grid">'+
-          '<button class="menu-btn" onclick="window.adminIrAPublic(\'calendarioLaboral\')"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg></span><span class="menu-label">Calendario Laboral</span></button>'+
           '<button class="menu-btn" onclick="window.adminProximamente()"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span><span class="menu-label">Convenios</span></button>'+
-          '<button class="menu-btn" onclick="window.adminIrAPublic(\'tablasSalariales\')"><span class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 9.2A4 4 0 0 0 9 12a4 4 0 0 0 6.5 2.8"/><path d="M7 11h5.5M7 13h4.5"/></svg></span><span class="menu-label">Tablas Salariales</span></button>'+
           '</div>';
       } else if(pantalla==='calendarioLaboral'){
         body.innerHTML=volverBtn+
@@ -21008,6 +21044,600 @@ window.tcMsgAbrirDia=function(fecha){
     window.addEventListener('pageshow', disparar, { passive: true });
     /* La navegación (abrirSeccion/volverAlMenu/nexumVolver) y la apertura/cierre
        de overlays invocan nexumRecuperarViewport() directamente desde su código. */
+  })();
+  </script>
+
+  <!-- ===================== NEXUM-018 — DATOS GENERALES AUTOMÁTICOS (nxDatosGenerales)
+       Módulo AISLADO que instala y actualiza automáticamente, una sola vez al
+       iniciar y en silencio, los DATOS GENERALES de NEXUM desde el servidor
+       oficial (GitHub) usando SOLO rutas relativas resueltas con document.baseURI:
+         · Tabla salarial del año activo   -> tc_v1_tablas_salariales (+ activa)
+         · Calendario de eventos del año    -> tc_v1_eventos
+         · Acuerdos extraordinarios         -> nexum_v1_acuerdos_generales
+       El usuario es EXCLUSIVAMENTE LECTOR: no hay mutadores públicos ni UI para
+       cargar/editar/borrar/activar estos datos. La instalación es transaccional
+       (todo-o-nada), verifica SHA-256 de cada archivo con crypto.subtle ANTES de
+       interpretar el JSON, revalida con los validadores existentes, relee lo
+       escrito y ante cualquier fallo restaura el estado anterior exacto. Sin
+       service worker, sin PWA, sin peticiones a orígenes externos.
+       No hardcodea usuario/repositorio/rama/dominio/URL absoluta. -->
+  <script>
+  (function(){
+    'use strict';
+
+    var K_TABLAS   = 'tc_v1_tablas_salariales';
+    var K_ACTIVA   = 'tc_v1_tabla_activa';
+    var K_EVENTOS  = 'tc_v1_eventos';
+    var K_ACUERDOS = 'nexum_v1_acuerdos_generales';
+    var K_ESTADO   = 'nexum_v1_datos_generales';   /* estado del paquete (módulo) */
+
+    var YA_ARRANCADO = false;
+    /* NEXUM-018R1 — Solo-memoria: true cuando una instalación falló y su rollback
+       NO pudo verificarse. En ese caso NO se sobrescribe K_ESTADO (podría ocultar
+       el rollback no verificable) y la tarjeta de Información muestra únicamente
+       «Estado de actualización no verificable». No se persiste. */
+    var nxActualizacionNoVerificable = false;
+
+    /* ---------------- utilidades puras ---------------- */
+    function plainObj(o){ return !!o && typeof o==='object' && !Array.isArray(o); }
+    function esEnteroSeguro(n){ return typeof n==='number' && isFinite(n) && Math.floor(n)===n && Math.abs(n)<=Number.MAX_SAFE_INTEGER; }
+    function esRevision(n){ return esEnteroSeguro(n) && n>=0; }
+    function esAnio(n){ return esEnteroSeguro(n) && n>=2000 && n<=2100; }
+    function esHex64(s){ return typeof s==='string' && /^[0-9a-f]{64}$/i.test(s); }
+    /* Nombre de archivo SIMPLE: solo .json, sin rutas, sin "..", sin barras ni
+       barras invertidas, sin dos puntos (evita esquemas/URL), sin "//". */
+    function esArchivoSimple(s){
+      if(typeof s!=='string' || !s) return false;
+      if(s.length>120) return false;
+      if(/[\\/]/.test(s)) return false;         /* barras */
+      if(s.indexOf('..')>=0) return false;      /* traversal */
+      if(s.indexOf(':')>=0) return false;       /* esquema/URL/dominio */
+      if(!/^[A-Za-z0-9._-]+\.json$/.test(s)) return false;
+      return true;
+    }
+    function textoSeguro(v,max){
+      if(typeof v!=='string') return false;
+      if(v.length>max) return false;
+      for(var i=0;i<v.length;i++){ var c=v.charCodeAt(i); if((c<32&&c!==9&&c!==10&&c!==13)||c===127) return false; }
+      if(/<[a-z!/]/i.test(v)) return false;
+      if(/on[a-z]+\s*=/i.test(v)) return false;
+      if(/javascript:/i.test(v)) return false;
+      return true;
+    }
+    function esFechaISOReal(s){
+      if(typeof s!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+      var p=s.split('-'), y=+p[0], mo=+p[1], d=+p[2];
+      if(mo<1||mo>12||d<1||d>31) return false;
+      var dt=new Date(Date.UTC(y,mo-1,d));
+      return dt.getUTCFullYear()===y && dt.getUTCMonth()===mo-1 && dt.getUTCDate()===d;
+    }
+    function bufToHex(buf){
+      var b=new Uint8Array(buf), h='';
+      for(var i=0;i<b.length;i++){ var x=b[i].toString(16); if(x.length<2) x='0'+x; h+=x; }
+      return h;
+    }
+    function sha256Hex(buf){
+      if(!(window.crypto&&window.crypto.subtle&&window.crypto.subtle.digest)) return Promise.reject(new Error('crypto.subtle no disponible'));
+      return window.crypto.subtle.digest('SHA-256', buf).then(bufToHex);
+    }
+
+    /* ---------------- red: SOLO GET al MISMO ORIGEN, sin caché ---------------- */
+    function urlRelativa(rel){
+      /* document.baseURI resuelve la ruta relativa; nunca se hardcodea dominio. */
+      var u = new URL(rel, document.baseURI);
+      u.searchParams.set('_nx', String(Date.now())); /* anticaché */
+      return u;
+    }
+    function mismoOrigen(u){ try{ return u.origin === window.location.origin; }catch(e){ return false; } }
+    function fetchTexto(rel){
+      var u = urlRelativa(rel);
+      if(!mismoOrigen(u)) return Promise.reject(new Error('origen externo bloqueado'));
+      return fetch(u.href, { method:'GET', cache:'no-store', credentials:'omit', redirect:'error' })
+        .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.arrayBuffer(); });
+    }
+
+    /* ---------------- validación estricta del catálogo ---------------- */
+    var CAT_KEYS = { schema:1, version:1, anio:1, revision:1, tablaSalarial:1, calendarioEventos:1, acuerdosPuntuales:1 };
+    var CAT_DS_KEYS = { archivo:1, revision:1, sha256:1 };
+    function validarDataset(d){
+      if(!plainObj(d)) return false;
+      var ks=Object.keys(d);
+      for(var i=0;i<ks.length;i++){ if(!CAT_DS_KEYS[ks[i]]) return false; }
+      if(!esArchivoSimple(d.archivo)) return false;
+      if(!esRevision(d.revision)) return false;
+      if(!esHex64(d.sha256)) return false;
+      return true;
+    }
+    function validarCatalogo(c){
+      if(!plainObj(c)) return false;
+      var ks=Object.keys(c);
+      for(var i=0;i<ks.length;i++){ if(!CAT_KEYS[ks[i]]) return false; }
+      if(c.schema!=='nexum-datos-generales') return false;
+      if(!esEnteroSeguro(c.version) || c.version<1) return false;
+      if(!esAnio(c.anio)) return false;
+      if(!esRevision(c.revision)) return false;
+      if(!validarDataset(c.tablaSalarial)) return false;
+      if(!validarDataset(c.calendarioEventos)) return false;
+      if(!validarDataset(c.acuerdosPuntuales)) return false;
+      return true;
+    }
+
+    /* ---------------- validación de payloads ---------------- */
+    function validarWrapper(obj, schema, anio, revision){
+      return plainObj(obj) && obj.schema===schema && esEnteroSeguro(obj.version) && obj.version>=1
+        && obj.anio===anio && obj.revision===revision;
+    }
+    /* Tabla salarial: se REUTILIZA el validador existente de la app. */
+    function validarBloqueSalarial(bloque){
+      return typeof window.tcValidarTablasSalarialesImportadas==='function'
+        && window.tcValidarTablasSalarialesImportadas(bloque);
+    }
+    /* Calendario de eventos: validador estricto equivalente a
+       tcValidarEventosImportados (que vive en un ámbito cerrado y no es público),
+       ampliado para admitir la clave conocida "tipos" que la propia app genera
+       cuando una fecha reúne varios tipos, y rechazando cualquier clave
+       desconocida ("Sin propiedades desconocidas"). */
+    function eventoValido(e){
+      if(!plainObj(e)) return false;
+      var ks=Object.keys(e);
+      for(var i=0;i<ks.length;i++){ var k=ks[i]; if(k!=='tipo'&&k!=='nombre'&&k!=='tipos') return false; }
+      if('tipo' in e && e.tipo!=null && !textoSeguro(e.tipo,100)) return false;
+      if('nombre' in e && e.nombre!=null && !textoSeguro(e.nombre,500)) return false;
+      if('tipos' in e){
+        if(!Array.isArray(e.tipos) || e.tipos.length>20) return false;
+        for(var j=0;j<e.tipos.length;j++){ if(!textoSeguro(e.tipos[j],100)) return false; }
+      }
+      return true;
+    }
+    function validarEventos(ev){
+      if(!plainObj(ev)) return false;
+      var anios=Object.keys(ev);
+      for(var a=0;a<anios.length;a++){
+        if(!/^\d{4}$/.test(anios[a]) || +anios[a]<2000 || +anios[a]>2100) return false;
+        var mapa=ev[anios[a]];
+        if(!plainObj(mapa)) return false;
+        var claves=Object.keys(mapa);
+        for(var c=0;c<claves.length;c++){
+          if(!esFechaISOReal(claves[c])) return false;
+          if(claves[c].slice(0,4)!==anios[a]) return false;
+          if(!eventoValido(mapa[claves[c]])) return false;
+        }
+      }
+      return true;
+    }
+    /* Acuerdos extraordinarios: validador estricto. Con la lista vacía NO produce
+       ningún efecto económico. Los acuerdos SOLO se modifican desde GitHub. */
+    var ACU_KEYS = { schema:1, version:1, anio:1, revision:1, acuerdos:1 };
+    var ACU_ITEM_KEYS = { id:1, concepto:1, importe:1, unidad:1, fuente:1, fecha:1, ambito:1 };
+    function acuerdoItemValido(x){
+      if(!plainObj(x)) return false;
+      var ks=Object.keys(x);
+      for(var i=0;i<ks.length;i++){ if(!ACU_ITEM_KEYS[ks[i]]) return false; }
+      if(!textoSeguro(x.id,120) || !x.id.trim()) return false;
+      if(!textoSeguro(x.concepto,300) || !x.concepto.trim()) return false;
+      if(x.importe!==null && (typeof x.importe!=='number' || !isFinite(x.importe) || x.importe<=0)) return false;
+      if('unidad' in x && x.unidad!=null && !textoSeguro(x.unidad,20)) return false;
+      if('fuente' in x && x.fuente!=null && !textoSeguro(x.fuente,200)) return false;
+      if('fecha' in x && x.fecha!=null && !esFechaISOReal(x.fecha)) return false;
+      if('ambito' in x && x.ambito!=null && !textoSeguro(x.ambito,60)) return false;
+      return true;
+    }
+    function validarAcuerdosPayload(obj, anio, revision){
+      if(!plainObj(obj)) return false;
+      var ks=Object.keys(obj);
+      for(var i=0;i<ks.length;i++){ if(!ACU_KEYS[ks[i]]) return false; }
+      if(obj.schema!=='nexum-acuerdos-puntuales') return false;
+      if(!esEnteroSeguro(obj.version) || obj.version<1) return false;
+      if(obj.anio!==anio) return false;
+      if(obj.revision!==revision) return false;
+      if(!Array.isArray(obj.acuerdos) || obj.acuerdos.length>1000) return false;
+      var ids={};
+      for(var j=0;j<obj.acuerdos.length;j++){
+        var it=obj.acuerdos[j];
+        if(!acuerdoItemValido(it)) return false;
+        var idn=String(it.id).trim().toLowerCase();
+        if(ids[idn]) return false;
+        ids[idn]=true;
+      }
+      return true;
+    }
+
+    /* ---------------- lectura de estado y de los almacenes ---------------- */
+    function leerEstado(){
+      var raw=null; try{ raw=localStorage.getItem(K_ESTADO); }catch(e){ return null; }
+      if(raw==null) return null;
+      try{ var d=JSON.parse(raw); return plainObj(d)?d:null; }catch(e){ return null; }
+    }
+    function leerBloqueSalarialBase(){
+      /* Base sobre la que fusionar (preservando años históricos). Si está corrupto
+         o no valida, se parte de {} para no propagar corrupción. */
+      var raw=null; try{ raw=localStorage.getItem(K_TABLAS); }catch(e){ return {}; }
+      if(raw==null) return {};
+      var d; try{ d=JSON.parse(raw); }catch(e){ return {}; }
+      if(!plainObj(d)) return {};
+      if(!validarBloqueSalarial(d)) return {};
+      return d;
+    }
+    function leerEventosBase(){
+      var raw=null; try{ raw=localStorage.getItem(K_EVENTOS); }catch(e){ return {}; }
+      if(raw==null) return {};
+      var d; try{ d=JSON.parse(raw); }catch(e){ return {}; }
+      if(!plainObj(d) || !validarEventos(d)) return {};
+      return d;
+    }
+    function leerAcuerdosBase(){
+      var raw=null; try{ raw=localStorage.getItem(K_ACUERDOS); }catch(e){ return {}; }
+      if(raw==null) return {};
+      var d; try{ d=JSON.parse(raw); }catch(e){ return {}; }
+      return plainObj(d)?d:{};
+    }
+
+    /* ---------------- instalación TRANSACCIONAL (todo-o-nada) ----------------
+       Toma una instantánea de todas las claves afectadas, aplica los cambios,
+       RELEE cada escritura para verificar coincidencia exacta y, ante cualquier
+       fallo, restaura el estado anterior EXACTO. Nunca deja escritura parcial ni
+       revisiones mezcladas. */
+    /* NEXUM-018R1 — Instalación transaccional con SNAPSHOT verificado, escritura
+       releída y ROLLBACK verificado. Devuelve EXACTAMENTE uno de:
+         {ok:true,  rollbackNecesario:false, rollbackVerificado:true}   (éxito)
+         {ok:false, rollbackNecesario:true,  rollbackVerificado:true}   (fallo, rollback verificado)
+         {ok:false, rollbackNecesario:true,  rollbackVerificado:false}  (fallo, rollback NO verificable)
+         {ok:false, rollbackNecesario:false, rollbackVerificado:false}  (snapshot inicial no verificable: NADA escrito)
+    */
+    function instalarTransaccional(cambios){
+      var keys=[K_TABLAS,K_ACTIVA,K_EVENTOS,K_ACUERDOS,K_ESTADO];
+
+      /* ---- SNAPSHOT: leer las cinco claves ANTES de escribir nada. Si cualquier
+         getItem() lanza, se ABORTA de inmediato: cero escrituras, cero borrados,
+         y una lectura fallida NUNCA se convierte en null. ---- */
+      var snap={};
+      for(var i=0;i<keys.length;i++){
+        try{ snap[keys[i]]=localStorage.getItem(keys[i]); }
+        catch(e){ return { ok:false, rollbackNecesario:false, rollbackVerificado:false }; }
+      }
+
+      /* ---- ROLLBACK: restaura CADA clave a su valor de snapshot; intenta todas
+         aunque una falle; verifica cada restauración por relectura exacta. ---- */
+      function rollback(){
+        var verificado=true;
+        for(var j=0;j<keys.length;j++){
+          var k=keys[j], prev=snap[k];
+          if(prev!==null){
+            /* Existía antes: reponer el valor exacto y comprobarlo. */
+            try{
+              localStorage.setItem(k, prev);
+              if(localStorage.getItem(k)!==prev) verificado=false;
+            }catch(e){ verificado=false; }
+          } else {
+            /* No existía antes: debe quedar ausente y comprobarlo. */
+            try{
+              localStorage.removeItem(k);
+              if(localStorage.getItem(k)!=null) verificado=false;
+            }catch(e){ verificado=false; }
+          }
+        }
+        return verificado;
+      }
+
+      /* ---- APLICACIÓN: conserva la serialización existente. Tras cada setItem()
+         se RELEE con getItem(); solo se considera escrito si coincide con ===.
+         Una excepción, un no-op silencioso o una cadena distinta inicia rollback. ---- */
+      function escribir(k, valorStr){
+        localStorage.setItem(k, valorStr);            /* puede lanzar */
+        var leido=localStorage.getItem(k);            /* puede lanzar */
+        if(leido!==valorStr) throw new Error('escritura no confirmada (===): '+k);
+      }
+
+      try{
+        if(cambios.tablas!==undefined)   escribir(K_TABLAS,   cambios.tablas);
+        if(cambios.activa!==undefined)   escribir(K_ACTIVA,   cambios.activa);
+        if(cambios.eventos!==undefined)  escribir(K_EVENTOS,  cambios.eventos);
+        if(cambios.acuerdos!==undefined) escribir(K_ACUERDOS, cambios.acuerdos);
+        escribir(K_ESTADO, cambios.estado);
+        return { ok:true, rollbackNecesario:false, rollbackVerificado:true };
+      }catch(err){
+        var verificado = rollback();
+        return { ok:false, rollbackNecesario:true, rollbackVerificado: verificado };
+      }
+    }
+
+    /* ---------------- refresco de UI abierta (no intrusivo) ---------------- */
+    function refrescarUIAbierta(){
+      try{ window.EVENTOS=null; }catch(e){}                 /* fuerza recarga perezosa */
+      try{ if(typeof window.tcRenderCal==='function') window.tcRenderCal(); }catch(e){}
+      try{ if(typeof window.tcRenderLeyenda==='function') window.tcRenderLeyenda(); }catch(e){}
+      try{ if(typeof window.tsReRenderNominaSiAbierta==='function') window.tsReRenderNominaSiAbierta(); }catch(e){}
+      try{ renderInfoCard(); }catch(e){}
+    }
+
+    /* ---------------- comprobación única al iniciar ---------------- */
+    function comprobar(){
+      var estadoPrevio = leerEstado();
+      var anioActual = (function(){ return new Date().getFullYear(); })();
+
+      fetchTexto('datos/catalogo.json').then(function(buf){
+        var texto;
+        try{ texto = new TextDecoder('utf-8',{fatal:false}).decode(buf); }catch(e){ texto=''; }
+        var cat;
+        try{ cat = JSON.parse(texto); }catch(e){ throw new Error('catálogo no es JSON'); }
+        if(!validarCatalogo(cat)) throw new Error('catálogo inválido');
+
+        var year = cat.anio;
+        var esCambioAnio = !estadoPrevio || estadoPrevio.anio !== year;
+
+        /* Revisiones instaladas para ESTE año (0/ausente si cambio de año). */
+        var insTS = (!esCambioAnio && estadoPrevio.tablaSalarial) ? estadoPrevio.tablaSalarial.revision : -1;
+        var insCE = (!esCambioAnio && estadoPrevio.calendarioEventos) ? estadoPrevio.calendarioEventos.revision : -1;
+        var insAC = (!esCambioAnio && estadoPrevio.acuerdos) ? estadoPrevio.acuerdos.revision : -1;
+
+        /* Presencia real en los almacenes (por si el usuario los borró). */
+        var tieneTS=false, tieneCE=false, tieneAC=false;
+        try{ tieneTS = (typeof window.tsLeerAniosTablas==='function') && window.tsLeerAniosTablas().indexOf(year)>=0; }catch(e){}
+        try{ var evb=leerEventosBase(); tieneCE = !!(evb[String(year)] && Object.keys(evb[String(year)]).length>0); }catch(e){}
+        try{ var acb=leerAcuerdosBase(); tieneAC = !!acb[String(year)]; }catch(e){}
+
+        /* Solo se descarga lo NECESARIO: revisión superior o dato ausente.
+           Nunca sustituye por revisión igual o inferior (sin downgrade). */
+        var needTS = (cat.tablaSalarial.revision > insTS) || !tieneTS;
+        var needCE = (cat.calendarioEventos.revision > insCE) || !tieneCE;
+        var needAC = (cat.acuerdosPuntuales.revision > insAC) || !tieneAC;
+
+        if(!needTS && !needCE && !needAC){
+          /* Todo al día: no se descarga ningún archivo. Solo se refresca la marca
+             temporal de comprobación (dato del módulo, no del usuario). */
+          var est = estadoPrevio ? JSON.parse(JSON.stringify(estadoPrevio)) : {};
+          est.ultimaComprobacion = new Date().toISOString();
+          est.ultimoResultado = 'ok';
+          try{ localStorage.setItem(K_ESTADO, JSON.stringify(est)); }catch(e){}
+          renderInfoCard();
+          return;
+        }
+
+        /* Descarga + verificación SHA-256 + validación de CADA archivo necesario
+           ANTES de escribir nada. */
+        function bajarYValidar(need, ds, schema, validarPayload){
+          if(!need) return Promise.resolve(null);
+          return fetchTexto('datos/'+ds.archivo).then(function(b){
+            return sha256Hex(b).then(function(hx){
+              if(hx.toLowerCase()!==ds.sha256.toLowerCase()) throw new Error('hash no coincide: '+ds.archivo);
+              var t; try{ t=new TextDecoder('utf-8',{fatal:false}).decode(b); }catch(e){ throw new Error('decode'); }
+              var obj; try{ obj=JSON.parse(t); }catch(e){ throw new Error('json'); }
+              if(!validarWrapper(obj, schema, cat.anio, ds.revision)) throw new Error('wrapper inválido: '+ds.archivo);
+              if(!validarPayload(obj)) throw new Error('payload inválido: '+ds.archivo);
+              return obj;
+            });
+          });
+        }
+
+        return Promise.all([
+          bajarYValidar(needTS, cat.tablaSalarial, 'nexum-tabla-salarial', function(o){
+            return plainObj(o.tablas) && Object.prototype.hasOwnProperty.call(o.tablas,String(year)) && validarBloqueSalarial(o.tablas);
+          }),
+          bajarYValidar(needCE, cat.calendarioEventos, 'nexum-calendario-eventos', function(o){
+            return plainObj(o.eventos) && Object.prototype.hasOwnProperty.call(o.eventos,String(year)) && validarEventos(o.eventos);
+          }),
+          bajarYValidar(needAC, cat.acuerdosPuntuales, 'nexum-acuerdos-puntuales', function(o){
+            return validarAcuerdosPayload(o, cat.anio, cat.acuerdosPuntuales.revision);
+          })
+        ]).then(function(res){
+          var tablaObj=res[0], eventosObj=res[1], acuerdosObj=res[2];
+          var cambios={};
+
+          /* Tabla salarial: fusiona el año nuevo preservando años históricos. */
+          if(tablaObj){
+            var baseTS = leerBloqueSalarialBase();
+            var nuevoTS = {}; Object.keys(baseTS).forEach(function(k){ nuevoTS[k]=baseTS[k]; });
+            nuevoTS[String(year)] = tablaObj.tablas[String(year)];
+            if(!validarBloqueSalarial(nuevoTS)) throw new Error('bloque salarial fusionado inválido');
+            cambios.tablas = JSON.stringify(nuevoTS);
+            cambios.activa = String(year); /* el año vigente pasa a ser la tabla activa */
+          }
+          /* Calendario de eventos: fusiona el año preservando años históricos. */
+          if(eventosObj){
+            var baseCE = leerEventosBase();
+            var nuevoCE = {}; Object.keys(baseCE).forEach(function(k){ nuevoCE[k]=baseCE[k]; });
+            nuevoCE[String(year)] = eventosObj.eventos[String(year)];
+            if(!validarEventos(nuevoCE)) throw new Error('eventos fusionados inválidos');
+            cambios.eventos = JSON.stringify(nuevoCE);
+          }
+          /* Acuerdos: por año. Con lista vacía no produce efecto económico. */
+          if(acuerdosObj){
+            var baseAC = leerAcuerdosBase();
+            var nuevoAC = {}; Object.keys(baseAC).forEach(function(k){ nuevoAC[k]=baseAC[k]; });
+            nuevoAC[String(year)] = { revision: cat.acuerdosPuntuales.revision, acuerdos: acuerdosObj.acuerdos };
+            cambios.acuerdos = JSON.stringify(nuevoAC);
+          }
+
+          /* Estado del paquete tras la instalación. */
+          var numAcu = acuerdosObj ? acuerdosObj.acuerdos.length : (insAC>=0 ? (estadoPrevio.acuerdos&&estadoPrevio.acuerdos.num)||0 : 0);
+          var est = {
+            anio: year,
+            catalogoRevision: cat.revision,
+            tablaSalarial: { anio:year, revision: (tablaObj?cat.tablaSalarial.revision:insTS), estado:'ok' },
+            calendarioEventos: { anio:year, revision: (eventosObj?cat.calendarioEventos.revision:insCE), estado:'ok' },
+            acuerdos: { anio:year, revision: (acuerdosObj?cat.acuerdosPuntuales.revision:insAC), num:numAcu },
+            ultimaComprobacion: new Date().toISOString(),
+            ultimoResultado: 'instalado'
+          };
+          cambios.estado = JSON.stringify(est);
+
+          /* NEXUM-018R1 — Solo se declara instalación correcta con ok===true. */
+          var resultado = instalarTransaccional(cambios);
+          if(resultado.ok === true){
+            nxActualizacionNoVerificable = false;
+            refrescarUIAbierta();
+            return;
+          }
+          if(resultado.rollbackNecesario === true && resultado.rollbackVerificado === true){
+            /* Rollback VERIFICADO: la copia anterior se conserva y sigue en uso.
+               K_ESTADO ya fue restaurado; es seguro reflejar el rechazo (esta
+               escritura no puede ocultar un rollback no verificable). */
+            nxActualizacionNoVerificable = false;
+            try{
+              var prevEst = leerEstado() || { anio: (estadoPrevio?estadoPrevio.anio:new Date().getFullYear()) };
+              prevEst.ultimaComprobacion = new Date().toISOString();
+              prevEst.ultimoResultado = 'rechazada';
+              localStorage.setItem(K_ESTADO, JSON.stringify(prevEst));
+            }catch(e){}
+          } else {
+            /* NEXUM-018R1R1 — Cualquier otro resultado es NO verificable: cubre
+               tanto el rollback no verificable como el fallo del SNAPSHOT inicial
+               ({ok:false, rollbackNecesario:false, rollbackVerificado:false}, en el
+               que no se escribió nada). En ambos casos NO se declara que la copia
+               anterior fue restaurada y NO se sobrescribe K_ESTADO. El estado no
+               verificable se refleja SOLO en Información. Si ya había datos válidos,
+               siguen usándose. Sin toast, modal, alert() ni explicación bloqueante. */
+            nxActualizacionNoVerificable = true;
+          }
+          try{ renderInfoCard(); }catch(e){}
+          return;
+        });
+      }).catch(function(err){
+        /* Cualquier fallo: NUNCA escritura parcial (ya revertida si la hubo).
+           - Si hay copia válida instalada -> se sigue usando; sin modal ni error.
+             Si el fallo fue de RED se marca 'sin-conexion'; si fue por datos
+             (hash/validación) se marca 'rechazada' (visible solo en Información).
+           - Si NUNCA se instalaron datos -> aviso NO bloqueante y estado 'sin-datos'. */
+        var estadoPrev = leerEstado();
+        var year = estadoPrev ? estadoPrev.anio : anioActual;
+        var tienePaquete = false;
+        try{ tienePaquete = (typeof window.tsLeerAniosTablas==='function') && window.tsLeerAniosTablas().indexOf(year)>=0; }catch(e){}
+        var esRed = /HTTP|Failed to fetch|NetworkError|origen externo|load failed/i.test(String(err&&err.message||err));
+        var est = estadoPrev ? JSON.parse(JSON.stringify(estadoPrev)) : { anio:anioActual };
+        est.ultimaComprobacion = new Date().toISOString();
+        if(tienePaquete){
+          est.ultimoResultado = esRed ? 'sin-conexion' : 'rechazada';
+        } else {
+          est.ultimoResultado = 'sin-datos';
+        }
+        try{ localStorage.setItem(K_ESTADO, JSON.stringify(est)); }catch(e){}
+        if(!tienePaquete){
+          /* Aviso NO bloqueante, una sola vez por arranque. */
+          try{ if(typeof window.mostrarToast==='function') window.mostrarToast('Datos generales no disponibles. Conéctate a Internet para completar la instalación.','error'); }catch(e){}
+        }
+        renderInfoCard();
+      });
+    }
+
+    /* ---------------- Tarjeta de SOLO LECTURA en «Información y ajustes» ---------------- */
+    function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function fmtFechaHora(iso){
+      if(!iso) return '—';
+      var d=new Date(iso); if(isNaN(d.getTime())) return '—';
+      function z(n){ return (n<10?'0':'')+n; }
+      return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' · '+z(d.getHours())+':'+z(d.getMinutes());
+    }
+    function filaEstado(marca, color, titulo, sub){
+      return '<div style="display:flex;gap:10px;align-items:flex-start;margin:10px 0;">'
+        + '<span aria-hidden="true" style="font-weight:800;min-width:16px;color:'+color+';">'+marca+'</span>'
+        + '<span><span style="font-weight:700;">'+esc(titulo)+'</span>'
+        + (sub?('<br><span style="font-size:0.85rem;color:var(--color-text-secondary);">'+esc(sub)+'</span>'):'')
+        + '</span></div>';
+    }
+    function renderInfoCard(){
+      var cont=document.getElementById('dg-info-card'); if(!cont) return;
+      var est=leerEstado();
+      var year = est ? est.anio : new Date().getFullYear();
+
+      /* Presencia real. */
+      var hayTS=false, revTS=null;
+      try{ hayTS = (typeof window.tsLeerAniosTablas==='function') && window.tsLeerAniosTablas().indexOf(year)>=0; }catch(e){}
+      if(est && est.tablaSalarial) revTS=est.tablaSalarial.revision;
+      var hayCE=false, revCE=null;
+      try{ var evb=leerEventosBase(); hayCE=!!(evb[String(year)] && Object.keys(evb[String(year)]).length>0); }catch(e){}
+      if(est && est.calendarioEventos) revCE=est.calendarioEventos.revision;
+      var numAC=0;
+      try{ var acb=leerAcuerdosBase(); if(acb[String(year)] && Array.isArray(acb[String(year)].acuerdos)) numAC=acb[String(year)].acuerdos.length; }catch(e){}
+
+      var VERDE='#1a7f37', AMBAR='#B45309', ROJO='#C0392B', NEUTRO='var(--color-text-secondary)';
+      var h='<div class="card" style="text-align:left;">';
+      h+='<div style="font-weight:800;letter-spacing:.04em;margin-bottom:4px;">DATOS GENERALES</div>';
+
+      /* Tabla salarial */
+      if(hayTS) h+=filaEstado('✓',VERDE,'Tabla salarial','Año '+year+(revTS!=null?(' · Revisión '+revTS):'')+' · Cargado y validado');
+      else h+=filaEstado('!',ROJO,'Tabla salarial','No disponible');
+
+      /* Calendario de eventos */
+      if(hayCE) h+=filaEstado('✓',VERDE,'Calendario de eventos','Año '+year+(revCE!=null?(' · Revisión '+revCE):'')+' · Cargado y validado');
+      else h+=filaEstado('!',AMBAR,'Calendario de eventos','No disponible');
+
+      /* Acuerdos extraordinarios */
+      if(numAC>0) h+=filaEstado('✓',VERDE,'Acuerdos extraordinarios',numAC+' acuerdo(s) publicado(s)');
+      else h+=filaEstado('—',NEUTRO,'Acuerdos extraordinarios','No hay acuerdos publicados');
+
+      /* NEXUM-018R1 — Rollback NO verificable: se refleja SOLO aquí, sin afirmar
+         que la copia anterior fue restaurada. Tiene prioridad sobre la nota de
+         «rechazada» (que sí implica copia anterior conservada). */
+      if(nxActualizacionNoVerificable){
+        h+='<div style="margin-top:6px;padding:8px 10px;border-left:3px solid '+ROJO+';background:rgba(192,57,43,.08);border-radius:6px;font-size:0.85rem;">'
+          +'<span style="color:'+ROJO+';font-weight:700;">Estado de actualización no verificable</span></div>';
+      } else if(est && est.ultimoResultado==='rechazada'){
+        /* Nota de actualización rechazada (solo aquí, se conserva la copia anterior). */
+        h+='<div style="margin-top:6px;padding:8px 10px;border-left:3px solid '+AMBAR+';background:rgba(180,83,9,.08);border-radius:6px;font-size:0.85rem;">'
+          +'<span style="color:'+AMBAR+';font-weight:700;">! Actualización rechazada</span> — se conserva la copia anterior.</div>';
+      }
+
+      h+='<div style="margin-top:12px;font-size:0.85rem;color:var(--color-text-secondary);"><strong>Última comprobación</strong><br>'
+        + esc(fmtFechaHora(est?est.ultimaComprobacion:null))+'</div>';
+      h+='<div style="margin-top:10px;font-size:0.82rem;color:var(--color-text-secondary);">Los datos se actualizan automáticamente.</div>';
+      h+='</div>';
+      cont.innerHTML=h;
+    }
+    /* Refresco de SOLO LECTURA de la tarjeta (no muta datos). */
+    window.nxRenderInfoDatosGenerales = renderInfoCard;
+
+    /* ---------------- bloqueo defensivo de mutadores públicos ----------------
+       Los datos generales son de SOLO LECTURA para el usuario. Se neutralizan las
+       antiguas vías públicas de mutación (abrir editores / importar / guardar /
+       activar) por si alguna quedara alcanzable: muestran un aviso y no mutan. No
+       se tocan los LECTORES/validadores ni la restauración del calendario PERSONAL
+       (dias/turnos) usada por las copias de seguridad. */
+    function soloLectura(){
+      try{ if(typeof window.mostrarToast==='function') window.mostrarToast('Estos datos son oficiales y de solo lectura: se actualizan automáticamente.','error'); }catch(e){}
+    }
+    function bloquearMutadores(){
+      var nombres = [
+        'tsAbrirEditorNuevo','tsAbrirEditorExistente','tsAbrirEditorActualizar',
+        'tsImportarArchivo','tsConfirmarGuardado','tsAplicarConfirmacion',
+        'tcOpenEventos','tcEventosLoad','tcEventosConfirm',
+        'adminAccionActualizarCalendario'
+      ];
+      for(var i=0;i<nombres.length;i++){
+        try{ if(typeof window[nombres[i]]==='function') window[nombres[i]] = soloLectura; }catch(e){}
+      }
+      /* Importadores/activadores de tabla salarial: ya no los usa el backup
+         (tsSolicitado=false) ni ninguna UI; se neutralizan como mutadores. */
+      try{ window.tcImportarTablasSalariales = function(){ return false; }; }catch(e){}
+      try{ window.tcAplicarTablaActivaImport = function(){ return { ok:false, manual:false }; }; }catch(e){}
+    }
+
+    /* ---------------- arranque único ----------------
+       Se espera a que estén disponibles los módulos necesarios (validador público
+       de tablas) e IndexedDB, sin bloquear la pantalla. Una sola comprobación. */
+    function arrancar(){
+      if(YA_ARRANCADO) return; YA_ARRANCADO=true;
+      /* Enlaza el refresco de la tarjeta a la apertura de Información (solo lectura). */
+      try{
+        ['btnSettings','nexoMasAjustes'].forEach(function(id){
+          var el=document.getElementById(id);
+          if(el) el.addEventListener('click', function(){ setTimeout(renderInfoCard,0); });
+        });
+      }catch(e){}
+      try{ renderInfoCard(); }catch(e){}
+      bloquearMutadores();
+
+      var intentos=0;
+      (function esperar(){
+        var modulosOk = (typeof window.tcValidarTablasSalarialesImportadas==='function');
+        var idbOk = (typeof window.indexedDB==='undefined') || (typeof db==='undefined') || db!==null || intentos>=15;
+        if(modulosOk && idbOk){ try{ comprobar(); }catch(e){} return; }
+        if(intentos++>=40){ try{ comprobar(); }catch(e){} return; } /* ~10s máx, luego intenta igual */
+        setTimeout(esperar, 250);
+      })();
+    }
+
+    if(document.readyState==='complete') setTimeout(arrancar, 0);
+    else window.addEventListener('load', function(){ setTimeout(arrancar, 0); });
   })();
   </script>
 

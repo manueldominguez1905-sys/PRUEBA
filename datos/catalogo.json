@@ -1,0 +1,21 @@
+{
+  "schema": "nexum-datos-generales",
+  "version": 1,
+  "anio": 2026,
+  "revision": 1,
+  "tablaSalarial": {
+    "archivo": "tabla-salarial-2026-r3.json",
+    "revision": 3,
+    "sha256": "c00248172cc1d1041a757f4f6600dba8a9f62b84e30f57a3e8b2361efaa1b70c"
+  },
+  "calendarioEventos": {
+    "archivo": "calendario-eventos-2026-r1.json",
+    "revision": 1,
+    "sha256": "7a817cd8bb32e120cddbadb0570c9e14ec28ac85c4a28bc52ac7a462a8456116"
+  },
+  "acuerdosPuntuales": {
+    "archivo": "acuerdos-2026-r0.json",
+    "revision": 0,
+    "sha256": "23e8b4208b99624a28886c33cf14e50a364427fef600c7a16c39a009a170a6b9"
+  }
+}
