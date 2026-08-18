@@ -823,7 +823,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-017R1</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-017R2</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -1932,7 +1932,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
           </div>
         </div>
 
-        <div class="tc-toast" id="tc-toast"></div>
+        <div class="tc-toast" id="tc-toast" role="status" aria-live="polite" aria-atomic="true"></div>
       </div><!-- /tc -->
 
       <!-- Banner de avisos de liquidación bajo el calendario -->
@@ -1969,6 +1969,11 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       #tab-nomina .cmp-btn{ display:inline-flex; align-items:center; gap:8px; background:var(--color-primary); color:#fff; border-radius:10px; padding:12px 16px; font-size:0.95rem; font-weight:700; border:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
       #tab-nomina .cmp-btn.sec{ background:var(--color-surface); color:var(--color-primary); border:1.5px solid var(--color-primary); }
       #tab-nomina .cmp-btn.ghost{ background:transparent; color:var(--color-text-secondary); border:1.5px solid var(--color-border); }
+      /* NEXUM-017R2 — Estado de ÉXITO tras copiar el informe (verde). El éxito se
+         comunica también con el texto «✓ Informe copiado», no solo con el color.
+         Se declara DESPUÉS de .sec para ganar en especificidad igual y por orden. */
+      #tab-nomina .cmp-btn.cmp-copiado{ background:var(--color-success); color:#fff; border:1.5px solid var(--color-success); opacity:1; cursor:default; }
+      #tab-nomina .cmp-btn[aria-disabled="true"]{ cursor:default; }
       #tab-nomina .cmp-btns{ display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 14px; }
       #tab-nomina .cmp-file{ font-size:0.88rem; color:var(--color-text); word-break:break-word; overflow-wrap:anywhere; }
       #tab-nomina .cmp-file .lbl{ color:var(--color-text-secondary); font-weight:600; }
@@ -11506,24 +11511,74 @@ function tcCmpProcesar(paginas){
 
 window.tcCmpSetFiltro=function(f){ NOMCMP.filtro=f; tcCmpRerender(); };
 
-/* ===== INFORME COPIABLE ===================================================== */
-window.tcCmpCopiarInforme=function(){
+/* ===== INFORME COPIABLE =====================================================
+   NEXUM-017R2 — Confirmación clara y accesible al copiar (especialmente en móvil).
+   El estado de ÉXITO solo aparece tras confirmar que la copia funcionó. La ruta
+   moderna (navigator.clipboard) y el fallback (textarea+execCommand) NUNCA se
+   ejecutan a la vez: el fallback solo se intenta si la moderna RECHAZA, de modo
+   que nunca se duplica la copia. El aviso se anuncia por el toast, que es una
+   región role="status" aria-live="polite". No abre modal, no bloquea, no guarda
+   nada, no usa alert(). Si la vista se re-renderiza durante la confirmación, los
+   temporizadores comprueban la existencia del elemento y nunca fallan. */
+window.tcCmpCopiarInforme=function(btn){
   var txt=tcCmpGenerarInforme();
   if(!txt){ tcToast('Nada que copiar'); return; }
-  function fallback(){
+  /* Referencia estable al botón (por argumento o por id). Puede ser null. */
+  if(!btn || !btn.tagName) btn=document.getElementById('cmpCopyBtn');
+  /* Guarda anti doble pulsación: si ya hay una copia/confirmación en curso, salir.
+     Se «deshabilita» con aria-disabled (no con la propiedad disabled) para poder
+     CONSERVAR EL FOCO en el botón; las pulsaciones repetidas se ignoran por esta
+     guarda, de modo que nunca se lanza una segunda copia. */
+  if(btn && btn.getAttribute('data-cmp-busy')==='1') return;
+  if(btn){ btn.setAttribute('data-cmp-busy','1'); btn.setAttribute('aria-disabled','true'); }
+  var textoOrig = btn ? btn.innerHTML : null;
+
+  function exito(){ tcCmpCopiaConfirmar(btn, textoOrig); }
+  function error(){
+    if(btn){ btn.removeAttribute('aria-disabled'); btn.removeAttribute('data-cmp-busy'); }
+    tcToast('No se pudo copiar el informe');
+  }
+  /* Fallback: copia y DEVUELVE éxito/fracaso (sin tocar la interfaz aquí). */
+  function fallbackCopy(){
     try{
       var ta=document.createElement('textarea');
       ta.value=txt; ta.setAttribute('readonly','');
       ta.style.position='fixed'; ta.style.top='-1000px'; ta.style.opacity='0';
       document.body.appendChild(ta); ta.select();
       var ok=document.execCommand('copy'); document.body.removeChild(ta);
-      tcToast(ok?'Informe copiado':'No se pudo copiar');
-    }catch(e){ tcToast('No se pudo copiar'); }
+      return !!ok;
+    }catch(e){ return false; }
   }
+
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(function(){ tcToast('Informe copiado'); }, fallback);
-  } else fallback();
+    navigator.clipboard.writeText(txt).then(exito, function(){
+      /* La moderna rechazó: intento ÚNICO por fallback (nunca ambas simultáneas). */
+      if(fallbackCopy()) exito(); else error();
+    });
+  } else {
+    if(fallbackCopy()) exito(); else error();
+  }
 };
+/* Aplica el estado de éxito al botón y lo restaura tras ~1,5 s. Robusto ante
+   re-render: si el botón desaparece del DOM, no hace foco ni lanza errores. */
+function tcCmpCopiaConfirmar(btn, textoOrig){
+  tcToast('Informe copiado');
+  if(!btn){ return; }
+  btn.classList.add('cmp-copiado');
+  btn.innerHTML='✓ Informe copiado';   /* ✓ + texto: no depende solo del color */
+  btn.setAttribute('aria-disabled','true');
+  if(document.body.contains(btn)){ try{ btn.focus(); }catch(e){} } /* mantener el foco */
+  if(btn._cmpTo) clearTimeout(btn._cmpTo);
+  btn._cmpTo=setTimeout(function(){
+    btn._cmpTo=null;
+    if(!btn) return;
+    btn.classList.remove('cmp-copiado');
+    if(textoOrig!=null) btn.innerHTML=textoOrig;
+    btn.removeAttribute('aria-disabled');
+    btn.removeAttribute('data-cmp-busy');
+    if(document.body.contains(btn)){ try{ btn.focus(); }catch(e){} } /* foco tras restaurar */
+  },1500);
+}
 function tcCmpGenerarInforme(){
   var R=NOMCMP.resultado, O=NOMCMP.oficial;
   if(!R||!O) return '';
@@ -11734,7 +11789,7 @@ function tcCmpRenderResultado(){
   if(micro) h+='<div class="cmp-foot">Nota: una diferencia de 0,01 € puede proceder del orden de redondeo, pero se muestra igualmente.</div>';
 
   h+='<div class="cmp-btns" style="margin-top:14px;">';
-  h+='<button type="button" class="cmp-btn sec" onclick="tcCmpCopiarInforme()">📋 Copiar informe de diferencias</button>';
+  h+='<button type="button" id="cmpCopyBtn" class="cmp-btn sec" onclick="tcCmpCopiarInforme(this)">📋 Copiar informe de diferencias</button>';
   h+='<button type="button" class="cmp-btn ghost" onclick="tcCmpQuitar()">Quitar nómina</button>';
   h+='</div>';
 
@@ -17575,7 +17630,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-017R1';
+    var VC_VERSION_ACTUAL = 'NEXUM-017R2';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
     var vcActualizando = false; /* guarda: impide doble ejecución/recarga */
