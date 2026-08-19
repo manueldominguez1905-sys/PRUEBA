@@ -823,7 +823,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-018R2</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-018R3</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -2250,6 +2250,25 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
         <button type="button" class="nexo-mas-item" id="nexoMasAdmin"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.3a3.6 3.6 0 0 0-4.7 4.4l-4.9 4.9a1.7 1.7 0 0 0 2.4 2.4l4.9-4.9a3.6 3.6 0 0 0 4.4-4.7l-2.3 2.3-1.8-.3-.3-1.8z"/></svg></span><span class="nexo-mas-tx">Administración</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
         <button type="button" class="nexo-mas-item" id="nexoMasAjustes"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg></span><span class="nexo-mas-tx">Información y ajustes</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
       </div>
+
+      <!-- NEXUM-018R3 — Acceso «Ayuda y guía» (reutiliza el patrón nexo-mas de la pantalla Más) -->
+      <h3 class="nexo-sub">Ayuda</h3>
+      <div class="nexo-mas-lista">
+        <button type="button" class="nexo-mas-item" id="nexoMasAyuda"><span class="nexo-mas-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.3a2.6 2.6 0 0 1 5 1c0 1.7-2.4 2.1-2.4 3.7"/><circle cx="12" cy="17" r="0.6"/></svg></span><span class="nexo-mas-tx">Ayuda y guía</span><span class="nexo-mas-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+      </div>
+    </section>
+
+    <!-- ===================== AYUDA Y GUÍA (NEXUM-018R3, pantalla secundaria) ===================== -->
+    <section id="tab-ayuda" class="tab-content">
+      <h2>❓ Ayuda y guía</h2>
+      <div class="info-box">
+        <p>Consulta la Guía visual NEXUM cuando necesites ayuda con alguna función.</p>
+      </div>
+      <div class="form-card">
+        <h3>Guía visual NEXUM</h3>
+        <p class="help-text">Manual paso a paso con imágenes de las principales funciones de NEXUM.</p>
+        <button id="btnAbrirGuiaVisual" class="btn btn-primary">📖 Abrir Guía visual NEXUM</button>
+      </div>
     </section>
 
   </main>
@@ -2846,7 +2865,8 @@ function abrirSeccion(tabId, opts) {
     importar: "Importar correo", estadillo: "Estadillo",
     historial: "Historial", backup: "Copias de seguridad",
     calendario: "Calendario", nomina: "Nómina",
-    recaudacion: "Recaudación", mas: "Más"
+    recaudacion: "Recaudación", mas: "Más",
+    ayuda: "Ayuda y guía"
   };
   document.getElementById("headerTitle").textContent = titulos[tabId] || "Registro del Conductor";
   document.getElementById("headerIcon").style.display = "none";
@@ -17647,7 +17667,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-018R2';
+    var VC_VERSION_ACTUAL = 'NEXUM-018R3';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
     var vcActualizando = false; /* guarda: impide doble ejecución/recarga */
@@ -20925,6 +20945,17 @@ window.tcMsgAbrirDia=function(fecha){
     on('nexoMasBackup', function(){ abrirSeccion('backup'); });
     on('nexoMasAdmin', function(){ var a=$('btnAdminAcceso'); if(a) a.click(); });
     on('nexoMasAjustes', function(){ var ms=$('modalSettings'); if(ms) ms.style.display='flex'; });
+    // NEXUM-018R3 — Ayuda y guía (pantalla secundaria estándar, misma navegación que las demás)
+    on('nexoMasAyuda', function(){ abrirSeccion('ayuda'); });
+    // NEXUM-018R3 — Apertura de la Guía visual NEXUM. Ruta RELATIVA (GitHub Pages),
+    // el mismo nombre de archivo se mantiene siempre para poder sustituir solo el PDF
+    // en GitHub sin tocar el código. Se abre en el visor del navegador (nueva pestaña),
+    // sin forzar descarga, dejando NEXUM intacto para volver fácilmente. Si el navegador
+    // bloquea la apertura, se avisa reutilizando el mecanismo de aviso existente (toast).
+    on('btnAbrirGuiaVisual', function(){
+      var w = window.open('docs/Guia_visual_NEXUM.pdf', '_blank');
+      if(!w && typeof mostrarToast === 'function'){ mostrarToast('No se ha podido abrir la Guía visual NEXUM.', 'error'); }
+    });
 
     /* NEXO-003R3 — Eliminado el listener duplicado de la barra inferior que hacía
        setTimeout(refrescarInicio,0). El refresco al regresar a Inicio (flecha
