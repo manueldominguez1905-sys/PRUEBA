@@ -797,6 +797,29 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
   .nexo-inicio{ max-width:1000px; margin-left:auto; margin-right:auto; }
 }
   </style>
+  <!-- ===================== NEXUM-018R4 — CSS ENCAPSULADO DEL VISOR DE GUÍA =====================
+       Todas las reglas cuelgan de #guiaVisor. No modifica body, .container, .tab-content,
+       .app-header, calendario, nómina ni overlays. Sin position:fixed. Última en la cascada. -->
+  <style id="guia-visor-css">
+    #guiaVisor{ display:flex; flex-direction:column; width:100%; max-width:100%; }
+    #guiaVisor .guiaVisor-head{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+    #guiaVisor .guiaVisor-back{
+      display:inline-flex; align-items:center; gap:6px; border:1px solid var(--color-border);
+      background:var(--color-surface); color:var(--color-text); border-radius:10px;
+      padding:9px 14px; font-size:.9rem; font-weight:600; cursor:pointer; min-height:40px;
+      -webkit-tap-highlight-color:transparent;
+    }
+    #guiaVisor .guiaVisor-back:hover{ filter:brightness(1.05); }
+    #guiaVisor .guiaVisor-back:focus-visible{ outline:2px solid var(--color-primary); outline-offset:2px; }
+    #guiaVisor .guiaVisor-title{ font-size:1.05rem; font-weight:700; color:var(--color-text); }
+    #guiaVisor .guiaVisor-estado{ font-size:.9rem; color:var(--color-text-secondary); margin:4px 0 10px; min-height:1.2em; }
+    #guiaVisor .guiaVisor-pages{ width:100%; max-width:100%; overflow-x:hidden; }
+    #guiaVisor .guiaVisor-page{
+      display:block; width:100%; max-width:100%; height:auto; margin:0 auto 12px;
+      border:1px solid var(--color-border); border-radius:6px; background:#fff;
+      box-shadow:var(--shadow);
+    }
+  </style>
 </head>
 <body>
 
@@ -2271,6 +2294,20 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       </div>
     </section>
 
+    <!-- ===================== VISOR INTERNO GUÍA (NEXUM-018R4, PDF.js existente) ===================== -->
+    <!-- Pantalla secundaria dedicada. Todo el CSS del visor va encapsulado bajo #guiaVisor
+         (ver bloque <style> guia-visor). No usa position:fixed ni toca reglas globales. -->
+    <section id="tab-guia" class="tab-content">
+      <div id="guiaVisor">
+        <div class="guiaVisor-head">
+          <button type="button" id="guiaVisorVolver" class="guiaVisor-back">← Volver a NEXUM</button>
+          <span class="guiaVisor-title">Guía visual NEXUM</span>
+        </div>
+        <div id="guiaVisorEstado" class="guiaVisor-estado" aria-live="polite"></div>
+        <div id="guiaVisorPages" class="guiaVisor-pages"></div>
+      </div>
+    </section>
+
   </main>
 
   <div id="toast" class="toast"></div>
@@ -2841,6 +2878,11 @@ function nexumPush(entrada){
 function abrirSeccion(tabId, opts) {
   var esVolver = !!(opts && typeof opts === "object" && opts.esVolver);
   var esRaiz   = !!(opts && typeof opts === "object" && opts.raiz); // R6R1 (tarea 2)
+  /* NEXUM-018R4 — Ciclo de vida del visor de guía: si se ABANDONA la pantalla 'guia'
+     por cualquier ruta que pase por aquí (flecha superior o pestañas de la barra),
+     se liberan sus canvas/recursos. Solo afecta al visor de guía; no toca ningún
+     otro estado de NEXUM. */
+  if(nexumPantallaActual === "guia" && tabId !== "guia" && typeof window.guiaVisorLimpiar === "function"){ window.guiaVisorLimpiar(); }
   /* R6R1 (tarea 2) — Pestaña de la barra inferior: destino de NIVEL SUPERIOR.
      Pulsarla inicia una ruta nueva: se descarta la jerarquía previa y solo Inicio
      queda como pantalla anterior, de modo que la flecha «atrás» vuelve a Inicio en
@@ -2866,7 +2908,7 @@ function abrirSeccion(tabId, opts) {
     historial: "Historial", backup: "Copias de seguridad",
     calendario: "Calendario", nomina: "Nómina",
     recaudacion: "Recaudación", mas: "Más",
-    ayuda: "Ayuda y guía"
+    ayuda: "Ayuda y guía", guia: "Guía visual NEXUM"
   };
   document.getElementById("headerTitle").textContent = titulos[tabId] || "Registro del Conductor";
   document.getElementById("headerIcon").style.display = "none";
@@ -2879,6 +2921,7 @@ function abrirSeccion(tabId, opts) {
   if (tabId === "nomina" && typeof window.tcRenderNomina === "function") window.tcRenderNomina();
   if (tabId === "recaudacion" && typeof window.nexoRenderRecaudacionHub === "function") window.nexoRenderRecaudacionHub();
   if (tabId === "mas" && typeof window.nexoRenderMas === "function") window.nexoRenderMas();
+  if (tabId === "guia" && typeof window.guiaVisorAbrir === "function") window.guiaVisorAbrir(); // NEXUM-018R4: render de la Guía visual con PDF.js existente
   if (typeof window.nexoActualizarNav === "function") window.nexoActualizarNav(tabId); // NEXO: estado visual barra inferior
   if (typeof window.nexumRecuperarViewport === "function") window.nexumRecuperarViewport(); // R5: recuperación de viewport al navegar (coalescida a 1 rAF)
 }
@@ -2921,6 +2964,9 @@ function cargarPDFjsSiNecesario() {
 }
 
 function volverAlMenu() {
+  /* NEXUM-018R4 — Si se sale del visor de guía por la pestaña «Inicio» de la barra
+     inferior (que llama directamente aquí), liberar los recursos del visor. */
+  if(nexumPantallaActual === "guia" && typeof window.guiaVisorLimpiar === "function"){ window.guiaVisorLimpiar(); }
   nexumPantallaActual = "inicio";
   nexumNavStack.length = 0; // Inicio es la raíz: la pila queda vacía (sin persistencia)
   document.getElementById("contenidoSecciones").style.display = "none";
@@ -20947,16 +20993,14 @@ window.tcMsgAbrirDia=function(fecha){
     on('nexoMasAjustes', function(){ var ms=$('modalSettings'); if(ms) ms.style.display='flex'; });
     // NEXUM-018R3 — Ayuda y guía (pantalla secundaria estándar, misma navegación que las demás)
     on('nexoMasAyuda', function(){ abrirSeccion('ayuda'); });
-    // NEXUM-018R3 — Apertura de la Guía visual NEXUM. Ruta RELATIVA (GitHub Pages),
-    // el mismo nombre de archivo se mantiene siempre para poder sustituir solo el PDF
-    // en GitHub sin tocar el código. Se abre en el visor del navegador (nueva pestaña),
-    // sin forzar descarga, dejando NEXUM intacto para volver fácilmente. Si el navegador
-    // bloquea la apertura, se avisa reutilizando el mecanismo de aviso existente (toast).
-    on('btnAbrirGuiaVisual', function(){
-      var url = new URL('docs/Guia_visual_NEXUM.pdf', document.baseURI).href;
-      var w = window.open(url, '_blank');
-      if(!w && typeof mostrarToast === 'function'){ mostrarToast('No se ha podido abrir la Guía visual NEXUM.', 'error'); }
-    });
+    // NEXUM-018R4 — Apertura de la Guía visual NEXUM en el VISOR INTERNO (PDF.js ya
+    // existente en NEXUM). No usa window.open, ni pestaña/ventana externa, ni descarga:
+    // navega a la pantalla interna 'guia' reutilizando la navegación de NEXUM. Al abrir
+    // 'guia' con padre 'ayuda', la vuelta (flecha superior o «← Volver a NEXUM») regresa
+    // exactamente a «Ayuda y guía». El renderizado lo dispara abrirSeccion vía
+    // window.guiaVisorAbrir(); si el PDF no puede abrirse, el propio visor avisa con el
+    // toast existente y mantiene al usuario en «Ayuda y guía».
+    on('btnAbrirGuiaVisual', function(){ abrirSeccion('guia', 'ayuda'); });
 
     /* NEXO-003R3 — Eliminado el listener duplicado de la barra inferior que hacía
        setTimeout(refrescarInicio,0). El refresco al regresar a Inicio (flecha
@@ -21670,6 +21714,136 @@ window.tcMsgAbrirDia=function(fecha){
 
     if(document.readyState==='complete') setTimeout(arrancar, 0);
     else window.addEventListener('load', function(){ setTimeout(arrancar, 0); });
+  })();
+  </script>
+
+  <!-- ===================== NEXUM-018R4 — VISOR INTERNO DE LA GUÍA VISUAL =====================
+       Reutiliza EXCLUSIVAMENTE el PDF.js ya presente en NEXUM (cargarPDFjsSiNecesario + pdfjsLib):
+       no añade librerías ni una segunda copia y no altera los usos de PDF.js en Calendario,
+       hojas de ruta, Nómina u OCR. No guarda el PDF (ni LocalStorage/IndexedDB): solo lo
+       renderiza. Sin setInterval, sondeos, MutationObserver ni bucles de refresco. Encapsulado:
+       expone window.guiaVisorAbrir y window.guiaVisorLimpiar. -->
+  <script>
+  (function(){
+    'use strict';
+    var GUIA_URL_REL = 'docs/Guia_visual_NEXUM.pdf';
+    var _gen = 0;           /* token de generación: invalida renders en vuelo al cerrar/reabrir */
+    var _pdfDoc = null;     /* documento PDF.js activo (se destruye al limpiar) */
+    var _renderTask = null; /* render de la página en curso (se cancela al limpiar) */
+
+    function $id(id){ return document.getElementById(id); }
+
+    /* Libera TODO lo específico del visor y no toca ningún otro estado de NEXUM. */
+    function limpiar(){
+      _gen++;                                   /* detiene cualquier bucle/promesa en vuelo (comparan su token) */
+      if(_renderTask && typeof _renderTask.cancel === 'function'){ try{ _renderTask.cancel(); }catch(e){} }
+      _renderTask = null;
+      if(_pdfDoc){ try{ if(typeof _pdfDoc.destroy === 'function') _pdfDoc.destroy(); }catch(e){} _pdfDoc = null; }
+      var cont = $id('guiaVisorPages');
+      if(cont){
+        var cvs = cont.querySelectorAll('canvas');
+        for(var i=0;i<cvs.length;i++){ cvs[i].width = 0; cvs[i].height = 0; } /* liberar cada canvas antes de vaciar */
+        cont.innerHTML = '';
+      }
+      var est = $id('guiaVisorEstado'); if(est) est.textContent = '';
+    }
+    window.guiaVisorLimpiar = limpiar;
+
+    /* Regreso a «Ayuda y guía» usando EXCLUSIVAMENTE la navegación interna existente.
+       Sin history.back / recarga / location. */
+    function volverAAyuda(){
+      if(typeof window.nexumVolver === 'function'){ window.nexumVolver(); }
+      else if(typeof window.abrirSeccion === 'function'){ window.abrirSeccion('ayuda', { esVolver:true }); }
+    }
+
+    /* Error controlado: libera recursos, avisa con el toast EXISTENTE y mantiene al
+       usuario en «Ayuda y guía». No crea alert/modal/toast nuevos. */
+    function fallo(){
+      limpiar();
+      if(typeof window.mostrarToast === 'function'){ window.mostrarToast('No se ha podido abrir la Guía visual NEXUM.', 'error'); }
+      volverAAyuda();
+    }
+
+    /* Espera acotada a que el PDF.js GLOBAL (ya existente) esté listo; reutiliza
+       cargarPDFjsSiNecesario(). No crea procesos permanentes: solo setTimeout puntuales
+       que además se abortan si el visor se cierra (cambia _gen). */
+    function esperarPdfjs(gen, intentos, onListo){
+      if(gen !== _gen) return;
+      if(typeof pdfjsLib !== 'undefined'){ onListo(); return; }
+      if(intentos === 0 && typeof cargarPDFjsSiNecesario === 'function'){ cargarPDFjsSiNecesario(); }
+      if(typeof _pdfjsEstado !== 'undefined' && _pdfjsEstado === 'error' && intentos > 0){ fallo(); return; }
+      if(intentos >= 15){ fallo(); return; }
+      setTimeout(function(){ esperarPdfjs(gen, intentos+1, onListo); }, 400);
+    }
+
+    function anchoContenedor(){
+      var cont = $id('guiaVisorPages');
+      var w = cont ? cont.clientWidth : 0;
+      if(!w || w < 1){ w = Math.min(window.innerWidth || 360, 1000) - 32; }
+      return Math.max(200, w);
+    }
+
+    /* Render SECUENCIAL (nunca todas las páginas a la vez): cada página a un canvas
+       ajustado al ancho real del contenedor y al devicePixelRatio ACOTADO (máx. 2)
+       para conservar la proporción y no disparar el consumo de memoria en móvil. */
+    function renderSecuencial(gen, pdf, num){
+      if(gen !== _gen) return;
+      if(num > pdf.numPages){ var f=$id('guiaVisorEstado'); if(f) f.textContent=''; return; }
+      pdf.getPage(num).then(function(page){
+        if(gen !== _gen){ try{ if(typeof page.cleanup==='function') page.cleanup(); }catch(e){} return; }
+        var cssW = anchoContenedor();
+        var base = page.getViewport({ scale: 1 });
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        var scale = (cssW / base.width) * dpr;
+        var vp = page.getViewport({ scale: scale });
+        var cont = $id('guiaVisorPages');
+        if(!cont || gen !== _gen) return;
+        var cv = document.createElement('canvas');
+        cv.className = 'guiaVisor-page';
+        cv.width = Math.round(vp.width);
+        cv.height = Math.round(vp.height);
+        cv.style.width = '100%';                 /* proporción original (height:auto por CSS) */
+        cont.appendChild(cv);
+        _renderTask = page.render({ canvasContext: cv.getContext('2d'), viewport: vp });
+        _renderTask.promise.then(function(){
+          _renderTask = null;
+          try{ if(typeof page.cleanup === 'function') page.cleanup(); }catch(e){}
+          renderSecuencial(gen, pdf, num+1);     /* siguiente página SOLO al terminar la actual */
+        }, function(){
+          _renderTask = null;
+          if(gen !== _gen) return;               /* cancelada por cierre: no es un fallo real */
+          fallo();
+        });
+      }, function(){ if(gen === _gen) fallo(); });
+    }
+
+    /* Apertura del visor (la dispara abrirSeccion al entrar en la pantalla 'guia'). */
+    function abrir(){
+      limpiar();                 /* parte de un estado limpio (idempotente) */
+      _gen++; var gen = _gen;
+      var est = $id('guiaVisorEstado'); if(est) est.textContent = 'Cargando la guía…';
+      var url;
+      try{ url = new URL(GUIA_URL_REL, document.baseURI).href; }  /* portable: GitHub Pages */
+      catch(e){ fallo(); return; }
+      esperarPdfjs(gen, 0, function(){
+        if(gen !== _gen) return;
+        var task;
+        try{ task = pdfjsLib.getDocument(url); }
+        catch(e){ fallo(); return; }
+        task.promise.then(function(pdf){
+          if(gen !== _gen){ try{ pdf.destroy(); }catch(e){} return; }
+          _pdfDoc = pdf;
+          var est2 = $id('guiaVisorEstado'); if(est2) est2.textContent = '';
+          renderSecuencial(gen, pdf, 1);
+        }, function(){ if(gen === _gen) fallo(); });
+      });
+    }
+    window.guiaVisorAbrir = abrir;
+
+    /* Botón «← Volver a NEXUM»: cierra SOLO el visor (libera recursos) y regresa a
+       «Ayuda y guía». El elemento ya está en el DOM (este script va al final del body). */
+    var bVolver = $id('guiaVisorVolver');
+    if(bVolver){ bVolver.addEventListener('click', function(){ limpiar(); volverAAyuda(); }); }
   })();
   </script>
 
