@@ -846,7 +846,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-018R5</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-018R5R1</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -16613,6 +16613,19 @@ window.tcEventosInvalidarCache=function(){
   if(typeof tcRenderCal==='function') tcRenderCal();
 };
 
+/* NEXUM-018R5R1 — Puente público seguro para módulos externos (p.ej. Datos
+   Generales tras instalar el calendario desde GitHub). Definido en el MISMO
+   ámbito privado que `var EVENTOS`, por lo que invalida la CACHÉ REAL (no el
+   inservible window.EVENTOS). No expone EVENTOS, no acepta parámetros, no
+   muta eventos, no escribe en localStorage, no abre el Calendario ni muestra
+   avisos: solo invalida la caché, reelee tc_v1_eventos y repinta. */
+window.tcEventosInvalidarCacheYRefrescar=function(){
+  EVENTOS=null;                 /* invalida la caché privada verdadera */
+  tcEnsureEventosLoaded();      /* reelee tc_v1_eventos (carga perezosa) */
+  try{ if(typeof tcRenderCal==='function') tcRenderCal(); }catch(e){}
+  try{ if(typeof tcRenderLeyenda==='function') tcRenderLeyenda(); }catch(e){}
+};
+
 /* ==================== DEV-007R6 — Centro de mensajes ====================
    Función pura y extensible. Recorre "dias" y genera avisos a partir de los
    datos reales de cada día (ampliaciones, cambios, jornadas y cálculos
@@ -17714,7 +17727,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-018R5';
+    var VC_VERSION_ACTUAL = 'NEXUM-018R5R1';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
     var vcActualizando = false; /* guarda: impide doble ejecución/recarga */
@@ -21423,9 +21436,11 @@ window.tcMsgAbrirDia=function(fecha){
 
     /* ---------------- refresco de UI abierta (no intrusivo) ---------------- */
     function refrescarUIAbierta(){
-      try{ window.EVENTOS=null; }catch(e){}                 /* fuerza recarga perezosa */
-      try{ if(typeof window.tcRenderCal==='function') window.tcRenderCal(); }catch(e){}
-      try{ if(typeof window.tcRenderLeyenda==='function') window.tcRenderLeyenda(); }catch(e){}
+      /* NEXUM-018R5R1 — Una única invalidación+refresco del Calendario a través
+         del puente que actúa sobre la variable privada real EVENTOS. El puente
+         ya ejecuta tcRenderCal() y tcRenderLeyenda(), así que aquí NO se repiten
+         (evita el doble renderizado). Se retiró el inservible window.EVENTOS=null. */
+      try{ if(typeof window.tcEventosInvalidarCacheYRefrescar==='function') window.tcEventosInvalidarCacheYRefrescar(); }catch(e){}
       try{ if(typeof window.tsReRenderNominaSiAbierta==='function') window.tsReRenderNominaSiAbierta(); }catch(e){}
       try{ renderInfoCard(); }catch(e){}
     }
