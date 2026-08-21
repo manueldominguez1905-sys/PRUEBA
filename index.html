@@ -846,7 +846,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-020R1</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-020R2R3</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -1111,7 +1111,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
        Reutilizado para: elegir parte de la jornada, confirmar sobrescritura de hora real,
        y avisar de una ampliación detectada. No usa alert/confirm/prompt nativos (poco fiables
        en PWA de iOS en modo standalone), sino el mismo patrón visual que modalSettings. -->
-  <div id="modalJornadaPrompt" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+  <div id="modalJornadaPrompt" role="dialog" aria-modal="true" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10020; align-items:center; justify-content:center;">
     <div style="background:#ffffff; color:#1a1a1a; border-radius:16px; padding:24px 22px; max-width:340px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.25);">
       <h3 id="jpTitulo" style="margin:0 0 10px; font-size:1.05rem;">&#8212;</h3>
       <p id="jpMensaje" style="margin:0 0 18px; font-size:0.9rem; color:var(--color-text-secondary); line-height:1.5; white-space:pre-line;"></p>
@@ -6572,36 +6572,84 @@ function inicializarCamaraOCR() {
      titularidad, cambiando SOLO condicionNocturna. Valida combinación estricta
      antes de escribir, relee EXACTO y hace rollback verificado si algo falla.
      Si el año no existía, se crea con DGA null / Bonobús false / régimen null (el
-     estado neutro habitual) más la condición nocturna. {ok:true, config} |
-     {ok:false, error}. */
+     estado neutro habitual) más la condición nocturna.
+     NEXUM-020R2R2 — Corrección 1. Resultado SIEMPRE estructurado y sin exponer
+     objetos internos mutables ni la clave de almacenamiento:
+       · Éxito:  {ok:true,  estado:'guardado'}
+       · Error:  {ok:false, estado:'corrupto'|'noVerificable'|'falloEscritura', error}
+     Se lee y valida ANTES mediante caLeer(). Si la configuración es 'corrupto',
+     desconocida o no verificable se ABORTA: cero escrituras, cero eliminaciones,
+     no se crea configuración vacía y NO se repara ni sustituye en silencio (así se
+     protegen DGA, Bonobús, régimen y los demás años). Solo 'sinConfig' permite
+     crear un año nuevo; 'ok' preserva todo lo existente. Tras escribir se RELEE con
+     caLeerAnio() y se comprueba que el estado guardado coincide EXACTAMENTE con el
+     solicitado; si la escritura o la relectura fallan, se aplica el rollback
+     transaccional existente y se devuelve ok:false. */
   function caGuardarCondicionNocturna(anio, estado, fuente, certeza){
     var y=String(anio==null?'':anio).trim();
-    if(!_caAnioValido(y)) return { ok:false, error:'El año debe tener el formato AAAA (cuatro dígitos).' };
+    if(!_caAnioValido(y)) return { ok:false, estado:'noVerificable', error:'El año debe tener el formato AAAA (cuatro dígitos).' };
     var _cnRes=_caCondNocturnaValida({ estado:estado, fuente:fuente, certeza:certeza }, y);
-    if(_cnRes.ok!==true) return { ok:false, error:_cnRes.error||'La condición nocturna no es válida.' };
+    if(_cnRes.ok!==true) return { ok:false, estado:'noVerificable', error:_cnRes.error||'La condición nocturna no es válida.' };
+    /* Lectura/validación PREVIA obligatoria: si el almacén no es legible, es
+       noVerificable; si es corrupto/no válido, se aborta SIN tocar nada. */
     var previoRaw, previoLegible=true;
     try { previoRaw = localStorage.getItem(CA_KEY); } catch(e){ previoLegible=false; }
     if(!previoLegible)
-      return { ok:false, error:'No se pudo leer el estado anterior de los conceptos anuales. No se ha guardado nada.' };
-    var base={ version:1, anios:{} };
+      return { ok:false, estado:'noVerificable', error:'No se pudo leer el estado anterior de los conceptos anuales. No se ha guardado nada.' };
     var lect=caLeer();
+    if(!lect || typeof lect!=='object'){
+      return { ok:false, estado:'noVerificable', error:'No se pudo verificar la configuración anual. No se ha guardado nada.' };
+    }
+    if(lect.estado==='corrupto'){
+      /* Config corrupta o no verificable → abortar: cero escrituras, cero
+         eliminaciones, no se sustituye ni repara en silencio. */
+      return { ok:false, estado:'corrupto', error:'La configuración anual está dañada o no es verificable. No se ha guardado nada para no destruir DGA, Bonobús, régimen ni otros años.' };
+    }
+    if(lect.estado!=='ok' && lect.estado!=='sinConfig'){
+      /* Estado desconocido → tratar como no verificable y abortar. */
+      return { ok:false, estado:'noVerificable', error:'La configuración anual no es verificable. No se ha guardado nada.' };
+    }
+    /* Reconstrucción preservando TODOS los años válidos existentes (solo cuando
+       la lectura es 'ok'). Con 'sinConfig' se parte de un objeto nuevo y válido. */
+    var base={ version:1, anios:{} };
     if(lect.estado==='ok'){
       for(var k in lect.config.anios){
         if(Object.prototype.hasOwnProperty.call(lect.config.anios,k)) base.anios[k]=_caCopiaAnio(lect.config.anios[k]);
       }
     }
+    /* Del año objetivo se conservan DGA, Bonobús y régimen; solo cambia la
+       condición nocturna. Si el año no existía, valores neutros habituales. */
     var prev=base.anios[y] || { dga:null, bonobusEconomico:false, regimenTurno:null };
     base.anios[y]={ dga:prev.dga, bonobusEconomico:(prev.bonobusEconomico===true),
       regimenTurno:(prev.regimenTurno==null?null:prev.regimenTurno),
       condicionNocturna:_cnRes.cond };
     var v=caValidar(base);
-    if(!v.ok) return { ok:false, error:v.error };
+    if(!v.ok) return { ok:false, estado:'falloEscritura', error:v.error };
     var serial;
     try { serial=JSON.stringify(v.config); }
-    catch(e){ return { ok:false, error:'No se pudo serializar la configuración.' }; }
+    catch(e){ return { ok:false, estado:'falloEscritura', error:'No se pudo serializar la configuración.' }; }
     var res=_caEscribirTransaccional(serial, previoRaw);
-    if(res.ok) return { ok:true, config:v.config };
-    return { ok:false, error:res.error };
+    if(!res.ok) return { ok:false, estado:'falloEscritura', error:res.error };
+    /* Relectura de verificación: el estado persistido del año debe coincidir
+       EXACTAMENTE con el solicitado. Si no, rollback verificado al valor previo.
+       NEXUM-020R2R3 — Corrección: caLeerAnio(y) se ejecuta DENTRO de try/catch. Si
+       lanza tras haber escrito, la verificación se considera fallida y se aplica el
+       MISMO rollback exacto, en lugar de terminar sin restaurar dejando un mensaje
+       de fallo con el nuevo estado ya almacenado. Ninguna excepción escapa. */
+    var _verif=null, _verifOk=false;
+    try {
+      _verif=caLeerAnio(y);
+      _verifOk=!!(_verif && typeof _verif==='object' && _verif.estado==='ok'
+        && _verif.condicionNocturna && _verif.condicionNocturna.estado===_cnRes.cond.estado);
+    } catch(e){ _verifOk=false; }   /* una excepción NO es verificación correcta */
+    if(!_verifOk){
+      var _rb=_caEscribirTransaccional(previoRaw, serial); /* restaura EXACTO el estado anterior */
+      return { ok:false, estado:'falloEscritura',
+        error:(_rb.ok
+          ? 'No se pudo verificar el guardado de la condición nocturna. Se ha restaurado la configuración anterior.'
+          : 'No se pudo verificar el guardado y no se pudo asegurar el estado anterior. Revisa el almacenamiento.') };
+    }
+    return { ok:true, estado:'guardado' };
   }
 
   /* NEXUM-019R2 — PUENTE público mínimo y seguro para que la IMPORTACIÓN de
@@ -7024,6 +7072,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /* Preguntas ya mostradas en esta sesión (por año): no se repite automáticamente. */
     var _cnPreguntado = {};
+    /* NEXUM-020R2R2 — Guard de doble pulsación / doble refresco para _cnResponder. */
+    var _cnGuardando = false;
 
     function _cnNorm(s){
       return String(s==null?'':s).toLowerCase()
@@ -7139,17 +7189,52 @@ document.addEventListener("DOMContentLoaded", function () {
       }catch(e){}
     }
 
+    /* NEXUM-020R2R2 — Corrección 2. NO se da éxito por hecho: se comprueba el
+       resultado ESTRUCTURADO de caGuardarCondicionNocturna() y, si dice ok, se
+       RELEE con nxCondNocturnaEstadoAnio() y solo se considera éxito si el estado
+       persistido coincide EXACTAMENTE con el elegido ('tfn' o 'no_tfn'). En éxito:
+       un único refresco de la nómina/pantalla y aviso breve. En fallo: no se
+       muestra éxito, no se modifica la configuración, «Revisar condición nocturna»
+       sigue disponible (el modal ya se cierra en tcModalPrompt antes de este
+       callback) y se muestra un aviso NO bloqueante. Guard contra doble pulsación
+       y doble refresco. No hay catch vacío que convierta una excepción en éxito. */
     function _cnResponder(anio, estado){
+      if(_cnGuardando) return;   /* evita dobles pulsaciones / dobles refrescos */
+      _cnGuardando = true;
       try{
-        if(typeof window.caGuardarCondicionNocturna==='function')
-          window.caGuardarCondicionNocturna(anio, estado, 'usuario', 'confirmada');
-      }catch(e){}
-      _cnRefrescar();
-      try{
-        if(typeof tcToast==='function')
-          tcToast(estado==='tfn' ? ('✔ Turno fijo de noche confirmado para '+anio)
-                                 : ('✔ Régimen nocturno registrado para '+anio));
-      }catch(e){}
+        if(estado!=='tfn' && estado!=='no_tfn'){ _cnFalloAviso(); return; }
+        if(typeof window.caGuardarCondicionNocturna!=='function'){ _cnFalloAviso(); return; }
+
+        var res;
+        try{
+          res = window.caGuardarCondicionNocturna(anio, estado, 'usuario', 'confirmada');
+        }catch(e){
+          /* Una excepción NO es un éxito. */
+          _cnFalloAviso();
+          return;
+        }
+
+        /* 1) El resultado debe declarar éxito explícito. */
+        if(!res || res.ok!==true){ _cnFalloAviso(); return; }
+
+        /* 2) Relectura de comprobación: éxito SOLO si coincide exactamente. */
+        var verif;
+        try{ verif = nxCondNocturnaEstadoAnio(anio); }catch(e){ verif = null; }
+        if(verif!==estado){ _cnFalloAviso(); return; }
+
+        /* Éxito real: un único refresco y aviso breve. */
+        _cnRefrescar();
+        try{ if(typeof tcToast==='function') tcToast('Condición nocturna guardada'); }catch(e){}
+      } finally {
+        _cnGuardando = false;
+      }
+    }
+
+    /* NEXUM-020R2R2 — Aviso NO bloqueante de fallo de guardado. No cambia la
+       configuración ni refresca la nómina; «Revisar condición nocturna» sigue
+       accesible en la tarjeta de Información. */
+    function _cnFalloAviso(){
+      try{ if(typeof tcToast==='function') tcToast('No se pudo guardar la condición nocturna. Revisa la configuración anual.'); }catch(e){}
     }
 
     /* Pregunta ÚNICA no bloqueante (tras importar) o de revisión (desde Información). */
@@ -7165,9 +7250,9 @@ document.addEventListener("DOMContentLoaded", function () {
         mensaje='No hemos podido confirmar tu régimen nocturno para '+anio+'. ¿Estás adscrito oficialmente al Turno Fijo de Noche?';
       }
       tcModalPrompt('Condición nocturna · '+anio, mensaje, [
-        {label:'Sí, turno fijo de noche', className:'btn-primary',   onClick:function(){ _cnResponder(anio,'tfn'); }},
-        {label:'No',                      className:'btn-secondary', onClick:function(){ _cnResponder(anio,'no_tfn'); }},
-        {label:(esRevision?'Cerrar':'Decidir después'), className:'btn-secondary', onClick:function(){ /* permanece pendiente */ }}
+        {label:'Sí, estoy adscrito al Turno Fijo de Noche', className:'btn-primary',   onClick:function(){ _cnResponder(anio,'tfn'); }},
+        {label:'No estoy adscrito al Turno Fijo de Noche',  className:'btn-secondary', onClick:function(){ _cnResponder(anio,'no_tfn'); }},
+        {label:(esRevision?'Cancelar':'Decidir después'), className:'btn-secondary', onClick:function(){ /* Cancelar: no guarda nada; permanece pendiente */ }}
       ]);
     }
 
@@ -10306,11 +10391,18 @@ function tcNomRenderProvisional(data){
     if(_cnEstado!=='tfn' && _cnEstado!=='no_tfn' && _cnEstado!=='pendiente' && _cnEstado!=='noVerificable')
       _cnEstado='noVerificable';
   }
-  /* Verdadero SOLO cuando el régimen nocturno está confirmado (tfn o no_tfn) en un
-     mes autorizado; en cualquier otro caso el bloque nocturno queda pendiente. */
   var _cnAplicable=(NOM_AUTORIZADO && esMes);
-  var _cnConfirmado=(_cnAplicable && (_cnEstado==='tfn' || _cnEstado==='no_tfn'));
-  var _cnBloquea=(_cnAplicable && !_cnConfirmado);
+  /* NEXUM-020R2R1 — Corrección 2. ESTADO ECONÓMICO EFECTIVO. Una condición
+     ausente, antigua o pendiente ('pendiente', que ya agrupa sinConfig/sinAnio/
+     ausente en nxCondNocturnaEstadoAnio) se interpreta económicamente como
+     'no_tfn' SOLO EN MEMORIA: se calcula sin bloquear y SIN PERSISTIR nada (no se
+     llama a caGuardarCondicionNocturna). 'tfn' y 'no_tfn' confirmados se respetan.
+     'noVerificable' (corrupción/excepción/lector averiado) NO se asume: mantiene la
+     fila «Pdte.» y el bloqueo de totales. Un turno nocturno suelto (CN/PN) NUNCA
+     deduce adscripción al TFN: el estado efectivo solo procede del módulo anual. */
+  var _cnEfectivo=(_cnEstado==='pendiente') ? 'no_tfn' : _cnEstado;
+  /* Solo 'noVerificable' bloquea; 'pendiente' pasa a calcularse como 'no_tfn'. */
+  var _cnBloquea=(_cnAplicable && _cnEstado==='noVerificable');
 
   /* Periodo de liquidación (dato fiable a partir del mes/año seleccionado).
      DEV-007R8 — El nº de días naturales del mes NO se usa como cantidad del
@@ -10409,7 +10501,7 @@ function tcNomRenderProvisional(data){
      se consulta el ID 4A33 (cero consultas). Fuera de mes autorizado (vista anual o
      categoría no autorizada) se conserva EXACTAMENTE el comportamiento anterior:
      resolverImporte ya devuelve «Pdte.» sin consultar la tabla por la guarda central. */
-  if(!_cnAplicable || _cnEstado==='no_tfn'){
+  if(!_cnAplicable || _cnEfectivo==='no_tfn'){
     add('4A33','Horas nocturnas','minutos',R.nocturnidadGeneral,null,'4A33_NOCTURNIDAD_GENERAL','horas',true);
   }
   /* NEXUM-019 — Plus MENSUAL de nocturnidad (4B11) del Turno Fijo de Noche. Cantidad
@@ -10418,7 +10510,7 @@ function tcNomRenderProvisional(data){
      con régimen 'tfn'. Si el ID está ausente/pendiente/no numérico, resolverImporte
      devuelve «Pdte.» y bloquea los totales por el mecanismo existente (una sola
      consulta mensual). En 'no_tfn'/'pendiente'/'noVerificable' NO se consulta 4B11. */
-  if(_cnAplicable && _cnEstado==='tfn'){
+  if(_cnAplicable && _cnEfectivo==='tfn'){
     add('4B11','Plus mensual de nocturnidad','unid',1,null,'4B11_NOCTURNIDAD','once',true);
   }
   add(
@@ -10495,14 +10587,22 @@ function tcNomRenderProvisional(data){
      R.extraCalle7 se conservan y solo se muestran en el Resumen de Nómina. */
   /* DEV-008R2 — Desde el turno final (reg.turno); ver tcResumenLaboralMes(). */
   add('4A0I','Prima diaria tarde','unid',R.primaTardeDias,'días','4A0I_TARDE','dias',true);
-  /* NEXUM-005 / NEXUM-019 — Prima diaria de noche (4A0J). Con la evidencia disponible
-     NO es aplicable al Conductor-Perceptor: se ELIMINA la fila económica de su nómina
-     provisional. No se añade fila, no se consulta el ID 4A0J_PRIMA_DIARIA_NOCHE y no
-     genera importe alguno. El acumulador estadístico R.primaNocheDias se CONSERVA
-     intacto (se calcula como hasta ahora y sigue disponible para las vistas que lo
-     necesiten); simplemente no se traduce en una línea de nómina. No se modifica la
-     tabla salarial ni se elimina el ID del catálogo genérico.
-     add('4A0J', ... ) — retirado deliberadamente en NEXUM-019. */
+  /* NEXUM-020R2R1 — Corrección 3. PRIMA DIARIA DE NOCHE (4A0J) del turno nocturno
+     SUELTO. Un trabajador NO adscrito que realiza uno o varios turnos nocturnos
+     sueltos cobra la prima DIARIA, no el plus mensual. Se restaura la fila usando
+     EXCLUSIVAMENTE: código visible 4A0J, descripción «Prima diaria noche», ID exacto
+     4A0J_PRIMA_DIARIA_NOCHE, cantidad R.primaNocheDias (una unidad por cada día CN o
+     PN, contada desde el turno final efectivo del día en tcResumenLaboralMes; no se
+     inventan días por horarios ni textos), modo 'dias', cotiza=true, sin fallback ni
+     importe hardcodeado. Solo con estado efectivo 'no_tfn' (incluye el 'pendiente'
+     tratado en memoria como 'no_tfn') y en mes autorizado: así NUNCA coexiste con el
+     plus mensual 4B11, y en 'tfn'/'noVerificable' o vista anual/no autorizada NO se
+     añade fila ni se consulta el ID (cero consultas económicas nuevas). Las horas
+     nocturnas reales siguen en 4A33 y las ampliaciones nocturnas en 4B13, con
+     independencia de esta prima. */
+  if(_cnAplicable && _cnEfectivo==='no_tfn'){
+    add('4A0J','Prima diaria noche','unid',R.primaNocheDias,'días','4A0J_PRIMA_DIARIA_NOCHE','dias',true);
+  }
   /* NEXUM-006 (4A0N) — Jornada tarde-noche especial. Mismo patrón que las primas
      diarias: días × importe diario del ID EXACTO de la tabla salarial ACTIVA
      (sin importe hardcodeado, sin búsqueda por nombre/código/aproximación).
@@ -10726,17 +10826,18 @@ function tcNomRenderProvisional(data){
       +'<div class="n"></div>';
   });
 
-  /* ===================== NEXUM-019 — CONDICIÓN NOCTURNA PENDIENTE / NO VERIFICABLE
-     En un mes autorizado sin régimen nocturno confirmado (pendiente, ausente,
-     configuración antigua o almacén no verificable) NO se ha consultado 4B11 ni 4A33
-     (cero consultas salariales de nocturnidad) y los acumuladores de minutos quedan
-     intactos. Se emite UNA sola fila informativa con cantidad «—» e importe «Pdte.»
-     que fija todosImportes=false y arrastra total devengado, deducciones y líquido a
-     «Pdte.» con el mecanismo bloqueante existente. No se repara ni sobrescribe la
-     configuración. El aviso con la acción («Más → Información») se añade más abajo. */
+  /* ===================== NEXUM-020R2R1 — CONDICIÓN NOCTURNA NO VERIFICABLE
+     Corrección 2: SOLO bloquea el estado 'noVerificable' (corrupción, excepción o
+     lector averiado). El estado 'pendiente'/ausente/antiguo ya NO bloquea: se calcula
+     en memoria como 'no_tfn'. Cuando _cnBloquea es cierto NO se ha consultado 4B11,
+     4A33 ni 4A0J (cero consultas salariales de nocturnidad) y los acumuladores de
+     minutos quedan intactos. Se emite UNA sola fila informativa con cantidad «—» e
+     importe «Pdte.» que fija todosImportes=false y arrastra total devengado,
+     deducciones y líquido a «Pdte.» con el mecanismo bloqueante existente. No se
+     repara ni sobrescribe la configuración. El aviso se añade más abajo. */
   if(_cnBloquea){
     todosImportes=false;
-    h+=descCelda(null,'Condición nocturna pendiente de confirmar')
+    h+=descCelda(null,'Condición nocturna no verificable')
       +'<div class="n">—</div>'
       +'<div class="n">'+celdaPend+'</div>'
       +'<div class="n"></div>';
@@ -11678,11 +11779,12 @@ function tcNomRenderProvisional(data){
     h+='<div class="nom-recibo-aviso">⚠️ No se pudo determinar la paga de Fiestas primaverales: la fecha de entrada (antigüedad) del perfil laboral no es válida. La fila FFPP queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revisa la fecha de antigüedad en el Perfil laboral.</div>';
   }
 
-  /* NEXUM-019 — Aviso de condición nocturna pendiente / no verificable (solo mes
-     autorizado sin régimen confirmado). No se ha consultado 4B11 ni 4A33; la nocturnidad
-     ordinaria queda sin resolver y los totales quedan «Pdte.». */
+  /* NEXUM-020R2R1 — Aviso de condición nocturna NO VERIFICABLE (solo mes autorizado
+     con almacén corrupto/lector averiado). No se ha consultado 4B11, 4A33 ni 4A0J; la
+     nocturnidad queda sin resolver y los totales quedan «Pdte.». El estado 'pendiente'
+     ya no llega aquí: se calcula como 'no_tfn' sin bloquear. */
   if(_cnBloquea){
-    h+='<div class="nom-recibo-aviso">⚠️ Tu condición nocturna no está confirmada para '+tcEsc(String(R.anio))+': la nocturnidad ordinaria queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revisa tu condición nocturna en Más → Información.</div>';
+    h+='<div class="nom-recibo-aviso">⚠️ No se pudo verificar tu condición nocturna para '+tcEsc(String(R.anio))+': la nocturnidad queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revisa tu condición nocturna en Más → Información.</div>';
   }
 
   /* DEV-010R11 — Aviso específico de la RETENCIÓN DE IRPF. Solo puede activarse
@@ -13620,16 +13722,51 @@ function tcModalPrompt(titulo,mensaje,botones){
   document.getElementById('jpTitulo').textContent=titulo;
   document.getElementById('jpMensaje').textContent=mensaje;
   var wrap=document.getElementById('jpBotones'); wrap.innerHTML='';
+  /* NEXUM-020R2R1 — El diálogo se abre POR ENCIMA de la pantalla que lo invoca
+     (z-index 10020 > .perfil-overlay/modalSettings 10000/9999) sin cerrarla: al
+     responder o cancelar, esa pantalla vuelve a quedar visible detrás. Se recuerda
+     el elemento con foco (p.ej. el botón «Revisar condición nocturna») para
+     restaurarlo al cerrar, y se cierra también con Escape. Cerrar con Escape o con
+     un botón sin onClick equivale a cancelar (no guarda nada). */
+  var _prevFoco=(document.activeElement && typeof document.activeElement.focus==='function')?document.activeElement:null;
+  function cerrar(cb){
+    document.removeEventListener('keydown',onKey,true);
+    modal.style.display='none';
+    if(typeof cb==='function'){ try{ cb(); }catch(e){} }
+    /* Restaura el foco al disparador tras devolver el control a la pantalla previa. */
+    if(_prevFoco){ try{ _prevFoco.focus(); }catch(e){} }
+  }
+  function onKey(ev){
+    if(ev.key==='Escape'||ev.key==='Esc'||ev.keyCode===27){
+      ev.preventDefault(); ev.stopPropagation(); cerrar(null); /* Escape = cancelar */
+    }
+  }
+  var primerBtn=null;
   (botones||[]).forEach(function(b){
     var btn=document.createElement('button');
     btn.className='btn '+(b.className||'btn-secondary');
     btn.style.width='100%';
+    btn.style.touchAction='manipulation';   /* uso táctil fiable en PWA/iOS */
+    btn.type='button';
     btn.textContent=b.label;
-    btn.onclick=function(){ modal.style.display='none'; if(b.onClick) b.onClick(); };
+    btn.onclick=function(){ cerrar(b.onClick); };
     wrap.appendChild(btn);
+    if(!primerBtn) primerBtn=btn;
   });
   modal.style.display='flex';
+  document.addEventListener('keydown',onKey,true);
+  /* Lleva el foco al diálogo (primer botón) para navegación por teclado; el foco
+     se devuelve al disparador al cerrar. */
+  if(primerBtn){ try{ primerBtn.focus(); }catch(e){} }
 }
+/* NEXUM-020R2R1 — Corrección 1 (causa raíz de «Revisar condición no se ve»).
+   tcModalPrompt se define dentro de la IIFE de este bloque <script>; el módulo de
+   CONDICIÓN NOCTURNA vive en una IIFE anterior y distinta, por lo que su llamada
+   `typeof tcModalPrompt==='function'` resolvía a la global (inexistente) y ABORTABA
+   sin abrir nunca el diálogo. Se expone aquí en window de forma ADITIVA para que el
+   módulo de condición nocturna lo alcance por la cadena global. No cambia ninguna de
+   las llamadas internas a tcModalPrompt (siguen usando la referencia local idéntica). */
+try{ window.tcModalPrompt = tcModalPrompt; }catch(e){}
 
 /* Compara fin real vs fin teórico de una parte y crea/actualiza su ampliación.
    Nunca borra en silencio una ampliación ya presentada o pendiente de
@@ -18618,14 +18755,14 @@ window.tcMsgAbrirDia=function(fecha){
           if(typeof tcColorSeguro!=='function' || tcColorSeguro(t.tagColor)) tagEl.style.background=t.tagColor;
           tagEl.style.color='#fff';
         }
-        /* Insignia ASIG SOLO si el real difiere del original y no hay cambio. Con
-           cambio se conserva el indicador de cambio existente (no se sustituye). */
-        if(real!==original && !reg.cambio){
-          var b=document.createElement('div');
-          b.className='tc-dasig'; b.textContent='ASIG';
-          b.title='Servicio partido asignado por hoja de ruta';
-          cell.appendChild(b);
-        }
+        /* NEXUM-020R2 — La insignia visual "ASIG" se ha eliminado del calendario
+           (mensual y anual). La celda muestra directamente el turno realmente
+           realizado mediante su etiqueta normal (PT/PM/PN o CM/CT/CN) con su color
+           y fondo, sin insignia, punto, texto ni borde que la sustituya. No se
+           añade ningún nodo bajo el turno (no queda espacio vacío). La asignación
+           se identifica al abrir la ficha del día (ver fichaCardHtml). Se conservan
+           los indicadores existentes de cambio, incidencia, festivo o aviso.
+           No se sobrescribe reg.turno. */
       }catch(e){}
     }
 
@@ -18645,12 +18782,21 @@ window.tcMsgAbrirDia=function(fecha){
         var origLbl=original+(tOrig&&tOrig.label?(' · '+tOrig.label):'');
         var realLbl=real+(tReal&&tReal.label?(' · '+tReal.label):'');
         var primaTxt={pendiente:'Pendiente',incluida:'Incluida',excluida:'Excluida',no_aplica:'No aplica'}[tsr.primaPartidoDiaria]||'—';
+        /* NEXUM-020R2 — Etiqueta destacada dentro de la ficha (no en el calendario)
+           que identifica la asignación. Con cambio prevalece "Servicio realizado
+           mediante cambio" (el indicador del cambio se conserva aparte); si el real
+           es partido, "Partido por asignación"; si es corrido, "Servicio corrido
+           asignado". El título general sigue siendo "Servicio asignado" y no se
+           oculta el turno original. */
+        var tagLbl = reg.cambio ? 'Servicio realizado mediante cambio'
+                   : (esPartido(real) ? 'Partido por asignación' : 'Servicio corrido asignado');
         var h='<div class="nx20-card">';
         h+='<div class="nx20-hd">Servicio asignado</div>'; /* NEXUM-020R1 — también cubre partido→corrido */
+        h+='<div class="nx20-tag">'+esc(tagLbl)+'</div>';
         h+='<div class="nx20-kv">Turno original: <strong>'+esc(origLbl)+'</strong><br>';
         h+='Servicio realizado: <strong>'+esc(realLbl)+'</strong><br>';
         h+='Origen: <strong>Hoja de ruta</strong><br>';
-        h+='Prima de partido: <strong>'+esc(primaTxt)+'</strong></div>';
+        h+='Prima diaria de partido: <strong>'+esc(primaTxt)+'</strong></div>';
         if(tsr.primaPartidoDiaria==='pendiente'){
           h+='<div class="nx20-actions"><button type="button" class="tc-btn tc-btn-ghost" onclick="nx20RevisarDia(\''+esc(key)+'\')">Revisar prima de partido</button></div>';
         }
@@ -18869,6 +19015,12 @@ window.tcMsgAbrirDia=function(fecha){
         L.fechas.forEach(function(f){
           var reg=dias[f]; if(reg) restaurarTSR(reg, L.snaps[f]);
         });
+        /* NEXUM-020R2 — Tras restaurar, refrescar el calendario para no mostrar en
+           pantalla un turno real que no ha quedado guardado; y si la ficha de uno de
+           esos días estaba abierta, volver a renderizarla con los datos restaurados.
+           No se abre la confirmación ni se altera la lógica de rollback. */
+        try{ if(typeof tcRenderCal==='function') tcRenderCal(); }catch(e){}
+        try{ if(typeof activeDate!=='undefined'&&activeDate&&L.fechas.indexOf(activeDate)!==-1&&dias[activeDate]&&typeof tcRenderView==='function') tcRenderView(activeDate,dias[activeDate]); }catch(e){}
       }
     };
 
@@ -18904,13 +19056,15 @@ window.tcMsgAbrirDia=function(fecha){
        reg.turnoServicioReal y gestiona la confirmación conjunta de la prima diaria
        de turno partido (4A41). Reutiliza tcCambioResolverTurnoDesdeJornada(). -->
   <style>
-    /* Insignia ASIG en el calendario (mensual y anual). Discreta, centrada,
-       nunca tapa el número ni el tag del turno. Legible en claro y oscuro. */
-    #tc .tc-dasig{display:inline-flex;align-items:center;justify-content:center;align-self:center;width:max-content;margin:2px auto 0;font-size:7px;font-weight:800;letter-spacing:.5px;line-height:1;padding:1px 4px;border-radius:3px;background:var(--surface2,#eee);color:var(--text2);border:1px solid var(--border);z-index:2;pointer-events:none;}
-    #tc .tc-d-mini .tc-dasig{margin:1px auto 0;font-size:5.5px;padding:.5px 2px;border-radius:2px;letter-spacing:.3px;}
+    /* NEXUM-020R2 — Insignia de asignación eliminada del calendario: sus reglas de
+       estilo se han retirado por completo (mensual y anual). El turno real se
+       muestra ya con su etiqueta y color normales, sin insignia bajo la celda. */
     /* Tarjeta del día: servicio partido asignado. */
     #tc .nx20-card{border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:10px;background:var(--surface,transparent);}
     #tc .nx20-hd{font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--color-primary);margin-bottom:8px;}
+    /* NEXUM-020R2 — Etiqueta destacada de la asignación dentro de la ficha (píldora).
+       Estilo NEXUM, legible en claro/oscuro mediante --color-primary. */
+    #tc .nx20-tag{display:inline-block;max-width:100%;box-sizing:border-box;font-size:11px;font-weight:800;letter-spacing:.3px;line-height:1.25;padding:3px 10px;border-radius:999px;margin:0 0 10px;background:var(--color-primary,#7a1f2b);color:#fff;overflow-wrap:anywhere;}
     #tc .nx20-kv{font-size:13px;line-height:1.7;color:var(--text2,inherit);}
     #tc .nx20-kv strong{color:inherit;}
     #tc .nx20-actions{display:flex;gap:8px;margin-top:10px;}
@@ -18999,7 +19153,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-020R1';
+    var VC_VERSION_ACTUAL = 'NEXUM-020R2R3';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
     var vcActualizando = false; /* guarda: impide doble ejecución/recarga */
