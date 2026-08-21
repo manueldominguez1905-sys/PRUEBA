@@ -846,7 +846,7 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
       <h2 style="margin:0 0 16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><svg class="nexo-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a7.7 7.7 0 0 0 0-3l1.9-1.5-1.9-3.3-2.3.9a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.6 7.6 0 0 0-2.6 1.5l-2.3-.9L2.7 9l1.9 1.5a7.7 7.7 0 0 0 0 3L2.7 15l1.9 3.3 2.3-.9a7.6 7.6 0 0 0 2.6 1.5l.5 2.6h4l.5-2.6a7.6 7.6 0 0 0 2.6-1.5l2.3.9 1.9-3.3z"/></svg>Información de la app</h2>
       <div style="font-size:0.95rem; color:var(--color-text-secondary); line-height:1.8;">
         <div><strong>Aplicación:</strong> NEXUM</div>
-        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-018R5R1</span></div>
+        <div style="margin-top:8px;"><strong>Versión:</strong> <span style="font-size:1.1rem; font-weight:700; color:var(--color-primary);">NEXUM-020R1</span></div>
         <div style="margin-top:8px;" data-dev="DEV-010R17"><strong>Descripción:</strong> Interfaz NEXUM móvil, autónoma, compacta y consistente.<br>Recaudación, calendarios y datos laborales integrados.<br>Nómina provisional conectada progresivamente a la tabla salarial activa.</div>
         <div style="margin-top:8px;"><strong>Comprobación de versión:</strong> <span id="vc-estado" style="color:var(--color-text-secondary);">—</span></div>
         <div style="margin-top:8px;"><strong>Desarrollado para:</strong> MDH</div>
@@ -855,6 +855,9 @@ body.nexo-has-nav{ padding-bottom:calc(var(--nexo-nav-h) + env(safe-area-inset-b
            calendario de eventos y acuerdos extraordinarios). La rellena el módulo
            nxDatosGenerales. Sin botones de acción: el usuario es solo lector. -->
       <div id="dg-info-card" style="margin-top:16px;"></div>
+      <!-- NEXUM-019 — Estado de datos personales: condición nocturna (TFN). La rellena
+           el módulo de condición nocturna (nxCondNocturnaRenderInfo). -->
+      <div id="cn-info-card"></div>
       <button id="btnCerrarSettings" class="btn btn-secondary" style="width:100%; margin-top:20px;">Cerrar</button>
     </div>
   </div>
@@ -6231,6 +6234,46 @@ function inicializarCamaraOCR() {
      de «proporcional» se validan contra los días de ESE año (365 / 366). */
   var CA_FFPP_KEYS = ['ffpp75','ffpp10','ffpp15'];
   var CA_FFPP_ESTADOS = { 'pendiente':1, 'noCorresponde':1, 'completo':1, 'proporcional':1 };
+  /* NEXUM-019 — Condición nocturna del Conductor-Perceptor por año. Objeto ESTRICTO
+     con EXACTAMENTE {estado, fuente, certeza} y COMBINACIONES cerradas (allowlist).
+     Ausente (config antigua) → se NORMALIZA en memoria como pendiente SIN reescribir
+     el almacenamiento. NO guarda el calendario completo: solo la conclusión. */
+  var CA_CN_ESTADOS  = { 'tfn':1, 'no_tfn':1, 'pendiente':1 };
+  var CA_CN_FUENTES  = { 'calendario_explicito':1, 'calendario_patron':1, 'usuario':1 };
+  var CA_CN_CERTEZAS = { 'confirmada':1, 'deducida':1, 'pendiente':1 };
+  /* Combinaciones POSIBLES; cualquier otra (p.ej. tfn+usuario+deducida,
+     pendiente+calendario_explicito+confirmada, no_tfn+calendario_explicito+…) → corrupto. */
+  var CA_CN_COMBOS = {
+    'tfn|calendario_explicito|confirmada':1,
+    'tfn|usuario|confirmada':1,
+    'no_tfn|calendario_patron|deducida':1,
+    'no_tfn|usuario|confirmada':1,
+    'pendiente|usuario|pendiente':1
+  };
+  /* Validación PURA de la condición nocturna de UN año (no escribe, no lanza).
+     {ok:true, cond:{estado,fuente,certeza}} (objeto NUEVO) | {ok:'ausente'} |
+     {ok:false, error}. Rechaza no-objeto, arrays, propiedades desconocidas, campos
+     ausentes, valores fuera de conjunto y combinaciones imposibles. */
+  function _caCondNocturnaValida(raw, y){
+    if(raw===undefined) return { ok:'ausente' };
+    if(!raw || typeof raw!=='object' || Array.isArray(raw))
+      return { ok:false, error:'La condición nocturna del año '+y+' no es válida.' };
+    for(var k in raw){
+      if(Object.prototype.hasOwnProperty.call(raw,k) && k!=='estado' && k!=='fuente' && k!=='certeza')
+        return { ok:false, error:'La condición nocturna del año '+y+' contiene propiedades no reconocidas.' };
+    }
+    if(!Object.prototype.hasOwnProperty.call(raw,'estado') ||
+       !Object.prototype.hasOwnProperty.call(raw,'fuente') ||
+       !Object.prototype.hasOwnProperty.call(raw,'certeza'))
+      return { ok:false, error:'Faltan campos en la condición nocturna del año '+y+'.' };
+    if(typeof raw.estado!=='string'  || !CA_CN_ESTADOS[raw.estado] ||
+       typeof raw.fuente!=='string'  || !CA_CN_FUENTES[raw.fuente] ||
+       typeof raw.certeza!=='string' || !CA_CN_CERTEZAS[raw.certeza])
+      return { ok:false, error:'La condición nocturna del año '+y+' tiene valores no válidos.' };
+    if(!CA_CN_COMBOS[raw.estado+'|'+raw.fuente+'|'+raw.certeza])
+      return { ok:false, error:'La condición nocturna del año '+y+' tiene una combinación imposible.' };
+    return { ok:true, cond:{ estado:raw.estado, fuente:raw.fuente, certeza:raw.certeza } };
+  }
 
   function _caAnioValido(y){ return typeof y==='string' && /^\d{4}$/.test(y); }
   function _caDgaValido(v){ return v===null || (typeof v==='string' && !!CA_DGA_VALIDOS[v]); }
@@ -6302,7 +6345,7 @@ function inicializarCamaraOCR() {
            Cualquier otra → rechazo. */
         for(var kk in val){
           if(Object.prototype.hasOwnProperty.call(val,kk) && kk!=='dga' && kk!=='bonobusEconomico'
-             && kk!=='regimenTurno'
+             && kk!=='regimenTurno' && kk!=='condicionNocturna'
              && kk!=='ffpp75' && kk!=='ffpp10' && kk!=='ffpp15')
             return { ok:false, error:'El año '+y+' contiene propiedades no reconocidas.', campo:'anio' };
         }
@@ -6351,9 +6394,18 @@ function inicializarCamaraOCR() {
           /* Esquema FFPP incompleto (una o dos claves): se rechaza toda la config. */
           return { ok:false, error:'La configuración de Fiestas primaverales del año '+y+' está incompleta: deben estar los tres tramos o ninguno.', campo:'ffpp75' };
         }
+        /* NEXUM-019 — condicionNocturna: si está presente debe ser un objeto ESTRICTO
+           con una combinación posible; si falta (config anterior) se OMITE del objeto
+           normalizado (equivale a pendiente en memoria) sin reescribir el almacenamiento. */
+        var _cnRes=_caCondNocturnaValida(val.condicionNocturna, y);
+        if(_cnRes.ok===false)
+          return { ok:false, error:_cnRes.error, campo:'condicionNocturna' };
+        var _cn=(_cnRes.ok===true)?_cnRes.cond:null;
         /* Objeto normalizado: DGA, Bonobús y régimen de titularidad (los tramos
-           FFPP heredados se descartan; se calculan desde el Perfil). */
+           FFPP heredados se descartan; se calculan desde el Perfil). La condición
+           nocturna solo se añade cuando estaba presente y es válida. */
         out.anios[y]={ dga:val.dga, bonobusEconomico:_bono, regimenTurno:_reg };
+        if(_cn) out.anios[y].condicionNocturna=_cn;
       }
       return { ok:true, config:out };
     } catch(e){
@@ -6388,9 +6440,14 @@ function inicializarCamaraOCR() {
     if(!Object.prototype.hasOwnProperty.call(lect.config.anios, y)) return { estado:'sinAnio' };
     var _a=lect.config.anios[y];
     /* NEXUM-012R2 / NEXUM-016 — DGA, Bonobús y régimen de titularidad (FFPP ya no
-       forma parte del esquema). */
+       forma parte del esquema). NEXUM-019 — condicionNocturna: se devuelve el objeto
+       almacenado (copia nueva) o null cuando está ausente; el consumidor trata null
+       como pendiente en memoria (config antigua) sin reescribir nada. */
     return { estado:'ok', dga:_a.dga, bonobusEconomico:(_a.bonobusEconomico===true),
-      regimenTurno:(_a.regimenTurno==null?null:_a.regimenTurno) };
+      regimenTurno:(_a.regimenTurno==null?null:_a.regimenTurno),
+      condicionNocturna:(_a.condicionNocturna
+        ? { estado:_a.condicionNocturna.estado, fuente:_a.condicionNocturna.fuente, certeza:_a.condicionNocturna.certeza }
+        : null) };
   }
 
   /* Serializa + escribe + relee EXACTO; si falla restaura el valor previo exacto
@@ -6423,8 +6480,13 @@ function inicializarCamaraOCR() {
   /* NEXUM-012R2 — Copia profunda de un año YA normalizado (solo dga y bonobus).
      Se usa para preservar los demás años al guardar/eliminar. */
   function _caCopiaAnio(a){
-    return { dga:a.dga, bonobusEconomico:(a.bonobusEconomico===true),
+    var o={ dga:a.dga, bonobusEconomico:(a.bonobusEconomico===true),
       regimenTurno:(a.regimenTurno==null?null:a.regimenTurno) };
+    /* NEXUM-019 — preserva la condición nocturna del año al copiar (guardado/borrado
+       de OTRO año, o guardado de DGA/Bonobús del mismo año). */
+    if(a.condicionNocturna) o.condicionNocturna={ estado:a.condicionNocturna.estado,
+      fuente:a.condicionNocturna.fuente, certeza:a.condicionNocturna.certeza };
+    return o;
   }
   function caGuardarAnio(anio, dga, bonobusEconomico, regimenTurno){
     var y=String(anio==null?'':anio).trim();
@@ -6452,7 +6514,12 @@ function inicializarCamaraOCR() {
         if(Object.prototype.hasOwnProperty.call(lect.config.anios,k)) base.anios[k]=_caCopiaAnio(lect.config.anios[k]);
       }
     }
+    /* NEXUM-019 — El modal de Condiciones laborales del año NO toca la condición
+       nocturna: se preserva la ya guardada para ese año (si existía) al reescribir
+       DGA, Bonobús y régimen. */
+    var _prevCN=(base.anios[y] && base.anios[y].condicionNocturna) ? base.anios[y].condicionNocturna : null;
     base.anios[y]={ dga:dga, bonobusEconomico:bonobusEconomico, regimenTurno:regimenTurno };
+    if(_prevCN) base.anios[y].condicionNocturna=_prevCN;
     var v=caValidar(base);
     if(!v.ok) return { ok:false, error:v.error, campo:v.campo||null };
     var serial;
@@ -6497,6 +6564,134 @@ function inicializarCamaraOCR() {
     var res=_caEscribirTransaccional(serial, previoRaw);
     if(res.ok) return { ok:true, estado:(quedan>0?'ok':'sinConfig') };
     return { ok:false, error:res.error };
+  }
+
+  /* NEXUM-019 — Guardado TRANSACCIONAL de la CONDICIÓN NOCTURNA de UN año. Mismo
+     patrón que caGuardarAnio: lee el valor anterior (obligatorio), preserva TODOS
+     los demás años y —del año objetivo— PRESERVA DGA, Bonobús y régimen de
+     titularidad, cambiando SOLO condicionNocturna. Valida combinación estricta
+     antes de escribir, relee EXACTO y hace rollback verificado si algo falla.
+     Si el año no existía, se crea con DGA null / Bonobús false / régimen null (el
+     estado neutro habitual) más la condición nocturna. {ok:true, config} |
+     {ok:false, error}. */
+  function caGuardarCondicionNocturna(anio, estado, fuente, certeza){
+    var y=String(anio==null?'':anio).trim();
+    if(!_caAnioValido(y)) return { ok:false, error:'El año debe tener el formato AAAA (cuatro dígitos).' };
+    var _cnRes=_caCondNocturnaValida({ estado:estado, fuente:fuente, certeza:certeza }, y);
+    if(_cnRes.ok!==true) return { ok:false, error:_cnRes.error||'La condición nocturna no es válida.' };
+    var previoRaw, previoLegible=true;
+    try { previoRaw = localStorage.getItem(CA_KEY); } catch(e){ previoLegible=false; }
+    if(!previoLegible)
+      return { ok:false, error:'No se pudo leer el estado anterior de los conceptos anuales. No se ha guardado nada.' };
+    var base={ version:1, anios:{} };
+    var lect=caLeer();
+    if(lect.estado==='ok'){
+      for(var k in lect.config.anios){
+        if(Object.prototype.hasOwnProperty.call(lect.config.anios,k)) base.anios[k]=_caCopiaAnio(lect.config.anios[k]);
+      }
+    }
+    var prev=base.anios[y] || { dga:null, bonobusEconomico:false, regimenTurno:null };
+    base.anios[y]={ dga:prev.dga, bonobusEconomico:(prev.bonobusEconomico===true),
+      regimenTurno:(prev.regimenTurno==null?null:prev.regimenTurno),
+      condicionNocturna:_cnRes.cond };
+    var v=caValidar(base);
+    if(!v.ok) return { ok:false, error:v.error };
+    var serial;
+    try { serial=JSON.stringify(v.config); }
+    catch(e){ return { ok:false, error:'No se pudo serializar la configuración.' }; }
+    var res=_caEscribirTransaccional(serial, previoRaw);
+    if(res.ok) return { ok:true, config:v.config };
+    return { ok:false, error:res.error };
+  }
+
+  /* NEXUM-019R2 — PUENTE público mínimo y seguro para que la IMPORTACIÓN de
+     CALENDARIO prepare / aplique / restaure ÚNICAMENTE el régimen de titularidad
+     de un año, de forma transaccional y verificable. NO expone la clave de
+     almacenamiento (CA_KEY), NI el objeto de configuración interno, NI ninguna
+     función de escritura genérica: solo tres operaciones acotadas al campo
+     régimen. Cada una devuelve un resultado ESTRUCTURADO que el llamante DEBE
+     comprobar.
+       · preparar(anio): captura el estado anterior EXACTO (instantánea opaca,
+         referida por un token interno) e informa de si el año ya tiene régimen.
+       · aplicar(anio, "partido"|"corrido"): escribe SOLO el régimen preservando
+         DGA, Bonobús y condición nocturna (reutiliza caGuardarAnio, transaccional
+         con relectura EXACTA y rollback verificado).
+       · restaurar(token): reescribe EXACTAMENTE el estado anterior capturado y
+         VERIFICA la restauración (o informa de que no se pudo asegurar).
+     Las instantáneas viven solo en memoria dentro de este módulo. */
+  var _caPuenteSnaps={};   /* token -> { anio, raw } (interno; NO se expone) */
+  var _caPuenteSeq=0;
+
+  /* NEXUM-019R2R1 — Corrección 1: la preparación EXIGE que el almacenamiento sea
+     VERIFICABLE. Se lee el estado con caLeer() y caLeerAnio(): si CUALQUIERA
+     devuelve 'corrupto', se ABORTA sin crear token y sin escribir ni eliminar
+     nada. Una configuración corrupta NUNCA se sustituye por una nueva. Los
+     estados 'sinConfig' y 'sinAnio' siguen siendo válidos para añadir el año.
+     La instantánea guarda internamente {anio, raw}; raw es la cadena EXACTA de
+     almacenamiento capturada aquí, referida por un token opaco. */
+  function caRegimenCalPreparar(anio){
+    var y=String(anio==null?'':anio).trim();
+    if(!_caAnioValido(y)) return { ok:false, error:'El año debe tener el formato AAAA (cuatro dígitos).' };
+    var _lg=caLeer();
+    if(_lg && _lg.estado==='corrupto')
+      return { ok:false, estado:'corrupto', error:'La configuración anual no es verificable.' };
+    var _l=caLeerAnio(y);
+    if(_l && _l.estado==='corrupto')
+      return { ok:false, estado:'corrupto', error:'La configuración anual no es verificable.' };
+    var previoRaw, legible=true;
+    try { previoRaw=localStorage.getItem(CA_KEY); } catch(e){ legible=false; }
+    if(!legible) return { ok:false, error:'No se pudo leer el estado anterior de los conceptos anuales.' };
+    var _reg=(_l&&_l.estado==='ok')?(_l.regimenTurno==null?null:_l.regimenTurno):null;
+    var token='rt'+(++_caPuenteSeq);
+    _caPuenteSnaps[token]={ anio:y, raw:previoRaw };
+    return { ok:true, token:token, regimenActual:_reg,
+             tieneRegimen:(_reg==='corrido'||_reg==='partido') };
+  }
+
+  /* NEXUM-019R2R1 — Corrección 2: la aplicación EXIGE el token de preparación.
+     Antes de escribir: 1) el token debe existir; 2) debe pertenecer al MISMO
+     año; 3) se relee la cadena actual de almacenamiento; 4) debe ser EXACTAMENTE
+     igual a la capturada al preparar; 5) si cambió, se ABORTA sin escribir
+     ({estado:'modificado'}) y SIN restaurar ninguna instantánea antigua. */
+  function caRegimenCalAplicar(token, anio, regimen){
+    var y=String(anio==null?'':anio).trim();
+    if(!_caAnioValido(y)) return { ok:false, error:'El año debe tener el formato AAAA (cuatro dígitos).' };
+    if(regimen!=='corrido' && regimen!=='partido')
+      return { ok:false, error:'La opción de régimen de titularidad no es válida.' };
+    if(!token || !Object.prototype.hasOwnProperty.call(_caPuenteSnaps, token))
+      return { ok:false, error:'No hay una preparación válida para aplicar el régimen.' };
+    var _snap=_caPuenteSnaps[token];
+    if(_snap.anio!==y)
+      return { ok:false, error:'La preparación no corresponde al año indicado.' };
+    var actualRaw, legible=true;
+    try { actualRaw=localStorage.getItem(CA_KEY); } catch(e){ legible=false; }
+    if(!legible) return { ok:false, error:'No se pudo leer el estado actual de los conceptos anuales.' };
+    if(actualRaw!==_snap.raw)
+      return { ok:false, estado:'modificado', error:'La configuración anual cambió durante la importación.' };
+    /* Se preservan DGA y Bonobús leyéndolos y reenviándolos; caGuardarAnio
+       preserva además la condición nocturna del año internamente. */
+    var _l=caLeerAnio(y);
+    var _dga=(_l&&_l.estado==='ok')?_l.dga:null;
+    var _bono=(_l&&_l.estado==='ok')?(_l.bonobusEconomico===true):false;
+    return caGuardarAnio(y, _dga, _bono, regimen);
+  }
+
+  function caRegimenCalRestaurar(token){
+    if(!token || !Object.prototype.hasOwnProperty.call(_caPuenteSnaps, token))
+      return { ok:false, verificado:false, error:'No hay estado anterior que restaurar.' };
+    var raw=_caPuenteSnaps[token].raw;
+    var actualRaw, legible=true;
+    try { actualRaw=localStorage.getItem(CA_KEY); } catch(e){ legible=false; }
+    if(!legible){ delete _caPuenteSnaps[token]; return { ok:false, verificado:false, error:'No se pudo leer el estado actual para restaurar.' }; }
+    var res=_caEscribirTransaccional(raw, actualRaw); /* reescribe EXACTO y verifica */
+    delete _caPuenteSnaps[token];
+    if(res.ok) return { ok:true, verificado:true };
+    return { ok:false, verificado:false, error:res.error };
+  }
+
+  function caRegimenCalDescartar(token){
+    if(token && Object.prototype.hasOwnProperty.call(_caPuenteSnaps, token)) delete _caPuenteSnaps[token];
+    return { ok:true };
   }
 
   /* ---------- Interfaz (modal accesible propio) ---------- */
@@ -6765,6 +6960,12 @@ function inicializarCamaraOCR() {
   window.caLeerAnio     = caLeerAnio;
   window.caValidar      = caValidar;
   window.caGuardarAnio  = caGuardarAnio;
+  window.caGuardarCondicionNocturna = caGuardarCondicionNocturna; /* NEXUM-019 */
+  /* NEXUM-019R2 — Puente régimen↔calendario (mínimo, seguro, transaccional). */
+  window.caRegimenCalPreparar  = caRegimenCalPreparar;
+  window.caRegimenCalAplicar   = caRegimenCalAplicar;
+  window.caRegimenCalRestaurar = caRegimenCalRestaurar;
+  window.caRegimenCalDescartar = caRegimenCalDescartar;
   window.caEliminarAnio = caEliminarAnio;
   window.caAbrirModal   = caAbrirModal;
   window.caCerrarModal  = caCerrarModal;
@@ -6801,6 +7002,260 @@ document.addEventListener("DOMContentLoaded", function () {
        cuando NO se ha abierto la app desde un enlace de "correo". */
     if(!correoParam && typeof window.tcPerfilComprobarInicial==="function") window.tcPerfilComprobarInicial(); });
 });
+  </script>
+
+  <!-- ===================== NEXUM-019 — CONDICIÓN NOCTURNA (TFN) DEL CONDUCTOR-PERCEPTOR
+       Módulo 100 % aditivo. Detecta automáticamente, tras importar/sustituir el
+       CALENDARIO PERSONAL DE TURNOS, si el titular está adscrito al Turno Fijo de
+       Noche (tfn), no adscrito (no_tfn) o si no hay evidencia suficiente (pendiente).
+       La conclusión —NO el calendario— se persiste por año en el módulo anual
+       existente (nexum_v1_conceptos_anuales) vía caGuardarCondicionNocturna(). No usa
+       el Calendario de eventos genérico, no toca dias/turnos, no crea temporizadores
+       ni sondeos, y solo pregunta una vez por sesión cuando el resultado es pendiente
+       y no existe ya un estado confirmado para ese año. ===================== -->
+  <script>
+  (function(){
+    'use strict';
+
+    /* Umbrales de «calendario suficientemente completo». Un calendario anual real de
+       TUSSAM supera holgadamente estos mínimos; un import parcial no. */
+    var CN_MIN_LABORABLES = 100;   /* días clasificables mañana/tarde/noche */
+    var CN_MIN_MESES      = 6;      /* meses distintos con días clasificables */
+
+    /* Preguntas ya mostradas en esta sesión (por año): no se repite automáticamente. */
+    var _cnPreguntado = {};
+
+    function _cnNorm(s){
+      return String(s==null?'':s).toLowerCase()
+        .normalize('NFD').replace(/[̀-ͯ]/g,'')
+        .replace(/\s+/g,' ').trim();
+    }
+
+    /* Clasifica un código de turno en franja. Los códigos por defecto son inequívocos;
+       para códigos creados desde el PDF se usa su etiqueta visible normalizada. */
+    function _cnClasificarFranja(cod){
+      if(typeof cod!=='string') return 'desconocido';
+      var c=cod.toUpperCase().trim();
+      if(c==='CN'||c==='PN') return 'noche';
+      if(c==='CM'||c==='PM') return 'manana';
+      if(c==='CT'||c==='PT') return 'tarde';
+      if(c==='D'||c==='V')   return 'descanso';
+      var t=null;
+      try{ t=(typeof TURNO!=='undefined' && TURNO && TURNO[c]) ? TURNO[c] : null; }catch(e){ t=null; }
+      var lbl=(t&&t.label)?_cnNorm(t.label):'';
+      if(/\bnoche\b/.test(lbl))            return 'noche';
+      if(/\bmanana\b/.test(lbl))           return 'manana';
+      if(/\btarde\b/.test(lbl))            return 'tarde';
+      if(/descanso|vacacion/.test(lbl))    return 'descanso';
+      return 'desconocido';
+    }
+
+    /* Referencia EXPLÍCITA e inequívoca al Turno Fijo de Noche en el documento
+       importado. Normaliza mayúsculas/minúsculas, tildes y espacios; NO acepta
+       coincidencias parciales ambiguas. «Adscrito a turno fijo de noche» contiene
+       la locución completa; «TFN» se exige como palabra aislada. */
+    function _cnTextoExplicitoTFN(texto){
+      var t=_cnNorm(texto);
+      if(!t) return false;
+      if(t.indexOf('turno fijo de noche')>=0) return true;
+      if(/\btfn\b/.test(t)) return true;
+      return false;
+    }
+
+    /* Análisis PURO (sin efectos). Devuelve el año dominante del calendario, y el
+       resultado {estado,fuente,certeza} SOLO cuando puede confirmarse automáticamente
+       (tfn explícito o no_tfn por patrón). En cualquier caso ambiguo/incompleto/
+       exclusivamente nocturno sin texto → resultado null (pendiente). */
+    function nxCondNocturnaAnalizar(dataStore, texto){
+      var out={ anio:null, resultado:null, motivo:'pendiente' };
+      var keys=[]; try{ keys=Object.keys(dataStore||{}); }catch(e){ keys=[]; }
+      var porAnio={};
+      keys.forEach(function(k){
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+        var y=k.slice(0,4);
+        (porAnio[y]=porAnio[y]||[]).push(k);
+      });
+      var anio=null, max=-1;
+      Object.keys(porAnio).forEach(function(y){ if(porAnio[y].length>max){ max=porAnio[y].length; anio=y; } });
+      if(!anio){ out.motivo='sin_fechas'; return out; }
+      out.anio=anio;
+      /* 1) Texto explícito → tfn confirmado, sin pregunta. */
+      if(_cnTextoExplicitoTFN(texto)){
+        out.resultado={ estado:'tfn', fuente:'calendario_explicito', certeza:'confirmada' };
+        out.motivo='explicito';
+        return out;
+      }
+      /* 2) Patrón del calendario del año dominante. */
+      var m=0,t=0,n=0, meses={};
+      porAnio[anio].forEach(function(k){
+        var f=_cnClasificarFranja(dataStore[k]);
+        if(f==='manana'){ m++; meses[k.slice(5,7)]=1; }
+        else if(f==='tarde'){ t++; meses[k.slice(5,7)]=1; }
+        else if(f==='noche'){ n++; meses[k.slice(5,7)]=1; }
+      });
+      var laborables=m+t+n;
+      var nMeses=Object.keys(meses).length;
+      var completo=(laborables>=CN_MIN_LABORABLES && nMeses>=CN_MIN_MESES);
+      if(!completo){ out.motivo='incompleto'; return out; }             /* pendiente, no adivinar */
+      if(m>0 || t>0){                                                    /* rotación / mañana o tarde */
+        out.resultado={ estado:'no_tfn', fuente:'calendario_patron', certeza:'deducida' };
+        out.motivo='patron_rotacion';
+        return out;
+      }
+      /* Exclusivamente nocturno sin texto explícito → NO declarar tfn: pendiente. */
+      out.motivo=(n>0)?'exclusivo_nocturno':'sin_datos';
+      return out;
+    }
+
+    /* Estado efectivo persistido de un año (sin efectos). */
+    function nxCondNocturnaEstadoAnio(anio){
+      if(typeof window.caLeerAnio!=='function') return 'noVerificable';
+      var lect;
+      try{ lect=window.caLeerAnio(anio); }catch(e){ return 'noVerificable'; }
+      if(!lect || typeof lect!=='object' || Array.isArray(lect)) return 'noVerificable';
+      if(lect.estado==='corrupto') return 'noVerificable';
+      if(lect.estado==='sinConfig' || lect.estado==='sinAnio') return 'pendiente';
+      if(lect.estado==='ok'){
+        var cn=lect.condicionNocturna;
+        if(cn && (cn.estado==='tfn' || cn.estado==='no_tfn' || cn.estado==='pendiente')) return cn.estado;
+        return 'pendiente';   /* ausente → pendiente en memoria */
+      }
+      return 'noVerificable';
+    }
+
+    function nxCondNocturnaPendienteActual(){
+      var e=nxCondNocturnaEstadoAnio(String(new Date().getFullYear()));
+      return (e==='pendiente' || e==='noVerificable');
+    }
+
+    function _cnRefrescar(){
+      try{ if(typeof window.nxCondNocturnaRenderInfo==='function') window.nxCondNocturnaRenderInfo(); }catch(e){}
+      try{ if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }catch(e){}
+      try{
+        if(typeof window.tcRenderNomina==='function'){
+          var tab=document.getElementById('tab-nomina');
+          if(tab && tab.style.display!=='none') window.tcRenderNomina();
+        }
+      }catch(e){}
+    }
+
+    function _cnResponder(anio, estado){
+      try{
+        if(typeof window.caGuardarCondicionNocturna==='function')
+          window.caGuardarCondicionNocturna(anio, estado, 'usuario', 'confirmada');
+      }catch(e){}
+      _cnRefrescar();
+      try{
+        if(typeof tcToast==='function')
+          tcToast(estado==='tfn' ? ('✔ Turno fijo de noche confirmado para '+anio)
+                                 : ('✔ Régimen nocturno registrado para '+anio));
+      }catch(e){}
+    }
+
+    /* Pregunta ÚNICA no bloqueante (tras importar) o de revisión (desde Información). */
+    function _cnPreguntar(anio, esRevision){
+      if(typeof tcModalPrompt!=='function') return;
+      var mensaje;
+      if(esRevision){
+        var e=nxCondNocturnaEstadoAnio(anio);
+        var estadoTxt=(e==='tfn')?'Turno fijo de noche (confirmado)':
+                      (e==='no_tfn')?'No adscrito a turno fijo de noche':'Pendiente de confirmar';
+        mensaje='Estado actual: '+estadoTxt+'. ¿Estás adscrito oficialmente al Turno Fijo de Noche?';
+      } else {
+        mensaje='No hemos podido confirmar tu régimen nocturno para '+anio+'. ¿Estás adscrito oficialmente al Turno Fijo de Noche?';
+      }
+      tcModalPrompt('Condición nocturna · '+anio, mensaje, [
+        {label:'Sí, turno fijo de noche', className:'btn-primary',   onClick:function(){ _cnResponder(anio,'tfn'); }},
+        {label:'No',                      className:'btn-secondary', onClick:function(){ _cnResponder(anio,'no_tfn'); }},
+        {label:(esRevision?'Cerrar':'Decidir después'), className:'btn-secondary', onClick:function(){ /* permanece pendiente */ }}
+      ]);
+    }
+
+    /* Acción desde Información: responder o corregir. */
+    function nxCondNocturnaRevisar(anio){
+      anio=String(anio||new Date().getFullYear());
+      if(!/^\d{4}$/.test(anio)) anio=String(new Date().getFullYear());
+      _cnPreguntar(anio, true);
+    }
+
+    /* Punto de enganche tras importación/sustitución CORRECTA del calendario anual. */
+    function nxCondNocturnaTrasImportar(dataStore, texto){
+      var a;
+      try{ a=nxCondNocturnaAnalizar(dataStore, texto); }catch(e){ return; }
+      if(!a || !a.anio) return;
+      var anio=a.anio;
+      if(a.resultado){
+        /* tfn (explícito) o no_tfn (patrón): se persiste automáticamente. */
+        try{
+          if(typeof window.caGuardarCondicionNocturna==='function')
+            window.caGuardarCondicionNocturna(anio, a.resultado.estado, a.resultado.fuente, a.resultado.certeza);
+        }catch(e){}
+        _cnRefrescar();
+        return;
+      }
+      /* pendiente: no sobrescribe un estado ya confirmado y pregunta una sola vez. */
+      var actual=nxCondNocturnaEstadoAnio(anio);
+      _cnRefrescar();
+      if(actual==='tfn' || actual==='no_tfn') return;
+      if(_cnPreguntado[anio]) return;
+      _cnPreguntado[anio]=true;
+      _cnPreguntar(anio, false);
+    }
+
+    /* Línea compacta en Más → Información (estado de datos personales). */
+    function nxCondNocturnaRenderInfo(){
+      var cont=document.getElementById('cn-info-card'); if(!cont) return;
+      var y=String(new Date().getFullYear());
+      var e=nxCondNocturnaEstadoAnio(y);
+      var VERDE='#1a7f37', AMBAR='#B45309';
+      var icon,color,txt;
+      if(e==='tfn'){ icon='✅'; color=VERDE; txt='Turno fijo de noche · confirmado'; }
+      else if(e==='no_tfn'){ icon='✅'; color=VERDE; txt='No adscrito a turno fijo de noche'; }
+      else { icon='⚠️'; color=AMBAR; txt='Condición nocturna pendiente'; }
+      var h='<div class="card" style="text-align:left;margin-top:16px;">';
+      h+='<div style="font-weight:800;letter-spacing:.04em;margin-bottom:6px;">DATOS PERSONALES</div>';
+      h+='<div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:'+color+';font-weight:700;">'
+        +'<span aria-hidden="true">'+icon+'</span><span>'+txt+' · '+y+'</span></div>';
+      /* NEXUM-019R2 — Línea de RÉGIMEN DE TITULARIDAD (solo lectura). Refleja el
+         valor persistido para el año en el módulo anual existente. El esquema solo
+         guarda "partido"|"corrido"|null: NO almacena fuente ni certeza, así que el
+         texto es NEUTRO y nunca afirma el origen del valor. No modifica TFN/no-TFN. */
+      try{
+        var _rReg=null;
+        if(typeof window.caLeerAnio==='function'){ var _rl=window.caLeerAnio(y); if(_rl&&_rl.estado==='ok') _rReg=_rl.regimenTurno; }
+        var _rIcon,_rColor,_rTxt;
+        if(_rReg==='partido'){ _rIcon='✅'; _rColor=VERDE; _rTxt='Régimen · Partido'; }
+        else if(_rReg==='corrido'){ _rIcon='✅'; _rColor=VERDE; _rTxt='Régimen · Corrido'; }
+        else { _rIcon='⚠️'; _rColor=AMBAR; _rTxt='Régimen de titularidad · Sin determinar'; }
+        h+='<div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:'+_rColor+';font-weight:700;margin-top:6px;">'
+          +'<span aria-hidden="true">'+_rIcon+'</span><span>'+_rTxt+' · '+y+'</span></div>';
+      }catch(e){}
+      h+='<button type="button" id="cnRevisarBtn" class="btn btn-secondary" style="width:100%;margin-top:12px;">Revisar condición nocturna</button>';
+      h+='</div>';
+      cont.innerHTML=h;
+      var b=document.getElementById('cnRevisarBtn');
+      if(b) b.onclick=function(){ nxCondNocturnaRevisar(y); };
+    }
+
+    /* Exposición pública. */
+    window.nxCondNocturnaAnalizar        = nxCondNocturnaAnalizar;
+    window.nxCondNocturnaEstadoAnio      = nxCondNocturnaEstadoAnio;
+    window.nxCondNocturnaPendienteActual = nxCondNocturnaPendienteActual;
+    window.nxCondNocturnaTrasImportar    = nxCondNocturnaTrasImportar;
+    window.nxCondNocturnaRevisar         = nxCondNocturnaRevisar;
+    window.nxCondNocturnaRenderInfo      = nxCondNocturnaRenderInfo;
+
+    /* Refresco de la línea de Información al abrir «Información y ajustes». */
+    document.addEventListener('DOMContentLoaded', function(){
+      try{
+        ['btnSettings','nexoMasAjustes'].forEach(function(id){
+          var el=document.getElementById(id);
+          if(el) el.addEventListener('click', function(){ setTimeout(nxCondNocturnaRenderInfo,0); });
+        });
+      }catch(e){}
+      try{ nxCondNocturnaRenderInfo(); }catch(e){}
+    });
+  })();
   </script>
 
   <!-- ===================== JS DIARIO DEL CONDUCTOR ===================== -->
@@ -6846,6 +7301,9 @@ var activeDate=null;
 var pdfPages=[];
 var pdfImportSemanalFile=null;
 var calDataStore=null;
+/* NEXUM-019 — Texto del último PDF de calendario anual analizado. Solo se usa para
+   detectar la referencia EXPLÍCITA a TFN; no se persiste ni se expone. */
+var calTextoStore='';
 /* DEV-004R9: hoja de ruta individual pendiente de confirmar turno/servicio.
    Mientras no sea null, NO se ha tocado dias[] con esta hoja: solo se
    escribe en dias[] al pulsar "Guardar cambios" en el editor; si el editor
@@ -7232,6 +7690,26 @@ function tcValidarJornadaImportada(jr){
   }
   return true;
 }
+/* NEXUM-020 — Validador ESTRICTO del objeto reg.turnoServicioReal (servicio
+   partido asignado detectado por hoja de ruta). null/undefined es VÁLIDO para
+   backups antiguos sin el objeto. Con objeto presente: exactamente version 1,
+   sin claves desconocidas, codigo entre los seis turnos base, origen fijo
+   'hoja_ruta', y primaPartidoDiaria en el conjunto de cuatro estados. Se define
+   como función global (antes de tcValidarDiaImportado y de cualquier
+   restauración) para que la validación previa a mutar datos esté disponible
+   siempre. */
+function nx20ValidarTurnoServicioRealImportado(o){
+  if(o===null||o===undefined) return true;
+  if(!tcEsObjPlano(o)) return false;
+  var permitidas=['version','codigo','origen','primaPartidoDiaria'];
+  var claves=Object.keys(o);
+  for(var i=0;i<claves.length;i++){ if(permitidas.indexOf(claves[i])===-1) return false; }
+  if(o.version!==1) return false;
+  if(['CM','CT','CN','PM','PT','PN'].indexOf(o.codigo)===-1) return false;
+  if(o.origen!=='hoja_ruta') return false;
+  if(['pendiente','incluida','excluida','no_aplica'].indexOf(o.primaPartidoDiaria)===-1) return false;
+  return true;
+}
 function tcValidarDiaImportado(reg){
   if(!tcEsObjPlano(reg)||!tcValidarJSONSeguro(reg)) return false;
   if('turno' in reg&&reg.turno!=null&&reg.turno!==''&&!tcCodigoTurnoSeguro(reg.turno)) return false;
@@ -7254,6 +7732,10 @@ function tcValidarDiaImportado(reg){
      aparece); un campo nuevo inválido rechaza TODO el día (backup completo). */
   if('asignacionServicio' in reg && !nx15ValidarAsignacion(reg.asignacionServicio)) return false;
   if('servicioIncidencia' in reg && !nx15ValidarServicioInc(reg.servicioIncidencia)) return false;
+  /* NEXUM-020 — Servicio partido asignado (hoja de ruta). Objeto estricto: un
+     valor inválido rechaza TODO el día (backup completo) antes de mutar datos.
+     La ausencia del objeto sigue siendo válida (backups antiguos). */
+  if('turnoServicioReal' in reg && !nx20ValidarTurnoServicioRealImportado(reg.turnoServicioReal)) return false;
   return tcValidarJornadaImportada(reg.jornada);
 }
 function tcValidarTurnoImportado(t){
@@ -7751,6 +8233,9 @@ function tcRenderCal(){
       /* NEXUM-015 — distintivo INC (servicio de incidencia). No sustituye el tag
          del turno original: se añade junto a él. */
       if(typeof nx15AplicarBadgeInc==='function') nx15AplicarBadgeInc(cell,reg);
+      /* NEXUM-020 — Turno real (servicio partido asignado) como turno visible +
+         insignia ASIG. No modifica reg.turno. */
+      if(reg&&typeof window.nx20DecorarCelda==='function') window.nx20DecorarCelda(cell,reg,false);
       if(c.inMonth){
         (function(k,r){cell.addEventListener('click',function(){tcOpenDay(k,r);});})(key,reg);
       }
@@ -8024,6 +8509,8 @@ function tcRenderAnual(scrollToActual){
         }
         /* NEXUM-015 — distintivo INC (mini). No sustituye el tag del turno. */
         if(typeof nx15AplicarBadgeInc==='function') nx15AplicarBadgeInc(cell,reg);
+        /* NEXUM-020 — Turno real + ASIG en la vista anual (mini). */
+        if(reg&&typeof window.nx20DecorarCelda==='function') window.nx20DecorarCelda(cell,reg,true);
         (function(k,r){cell.addEventListener('click',function(){tcOpenDay(k,r);});})(key,reg);
         tcAplicarEventoEnCelda(cell,key);
         row.appendChild(cell);
@@ -8200,6 +8687,9 @@ function tcRenderView(key,reg){
      día tiene un servicio de incidencia registrado (reg.servicioIncidencia o
      reg.asignacionServicio.clase==='incidencia'). No sustituye nada. */
   if(typeof nx15IncCardHtml==='function') html+=nx15IncCardHtml(key,reg);
+  /* NEXUM-020 — Tarjeta de servicio partido asignado (turno original vs servicio
+     realizado, origen y estado de la prima de partido). No sustituye nada. */
+  if(typeof window.nx20FichaCardHtml==='function') html+=window.nx20FichaCardHtml(key,reg);
   if(reg.incidencia) html+='<div class="tc-inc-box">⚠️ '+tcEsc(reg.incidencia)+'</div>';
   if(reg.notas) html+='<div class="tc-nota-box">📋 '+tcEsc(reg.notas)+'</div>';
   document.getElementById('vw-extra').innerHTML=html;
@@ -9275,6 +9765,7 @@ function tcResumenLaboralMes(anio,mes){
     jornadaTardeNocheEspecialDias:0, /* NEXUM-006 (4A0N) — adicional a las primas */
     jornadaTardeNocheEspecialPendiente:0, /* NEXUM-006R1 (4A0N) — 0/1: falta 'Domingo de Ramos' en el año */
     tpMensualCompleto:false, tpMensualUnidades:0, tpDiarioUnidades:0, /* DEV-008R3 */
+    tpAsigIncluidas:0, tpAsigPendientes:0, /* NEXUM-020 — servicios partidos asignados por hoja de ruta */
     festivoTrabajadoDias:0, festivoEspecialDias:0, domingoRamosDias:0, festivoDesplazadoDias:0, /* DEV-008R10 */
     serviciosIncidenciaConfirmados:0, serviciosIncidenciaPendientes:0, /* NEXUM-015 */
     diasPendientesRevision:0, diasConDatos:0
@@ -9375,6 +9866,16 @@ function tcResumenLaboralMes(anio,mes){
       if(turnoFinal==='PM'||turnoFinal==='PT'||turnoFinal==='PN') mesTurnoPartidoDias++;
       else if(turnoFinal==='CM'||turnoFinal==='CT'||turnoFinal==='CN') mesTurnoRectoPresente=true;
     }
+    /* NEXUM-020 — Servicio partido ASIGNADO por hoja de ruta: turno original
+       corrido (CM/CT/CN), servicio real partido (PM/PT/PN) y SIN cambio. reg.turno
+       NO se toca (sigue corrido), por lo que estos días NO entran en
+       mesTurnoPartidoDias: no hay doble cómputo con la lógica diaria existente. Se
+       cuentan aparte según el estado confirmado de la prima diaria. */
+    if(typeof window.nx20DiaEsPartidoAsignado==='function' && window.nx20DiaEsPartidoAsignado(reg)){
+      var _ep20=window.nx20EstadoPrima(reg);
+      if(_ep20==='incluida') R.tpAsigIncluidas++;
+      else if(_ep20==='pendiente') R.tpAsigPendientes++;
+    }
     /* NEXUM-015 — Servicios de incidencia. Se cuentan ANTES de exigir jornada:
        una incidencia programada o pendiente de hoja aún no tiene reg.jornada.
        Máximo UNA unidad por fecha (es un objeto por día). Confirmados =
@@ -9440,7 +9941,17 @@ function tcResumenLaboralMes(anio,mes){
          pendiente (incrementa tpPendiente, marca pendDia, no toca tpHasta2h/tpMas2h
          ni ningún subtipo y no consulta ningún ID salarial). No se duplica ni se
          altera la lógica de calendario/festivos existente. */
-      var turnoPartidoOk=(turnoFinal==='PM'||turnoFinal==='PT'||turnoFinal==='PN');
+      /* NEXUM-020R1 (Defecto 2) — El descanso intermedio 4A4E/4A4F corresponde a
+         QUIEN REALIZA el servicio. Se clasifica con un código EFECTIVO: el del
+         servicio real (turnoServicioReal desde hoja de ruta) si existe, o el turno
+         final en su defecto. turnoFinal y reg.turno NO se sustituyen: siguen rigiendo
+         titularidad, 4A10 y 4A41. La clasificación por festivo/día (esFestivoHoy,
+         dowFinal) solo es fiable si el turno final es un turno real (el bloque
+         laboral de arriba se ejecutó): por eso se exige turnoFinalEsReal, con lo que
+         CT/CN/CM original + PT/PN/PM real quedan cubiertos sin usar variables obsoletas. */
+      var _codEfec=(typeof window.nx20CodigoEfectivoDescanso==='function')?window.nx20CodigoEfectivoDescanso(reg,turnoFinal):turnoFinal;
+      var turnoFinalEsReal=(turnoFinal==='CM'||turnoFinal==='CT'||turnoFinal==='CN'||turnoFinal==='PM'||turnoFinal==='PT'||turnoFinal==='PN');
+      var turnoPartidoOk=turnoFinalEsReal&&(_codEfec==='PM'||_codEfec==='PT'||_codEfec==='PN');
       if(gap==null||!turnoPartidoOk){ R.tpPendiente++; pendDia=true; }
       else if(gap<=120){
         R.tpHasta2h++;
@@ -9496,7 +10007,12 @@ function tcResumenLaboralMes(anio,mes){
      automáticamente en el siguiente cálculo. */
   R.tpMensualCompleto=(mesTurnoTotalDias===ndias)&&!mesTurnoRectoPresente&&mesTurnoPartidoDias>0;
   if(R.tpMensualCompleto){ R.tpMensualUnidades=30; R.tpDiarioUnidades=0; }
-  else { R.tpMensualUnidades=0; R.tpDiarioUnidades=mesTurnoPartidoDias; }
+  /* NEXUM-020 — Las unidades de servicios partidos asignados CONFIRMADOS (incluida)
+     se suman al MISMO ID diario 4A41 (nunca un ID nuevo, sin importes hardcodeados).
+     Solo cuando NO es 4A10 mensual: así 4A10 y 4A41 siguen siendo mutuamente
+     excluyentes. Como reg.turno es corrido en estos días, mesTurnoPartidoDias no los
+     incluye: no se suma la misma fecha dos veces. */
+  else { R.tpMensualUnidades=0; R.tpDiarioUnidades=mesTurnoPartidoDias+R.tpAsigIncluidas; }
   return R;
 }
 
@@ -9514,6 +10030,7 @@ function tcResumenLaboral(anio,mes){
     'primaTardeDias','primaNocheDias','plusSabadoDias','plusDomingoDias', /* DEV-008R2 / NEXUM-005 */
     'jornadaTardeNocheEspecialDias','jornadaTardeNocheEspecialPendiente', /* NEXUM-006 / NEXUM-006R1 (4A0N) */
     'tpMensualUnidades','tpDiarioUnidades', /* DEV-008R3 */
+    'tpAsigIncluidas','tpAsigPendientes', /* NEXUM-020 */
     'festivoTrabajadoDias','festivoEspecialDias','domingoRamosDias','festivoDesplazadoDias', /* DEV-008R10 */
     'serviciosIncidenciaConfirmados','serviciosIncidenciaPendientes', /* NEXUM-015 */
     'diasPendientesRevision','diasConDatos'];
@@ -9767,6 +10284,34 @@ function tcNomRenderProvisional(data){
   var _heIdSal=(_tramoNom && Object.prototype.hasOwnProperty.call(HE_ID,_tramoNom))
     ? HE_ID[_tramoNom] : null;
 
+  /* ===================== NEXUM-019 — CONDICIÓN NOCTURNA (TFN) DEL AÑO DE LA NÓMINA
+     Solo tiene efecto en vista mensual y con perfil Conductor-Perceptor AUTORIZADO.
+     Se lee del módulo anual (caLeerAnio → condicionNocturna) del MISMO año de la
+     nómina (R.anio). Estados efectivos:
+       'tfn'            → adscrito al Turno Fijo de Noche.
+       'no_tfn'         → no adscrito.
+       'pendiente'      → sin confirmar (incluye configuración antigua/ausente).
+       'noVerificable'  → lector ausente, excepción o almacén corrupto.
+     'pendiente' y 'noVerificable' comparten tratamiento en la nómina (fila
+     informativa y bloqueo de totales). NUNCA se altera aquí ningún acumulador de
+     minutos ni ningún otro concepto. */
+  var _cnEstado='pendiente';
+  if(NOM_AUTORIZADO && esMes){
+    if(typeof window.nxCondNocturnaEstadoAnio==='function'){
+      try{ _cnEstado=window.nxCondNocturnaEstadoAnio(R.anio); }
+      catch(e){ _cnEstado='noVerificable'; }
+    } else {
+      _cnEstado='noVerificable';
+    }
+    if(_cnEstado!=='tfn' && _cnEstado!=='no_tfn' && _cnEstado!=='pendiente' && _cnEstado!=='noVerificable')
+      _cnEstado='noVerificable';
+  }
+  /* Verdadero SOLO cuando el régimen nocturno está confirmado (tfn o no_tfn) en un
+     mes autorizado; en cualquier otro caso el bloque nocturno queda pendiente. */
+  var _cnAplicable=(NOM_AUTORIZADO && esMes);
+  var _cnConfirmado=(_cnAplicable && (_cnEstado==='tfn' || _cnEstado==='no_tfn'));
+  var _cnBloquea=(_cnAplicable && !_cnConfirmado);
+
   /* Periodo de liquidación (dato fiable a partir del mes/año seleccionado).
      DEV-007R8 — El nº de días naturales del mes NO se usa como cantidad del
      salario base; solo se emplea para el rango de fechas del periodo. */
@@ -9857,7 +10402,25 @@ function tcNomRenderProvisional(data){
      crea fila ni se consulta ningún ID. Con tramo INVALIDO/NO_APLICABLE (o sin
      autorizar) _heIdSal es null: resolverImporte devuelve «Pdte.» sin consultar. */
   add('4A31','Horas extraordinarias','minutos',R.horasExtraordinarias,null,_heIdSal,'horas',false);
-  add('4A33','Horas nocturnas','minutos',R.nocturnidadGeneral,null,'4A33_NOCTURNIDAD_GENERAL','horas',true);
+  /* NEXUM-019 — Nocturnidad ORDINARIA (4A33). En un mes autorizado, SOLO se cobra
+     cuando el régimen es 'no_tfn': un Conductor-Perceptor adscrito al TFN cobra en su
+     lugar el plus mensual fijo 4B11 y NO percibe 4A33 por los minutos nocturnos de su
+     servicio ordinario. En 'tfn', 'pendiente' o 'noVerificable' NO se añade la fila ni
+     se consulta el ID 4A33 (cero consultas). Fuera de mes autorizado (vista anual o
+     categoría no autorizada) se conserva EXACTAMENTE el comportamiento anterior:
+     resolverImporte ya devuelve «Pdte.» sin consultar la tabla por la guarda central. */
+  if(!_cnAplicable || _cnEstado==='no_tfn'){
+    add('4A33','Horas nocturnas','minutos',R.nocturnidadGeneral,null,'4A33_NOCTURNIDAD_GENERAL','horas',true);
+  }
+  /* NEXUM-019 — Plus MENSUAL de nocturnidad (4B11) del Turno Fijo de Noche. Cantidad
+     fija 1, modo 'once' (importe mensual completo una sola vez desde la tabla activa
+     por su ID EXACTO 4B11_NOCTURNIDAD), cotiza=true. Se añade SOLO en un mes autorizado
+     con régimen 'tfn'. Si el ID está ausente/pendiente/no numérico, resolverImporte
+     devuelve «Pdte.» y bloquea los totales por el mecanismo existente (una sola
+     consulta mensual). En 'no_tfn'/'pendiente'/'noVerificable' NO se consulta 4B11. */
+  if(_cnAplicable && _cnEstado==='tfn'){
+    add('4B11','Plus mensual de nocturnidad','unid',1,null,'4B11_NOCTURNIDAD','once',true);
+  }
   add(
     '4B13',
     'Horas nocturnas ampliadas',
@@ -9932,12 +10495,14 @@ function tcNomRenderProvisional(data){
      R.extraCalle7 se conservan y solo se muestran en el Resumen de Nómina. */
   /* DEV-008R2 — Desde el turno final (reg.turno); ver tcResumenLaboralMes(). */
   add('4A0I','Prima diaria tarde','unid',R.primaTardeDias,'días','4A0I_TARDE','dias',true);
-  /* NEXUM-005 — Prima diaria de noche (CN/PN). Mismo patrón que la de tarde:
-     días × importe diario del ID EXACTO 4A0J_PRIMA_DIARIA_NOCHE de la tabla
-     salarial ACTIVA (sin importe hardcodeado). cotiza=true. Con 0 días add() no
-     crea fila ni consulta el ID. ID ausente/pendiente/corrupto → «Pdte.» por
-     resolverImporte(), bloqueando los totales con el mecanismo existente. */
-  add('4A0J','Prima diaria noche','unid',R.primaNocheDias,'días','4A0J_PRIMA_DIARIA_NOCHE','dias',true);
+  /* NEXUM-005 / NEXUM-019 — Prima diaria de noche (4A0J). Con la evidencia disponible
+     NO es aplicable al Conductor-Perceptor: se ELIMINA la fila económica de su nómina
+     provisional. No se añade fila, no se consulta el ID 4A0J_PRIMA_DIARIA_NOCHE y no
+     genera importe alguno. El acumulador estadístico R.primaNocheDias se CONSERVA
+     intacto (se calcula como hasta ahora y sigue disponible para las vistas que lo
+     necesiten); simplemente no se traduce en una línea de nómina. No se modifica la
+     tabla salarial ni se elimina el ID del catálogo genérico.
+     add('4A0J', ... ) — retirado deliberadamente en NEXUM-019. */
   /* NEXUM-006 (4A0N) — Jornada tarde-noche especial. Mismo patrón que las primas
      diarias: días × importe diario del ID EXACTO de la tabla salarial ACTIVA
      (sin importe hardcodeado, sin búsqueda por nombre/código/aproximación).
@@ -9984,6 +10549,14 @@ function tcNomRenderProvisional(data){
      evitar una nómina incompleta). add() oculta la fila si la cantidad es 0, de modo
      que las incidencias FUTURAS (no alcanzadas), DES y VAC no la generan ni bloquean. */
   add(null,'Servicios de incidencia pendientes de confirmar','unid',R.serviciosIncidenciaPendientes,'días');
+  /* NEXUM-020 — Servicios partidos ASIGNADOS por hoja de ruta PENDIENTES de revisar
+     (turno original corrido, servicio real partido, sin cambio, prima aún
+     'pendiente'). Una SOLA fila informativa: cod/idSal null → resolverImporte
+     devuelve «Pdte.» SIN consultar la tabla salarial y fija todosImportes=false,
+     dejando los totales como «Pdte.» para no emitir una nómina provisional
+     incompleta. add() oculta la fila si la cantidad es 0. Los estados 'incluida'
+     (ya sumados a 4A41), 'excluida' y 'no_aplica' NO generan fila ni bloquean. */
+  add(null,'Turnos partidos asignados pendientes de revisar','unid',R.tpAsigPendientes,'días');
 
   /* Celda de descripción con su código (si lo tiene). */
   function descCelda(cod,desc){
@@ -10152,6 +10725,22 @@ function tcNomRenderProvisional(data){
       +'<div class="n">'+res.inner+'</div>'
       +'<div class="n"></div>';
   });
+
+  /* ===================== NEXUM-019 — CONDICIÓN NOCTURNA PENDIENTE / NO VERIFICABLE
+     En un mes autorizado sin régimen nocturno confirmado (pendiente, ausente,
+     configuración antigua o almacén no verificable) NO se ha consultado 4B11 ni 4A33
+     (cero consultas salariales de nocturnidad) y los acumuladores de minutos quedan
+     intactos. Se emite UNA sola fila informativa con cantidad «—» e importe «Pdte.»
+     que fija todosImportes=false y arrastra total devengado, deducciones y líquido a
+     «Pdte.» con el mecanismo bloqueante existente. No se repara ni sobrescribe la
+     configuración. El aviso con la acción («Más → Información») se añade más abajo. */
+  if(_cnBloquea){
+    todosImportes=false;
+    h+=descCelda(null,'Condición nocturna pendiente de confirmar')
+      +'<div class="n">—</div>'
+      +'<div class="n">'+celdaPend+'</div>'
+      +'<div class="n"></div>';
+  }
 
   /* ===================== DEV-010R7 — ANTIGÜEDAD MENSUAL (Conductor-Perceptor)
      Conecta la antigüedad con la TABLA SALARIAL ACTIVA mediante el ID EXACTO del
@@ -11087,6 +11676,13 @@ function tcNomRenderProvisional(data){
      no se activan por FFPP. */
   if(_ffppNoVerificable){
     h+='<div class="nom-recibo-aviso">⚠️ No se pudo determinar la paga de Fiestas primaverales: la fecha de entrada (antigüedad) del perfil laboral no es válida. La fila FFPP queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revisa la fecha de antigüedad en el Perfil laboral.</div>';
+  }
+
+  /* NEXUM-019 — Aviso de condición nocturna pendiente / no verificable (solo mes
+     autorizado sin régimen confirmado). No se ha consultado 4B11 ni 4A33; la nocturnidad
+     ordinaria queda sin resolver y los totales quedan «Pdte.». */
+  if(_cnBloquea){
+    h+='<div class="nom-recibo-aviso">⚠️ Tu condición nocturna no está confirmada para '+tcEsc(String(R.anio))+': la nocturnidad ordinaria queda como «Pdte.» y el total devengado, las deducciones y el líquido quedan sin calcular. Revisa tu condición nocturna en Más → Información.</div>';
   }
 
   /* DEV-010R11 — Aviso específico de la RETENCIÓN DE IRPF. Solo puede activarse
@@ -12438,6 +13034,11 @@ function tcDiaHojaGuardarEn(fecha,imgData,thumbData,texto,opcionDatos){
        (confirmada_hoja) sin preguntar. Si NO lo era y la hoja es simplificada, se
        pregunta «¿Este servicio corresponde a una incidencia?» (Sí/No/Cancelar). */
     if(typeof nx15PostHojaGuardada==='function') nx15PostHojaGuardada(fecha,texto,_nx15PrevInc,_nx15Snap,habiaHoja);
+    /* NEXUM-020 — Tras guardar la hoja, determina el turno REAL del servicio
+       (reutiliza tcCambioResolverTurnoDesdeJornada) y, si aparece un candidato
+       NUEVO a prima diaria de turno partido, agenda la confirmación conjunta.
+       NUNCA toca reg.turno. */
+    if(typeof window.nx20PostHoja==='function') window.nx20PostHoja(fecha);
   }
 }
 
@@ -15481,6 +16082,18 @@ window.tcImpConfirm=function(){
         /* DEV-007R8 — Política de retención centralizada (deja 3 semanas con
            imagen, archivando repetidamente si hay más). */
         tcAplicarRetencionHojas();
+        /* NEXUM-020R1 (Defecto 1) — Detección de servicios partidos asignados en LOTE.
+           Se ejecuta cuando todas las miniaturas y jornadas ya se han incorporado
+           (pendientes===0) y JUSTO ANTES del único saveDias() del lote: prepara el
+           lote (actualizarDia + instantánea exacta por fecha) SIN guardar. No se
+           llama a nx20PostHoja por cada fecha (evita varios guardados/aperturas). */
+        var _nx20Lote=null;
+        try{
+          if(typeof window.nx20PrepararLote==='function'){
+            var _nx20Fechas=validas.map(function(p){return p.key;});
+            _nx20Lote=window.nx20PrepararLote(_nx20Fechas);
+          }
+        }catch(_e20){ _nx20Lote=null; }
         var guardado=saveDias(); tcRenderCal();
         if(guardado) tcImpReset(); /* DEV-007R10 (tarea 2) — solo se limpia el panel si se guardó */
         /* DEV-007R8 — No se declara éxito si el guardado falló (saveDias ya avisó
@@ -15488,6 +16101,11 @@ window.tcImpConfirm=function(){
         if(guardado){
           tcToast('✔ '+ok+' días guardados'+(resumenDias?' · 📋 resumen: '+resumenDias+' día(s)':'')+(incConf?' · ⚠️ '+incConf+' incidencia(s) confirmada(s)':'')+(skip?' · '+skip+' omitidos':'')+(revisar?' · ⚠️ '+revisar+' día(s) requieren revisión':'')+(resueltosCambio?' · 🔄 '+resueltosCambio+' turno(s) de cambio resueltos':'')+(cambioSinDetectar?' · ⚠️ No se pudo detectar el turno. Asígnalo manualmente.':''));
         }
+        /* NEXUM-020R1 (Defecto 1) — Finaliza el lote con el resultado del ÚNICO
+           saveDias: si se guardó, abre UNA sola confirmación conjunta cuando hubo
+           candidatos NUEVOS; si falló, restaura exactamente turnoServicioReal de todas
+           las fechas y no abre el modal. */
+        try{ if(_nx20Lote&&typeof window.nx20FinalizarLote==='function') window.nx20FinalizarLote(_nx20Lote.token, guardado); }catch(_e20b){}
       }
     });
   });
@@ -15532,6 +16150,7 @@ function tcDetectServicio(texto){
 window.tcOpenCal=function(){tcShowPanel('pnl-cal');tcOpenOv();};
 window.tcCalReset=function(){
   calDataStore=null;
+  calTextoStore=''; /* NEXUM-019 */
   document.getElementById('cal-file').value='';
   document.getElementById('cal-prog').style.display='none';
   document.getElementById('cal-actions').style.display='none';
@@ -15554,6 +16173,7 @@ window.tcCalLoad=function(input){
           document.getElementById('cal-bar').style.width='80%';
           document.getElementById('cal-prog-txt').textContent='Procesando turnos…';
           calDataStore=tcParsearCalAnual(texto);
+          calTextoStore=texto; /* NEXUM-019 — para el detector de condición nocturna */
           var nd=Object.keys(calDataStore).length;
           document.getElementById('cal-bar').style.width='100%';
           document.getElementById('cal-prog-txt').textContent='✔ '+nd+' días detectados';
@@ -15645,6 +16265,63 @@ function tcCrearTurnoNuevo(codigo,mapaTurnos){
   return codigo;
 }
 
+/* NEXUM-019R2 — Detección del RÉGIMEN GLOBAL declarado ÚNICAMENTE en la CABECERA
+   REAL del calendario anual. La cabecera es EXCLUSIVAMENTE el bloque de líneas
+   ANTERIOR a la primera línea semanal (la que contiene un rango con formato
+   equivalente a «DD.MM A DD.MM»). Nunca se analiza el documento completo: una
+   leyenda, observación o nota posterior que contenga «turnos partidos» NO puede
+   clasificar todo el calendario. Si no hay ninguna línea semanal, la detección se
+   limita a las primeras líneas razonables de cabecera (nunca a todo el documento).
+   Devuelve exactamente "partido" | "corrido" | "tfn" | null.
+   Normalización segura antes de comparar:
+     · mayúsculas · tildes eliminadas · guiones y saltos → espacio ·
+       espacios múltiples reducidos a uno.
+   La comparación exige la LOCUCIÓN COMPLETA delimitada por inicio/fin o espacio
+   (nunca coincidencias parciales; «TFN» solo como palabra aislada; una simple
+   N / PN / CN o la palabra «noche» NO son prueba de TFN). Precedencia:
+   partido > corrido > tfn. NO deduce partido/corrido si el documento solo
+   confirma TFN. */
+function nxNormRegimenTexto(s){
+  return String(s==null?'':s)
+    .toUpperCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')  /* quitar tildes */
+    .replace(/[-\r\n\t]/g,' ')                         /* guiones y saltos → espacio */
+    .replace(/\s+/g,' ')                               /* espacios múltiples → uno */
+    .trim();
+}
+/* Máximo de líneas de cabecera cuando el documento NO trae ninguna línea semanal
+   con rango: acota la búsqueda a un encabezado plausible, nunca a todo el texto. */
+var NX_CABECERA_MAX_LINEAS=12;
+function nxDetectarRegimenCabecera(texto){
+  var crudo=String(texto==null?'':texto);
+  if(!crudo) return null;
+  /* Rango semanal «DD.MM A DD.MM» (separador . / -): marca el inicio de las
+     semanas. Se detecta sobre las líneas ORIGINALES (antes de normalizar, que
+     colapsa los saltos de línea) para poder recortar por línea. */
+  var reRangoSem=/(\d{1,2})[.\/-](\d{1,2})\s+A\s+(\d{1,2})[.\/-](\d{1,2})/i;
+  var lineas=crudo.split(/\r?\n/);
+  var corte=-1;
+  for(var _i=0;_i<lineas.length;_i++){ if(reRangoSem.test(lineas[_i])){ corte=_i; break; } }
+  var cabeceraLineas=(corte>=0)
+    ? lineas.slice(0,corte)                     /* solo lo anterior a la 1.ª semana */
+    : lineas.slice(0,NX_CABECERA_MAX_LINEAS);   /* sin semanas: primeras líneas razonables */
+  var t=nxNormRegimenTexto(cabeceraLineas.join('\n'));
+  if(!t) return null;
+  function tiene(frase){ return new RegExp('(^| )'+frase+'( |$)').test(t); }
+  /* 1) Turno partido (máxima prioridad) */
+  if(tiene('TURNOS PARTIDOS') || tiene('TURNO PARTIDO') ||
+     tiene('JORNADA PARTIDA') || tiene('ADSCRITO A TURNO PARTIDO'))
+    return 'partido';
+  /* 2) Turno corrido / continuo */
+  if(tiene('TURNOS CORRIDOS') || tiene('TURNO CORRIDO') ||
+     tiene('TURNOS CONTINUOS') || tiene('JORNADA CONTINUA'))
+    return 'corrido';
+  /* 3) TFN — SOLO referencia inequívoca. No altera partido/corrido. */
+  if(tiene('TFN') || tiene('TURNO FIJO DE NOCHE') ||
+     tiene('ADSCRITO A TURNO FIJO DE NOCHE'))
+    return 'tfn';
+  return null;
+}
 function tcParsearCalAnual(texto){
   /*
    * Formato real del PDF de TUSSAM (una línea por semana):
@@ -15704,16 +16381,17 @@ function tcParsearCalAnual(texto){
 
   var lineas=texto.split(/\r?\n/);
 
-  /* Detección de régimen declarado en la cabecera del PDF (texto que aparece
-     antes/encima de las filas semanales, ej. "TURNO PARTIDO", "JORNADA CORRIDA").
-     Sirve como valor por defecto cuando una semana concreta no trae su propio
-     campo OBSERV con TP/PM/PN/PT. La indicación por semana (OBSERV) siempre
-     tiene prioridad sobre este valor global. */
-  var reHeaderPartido=/JORNADA\s+PARTID|TURNO\s+PARTID|R[EÉ]GIMEN\s+PARTID/i;
-  var reHeaderCorrido=/JORNADA\s+CORRID|TURNO\s+CORRID|R[EÉ]GIMEN\s+CORRID/i;
-  var partidoGlobal=false;
-  if(reHeaderPartido.test(texto)) partidoGlobal=true;
-  else if(reHeaderCorrido.test(texto)) partidoGlobal=false;
+  /* NEXUM-019R1 — RÉGIMEN GLOBAL de la cabecera, calculado UNA sola vez para
+     todo el documento (nunca por día). Cuando la cabecera confirma partido o
+     corrido, ESE régimen se aplica a TODO el calendario y tiene prioridad
+     ABSOLUTA sobre el campo OBSERV por semana (una OBSERV «TP» en Semana Santa
+     o Feria NO genera una segunda detección ni convierte solo esas semanas: el
+     documento ya es partido en su conjunto). Cuando la cabecera NO confirma
+     partido/corrido (null o solo TFN) se conserva EXACTAMENTE el comportamiento
+     previo: OBSERV por semana con turno corrido por defecto. TFN no cambia la
+     conversión diaria M/T/N (lo resuelve el detector de condición nocturna). */
+  var regimenGlobal=nxDetectarRegimenCabecera(texto);
+  var partidoGlobal=(regimenGlobal==='partido'); /* defecto para el camino sin régimen global */
 
   var semanasDetectadas=0;
 
@@ -15777,9 +16455,17 @@ function tcParsearCalAnual(texto){
 
     if(candidatos.length<1) continue;
 
-    /* Si OBSERV indicaba partido, convertir turnos base a su versión partida:
-       T→PT  M→PM  N→PN  (solo para días que tengan turno, no descansos/vacas) */
-    if(observPartido){
+    /* NEXUM-019R1 — Conversión de los códigos base M/T/N según el régimen.
+       El régimen GLOBAL de cabecera (partido/corrido) manda sobre el OBSERV de
+       la semana; solo cuando la cabecera no confirma partido/corrido (null o
+       TFN) se usa el OBSERV por semana con corrido por defecto (comportamiento
+       previo). Los códigos no laborables (D, V, FEST, DCOMP, …) NUNCA se
+       convierten: PARTIDO_MAP/tcAlCorrido solo tocan T/M/N. */
+    var aplicaPartido;
+    if(regimenGlobal==='partido')      aplicaPartido=true;
+    else if(regimenGlobal==='corrido') aplicaPartido=false;
+    else                               aplicaPartido=observPartido; /* null o tfn → previo */
+    if(aplicaPartido){
       var PARTIDO_MAP={'T':'PT','M':'PM','N':'PN'};
       candidatos=candidatos.map(function(cod){return PARTIDO_MAP[cod]||cod;});
     } else {
@@ -15796,6 +16482,11 @@ function tcParsearCalAnual(texto){
 
   /* ── Fallback token-a-token si no se detectó ninguna semana ── */
   if(semanasDetectadas===0){
+    /* NEXUM-019R1 — También aquí manda el régimen global: partido → PM/PT/PN;
+       en cualquier otro caso (corrido/null/tfn) se mantiene el corrido por
+       defecto previo. */
+    var _PARTIDO_FB={'T':'PT','M':'PM','N':'PN'};
+    function _regFallback(cod){ return (regimenGlobal==='partido') ? (_PARTIDO_FB[cod]||cod) : tcAlCorrido(cod); }
     var MNOM=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
     var tokens=texto.split(/\s+/);
     var mesAct=-1;
@@ -15811,7 +16502,7 @@ function tcParsearCalAnual(texto){
       if(mfb){
         var db=parseInt(mfb[1],10),mob=parseInt(mfb[2],10);
         if(db>=1&&db<=31&&mob>=1&&mob<=12){
-          for(var jb=1;jb<=2;jb++){var nxb=(tokens[ii+jb]||'').toUpperCase().trim();if(VALID_COD.test(nxb)){var ncb=normCod(nxb);result[anioActual+'-'+tcPad(mob)+'-'+tcPad(db)]=tcAlCorrido(ncb);break;}}
+          for(var jb=1;jb<=2;jb++){var nxb=(tokens[ii+jb]||'').toUpperCase().trim();if(VALID_COD.test(nxb)){var ncb=normCod(nxb);result[anioActual+'-'+tcPad(mob)+'-'+tcPad(db)]=_regFallback(ncb);break;}}
         }
         continue;
       }
@@ -15819,7 +16510,7 @@ function tcParsearCalAnual(texto){
       if(mdb){
         var db2=parseInt(mdb[1],10);
         if(db2>=1&&db2<=31){
-          for(var jb2=1;jb2<=2;jb2++){var nxb2=(tokens[ii+jb2]||'').toUpperCase().trim();if(VALID_COD.test(nxb2)){var ncb2=normCod(nxb2);result[anioActual+'-'+tcPad(mesAct)+'-'+tcPad(db2)]=tcAlCorrido(ncb2);break;}}
+          for(var jb2=1;jb2<=2;jb2++){var nxb2=(tokens[ii+jb2]||'').toUpperCase().trim();if(VALID_COD.test(nxb2)){var ncb2=normCod(nxb2);result[anioActual+'-'+tcPad(mesAct)+'-'+tcPad(db2)]=_regFallback(ncb2);break;}}
         }
       }
     }
@@ -15890,9 +16581,106 @@ window.tcCalConfirm=function(){
     }
     protegidos++;
   });
-  if(!tcGuardarDiasYTurnosAtomico(diasNuevos,turnosNuevos)) return;
+  /* NEXUM-019R2 — GUARDADO COHERENTE de RÉGIMEN + CALENDARIO.
+     Cuando la CABECERA REAL confirma inequívocamente partido/corrido y el AÑO
+     DOMINANTE del documento todavía no tiene régimen (regimenTurno:null), la
+     importación trata AMBAS partes CONJUNTAMENTE y en este orden:
+       1) RÉGIMEN primero: si su guardado falla, NO se tocan días ni turnos.
+       2) CALENDARIO después: si falla, se RESTAURA exactamente el estado anual
+          anterior y se VERIFICA la restauración.
+     No se declara éxito si solo se guardó una de las dos partes. Si un rollback
+     no puede verificarse, se muestra un aviso NO bloqueante. Precedencia: un
+     régimen ya elegido por el usuario NUNCA se sobrescribe automáticamente; en
+     ese caso solo se guarda el calendario por el flujo existente. Reimportar el
+     mismo calendario es idempotente (a lo sumo una escritura de régimen, y solo
+     la primera vez). DGA, Bonobús y condición nocturna se conservan íntegros.
+     TFN no se trata aquí (lo resuelve el detector de condición nocturna). */
+  var _reg=null;
+  try { _reg=(typeof nxDetectarRegimenCabecera==='function')?nxDetectarRegimenCabecera(calTextoStore):null; }
+  catch(_eDet){ _reg=null; } /* un fallo de detección no bloquea; se trata como "sin régimen" */
+
+  /* Año DOMINANTE del documento (el que aporta más días importados). */
+  var _anioReg=null;
+  if(_reg==='partido'||_reg==='corrido'){
+    var _cntAnio={};
+    Object.keys(datosNuevos).forEach(function(k){
+      if(/^\d{4}-\d{2}-\d{2}$/.test(k)){ var yy=k.slice(0,4); _cntAnio[yy]=(_cntAnio[yy]||0)+1; }
+    });
+    var _mx=-1;
+    Object.keys(_cntAnio).forEach(function(y){ if(_cntAnio[y]>_mx){_mx=_cntAnio[y];_anioReg=y;} });
+  }
+
+  var _puenteOk=(typeof window.caRegimenCalPreparar==='function' &&
+                 typeof window.caRegimenCalAplicar==='function' &&
+                 typeof window.caRegimenCalRestaurar==='function' &&
+                 typeof window.caRegimenCalDescartar==='function');
+
+  /* ¿Régimen conjunto? Solo si hay cabecera partido/corrido, año dominante,
+     puente disponible y el año AÚN NO tiene régimen (precedencia usuario). */
+  var _aplicarReg=false, _tokenReg=null;
+  if((_reg==='partido'||_reg==='corrido') && _anioReg && _puenteOk){
+    var _prep=window.caRegimenCalPreparar(_anioReg);
+    if(_prep && _prep.ok){
+      if(_prep.tieneRegimen){
+        /* Ya hay un régimen elegido: no se sobrescribe. Se descarta la
+           instantánea y se guardará SOLO el calendario por el flujo existente. */
+        window.caRegimenCalDescartar(_prep.token);
+      } else {
+        _aplicarReg=true; _tokenReg=_prep.token;
+      }
+    } else if(_prep && _prep.estado==='corrupto'){
+      /* NEXUM-019R2R1 — Corrección 3: la configuración anual NO es verificable.
+         Se cancela TODA la importación ANTES de tocar días o turnos. */
+      tcToast('La configuración anual no es verificable. Revisa Condiciones laborales antes de importar el calendario.');
+      return;
+    } else {
+      /* Ni siquiera se pudo leer el estado anual: no cabe garantizar el guardado
+         conjunto. No se cambia nada (días/turnos intactos) y se avisa. */
+      tcToast('⚠️ No se pudo preparar el guardado del régimen. No se cambió ningún dato.');
+      return;
+    }
+  }
+
+  if(_aplicarReg){
+    /* 1) RÉGIMEN primero. Si falla, NO se tocan días ni turnos. Se pasa el token
+       de preparación: la aplicación exige token, año coincidente y cadena de
+       almacenamiento sin cambios desde la preparación. */
+    var _resReg=window.caRegimenCalAplicar(_tokenReg,_anioReg,_reg);
+    if(!_resReg || _resReg.ok!==true){
+      window.caRegimenCalDescartar(_tokenReg);
+      if(_resReg && _resReg.estado==='modificado')
+        /* NEXUM-019R2R1 — Corrección 3: el estado cambió durante la importación.
+           No se escribe régimen ni calendario; se preserva el cambio reciente. */
+        tcToast('La configuración anual cambió durante la importación. No se cambió el calendario.');
+      else
+        tcToast('⚠️ No se pudo guardar el régimen de titularidad. No se cambió el calendario.');
+      return;
+    }
+    /* 2) CALENDARIO después. Si falla, RESTAURAR EXACTO el estado anual anterior
+       y VERIFICAR. tcGuardarDiasYTurnosAtomico ya avisa de su propio fallo. */
+    if(!tcGuardarDiasYTurnosAtomico(diasNuevos,turnosNuevos)){
+      var _rb=window.caRegimenCalRestaurar(_tokenReg);
+      if(!_rb || _rb.verificado!==true)
+        tcToast('No se pudo asegurar el estado anterior. Revisa los datos antes de continuar.');
+      return;
+    }
+    window.caRegimenCalDescartar(_tokenReg);
+  } else {
+    /* Sin régimen que aplicar (cabecera sin partido/corrido, año ya con régimen,
+       o puente no disponible): SOLO calendario por el flujo existente. */
+    if(!tcGuardarDiasYTurnosAtomico(diasNuevos,turnosNuevos)) return;
+  }
   if(nuevosCreados.length>0){tcRenderLeyenda();tcBuildTurnoSelects();}
+  /* NEXUM-019 — Importación/sustitución CORRECTA del calendario personal anual:
+     se dispara el detector de condición nocturna sobre el DOCUMENTO ORIGINAL
+     (calDataStore + su texto), no sobre los servicios realmente realizados. Se
+     captura antes de limpiar los stores. Nunca bloquea ni interfiere con el flujo. */
+  var _cnData=calDataStore, _cnTexto=calTextoStore;
   calDataStore=null; tcCalReset(); tcClose(); tcRenderCal();
+  try{
+    if(typeof window.nxCondNocturnaTrasImportar==='function')
+      window.nxCondNocturnaTrasImportar(_cnData, _cnTexto);
+  }catch(e){}
   var msg='✔ '+anadidos+' añadido'+(anadidos===1?'':'s')+' · '+actualizados+' actualizado'+(actualizados===1?'':'s')+' · '+sinCambios+' sin cambios · '+protegidos+' protegido'+(protegidos===1?'':'s')+' · '+errores+' inválido'+(errores===1?'':'s');
   if(nuevosCreados.length>0) msg+=' · '+nuevosCreados.length+' turno'+(nuevosCreados.length>1?'s':'')+' nuevo'+(nuevosCreados.length>1?'s':'')+': '+nuevosCreados.join(', ');
   tcToast(msg);
@@ -16773,7 +17561,36 @@ function tcObtenerMensajes(){
         if(_av15&&_av15.length){ for(var _i15=0;_i15<_av15.length;_i15++) push(_av15[_i15]); }
       }
     }catch(e){}
+
+    /* 7) NEXUM-020 — Servicio partido asignado con prima diaria PENDIENTE de
+       confirmar (turno original corrido, servicio real partido, sin cambio). Aviso
+       ESTABLE (id por fecha, sin duplicar) accesible desde el Centro de mensajes;
+       al pulsarlo se abre la ficha del día. No bloquea la app ni reabre el modal. */
+    try{
+      if(typeof window.nx20DiaEsPartidoAsignado==='function' &&
+         window.nx20DiaEsPartidoAsignado(reg) &&
+         window.nx20EstadoPrima(reg)==='pendiente'){
+        push({id:'primapartido:'+fecha, tipo:'info', fecha:fecha,
+          titulo:'Prima de turno partido pendiente',
+          descripcion:'Servicio partido asignado en un día de turno corrido. Confirma si procede la prima diaria de turno partido.',
+          prioridad:'media'});
+      }
+    }catch(e){}
   });
+
+  /* NEXUM-019 — Aviso NO bloqueante de condición nocturna pendiente del año natural
+     actual (no ligado a un día). Sin fecha: al pulsarlo se marca leído y se cierra el
+     panel; la acción para responder/corregir vive en Más → Información. */
+  try{
+    if(typeof window.nxCondNocturnaPendienteActual==='function' && window.nxCondNocturnaPendienteActual()){
+      var _cnAnio=String(new Date().getFullYear());
+      push({id:'condnoct:'+_cnAnio, tipo:'info', fecha:'',
+        titulo:'Condición nocturna pendiente',
+        descripcion:'No hemos confirmado tu régimen nocturno para '+_cnAnio+'. Revísalo en Más → Información.',
+        prioridad:'media'});
+    }
+  }catch(e){}
+
   return lista;
 }
 window.tcMsgObtener=tcObtenerMensajes;
@@ -17658,8 +18475,463 @@ window.tcMsgAbrirDia=function(fecha){
   window.nx15CardNoRealizada=nx15CardNoRealizada;
   window.nx15RenderAvisosInicio=nx15RenderAvisosInicio;
 
+  /* ===================== NEXUM-020 — SERVICIOS PARTIDOS ASIGNADOS (HOJA DE RUTA)
+     Se ejecuta DENTRO de la IIFE principal para cerrar sobre dias/TURNO/saveDias/
+     tcRenderCal/etc. (igual que el resto de módulos). NUNCA sobrescribe reg.turno.
+     Solo expone en window la API pública mínima; no expone dias ni estado mutable. */
+  (function(){
+    'use strict';
+    var CODIGOS=['CM','CT','CN','PM','PT','PN'];
+    function esRecto(c){ return c==='CM'||c==='CT'||c==='CN'; }
+    function esPartido(c){ return c==='PM'||c==='PT'||c==='PN'; }
+    function objPlano(v){
+      return (typeof tcEsObjPlano==='function')?tcEsObjPlano(v):(!!v&&typeof v==='object'&&!Array.isArray(v));
+    }
+    /* Validación estricta reutilizable (misma regla que el validador de importación
+       global nx20ValidarTurnoServicioRealImportado). */
+    function valido(o){
+      if(o===null||o===undefined) return true;
+      if(typeof nx20ValidarTurnoServicioRealImportado==='function') return nx20ValidarTurnoServicioRealImportado(o);
+      if(!objPlano(o)) return false;
+      var ks=Object.keys(o), perm=['version','codigo','origen','primaPartidoDiaria'];
+      for(var i=0;i<ks.length;i++) if(perm.indexOf(ks[i])===-1) return false;
+      return o.version===1 && CODIGOS.indexOf(o.codigo)!==-1 && o.origen==='hoja_ruta' &&
+             ['pendiente','incluida','excluida','no_aplica'].indexOf(o.primaPartidoDiaria)!==-1;
+    }
+    function objValido(o){ return valido(o) && o!==null && o!==undefined && typeof o==='object'; }
+
+    /* Código real desde la jornada de la hoja (reutiliza el resolvedor existente). */
+    function codigoReal(reg){
+      if(!reg||!reg.jornada||typeof tcCambioResolverTurnoDesdeJornada!=='function') return null;
+      try{ return tcCambioResolverTurnoDesdeJornada(reg.jornada)||null; }catch(e){ return null; }
+    }
+
+    /* ¿El día es un servicio partido ASIGNADO? Turno real partido, original
+       corrido y SIN cambio. No consulta el estado de la prima. */
+    function esPartidoAsignado(reg){
+      if(!reg) return false;
+      var tsr=reg.turnoServicioReal;
+      if(!objValido(tsr)) return false;
+      return esPartido(tsr.codigo) && esRecto(reg.turno||'') && !reg.cambio;
+    }
+    function estadoPrima(reg){
+      var tsr=reg&&reg.turnoServicioReal;
+      return (tsr&&typeof tsr==='object')?tsr.primaPartidoDiaria:null;
+    }
+
+    /* Máquina de estados por día. NO guarda (el llamador guarda). NO toca reg.turno.
+       Devuelve {cambio, nuevoCandidato}. */
+    function actualizarDia(reg){
+      var res={cambio:false, nuevoCandidato:false};
+      if(!reg) return res;
+      var code=codigoReal(reg);
+      if(!code) return res; /* hoja no concluyente: no se crea/toca el objeto */
+      var original=reg.turno||'';
+      var hayCambio=!!reg.cambio;
+      var prev=reg.turnoServicioReal;
+      var prevOk=objValido(prev);
+
+      var nuevoEstado;
+      if(!esPartido(code)){
+        /* Servicio real corrido → no procede prima diaria (cubre "hoja partida
+           reemplazada por corrida": el efecto en 4A41 desaparece al no ser
+           'incluida"). */
+        nuevoEstado='no_aplica';
+      } else if(!esRecto(original)){
+        /* Turno original NO corrido (partido propio del titular, D, V...): la prima
+           diaria no procede por esta vía; el partido propio ya lo cubre 4A41. */
+        nuevoEstado='no_aplica';
+      } else if(hayCambio){
+        /* Cambio registrado: la prima pertenece al titular. */
+        nuevoEstado='excluida';
+      } else {
+        /* Candidato: corrido original + servicio partido + sin cambio. Respeta una
+           decisión previa del usuario (incluida/excluida) y no repregunta si ya
+           estaba pendiente con el mismo código. */
+        if(prevOk && prev.codigo===code &&
+           (prev.primaPartidoDiaria==='incluida'||prev.primaPartidoDiaria==='excluida'||prev.primaPartidoDiaria==='pendiente')){
+          nuevoEstado=prev.primaPartidoDiaria;
+        } else {
+          nuevoEstado='pendiente';
+        }
+      }
+
+      var eraPendCand = prevOk && esPartido(prev.codigo) && esRecto(original) && !hayCambio && prev.primaPartidoDiaria==='pendiente';
+      var esPendCand  = esRecto(original) && esPartido(code) && !hayCambio && nuevoEstado==='pendiente';
+
+      var igual = prevOk && prev.codigo===code && prev.origen==='hoja_ruta' && prev.primaPartidoDiaria===nuevoEstado;
+      if(!igual){
+        reg.turnoServicioReal={version:1, codigo:code, origen:'hoja_ruta', primaPartidoDiaria:nuevoEstado};
+        res.cambio=true;
+      }
+      if(esPendCand && !eraPendCand) res.nuevoCandidato=true;
+      return res;
+    }
+
+    /* Lista ordenada de fechas con candidato pendiente. */
+    function listarPendientes(){
+      var out=[], ks;
+      try{ ks=Object.keys(dias||{}); }catch(e){ ks=[]; }
+      ks.forEach(function(f){ var reg=dias[f]; if(esPartidoAsignado(reg)&&estadoPrima(reg)==='pendiente') out.push(f); });
+      out.sort();
+      return out;
+    }
+
+    /* ---------- Etiquetas ---------- */
+    function fechaLabel(f){
+      try{
+        var p=String(f).split('-'), y=+p[0], mo=+p[1], d=+p[2];
+        var dow=(new Date(y,mo-1,d).getDay()+6)%7;
+        return DSEM[dow]+', '+d+' de '+MESES[mo-1];
+      }catch(e){ return String(f); }
+    }
+    function flechaLabel(reg){
+      var o=(reg&&reg.turno)||'', r=(reg&&reg.turnoServicioReal&&reg.turnoServicioReal.codigo)||'';
+      return o+' → '+r;
+    }
+
+    /* ---------- Decoración del calendario ---------- */
+    function decorarCelda(cell,reg,mini){
+      try{
+        if(!cell||!reg) return;
+        var tsr=reg.turnoServicioReal;
+        if(!objValido(tsr)) return;
+        var real=tsr.codigo, original=reg.turno||'';
+        if(!real||typeof TURNO==='undefined'||!TURNO[real]) return;
+        var t=TURNO[real];
+        /* Fondo del turno REAL como turno visible principal (no toca reg.turno). */
+        if(t.partido && typeof tcAdjustHex==='function'){
+          var c2=tcAdjustHex(t.bg,-20);
+          var s1=mini?5:6, s2=mini?7:8;
+          cell.style.background='repeating-linear-gradient(135deg,'+t.bg+' 0,'+t.bg+' '+s1+'px,'+c2+' '+s1+'px,'+c2+' '+s2+'px)';
+        } else if(t.bg){
+          cell.style.background=t.bg;
+        }
+        /* Número: solo se recolorea si el día NO es festivo (para no pisar NAC/LOC);
+           entre corrido y partido de la misma franja el color coincide igualmente. */
+        var numEl=cell.querySelector('.tc-dnum');
+        if(numEl && t.textColor && !cell.querySelector('.tc-dsub-nac,.tc-dsub-loc')) numEl.style.color=t.textColor;
+        /* Tag: muestra el código REAL (p.ej. PT). */
+        var tagEl=cell.querySelector('.tc-dtag');
+        if(tagEl){
+          tagEl.textContent=t.tag;
+          if(typeof tcColorSeguro!=='function' || tcColorSeguro(t.tagColor)) tagEl.style.background=t.tagColor;
+          tagEl.style.color='#fff';
+        }
+        /* Insignia ASIG SOLO si el real difiere del original y no hay cambio. Con
+           cambio se conserva el indicador de cambio existente (no se sustituye). */
+        if(real!==original && !reg.cambio){
+          var b=document.createElement('div');
+          b.className='tc-dasig'; b.textContent='ASIG';
+          b.title='Servicio partido asignado por hoja de ruta';
+          cell.appendChild(b);
+        }
+      }catch(e){}
+    }
+
+    /* ---------- Tarjeta de la ficha del día ---------- */
+    function fichaCardHtml(key,reg){
+      try{
+        var tsr=reg&&reg.turnoServicioReal;
+        if(!objValido(tsr)) return '';
+        var real=tsr.codigo, original=reg.turno||'';
+        if(!real) return '';
+        /* Solo aporta información si el servicio real difiere del original o la
+           prima tiene un estado relevante distinto de 'no_aplica'. */
+        if(real===original && tsr.primaPartidoDiaria==='no_aplica') return '';
+        var esc=(typeof tcEsc==='function')?tcEsc:function(x){return String(x==null?'':x);};
+        var tOrig=(typeof TURNO!=='undefined'&&TURNO[original])?TURNO[original]:null;
+        var tReal=(typeof TURNO!=='undefined'&&TURNO[real])?TURNO[real]:null;
+        var origLbl=original+(tOrig&&tOrig.label?(' · '+tOrig.label):'');
+        var realLbl=real+(tReal&&tReal.label?(' · '+tReal.label):'');
+        var primaTxt={pendiente:'Pendiente',incluida:'Incluida',excluida:'Excluida',no_aplica:'No aplica'}[tsr.primaPartidoDiaria]||'—';
+        var h='<div class="nx20-card">';
+        h+='<div class="nx20-hd">Servicio asignado</div>'; /* NEXUM-020R1 — también cubre partido→corrido */
+        h+='<div class="nx20-kv">Turno original: <strong>'+esc(origLbl)+'</strong><br>';
+        h+='Servicio realizado: <strong>'+esc(realLbl)+'</strong><br>';
+        h+='Origen: <strong>Hoja de ruta</strong><br>';
+        h+='Prima de partido: <strong>'+esc(primaTxt)+'</strong></div>';
+        if(tsr.primaPartidoDiaria==='pendiente'){
+          h+='<div class="nx20-actions"><button type="button" class="tc-btn tc-btn-ghost" onclick="nx20RevisarDia(\''+esc(key)+'\')">Revisar prima de partido</button></div>';
+        }
+        h+='</div>';
+        return h;
+      }catch(e){ return ''; }
+    }
+
+    /* ---------- Modal de confirmación conjunta (accesible) ---------- */
+    var _opener=null, _filtro=null, _fechasEnModal=[];
+    function keydown(e){
+      var ov=document.getElementById('nx20-modal');
+      if(!ov||ov.style.display==='none') return;
+      if(e.key==='Escape'||e.keyCode===27){ e.preventDefault(); cerrar(); return; }
+      if(e.key==='Tab'||e.keyCode===9){
+        var foco=ov.querySelectorAll('button, input:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        var vis=[]; for(var i=0;i<foco.length;i++){ var el=foco[i]; if(el.offsetParent!==null||el===document.activeElement) vis.push(el); }
+        if(!vis.length) return;
+        var first=vis[0], last=vis[vis.length-1];
+        if(e.shiftKey){ if(document.activeElement===first||!ov.contains(document.activeElement)){ e.preventDefault(); last.focus(); } }
+        else { if(document.activeElement===last||!ov.contains(document.activeElement)){ e.preventDefault(); first.focus(); } }
+      }
+    }
+    function cerrar(){
+      var ov=document.getElementById('nx20-modal');
+      if(ov) ov.style.display='none';
+      document.removeEventListener('keydown', keydown, true);
+      var op=_opener; _opener=null; _filtro=null; _fechasEnModal=[];
+      if(op&&typeof op.focus==='function'){ try{ op.focus(); }catch(e){} }
+    }
+    function ensure(){
+      var ov=document.getElementById('nx20-modal');
+      if(ov) return ov;
+      ov=document.createElement('div'); ov.id='nx20-modal';
+      ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true'); ov.setAttribute('aria-labelledby','nx20-titulo');
+      ov.innerHTML=''
+        +'<div class="nx20-box">'
+        +'<button type="button" id="nx20-x" class="perfil-cerrar-x" aria-label="Cerrar confirmación de servicios partidos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
+        +'<h3 id="nx20-titulo" class="nx20-titulo">Servicios partidos detectados</h3>'
+        +'<p class="nx20-intro">Hemos encontrado servicios partidos asignados en días cuyo turno original era corrido. Confirma cuáles deben incluirse como prima diaria de turno partido.</p>'
+        +'<ul id="nx20-lista" class="nx20-lista"></ul>'
+        +'<div class="nx20-btns">'
+        +'<button type="button" id="nx20-confirmar" class="btn btn-primary">Confirmar selección</button>'
+        +'<button type="button" id="nx20-mastarde" class="btn btn-secondary">Revisar más tarde</button>'
+        +'</div></div>';
+      document.body.appendChild(ov);
+      ov.addEventListener('click',function(e){ if(e.target===ov) cerrar(); });
+      document.getElementById('nx20-x').addEventListener('click',cerrar);
+      document.getElementById('nx20-mastarde').addEventListener('click',cerrar);
+      document.getElementById('nx20-confirmar').addEventListener('click',confirmar);
+      /* NEXUM-020R1 (Defecto 3) — El checkbox y su <label> ya alternan de forma
+         NATIVA (una vez). Este delegado SOLO cubre el espacio VACÍO de la fila (el
+         propio <li>, es decir, el padding/gap fuera del checkbox y del texto) y
+         entonces ejecuta cb.click() UNA sola vez. No se toca el estado cuando el
+         clic recae en el checkbox o en el label, para no duplicar la alternancia.
+         Sin preventDefault; toda la fila sigue siendo zona cómoda de interacción. */
+      document.getElementById('nx20-lista').addEventListener('click',function(e){
+        var li=(e.target&&e.target.classList&&e.target.classList.contains('nx20-item'))?e.target:null;
+        if(!li) return; /* clic en checkbox o label (o su interior): comportamiento nativo */
+        var cb=li.querySelector('input[type="checkbox"]');
+        if(cb) cb.click(); /* espacio vacío de la fila → una sola alternancia */
+      });
+      return ov;
+    }
+    function abrir(filtroFecha){
+      var pend=listarPendientes();
+      if(filtroFecha){ pend=pend.filter(function(f){ return f===filtroFecha; }); }
+      if(!pend.length){ if(typeof tcToast==='function') tcToast('No hay servicios partidos pendientes de revisar.'); return; }
+      _opener=(document.activeElement&&document.activeElement!==document.body)?document.activeElement:null;
+      _filtro=filtroFecha||null;
+      _fechasEnModal=pend.slice();
+      var ov=ensure();
+      var esc=(typeof tcEsc==='function')?tcEsc:function(x){return String(x==null?'':x);};
+      var ul=document.getElementById('nx20-lista');
+      ul.innerHTML='';
+      pend.forEach(function(f,idx){
+        var reg=dias[f]||{};
+        var li=document.createElement('li'); li.className='nx20-item';
+        var cbId='nx20-cb-'+idx;
+        li.innerHTML='<input type="checkbox" id="'+cbId+'" checked>'
+          +'<label class="nx20-item-tx" for="'+cbId+'">'+esc(fechaLabel(f))+' <span class="nx20-mut">· '+esc(flechaLabel(reg))+'</span></label>';
+        li.setAttribute('data-fecha',f);
+        ul.appendChild(li);
+      });
+      ov.style.display='flex';
+      document.addEventListener('keydown', keydown, true);
+      try{ var c=document.getElementById('nx20-confirmar'); if(c&&typeof c.focus==='function') c.focus(); }catch(e){}
+    }
+    function confirmar(){
+      /* Guardado ATÓMICO con rollback exacto: se captura el estado previo de TODOS
+         los días, se aplica y, si el guardado falla, se restaura íntegro. */
+      var snap=null;
+      try{ snap=JSON.stringify(dias); }catch(e){ snap=null; }
+      var ov=document.getElementById('nx20-modal');
+      var items=ov?ov.querySelectorAll('.nx20-item'):[];
+      var aplicados=0;
+      for(var i=0;i<items.length;i++){
+        var f=items[i].getAttribute('data-fecha'); if(!f) continue;
+        var reg=dias[f]; if(!reg||!objValido(reg.turnoServicioReal)) continue;
+        /* Solo actúa sobre candidatos aún pendientes (idempotente). */
+        if(!(esPartidoAsignado(reg)&&reg.turnoServicioReal.primaPartidoDiaria==='pendiente')) continue;
+        var cb=items[i].querySelector('input[type="checkbox"]');
+        var marcado=!!(cb&&cb.checked);
+        reg.turnoServicioReal={version:1, codigo:reg.turnoServicioReal.codigo, origen:'hoja_ruta',
+          primaPartidoDiaria:marcado?'incluida':'excluida'};
+        dias[f]=reg; aplicados++;
+      }
+      var ok=(typeof saveDias==='function')?saveDias():false;
+      if(!ok){
+        if(snap!=null){ try{ dias=JSON.parse(snap); }catch(e){} }
+        if(typeof tcToast==='function') tcToast('⚠️ No se pudo guardar. No se ha cambiado ninguna prima.');
+        return;
+      }
+      cerrar();
+      try{ if(typeof tcRenderCal==='function') tcRenderCal(); }catch(e){}
+      try{ if(typeof activeDate!=='undefined'&&activeDate&&dias[activeDate]&&typeof tcRenderView==='function') tcRenderView(activeDate,dias[activeDate]); }catch(e){}
+      try{ if(typeof window.tcRenderNomina==='function') window.tcRenderNomina(); }catch(e){} /* recalcula UNA sola vez */
+      try{ if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }catch(e){}
+      if(typeof tcToast==='function') tcToast('✔ Primas de turno partido actualizadas ('+aplicados+' día'+(aplicados===1?'':'s')+').');
+    }
+
+    /* Copia exacta (superficial de campos primitivos) de un turnoServicioReal. */
+    function cloneTSR(o){
+      return (o&&typeof o==='object')
+        ? {version:o.version, codigo:o.codigo, origen:o.origen, primaPartidoDiaria:o.primaPartidoDiaria}
+        : null;
+    }
+    /* Instantánea EXACTA de turnoServicioReal de una fecha (existía + valor). */
+    function snapTSR(reg){
+      var existia = !!(reg && Object.prototype.hasOwnProperty.call(reg,'turnoServicioReal'));
+      return { existia:existia, valor: existia? cloneTSR(reg.turnoServicioReal) : undefined };
+    }
+    /* Restaura EXACTAMENTE turnoServicioReal en una fecha desde una instantánea. */
+    function restaurarTSR(reg, snap){
+      if(!reg||!snap) return;
+      if(snap.existia){ reg.turnoServicioReal = cloneTSR(snap.valor); }
+      else { if(Object.prototype.hasOwnProperty.call(reg,'turnoServicioReal')) delete reg.turnoServicioReal; }
+    }
+
+    /* ---------- Detección tras guardar una hoja ---------- */
+    var _timer=null;
+    function agendarModal(){
+      if(_timer) return;
+      _timer=setTimeout(function(){ _timer=null; if(listarPendientes().length) abrir(null); },0);
+    }
+
+    /* NEXUM-020R1 (Defecto 4) — Flujo INDIVIDUAL. La hoja ya se guardó antes por
+       tcDiaHojaGuardarEn (primer saveDias). Aquí se aplica la detección y se hace un
+       SEGUNDO saveDias solo si turnoServicioReal cambió; si ese guardado falla, se
+       restaura EXACTAMENTE el valor anterior (o se elimina si no existía) y NO se
+       abre el modal ni se refresca como éxito. Nunca se altera la hoja ya guardada
+       ni se deja el nuevo turnoServicioReal solo en memoria. */
+    window.nx20PostHoja=function(fecha){
+      try{
+        var reg=dias[fecha]; if(!reg) return;
+        var snap=snapTSR(reg); /* estado exacto ANTES de actualizarDia */
+        var r=actualizarDia(reg);
+        if(r.cambio){
+          dias[fecha]=reg;
+          if(typeof saveDias==='function'&&saveDias()){
+            try{ if(typeof tcRenderCal==='function') tcRenderCal(); }catch(e){}
+            try{ if(typeof activeDate!=='undefined'&&activeDate===fecha&&typeof tcRenderView==='function') tcRenderView(fecha,reg); }catch(e){}
+            try{ if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }catch(e){}
+            if(r.nuevoCandidato) agendarModal(); /* solo se auto-abre con candidato NUEVO */
+          } else {
+            /* Fallo del segundo guardado: rollback exacto de turnoServicioReal.
+               saveDias ya revirtió «dias» a lo persistido; reafirmamos el valor
+               anterior en la fecha (idempotente) y NO abrimos el modal. */
+            var rreg=dias[fecha]; if(rreg) restaurarTSR(rreg, snap);
+          }
+        } else {
+          /* Sin cambio de turnoServicioReal: no hay segundo guardado. */
+          try{ if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }catch(e){}
+        }
+      }catch(e){}
+    };
+
+    /* NEXUM-020R1 (Defecto 1) — API interna de LOTE para la importación múltiple.
+       nx20PrepararLote: recibe fechas SIN duplicados, ejecuta actualizarDia() para
+       cada una, captura una instantánea exacta de turnoServicioReal por fecha, NO
+       guarda, y devuelve un token OPACO + el número de candidatos nuevos. El único
+       saveDias() del lote lo hace el llamador (tcImpConfirm). nx20FinalizarLote:
+       tras un guardado correcto abre UNA sola confirmación conjunta si hubo
+       candidatos nuevos; si el guardado falló, restaura EXACTAMENTE turnoServicioReal
+       de todas las fechas y no abre el modal. No se expone «dias» ni la instantánea. */
+    var _lotes={}, _loteSeq=0;
+    window.nx20PrepararLote=function(fechas){
+      var vistas={}, lista=[];
+      if(fechas&&fechas.length){
+        for(var i=0;i<fechas.length;i++){
+          var f=fechas[i];
+          if(typeof f!=='string'||vistas[f]) continue; /* sin duplicados */
+          vistas[f]=true; lista.push(f);
+        }
+      }
+      var snaps={}, nuevos=0;
+      lista.forEach(function(f){
+        var reg=dias[f]; if(!reg) return;
+        snaps[f]=snapTSR(reg);        /* instantánea EXACTA antes de mutar */
+        var r=actualizarDia(reg);     /* muta reg.turnoServicioReal en memoria; NO guarda */
+        dias[f]=reg;
+        if(r.nuevoCandidato) nuevos++;
+      });
+      var token='nx20lote:'+(++_loteSeq);
+      _lotes[token]={ fechas:lista, snaps:snaps, nuevos:nuevos };
+      return { token:token, nuevos:nuevos };
+    };
+    window.nx20FinalizarLote=function(token, guardadoOk){
+      var L=token&&_lotes[token]; if(!L){ return; }
+      delete _lotes[token];
+      if(guardadoOk){
+        try{ if(typeof window.tcMsgRefrescar==='function') window.tcMsgRefrescar(); }catch(e){}
+        if(L.nuevos>0) agendarModal(); /* UNA sola confirmación conjunta */
+      } else {
+        /* Rollback exacto de turnoServicioReal de TODAS las fechas del lote. */
+        L.fechas.forEach(function(f){
+          var reg=dias[f]; if(reg) restaurarTSR(reg, L.snaps[f]);
+        });
+      }
+    };
+
+    /* NEXUM-020R1 (Defecto 2) — Código EFECTIVO solo para clasificar el descanso
+       intermedio realmente trabajado (4A4E/4A4F). Usa turnoServicioReal.codigo si el
+       objeto es válido y procede de hoja de ruta; en caso contrario, el turno final.
+       NO sustituye globalmente turnoFinal ni toca titularidad, 4A10, 4A41 ni cambios.
+       Se aplica igual con o sin reg.cambio (el servicio lo realiza quien trabaja). */
+    function codigoEfectivoDescanso(reg, turnoFinal){
+      var tsr=reg&&reg.turnoServicioReal;
+      if(objValido(tsr)&&tsr.origen==='hoja_ruta'&&CODIGOS.indexOf(tsr.codigo)!==-1) return tsr.codigo;
+      return turnoFinal;
+    }
+
+    /* ---------- API pública ---------- */
+    window.nx20DiaEsPartidoAsignado=esPartidoAsignado;
+    window.nx20EstadoPrima=estadoPrima;
+    window.nx20ListarPendientes=listarPendientes;
+    window.nx20DecorarCelda=decorarCelda;
+    window.nx20FichaCardHtml=fichaCardHtml;
+    window.nx20AbrirModal=abrir;
+    window.nx20RevisarDia=function(fecha){ abrir(fecha); };
+    window.nx20CodigoEfectivoDescanso=codigoEfectivoDescanso;
+  })();
+
 })();
   </script>
+
+  <!-- ===================== NEXUM-020 — SERVICIOS PARTIDOS ASIGNADOS (HOJA DE RUTA) =====================
+       Módulo 100% ADITIVO. NUNCA sobrescribe reg.turno. Detecta, mediante la hoja
+       de ruta, cuando el servicio realmente realizado fue PARTIDO (PM/PT/PN) en un
+       día cuyo turno original era CORRIDO (CM/CT/CN); lo guarda SEPARADO en
+       reg.turnoServicioReal y gestiona la confirmación conjunta de la prima diaria
+       de turno partido (4A41). Reutiliza tcCambioResolverTurnoDesdeJornada(). -->
+  <style>
+    /* Insignia ASIG en el calendario (mensual y anual). Discreta, centrada,
+       nunca tapa el número ni el tag del turno. Legible en claro y oscuro. */
+    #tc .tc-dasig{display:inline-flex;align-items:center;justify-content:center;align-self:center;width:max-content;margin:2px auto 0;font-size:7px;font-weight:800;letter-spacing:.5px;line-height:1;padding:1px 4px;border-radius:3px;background:var(--surface2,#eee);color:var(--text2);border:1px solid var(--border);z-index:2;pointer-events:none;}
+    #tc .tc-d-mini .tc-dasig{margin:1px auto 0;font-size:5.5px;padding:.5px 2px;border-radius:2px;letter-spacing:.3px;}
+    /* Tarjeta del día: servicio partido asignado. */
+    #tc .nx20-card{border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:10px;background:var(--surface,transparent);}
+    #tc .nx20-hd{font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--color-primary);margin-bottom:8px;}
+    #tc .nx20-kv{font-size:13px;line-height:1.7;color:var(--text2,inherit);}
+    #tc .nx20-kv strong{color:inherit;}
+    #tc .nx20-actions{display:flex;gap:8px;margin-top:10px;}
+    #tc .nx20-actions .tc-btn{flex:1 1 auto;}
+    /* Modal de confirmación conjunta. Overlay propio; respeta claro/oscuro por las
+       variables --color-*. Sin scroll horizontal a 360/390/430 px. */
+    #nx20-modal{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;box-sizing:border-box;}
+    #nx20-modal .nx20-box{position:relative;background:var(--color-surface,#fff);color:var(--color-text,#111);max-width:440px;width:100%;box-sizing:border-box;border-radius:14px;padding:18px;max-height:90vh;overflow-y:auto;overflow-x:hidden;box-shadow:0 12px 40px rgba(0,0,0,.3);}
+    #nx20-modal .nx20-titulo{margin:0 0 6px;font-size:17px;padding-right:48px;line-height:1.3;}
+    #nx20-modal .nx20-intro{margin:0 0 12px;font-size:13px;line-height:1.5;color:var(--color-text-secondary,#666);}
+    #nx20-modal .nx20-lista{list-style:none;margin:0 0 4px;padding:0;}
+    #nx20-modal .nx20-item{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 4px;border-bottom:1px solid var(--color-border,#e5e5e5);cursor:pointer;}
+    #nx20-modal .nx20-item:last-child{border-bottom:none;}
+    #nx20-modal .nx20-item input[type="checkbox"]{width:22px;height:22px;min-width:22px;flex:0 0 auto;margin:0;cursor:pointer;accent-color:var(--color-primary,#7a1f2b);}
+    #nx20-modal .nx20-item .nx20-item-tx{flex:1 1 auto;min-width:0;font-size:14px;line-height:1.35;overflow-wrap:anywhere;}
+    #nx20-modal .nx20-item .nx20-item-tx .nx20-mut{color:var(--color-text-secondary,#666);font-weight:600;}
+    #nx20-modal .nx20-vacio{font-size:13px;color:var(--color-text-secondary,#666);padding:8px 0 4px;}
+    #nx20-modal .nx20-btns{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+    #nx20-modal .nx20-btns .btn{width:100%;min-height:44px;}
+  </style>
+
 
   <!-- ===================== SISTEMA DE DETECCIÓN DE NUEVAS VERSIONES ===================== -->
   <!-- Módulo 100% aditivo. No modifica ninguna función, estilo ni almacenamiento existente. -->
@@ -17727,7 +18999,7 @@ window.tcMsgAbrirDia=function(fecha){
        localStorage. Así, si el servidor (p. ej. Safari) sigue devolviendo el HTML
        antiguo, la app se sigue detectando como antigua y vuelve a ofrecer la
        actualización; jamás afirma falsamente «Al día». */
-    var VC_VERSION_ACTUAL = 'NEXUM-018R5R1';
+    var VC_VERSION_ACTUAL = 'NEXUM-020R1';
 
     var vcEnCurso = false; /* guarda: impide comprobaciones simultáneas */
     var vcActualizando = false; /* guarda: impide doble ejecución/recarga */
